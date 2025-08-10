@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  image          String?
+  hashedPassword String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Team relationships
+  ownedTeams      Team[]
+  teamMembers     TeamMember[]
+  sentInvites     TeamInvite[] @relation("InviterRelation")
+  receivedInvites TeamInvite[] @relation("InviteeRelation")
+
+  @@map("users")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  owner    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId  String
+
+  members  TeamMember[]
+  invites  TeamInvite[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  role      Role     @default(EDITOR)
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+model TeamInvite {
+  id        String      @id @default(cuid())
+  email     String
+  role      Role        @default(EDITOR)
+  status    InviteStatus @default(PENDING)
+  token     String      @unique
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relationships
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+
+  inviter   User   @relation("InviterRelation", fields: [inviterId], references: [id], onDelete: Cascade)
+  inviterId String
+
+  invitee   User?  @relation("InviteeRelation", fields: [inviteeId], references: [id], onDelete: SetNull)
+  inviteeId String?
+
+  @@unique([email, teamId])
+  @@map("team_invites")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EDITOR
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
