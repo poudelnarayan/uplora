@@ -4,7 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -111,7 +111,10 @@ const authOptions: NextAuthOptions = {
       return session;
     }
   },
-  session: { strategy: "jwt" }
+  session: { strategy: "jwt" },
+  pages: {
+    signIn: "/signin",
+  },
 };
 
 const handler = NextAuth(authOptions);

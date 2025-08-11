@@ -16,6 +16,9 @@ model User {
   name           String?
   image          String?
   hashedPassword String?
+  emailVerified  DateTime?
+  verificationToken String?
+  verificationTokenExpires DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -24,6 +27,10 @@ model User {
   teamMembers     TeamMember[]
   sentInvites     TeamInvite[] @relation("InviterRelation")
   receivedInvites TeamInvite[] @relation("InviteeRelation")
+
+  // Videos
+  videos          Video[]
+  uploadLock      UploadLock?
 
   @@map("users")
 }
@@ -50,6 +57,7 @@ model TeamMember {
   role      Role     @default(EDITOR)
   joinedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
+  status    MemberStatus @default(ACTIVE)
 
   // Relationships
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -63,14 +71,14 @@ model TeamMember {
 }
 
 model TeamInvite {
-  id        String      @id @default(cuid())
+  id        String       @id @default(cuid())
   email     String
-  role      Role        @default(EDITOR)
+  role      Role         @default(EDITOR)
   status    InviteStatus @default(PENDING)
-  token     String      @unique
+  token     String       @unique
   expiresAt DateTime
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   // Relationships
   team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -86,6 +94,47 @@ model TeamInvite {
   @@map("team_invites")
 }
 
+model Video {
+  id           String      @id @default(cuid())
+  key          String
+  filename     String
+  contentType  String
+  sizeBytes    Int
+  uploadedAt   DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  status       VideoStatus @default(PROCESSING)
+  requestedByUserId String?
+  approvedByUserId  String?
+
+  // Owner
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+
+  // Optional associations
+  teamId   String?
+
+  // Editable metadata
+  description  String?
+  visibility   String?   // public | private | unlisted
+  madeForKids  Boolean   @default(false)
+  thumbnailKey String?
+
+  @@index([userId, uploadedAt])
+  @@map("videos")
+}
+
+model UploadLock {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  @@map("upload_locks")
+}
+
 enum Role {
   ADMIN
   MANAGER
@@ -97,4 +146,15 @@ enum InviteStatus {
   ACCEPTED
   REJECTED
   EXPIRED
+}
+
+enum MemberStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum VideoStatus {
+  PROCESSING  // Initial state - being processed
+  PENDING     // Sent for publish (awaiting owner approval)
+  PUBLISHED   // Published/approved by owner
 }

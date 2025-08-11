@@ -65,7 +65,7 @@ export default function InvitePage() {
 
       if (response.ok) {
         toast.success("Welcome to the team!");
-        router.push("/dashboard");
+        router.push("/teams");
       } else {
         const error = await response.json();
         toast.error(error.message || "Failed to accept invitation");
@@ -106,7 +106,7 @@ export default function InvitePage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="card max-w-md w-full text-center">
+        <div className="card max-w-md w-full text-center p-6 rounded-lg">
           <div className="w-16 h-16 rounded-full glass glow-red mx-auto mb-6 flex items-center justify-center">
             <X className="w-8 h-8 text-red-400" />
           </div>
@@ -114,7 +114,7 @@ export default function InvitePage() {
           <p className="text-white/70 mb-6">{error}</p>
           <button
             onClick={() => router.push("/")}
-            className="btn btn-primary"
+            className="btn btn-primary mt-2"
           >
             Back to Home
           </button>
@@ -132,7 +132,7 @@ export default function InvitePage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card max-w-md w-full"
+        className="card max-w-md w-full p-6 rounded-lg"
       >
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-full glass glow mx-auto mb-6 flex items-center justify-center">
