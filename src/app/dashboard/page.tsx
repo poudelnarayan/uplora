@@ -426,13 +426,13 @@ export default function Dashboard() {
                             <Play className="w-3 h-3" /> Preview
                           </button>
                           
-                          {/* Send for Publish Chip - Only for PROCESSING videos and EDITORS+ */}
-                          {video.status === "PROCESSING" && video.userRole && ["EDITOR", "MANAGER", "ADMIN", "OWNER"].includes(video.userRole) && (
+                          {/* Send for Publish Chip - Only for PROCESSING videos and EDITOR/MANAGER/ADMIN (not OWNER) */}
+                          {video.status === "PROCESSING" && video.userRole && ["EDITOR", "MANAGER", "ADMIN"].includes(video.userRole) && (
                             <button 
                               className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
                               onClick={() => changeVideoStatus(video.id, 'PENDING')}
                             >
-                              <Upload className="w-3 h-3" /> Send for Publish
+                              <Upload className="w-3 h-3" /> Request for Publish
                             </button>
                           )}
                           
@@ -465,82 +465,7 @@ export default function Dashboard() {
           )}
         </motion.div>
 
-        {/* Team Activity & Workflow */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          {/* Recent Team Activity */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">Team Activity</h2>
-              <button className="btn btn-ghost text-sm">View All</button>
-            </div>
-            <div className="card p-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">Maya approved video "React Tutorial #5"</p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                    <Upload className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">Alex uploaded "JavaScript Basics"</p>
-                    <p className="text-xs text-muted-foreground">5 hours ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-purple-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">Jordan joined the team as Editor</p>
-                    <p className="text-xs text-muted-foreground">1 day ago</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Upload Schedule */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">Upcoming Uploads</h2>
-              <button className="btn btn-ghost text-sm flex items-center gap-1">
-                <Plus className="w-4 h-4" />
-                Schedule
-              </button>
-            </div>
-            <div className="card p-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-orange-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">Next.js Complete Guide</p>
-                    <p className="text-xs text-muted-foreground">Scheduled for tomorrow, 2:00 PM</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600">Pending</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <FileVideo className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">CSS Grid Masterclass</p>
-                    <p className="text-xs text-muted-foreground">Scheduled for Friday, 10:00 AM</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">Ready</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+        {/* Team Activity & Upcoming Uploads removed per request */}
 
         {/* Quick Actions and Insights removed as requested */}
       </div>

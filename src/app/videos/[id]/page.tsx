@@ -242,7 +242,7 @@ export default function VideoPreviewPage() {
         const presign = await fetch("/api/s3/presign-thumbnail", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: thumbFile.name, contentType: thumbFile.type || "image/jpeg", sizeBytes: thumbFile.size }),
+          body: JSON.stringify({ filename: thumbFile.name, contentType: thumbFile.type || "image/jpeg", sizeBytes: thumbFile.size, teamId: video.teamId, videoId: video.id }),
         }).then(r=>r.json());
         if (presign?.putUrl && presign?.key) {
           const put = await fetch(presign.putUrl, { method: "PUT", headers: { "Content-Type": thumbFile.type || "image/jpeg" }, body: thumbFile });
@@ -508,23 +508,25 @@ export default function VideoPreviewPage() {
 
   // Load thumbnail from S3
   const loadThumbnailUrl = async (thumbnailKey: string) => {
+    // If no key or key is not in team-based thumbnail path, don't ping the server
+    if (!thumbnailKey || !/^teams\/[\w-]+\/videos\/[\w-]+\/thumbnail\//.test(thumbnailKey)) {
+      setCurrentThumbnailUrl(null);
+      setThumbnailLoading(false);
+      return;
+    }
     setThumbnailLoading(true);
     try {
       const res = await fetch(`/api/s3/get-url?key=${encodeURIComponent(thumbnailKey)}`);
       const json = await res.json();
       if (res.ok && json?.url) {
-        setImageLoading(true); // Start image loading
+        setImageLoading(true);
         setCurrentThumbnailUrl(json.url);
-        
-        // Cache the thumbnail URL
-        if (video?.id) {
-          videoCache.setThumbnailUrl(video.id, json.url);
-        }
+        if (video?.id) videoCache.setThumbnailUrl(video.id, json.url);
       } else {
-        console.error("Failed to get thumbnail URL:", json);
+        setCurrentThumbnailUrl(null);
       }
-    } catch (e) {
-      console.error("Failed to load thumbnail URL:", e);
+    } catch {
+      setCurrentThumbnailUrl(null);
     } finally {
       setThumbnailLoading(false);
     }
@@ -939,8 +941,14 @@ export default function VideoPreviewPage() {
                             className="w-full h-full object-cover"
                             onLoad={() => setImageLoading(false)}
                             onError={(e) => {
-                              console.error("Thumbnail failed to load");
-                              setCurrentThumbnailUrl(null);
+                              console.warn("Thumbnail failed to load; refreshing signed URL");
+                              if (video?.thumbnailKey) {
+                                // Clear any cached URL and fetch a fresh signed URL
+                                try { videoCache.setThumbnailUrl(video.id, ""); } catch {}
+                                loadThumbnailUrl(video.thumbnailKey);
+                              } else {
+                                setCurrentThumbnailUrl(null);
+                              }
                               setImageLoading(false);
                             }}
                           />
@@ -1221,14 +1229,7 @@ export default function VideoPreviewPage() {
                   )}
                 </div>
               </div>
-              <div className="card p-4">
-                <h3 className="font-semibold text-foreground mb-2">Upload timeline</h3>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>Uploaded: {video?.uploadedAt ? new Date(video.uploadedAt as any).toLocaleString() : '—'}</li>
-                  <li>Last updated: {video?.updatedAt ? new Date(video.updatedAt as any).toLocaleString() : '—'}</li>
-                  <li>Approval: {video?.status === 'PENDING' ? 'Requested' : video?.status === 'PUBLISHED' ? 'Approved' : '—'}</li>
-                </ul>
-              </div>
+              {/* Upload timeline removed per request */}
             </div>
           </div>
         )}

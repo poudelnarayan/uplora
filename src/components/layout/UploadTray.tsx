@@ -1,12 +1,31 @@
 "use client";
 
 import { useUploads } from "@/context/UploadContext";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Upload } from "lucide-react";
 
 export default function UploadTray() {
   const { uploads, dismiss, cancelUpload } = useUploads();
   const hasActive = uploads.length > 0;
+
+  // Auto-dismiss rules:
+  // - completed: 3s
+  // - cancelled: 3s
+  // - failed: 5s
+  useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+    uploads.forEach((u) => {
+      if (u.status === "completed") {
+        timers.push(setTimeout(() => dismiss(u.id), 3000));
+      } else if (u.status === "cancelled") {
+        timers.push(setTimeout(() => dismiss(u.id), 3000));
+      } else if (u.status === "failed") {
+        timers.push(setTimeout(() => dismiss(u.id), 5000));
+      }
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [uploads, dismiss]);
 
   return (
     <AnimatePresence>

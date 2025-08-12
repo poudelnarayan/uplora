@@ -1,108 +1,110 @@
 "use client";
 
-import { motion } from "framer-motion";
 import AppShell from "@/components/layout/AppShell";
-import { Check, Star } from "lucide-react";
+import { Check, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+// User-facing benefits (as requested)
+const features = [
+  "Work together: invite your team and assign roles",
+  "Email notifications for key actions",
+  "Fast support",
+  "Unlimited uploads",
+  "Priority support",
+];
+
+function FeatureItem({ enabled, text }: { enabled: boolean; text: string }) {
+  return (
+    <li className="flex items-start gap-2">
+      {enabled ? (
+        <Check className="w-4 h-4 text-green-600 mt-0.5" />
+      ) : (
+        <X className="w-4 h-4 text-muted-foreground mt-0.5" />
+      )}
+      <span className={enabled ? "text-foreground" : "text-muted-foreground"}>{text}</span>
+    </li>
+  );
+}
 
 export default function SubscriptionPage() {
+  const router = useRouter();
+
+  const handleSubscribe = (plan: "monthly" | "yearly") => {
+    // Placeholder action. Integrate payment later.
+    router.push(`/checkout?plan=${plan}`);
+  };
+
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <h1 className="heading-2 mb-2">Choose Your Plan</h1>
-          <p className="text-muted-foreground">Pick a plan that fits your workflow. Upgrade anytime.</p>
-        </motion.div>
+      <div className="max-w-7xl mx-auto py-12">
+        <div className="text-center mb-12">
+          <h1 className="heading-2">Choose your plan</h1>
+          <p className="text-muted-foreground mt-3">
+            Create, manage and publish YouTube videos with your team. Start free, upgrade when you’re ready.
+          </p>
+        </div>
 
-        {/* Row 1: Lite Plans */}
-        <div className="mb-8">
-          <h2 className="text-sm uppercase tracking-wide text-muted-foreground mb-3">Lite</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Lite Monthly */}
-            <div className="card p-6">
-              <div className="mb-3">
-                <h3 className="text-xl font-bold">Lite (Monthly)</h3>
-                <p className="text-xs text-muted-foreground">Starter plan</p>
-              </div>
-              <div className="mb-4 space-y-1">
-                <div className="text-3xl font-bold">$19.99<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
-                <p className="text-xs text-muted-foreground">Billed monthly. Cancel anytime.</p>
-              </div>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Up to <strong>3</strong> projects simultaneously</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Unlimited uploads</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Team collaboration</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Email invitations</li>
-              </ul>
-              <button className="btn btn-primary w-full">Choose Lite Monthly</button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Free */}
+          <div className="card p-8 flex flex-col">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Free</h3>
+              <p className="text-3xl font-bold mt-2">$0</p>
+              <p className="text-muted-foreground mt-1">Limited access</p>
             </div>
+            <ul className="space-y-2 text-sm flex-1">
+              <FeatureItem enabled={true} text="1 test upload only" />
+              <FeatureItem enabled={true} text="Preview the video online" />
+              <FeatureItem enabled={true} text="Try the request-for-publish flow" />
+              <FeatureItem enabled={false} text="Invite your team" />
+              <FeatureItem enabled={false} text="Unlimited uploads" />
+              <FeatureItem enabled={false} text="Email notifications & priority support" />
+            </ul>
+            <button className="btn btn-outline mt-6" onClick={() => router.push("/upload")}>Start Free</button>
+          </div>
 
-            {/* Lite Yearly */}
-            <div className="card p-6 border-primary/30 relative">
-              <span className="absolute -top-3 right-4 text-xs px-2 py-1 rounded-full bg-primary text-primary-foreground">Save</span>
-              <div className="mb-3">
-                <h3 className="text-xl font-bold">Lite (Yearly)</h3>
-                <p className="text-xs text-muted-foreground">Starter plan</p>
+          {/* Monthly */}
+          <div className="card p-8 border-primary/30 ring-2 ring-primary/20 flex flex-col">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Monthly</h3>
+              <div className="flex items-end gap-2 mt-2">
+                <p className="text-3xl font-bold">$19</p>
+                <span className="text-muted-foreground">/mo</span>
               </div>
-              <div className="mb-4 space-y-1">
-                <div className="text-3xl font-bold">$199.99<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
-                <p className="text-xs text-muted-foreground">~17% off vs monthly</p>
-              </div>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Up to <strong>3</strong> projects simultaneously</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Unlimited uploads</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Team collaboration</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Email invitations</li>
-              </ul>
-              <button className="btn btn-primary w-full">Choose Lite Yearly</button>
+              <p className="text-muted-foreground mt-1">Full access</p>
             </div>
+            <ul className="space-y-2 text-sm flex-1">
+              {features.map((f) => (
+                <FeatureItem key={f} enabled={true} text={f} />
+              ))}
+            </ul>
+            <button className="btn btn-primary mt-6" onClick={() => handleSubscribe("monthly")}>Subscribe Monthly</button>
+          </div>
+
+          {/* Yearly */}
+          <div className="card p-8 flex flex-col">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Yearly</h3>
+              <div className="flex items-end gap-2 mt-2">
+                <p className="text-3xl font-bold">$190</p>
+                <span className="text-muted-foreground">/yr</span>
+              </div>
+              <p className="text-green-600 text-sm mt-1">2 months free</p>
+            </div>
+            <ul className="space-y-2 text-sm flex-1">
+              {features.map((f) => (
+                <FeatureItem key={f} enabled={true} text={f} />
+              ))}
+            </ul>
+            <button className="btn btn-primary mt-6" onClick={() => handleSubscribe("yearly")}>Subscribe Yearly</button>
           </div>
         </div>
 
-        {/* Row 2: Blaze Plans */}
-        <div>
-          <h2 className="text-sm uppercase tracking-wide text-muted-foreground mb-3">Blaze</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Blaze Monthly */}
-            <div className="card p-6">
-              <div className="mb-3">
-                <h3 className="text-xl font-bold">Blaze (Monthly)</h3>
-                <p className="text-xs text-muted-foreground">Pro plan</p>
-              </div>
-              <div className="mb-4 space-y-1">
-                <div className="text-3xl font-bold">$29.99<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
-                <p className="text-xs text-muted-foreground">Billed monthly. Cancel anytime.</p>
-              </div>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Up to <strong>10</strong> projects simultaneously</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Unlimited uploads</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Team collaboration</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Priority support</li>
-              </ul>
-              <button className="btn btn-primary w-full">Choose Blaze Monthly</button>
-            </div>
-
-            {/* Blaze Yearly */}
-            <div className="card p-6 border-primary/30 relative">
-              <span className="absolute -top-3 right-4 text-xs px-2 py-1 rounded-full bg-primary text-primary-foreground flex items-center gap-1"><Star className="w-3 h-3" /> Best Value</span>
-              <div className="mb-3">
-                <h3 className="text-xl font-bold">Blaze (Yearly)</h3>
-                <p className="text-xs text-muted-foreground">Pro plan</p>
-              </div>
-              <div className="mb-4 space-y-1">
-                <div className="text-3xl font-bold">$299.99<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
-                <p className="text-xs text-muted-foreground">~17% off vs monthly</p>
-              </div>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Up to <strong>10</strong> projects simultaneously</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Unlimited uploads</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Team collaboration</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-green-500" /> Priority support</li>
-              </ul>
-              <button className="btn btn-primary w-full">Choose Blaze Yearly</button>
-            </div>
-          </div>
+        <div className="text-center mt-12 text-xs text-muted-foreground">
+          Free plan is for evaluation only. After your single test upload, subscribe to continue using background uploads, team workflows, and publishing.
         </div>
       </div>
     </AppShell>
   );
 }
+ 

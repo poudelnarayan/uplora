@@ -11,6 +11,8 @@ export interface UploadItem {
   progress: number; // 0-100
   status: UploadStatus;
   s3Key?: string;
+  videoId?: string;
+  uploadId?: string; // for multipart
   error?: string;
 }
 
@@ -115,6 +117,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         
         const presign = await presignResponse.json();
         if (!presign?.putUrl || !presign?.key) throw new Error("Presign failed");
+        // Record key/videoId early so cancellation can clean up
+        update({ s3Key: presign.key, videoId: presign.videoId });
         
         // Check if cancelled before starting XHR
         if (cancelledUploads.current.has(itemId)) {
@@ -165,7 +169,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       const initResponse = await fetch("/api/s3/multipart/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream" }),
+        body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", teamId }),
       });
       
       if (!initResponse.ok) {
@@ -175,6 +179,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       
       const init = await initResponse.json();
       if (!init?.uploadId || !init?.key) throw new Error("Failed to init multipart upload");
+      // Record identifiers so cancellation can abort and cleanup
+      update({ s3Key: init.key, videoId: init.videoId, uploadId: init.uploadId });
 
       const PART_SIZE = init.partSize || 8 * 1024 * 1024;
       const totalParts = Math.ceil(file.size / PART_SIZE);
@@ -295,10 +301,17 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       abortControllers.current.delete(id);
     }
     
-    // Also release upload lock on server
-    fetch("/api/s3/lock/release", { method: "DELETE" }).catch(() => {
-      // Silently handle lock release failures
-    });
+    // Also release upload lock and clean provisional video on server
+    const item = uploads.find(u => u.id === id);
+    if (item) {
+      fetch("/api/uploads/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: item.s3Key, uploadId: item.uploadId, videoId: item.videoId })
+      }).catch(() => {});
+    } else {
+      fetch("/api/s3/lock/release", { method: "DELETE" }).catch(() => {});
+    }
   };
 
   const value: UploadContextValue = useMemo(() => ({ uploads, enqueueUpload, dismiss, cancelUpload, hasActive }), [uploads, hasActive]);

@@ -6,6 +6,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
+import { prisma } from "@/lib/prisma";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
 
     const { filename, contentType, sizeBytes, teamId, videoId } = await req.json();
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
+    if (!videoId) return NextResponse.json({ error: "Missing videoId" }, { status: 400 });
 
     // Validate it's a supported image format (YouTube requirements)
     const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
@@ -26,11 +28,29 @@ export async function POST(req: NextRequest) {
     // Build safe S3 key for thumbnails
     const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
 
-    // Build structured key; if videoId missing, place under tmp with user id
-    const base = teamId ? `teams/${teamId}` : `users/${session.user.email?.replace(/[^\w.-]+/g, "_")}`;
-    const key = videoId
-      ? `${base}/videos/${videoId}/thumb/${safeName}`
-      : `${base}/thumb/tmp-${Date.now()}-${crypto.randomBytes(6).toString("hex")}-${safeName}`;
+    // Resolve video and enforce access based on team membership or personal ownership
+    const video = await prisma.video.findUnique({ where: { id: videoId } });
+    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+
+    // Ensure user exists
+    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    // Enforce thumbnails only under team videos
+    if (!video.teamId) {
+      return NextResponse.json({ error: "Video must belong to a team for thumbnail upload" }, { status: 400 });
+    }
+    // Team access: owner or any member
+    const team = await prisma.team.findUnique({ where: { id: video.teamId } });
+    let allowed = team?.ownerId === user.id;
+    if (!allowed) {
+      const membership = await prisma.teamMember.findFirst({ where: { teamId: video.teamId, userId: user.id } });
+      allowed = !!membership;
+    }
+    if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+
+    // Only team-based path
+    const key = `teams/${video.teamId}/videos/${videoId}/thumbnail/${safeName}`;
 
     // Generate presigned PUT URL
     const command = new PutObjectCommand({ 

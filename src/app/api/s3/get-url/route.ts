@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   if (!key) return NextResponse.json({ error: "Missing key" }, { status: 400 });
 
-  const isThumb = /\/thumb\//.test(key);
+  const isThumb = /\/(thumb|thumbnail)\//.test(key);
   const isPreview = /\/preview\//.test(key);
   const command = new GetObjectCommand({ 
     Bucket: process.env.S3_BUCKET!, 

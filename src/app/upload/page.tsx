@@ -70,43 +70,7 @@ export default function UploadPage() {
           <UploadZone />
         </motion.div>
 
-        {/* Upload Tips */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 rounded-lg bg-blue-500/10 mx-auto mb-4 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-blue-500" />
-            </div>
-            <h4 className="font-semibold mb-2 text-foreground">Easy Upload</h4>
-            <p className="text-sm text-muted-foreground">
-              Simply drag and drop your video files or click to browse
-            </p>
-          </div>
-          
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 rounded-lg bg-green-500/10 mx-auto mb-4 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-green-500" />
-            </div>
-            <h4 className="font-semibold mb-2 text-foreground">Team Collaboration</h4>
-            <p className="text-sm text-muted-foreground">
-              Upload videos that your team can access and manage together
-            </p>
-          </div>
-          
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/10 mx-auto mb-4 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-purple-500" />
-            </div>
-            <h4 className="font-semibold mb-2 text-foreground">Direct to YouTube</h4>
-            <p className="text-sm text-muted-foreground">
-              Videos are uploaded directly to your YouTube channel
-            </p>
-          </div>
-        </motion.div>
+        {/* Removed extra tips per request */}
       </div>
     </AppShell>
   );
