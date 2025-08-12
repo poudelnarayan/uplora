@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { 
@@ -93,51 +93,86 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
-        const res = await fetch(apiUrl);
-        if (res.ok) {
-          const data = await res.json();
-          const list: VideoItem[] = Array.isArray(data) ? data : [];
-          
-          // Fetch role for each video
-          const videosWithRoles = await Promise.all(
-            list.map(async (video) => {
-              try {
-                const roleRes = await fetch(`/api/videos/${video.id}/role`);
-                if (roleRes.ok) {
-                  const { role } = await roleRes.json();
-                  return { ...video, userRole: role };
-                }
-              } catch (error) {
-                console.error(`Failed to get role for video ${video.id}:`, error);
+  const fetchVideos = useCallback(async () => {
+    try {
+      const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const data = await res.json();
+        const list: VideoItem[] = Array.isArray(data) ? data : [];
+        // Fetch role for each video
+        const videosWithRoles = await Promise.all(
+          list.map(async (video) => {
+            try {
+              const roleRes = await fetch(`/api/videos/${video.id}/role`);
+              if (roleRes.ok) {
+                const { role } = await roleRes.json();
+                return { ...video, userRole: role };
               }
-              return { ...video, userRole: null };
-            })
-          );
-          
-          setVideos(videosWithRoles);
-          
-          // Load thumbnails for videos that have them
-          videosWithRoles.forEach(video => {
-            if (video.thumbnailKey) {
-              loadThumbnailUrl(video.id, video.thumbnailKey);
+            } catch (error) {
+              console.error(`Failed to get role for video ${video.id}:`, error);
             }
-          });
-        } else {
-          setVideos([]);
-        }
-      } catch {
+            return { ...video, userRole: null };
+          })
+        );
+        setVideos(videosWithRoles);
+        // Load thumbnails for videos that have them
+        videosWithRoles.forEach(video => {
+          if (video.thumbnailKey) {
+            loadThumbnailUrl(video.id, video.thumbnailKey);
+          }
+        });
+      } else {
         setVideos([]);
-      } finally {
-        setLoading(false);
+      }
+    } catch {
+      setVideos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTeamId]);
+
+  useEffect(() => {
+    fetchVideos();
+  }, [fetchVideos]);
+
+  // Realtime refresh for dashboard recent videos
+  useEffect(() => {
+    let es: EventSource | null = null;
+    let retryTimer: any = null;
+    const connect = () => {
+      try {
+        const url = selectedTeamId ? `/api/events?teamId=${encodeURIComponent(selectedTeamId)}` : `/api/events`;
+        es = new EventSource(url);
+        es.onmessage = async (ev) => {
+          try {
+            const evt = JSON.parse(ev.data || '{}');
+            if (evt?.type?.startsWith('video.')) await fetchVideos();
+          } catch {}
+        };
+        es.onerror = () => {
+          try { es?.close(); } catch {}
+          es = null;
+          if (!retryTimer) retryTimer = setTimeout(() => { retryTimer = null; connect(); }, 3000);
+        };
+      } catch {
+        if (!retryTimer) retryTimer = setTimeout(() => { retryTimer = null; connect(); }, 3000);
       }
     };
-    fetchVideos();
+    connect();
+    // Fallback refresh on focus/visibility
+    const onFocus = () => fetchVideos();
+    const onVis = () => { if (!document.hidden) fetchVideos(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      try { es?.close(); } catch {}
+      if (retryTimer) clearTimeout(retryTimer);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.email, selectedTeamId]);
+  }, [selectedTeamId, fetchVideos]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(
   request: NextRequest,
@@ -149,7 +150,7 @@ export async function POST(
     const inviteUrl = `${process.env.NEXTAUTH_URL}/invite/${invitation.token}`;
     const emailSent = await sendInviteEmail(invitation.team.name, invitation.inviter?.name || "", invitation.inviter?.email || "", email, invitation.role, inviteUrl, invitation.expiresAt);
 
-    return NextResponse.json({
+    const resp = {
       id: invitation.id,
       token: invitation.token,
       email: invitation.email,
@@ -159,7 +160,9 @@ export async function POST(
       inviter: invitation.inviter,
       emailSent,
       reused: true,
-    });
+    };
+    broadcast({ type: "team.invite", teamId: params.teamId, payload: { email, role } });
+    return NextResponse.json(resp);
   } catch (error) {
     console.error("Error creating invitation:", error);
     return NextResponse.json(

@@ -46,6 +46,8 @@
 }
 
 body {
+  /* Fallback color to avoid white flash/edges on overscroll */
+  background-color: rgb(var(--background));
   background: linear-gradient(
     135deg,
     rgb(var(--background)) 0%,
@@ -55,6 +57,13 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Ensure root background matches theme to prevent white edges in dark mode on overscroll */
+html {
+  background-color: rgb(var(--background));
+  /* Avoid rubber-band showing behind content */
+  overscroll-behavior-y: none;
 }
 
 /* Modern Glassmorphism */

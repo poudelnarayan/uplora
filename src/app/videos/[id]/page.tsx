@@ -227,6 +227,43 @@ export default function VideoPreviewPage() {
     if (id) fetchData();
   }, [id, session?.user?.email]);
 
+  // Realtime: refresh on video.* events for this id, but avoid overwriting local edits
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      const url = `/api/events`;
+      es = new EventSource(url);
+      es.onmessage = async (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || '{}');
+          if (!evt?.type?.startsWith('video.')) return;
+          if (evt?.payload?.id !== id) return;
+          // If user has unsaved changes, don't clobber the form
+          if (hasUnsavedChanges || isSaving) return;
+          // Soft refresh of server fields
+          const res = await fetch(`/api/videos/${id}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const v = await res.json();
+          setVideo(v);
+          // Only update form fields if they haven't been touched since last load
+          setTitle((prev) => prev || (v.filename || '').replace(/\.[^/.]+$/, ''));
+          setDescription((prev) => prev);
+          setVisibility((prev) => prev || v.visibility || 'public');
+          setMadeForKids((prev) => typeof prev === 'boolean' ? prev : (v.madeForKids || false));
+          // thumbnail refresh
+          if (v.thumbnailKey) {
+            const cached = videoCache.getThumbnailUrl(v.id);
+            if (!cached) loadThumbnailUrl(v.thumbnailKey);
+          } else {
+            setCurrentThumbnailUrl(null);
+          }
+        } catch {}
+      };
+      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+    } catch {}
+    return () => { try { es?.close(); } catch {} };
+  }, [id, hasUnsavedChanges, isSaving]);
+
   // Auto-save function
   const autoSave = async (showNotification = false) => {
     if (!video || !hasUnsavedChanges) return;

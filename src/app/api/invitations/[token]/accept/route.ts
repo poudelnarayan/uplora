@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(
   request: NextRequest,
@@ -97,6 +98,7 @@ export async function POST(
         },
       }),
     ]);
+    broadcast({ type: "team.member.added", teamId: invitation.teamId, payload: { userId: user.id } });
 
     return NextResponse.json({
       message: "Successfully joined the team!",

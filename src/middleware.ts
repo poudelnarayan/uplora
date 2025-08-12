@@ -5,7 +5,7 @@ export default withAuth(
   function middleware(req) {
     // If the user is not authenticated and trying to access a protected route
     if (!req.nextauth.token) {
-      return NextResponse.redirect(new URL("/", req.url));
+      return NextResponse.redirect(new URL("/signin", req.url));
     }
     
     return NextResponse.next();
@@ -22,8 +22,8 @@ export const config = {
     "/dashboard/:path*",
     "/upload/:path*",
     "/teams/:path*",
-    "/analytics/:path*",
-    "/insights/:path*",
     "/settings/:path*",
+    "/videos/:path*",
+    "/subscription/:path*",
   ],
 };

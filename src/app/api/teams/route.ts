@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,12 @@ export async function POST(request: NextRequest) {
     // Allow multiple teams per owner
     const team = await prisma.team.create({
       data: { name: name.trim(), description: description?.trim() || "", ownerId: currentUser.id },
+    });
+
+    // Realtime notify all connected clients to refresh team lists
+    broadcast({
+      type: "team.created",
+      payload: { id: team.id, name: team.name, description: team.description },
     });
 
     return NextResponse.json({ id: team.id, name: team.name, description: team.description, createdAt: team.createdAt });

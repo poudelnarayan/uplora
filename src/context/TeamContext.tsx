@@ -17,6 +17,7 @@ const TeamContext = createContext<TeamContextType | undefined>(undefined);
 export function TeamProvider({ children }: { children: React.ReactNode }) {
   const [teams, setTeams] = useState<TeamBasic[]>([]);
   const [selectedTeamId, setSelectedTeamIdState] = useState<string | null>(null);
+  const [etag, setEtag] = useState<string | null>(null);
 
   const setSelectedTeamId = (id: string | null) => {
     setSelectedTeamIdState(id);
@@ -26,11 +27,15 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
 
   const refreshTeams = async () => {
     try {
-      const res = await fetch("/api/teams", { cache: "no-store" });
+      const res = await fetch("/api/teams", { cache: "no-store", headers: etag ? { "If-None-Match": etag } : {} });
+      if (res.status === 304) return;
       if (!res.ok) return;
       const data = await res.json();
       const list: TeamBasic[] = Array.isArray(data) ? data : [];
       setTeams(list);
+      const newEtag = res.headers.get('ETag');
+      if (newEtag) setEtag(newEtag);
+      try { localStorage.setItem('teams-cache', JSON.stringify({ data: list, etag: newEtag, t: Date.now() })); } catch {}
       // Ensure a valid selection
       const stored = localStorage.getItem("currentTeamId");
       const existing = stored && list.some(t => t.id === stored) ? stored : null;
@@ -45,22 +50,43 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // hydrate from cache
+    try {
+      const cached = JSON.parse(localStorage.getItem('teams-cache') || 'null');
+      if (cached?.data) setTeams(cached.data);
+      if (cached?.etag) setEtag(cached.etag);
+    } catch {}
+
     refreshTeams();
     const onFocusOrVisible = () => { if (!document.hidden) refreshTeams(); };
-    const interval = setInterval(onFocusOrVisible, 10000);
     window.addEventListener("focus", onFocusOrVisible);
     document.addEventListener("visibilitychange", onFocusOrVisible);
     // Sync across tabs
     const onStorage = (e: StorageEvent) => { if (e.key === "currentTeamId") setSelectedTeamIdState(e.newValue); };
     window.addEventListener("storage", onStorage);
+
+    // SSE subscribe for team updates
+    let es: EventSource | null = null;
+    try {
+      const url = selectedTeamId ? `/api/events?teamId=${encodeURIComponent(selectedTeamId)}` : `/api/events`;
+      es = new EventSource(url);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data);
+          if (evt?.type?.startsWith('team.')) refreshTeams();
+        } catch {}
+      };
+      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+    } catch {}
+
     return () => {
-      clearInterval(interval);
       window.removeEventListener("focus", onFocusOrVisible);
       document.removeEventListener("visibilitychange", onFocusOrVisible);
       window.removeEventListener("storage", onStorage);
+      try { es?.close(); } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedTeamId]);
 
   const selectedTeam = useMemo(() => teams.find(t => t.id === selectedTeamId) || null, [teams, selectedTeamId]);
 

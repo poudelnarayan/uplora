@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/layout/AppShell";
 import { Play, Image as ImageIcon, X, User } from "lucide-react";
@@ -74,6 +74,32 @@ export default function AllVideosPage() {
       }
     };
     load();
+  }, [selectedTeamId]);
+
+  // Realtime: auto-refresh list on video events
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      const url = selectedTeamId ? `/api/events?teamId=${encodeURIComponent(selectedTeamId)}` : `/api/events`;
+      es = new EventSource(url);
+      const handler = (ev: MessageEvent) => {
+        try {
+          const evt = JSON.parse(ev.data || '{}');
+          if (evt?.type?.startsWith('video.')) {
+            // Reload list; cheap due to API caching/ETag on server if added later
+            (async () => {
+              const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
+              const res = await fetch(apiUrl, { cache: 'no-store' });
+              const data = await res.json();
+              setVideos(Array.isArray(data) ? data : []);
+            })();
+          }
+        } catch {}
+      };
+      es.onmessage = handler;
+      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+    } catch {}
+    return () => { try { es?.close(); } catch {} };
   }, [selectedTeamId]);
 
   const getStatusColor = (status: string) => {

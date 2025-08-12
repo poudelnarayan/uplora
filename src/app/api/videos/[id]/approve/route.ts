@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { publishApprovedTemplate } from "@/lib/emailTemplates";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(
   req: NextRequest,
@@ -49,6 +50,7 @@ export async function POST(
       where: { id: video.id },
       data: { status: "PUBLISHED", approvedByUserId: me.id },
     });
+    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "PUBLISHED" } });
 
     // Send approval email to the video uploader if different from approver
     if (video.userId !== me.id && video.user.email) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { broadcast } from "@/lib/realtime";
 
 // PATCH: update team (owner-only)
 export async function PATCH(
@@ -58,7 +60,37 @@ export async function DELETE(
     if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
     if (team.ownerId !== user.id) return NextResponse.json({ error: "Only the owner can delete this team" }, { status: 403 });
 
+    // Best-effort: delete all S3 objects under this team's prefix
+    try {
+      const bucket = process.env.S3_BUCKET;
+      const region = process.env.AWS_REGION;
+      if (bucket && region) {
+        const s3 = new S3Client({ region });
+        const prefix = `teams/${team.id}/`;
+        let continuationToken: string | undefined = undefined;
+        do {
+          const listResp = await s3.send(
+            new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken })
+          );
+          const keys = (listResp.Contents || [])
+            .map((o) => o.Key)
+            .filter((k): k is string => Boolean(k));
+          if (keys.length > 0) {
+            await s3.send(
+              new DeleteObjectsCommand({
+                Bucket: bucket,
+                Delete: { Objects: keys.map((Key) => ({ Key })) },
+              })
+            );
+          }
+          continuationToken = listResp.IsTruncated ? listResp.NextContinuationToken : undefined;
+        } while (continuationToken);
+      }
+    } catch {}
+
     await prisma.team.delete({ where: { id: team.id } });
+    // Broadcast deletion so clients refresh their team lists/dropdowns
+    broadcast({ type: "team.deleted", payload: { id: team.id } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: "Failed to delete team" }, { status: 500 });

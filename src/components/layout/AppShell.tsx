@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
@@ -130,8 +131,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r bg-card min-h-screen fixed inset-y-0 left-0 z-40">
-        <header className="h-16 flex items-center px-6 text-[18px] font-extrabold tracking-tight text-foreground">
-          Uplora
+        <header className="h-auto flex items-center justify-center p-4 m-0">
+          <Image src="/text-logo.png" alt="Uplora" width={140} height={140} className="rounded-md block" />
         </header>
 
         {/* Team selector block */}

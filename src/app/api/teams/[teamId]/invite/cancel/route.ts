@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(
   request: NextRequest,
@@ -39,7 +40,8 @@ export async function POST(
     });
     if (!invite) return NextResponse.json({ error: "Pending invitation not found" }, { status: 404 });
 
-    await prisma.teamInvite.update({ where: { id: invite.id }, data: { status: "REJECTED" } });
+    const updated = await prisma.teamInvite.update({ where: { id: invite.id }, data: { status: "REJECTED" } });
+    broadcast({ type: "team.invite.cancelled", teamId: updated.teamId, payload: { id: updated.id } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("Error cancelling invite:", e);

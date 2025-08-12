@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { publishRequestTemplate } from "@/lib/emailTemplates";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(
   req: NextRequest,
@@ -78,6 +79,8 @@ export async function POST(
       }
     }
 
+    // notify team
+    broadcast({ type: "video.status", teamId: video.teamId || null, payload: { id: video.id, status: "PENDING" } });
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {
     return NextResponse.json({ error: "Failed to request approval" }, { status: 500 });
