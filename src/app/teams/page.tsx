@@ -19,6 +19,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useNotifications } from "@/components/ui/Notification";
 import { Modal, ConfirmModal } from "@/components/ui/Modal";
 import { TextField, SelectField } from "@/components/ui/TextField";
+export const dynamic = "force-dynamic";
 
 interface TeamMember {
   id: string;

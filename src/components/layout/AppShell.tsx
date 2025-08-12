@@ -131,7 +131,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r bg-card min-h-screen fixed inset-y-0 left-0 z-40">
         <header className="h-16 flex items-center px-6 text-[18px] font-extrabold tracking-tight text-foreground">
-          YTUploader
+          Uplora
         </header>
 
         {/* Team selector block */}
@@ -246,11 +246,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <Link href="/copyright" className="hover:underline">Copyright</Link>
             <Link href="/contact" className="hover:underline">Contact us</Link>
             <Link href="/terms" className="hover:underline">Terms</Link>
-            <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
+            <Link href="/privacy" className="hover:underline">Privacy</Link>
           </div>
         </div>
         <div className="px-4 py-4 text-[11px] text-muted-foreground">
-          © {new Date().getFullYear()} YTUploader
+          © {new Date().getFullYear()} Uplora
         </div>
       </aside>
 
@@ -338,15 +338,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Right Notifications Drawer */}
       <AnimatePresence>
         {notifOpen && (
-          <motion.aside
+          <>
+            {/* Click-away overlay to close drawer */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40"
+              onClick={() => setNotifOpen(false)}
+            />
+            <motion.aside
             initial={{ x: 400, opacity: 1 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 400, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 right-0 h-full w-[360px] bg-white dark:bg-slate-900 border-l shadow-xl z-50"
+              className="fixed top-0 right-0 h-full w-[360px] bg-white dark:bg-slate-900 border-l shadow-xl z-50"
             role="dialog"
             aria-label="Notifications"
-          >
+            >
             <div className="h-16 flex items-center justify-between px-5 border-b bg-white dark:bg-slate-900">
               <div className="text-sm font-semibold">Notifications</div>
               <div className="flex items-center gap-2">
@@ -372,7 +381,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 ))
               )}
             </div>
-          </motion.aside>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 

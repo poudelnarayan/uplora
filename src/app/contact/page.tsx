@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { TextField, SelectField } from "@/components/ui/TextField";
 import { Mail, User, MessageSquare, Send, Lightbulb, Bug, HelpCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 
 export default function ContactPage() {
   const { data: session } = useSession();
@@ -48,6 +49,7 @@ export default function ContactPage() {
 
   return (
     <AppShell>
+      <NextSeoNoSSR title="Contact" description="Get in touch with the YTUploader team." />
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <h1 className="heading-2">Contact us</h1>

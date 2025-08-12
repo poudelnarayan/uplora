@@ -4,11 +4,15 @@ import { motion } from "framer-motion";
 import { Settings, User, Bell, Shield, Palette, Globe, Key, Trash2 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useSession } from "next-auth/react";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+export const dynamic = "force-dynamic";
+// Avoid exporting revalidate from a client page; build was interpreting it on server.
 
 export default function SettingsPage() {
   const { data: session } = useSession();
   return (
     <AppShell>
+      <NextSeoNoSSR title="Settings" noindex nofollow />
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Page Header */}
         <motion.div

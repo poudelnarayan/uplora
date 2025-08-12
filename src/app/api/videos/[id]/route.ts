@@ -86,28 +86,64 @@ export async function PATCH(
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Check access: owner or team member
+    // Check access: owner or team member (team owner included)
     const video = await prisma.video.findUnique({ where: { id: params.id } });
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
-    let hasAccess = video.userId === user.id; // Owner access
+    let hasAccess = video.userId === user.id; // Uploader (personal owner)
+    let team: { ownerId: string } | null = null;
     if (!hasAccess && video.teamId) {
-      // Check if user is a member of the video's team
-      const membership = await prisma.teamMember.findFirst({
-        where: { teamId: video.teamId, userId: user.id }
-      });
-      hasAccess = !!membership;
+      // Team owner has access
+      team = await prisma.team.findUnique({ where: { id: video.teamId }, select: { ownerId: true } });
+      if (team?.ownerId === user.id) {
+        hasAccess = true;
+      } else {
+        // Check if user is a member of the video's team
+        const membership = await prisma.teamMember.findFirst({
+          where: { teamId: video.teamId, userId: user.id }
+        });
+        hasAccess = !!membership;
+      }
     }
     
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const { title, description, visibility, madeForKids, thumbnailKey } = body as {
+    // If video is awaiting publish, only owner can edit (uploader for personal, team owner for team videos)
+    if (video.status === 'PENDING') {
+      let isOwner = video.userId === user.id;
+      if (video.teamId && !isOwner) {
+        // use previously fetched team when available
+        const t = team || (await prisma.team.findUnique({ where: { id: video.teamId }, select: { ownerId: true } }));
+        if (t?.ownerId === user.id) isOwner = true;
+      }
+      if (!isOwner) {
+        return NextResponse.json({ error: "Awaiting publish. Only the owner can edit." }, { status: 403 });
+      }
+    }
+
+    const { title, description, visibility, madeForKids, thumbnailKey, status } = body as {
       title?: string;
       description?: string;
       visibility?: string;
       madeForKids?: boolean;
       thumbnailKey?: string | null;
+      status?: string;
     };
+
+    // Optional: owner-only status revert from PENDING -> PROCESSING
+    let statusData: { status?: any; requestedByUserId?: string | null; approvedByUserId?: string | null } = {};
+    if (typeof status === 'string') {
+      // Determine if current user is the owner of this video/team
+      let isOwnerOfVideo = video.userId === user.id;
+      if (!isOwnerOfVideo && video.teamId) {
+        const team = await prisma.team.findUnique({ where: { id: video.teamId } });
+        if (team?.ownerId === user.id) isOwnerOfVideo = true;
+      }
+      // Allow only reverting to PROCESSING by owner
+      if (isOwnerOfVideo && status.toUpperCase() === 'PROCESSING') {
+        statusData = { status: 'PROCESSING', requestedByUserId: null, approvedByUserId: null };
+      }
+    }
 
     const updated = await prisma.video.update({
       where: { id: params.id },
@@ -117,6 +153,7 @@ export async function PATCH(
         visibility: typeof visibility === 'string' ? visibility : undefined,
         madeForKids: typeof madeForKids === 'boolean' ? madeForKids : undefined,
         thumbnailKey: typeof thumbnailKey === 'string' ? thumbnailKey : thumbnailKey === null ? null : undefined,
+        ...statusData,
       },
     });
 

@@ -5,11 +5,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User } from "lucide-react";
+import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3 } from "lucide-react";
+import Image from "next/image";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { useNotifications } from "@/components/ui/Notification";
+import { NextSeoNoSSR, VideoJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
 import { videoCache } from "@/lib/videoCache";
 import { ThumbnailShimmer } from "@/components/ui/Shimmer";
 import { useTeam } from "@/context/TeamContext";
+export const dynamic = "force-dynamic";
 
 interface Video {
   id: string;
@@ -66,6 +71,8 @@ export default function VideoPreviewPage() {
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
   const [thumbnailDeleting, setThumbnailDeleting] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
+  const [forcePublishOpen, setForcePublishOpen] = useState(false);
+  const [forcePublishing, setForcePublishing] = useState(false);
   
   // Track original values for change detection
   const [originalMetadata, setOriginalMetadata] = useState({
@@ -74,6 +81,10 @@ export default function VideoPreviewPage() {
     madeForKids: false,
     visibility: "public" as "private" | "unlisted" | "public"
   });
+
+  const canonicalUrl = typeof window !== "undefined" ? `${window.location.origin}/videos/${id}` : undefined;
+  const pageTitle = (title && title.trim()) || video?.filename || "Video Preview";
+  const pageDescription = (description && description.trim()) || "Preview and manage this video";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,7 +114,6 @@ export default function VideoPreviewPage() {
             madeForKids: videoMadeForKids,
             visibility: videoVisibility
           });
-          
           // Load cached URLs if available
           if (cachedVideo.playUrl) {
             setPlayUrl(cachedVideo.playUrl);
@@ -220,6 +230,13 @@ export default function VideoPreviewPage() {
   // Auto-save function
   const autoSave = async (showNotification = false) => {
     if (!video || !hasUnsavedChanges) return;
+    // Lock editors when awaiting publish
+    if (role === "EDITOR" && video.status === "PENDING") {
+      if (showNotification) {
+        notifications.addNotification({ type: "warning", title: "Awaiting publish", message: "This video is awaiting owner approval. Editors cannot edit until it's sent back to Processing." });
+      }
+      return;
+    }
     
     setIsSaving(true);
     try {
@@ -662,11 +679,11 @@ export default function VideoPreviewPage() {
     }
   };
 
-  const approveAndPublish = async () => {
+  const doApproveAndPublish = async () => {
     if (!video) return;
+    setForcePublishing(true);
     setSubmitting(true);
     try {
-      // 1) Upload to YouTube with current metadata
       const res = await fetch("/api/youtube/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -676,20 +693,31 @@ export default function VideoPreviewPage() {
           description,
           privacyStatus: visibility,
           madeForKids,
-          // thumbnailKey: can be added when thumbnail is stored in S3
         }),
       });
       const json = await res.json();
       if (!res.ok || !json?.id) {
         throw new Error(json?.error || "Failed to upload to YouTube");
       }
-      // 2) Mark approved/published in our DB then redirect
       await fetch(`/api/videos/${video.id}/approve`, { method: "POST" });
-      setVideo({ ...video, status: "published" });
+      setVideo({ ...video, status: "PUBLISHED" });
       router.push("/dashboard");
+    } catch (e) {
+      notifications.addNotification({ type: 'error', title: 'Upload failed', message: 'Could not publish to YouTube' });
     } finally {
+      setForcePublishing(false);
       setSubmitting(false);
+      setForcePublishOpen(false);
     }
+  };
+
+  const approveAndPublish = async () => {
+    if (!video) return;
+    if (video.status !== 'PENDING') {
+      setForcePublishOpen(true);
+      return;
+    }
+    await doApproveAndPublish();
   };
 
   
@@ -757,6 +785,29 @@ export default function VideoPreviewPage() {
 
   return (
     <AppShell>
+      <NextSeoNoSSR
+        title={pageTitle}
+        description={pageDescription}
+        canonical={canonicalUrl}
+        noindex
+        nofollow
+        openGraph={{
+          url: canonicalUrl,
+          title: pageTitle,
+          description: pageDescription,
+          images: currentThumbnailUrl ? [{ url: currentThumbnailUrl }] : undefined,
+        }}
+      />
+      {video && (
+        <VideoJsonLdNoSSR
+          name={pageTitle}
+          description={pageDescription}
+          thumbnailUrls={currentThumbnailUrl ? [currentThumbnailUrl] : []}
+          uploadDate={video.uploadedAt || new Date().toISOString()}
+          contentUrl={canonicalUrl}
+          embedUrl={canonicalUrl}
+        />
+      )}
       <div className="space-y-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between">
           <h1 className="heading-2">Video Preview</h1>
@@ -810,9 +861,9 @@ export default function VideoPreviewPage() {
         ) : !video ? (
           <div className="text-muted-foreground">Video not found</div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: metadata editor */}
-            <div className="lg:col-span-2 space-y-6">
+              <div id="edit-section" className="lg:col-span-2 space-y-6">
               {/* Save Status Indicator */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
@@ -847,7 +898,17 @@ export default function VideoPreviewPage() {
                 )}
               </div>
               
-              <div className="card p-6 space-y-5">
+              <div className={`card p-6 space-y-5 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
+                {video.status === "PENDING" && (
+                  <div className="mb-3 text-sm flex items-center gap-2 p-3 rounded-md border bg-amber-50 text-amber-800 border-amber-200">
+                    <Clock className="w-4 h-4" />
+                    {role === "EDITOR" ? (
+                      <span>Awaiting owner review — editors can’t edit while awaiting publish.</span>
+                    ) : (
+                      <span>Awaiting publish — you can edit or send back to Processing to allow editors to make changes.</span>
+                    )}
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium mb-1">Title</label>
                   <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Add a descriptive title" />
@@ -935,15 +996,16 @@ export default function VideoPreviewPage() {
                       ) : (thumbPreview || currentThumbnailUrl) ? (
                         // Show thumbnail when available
                         <div className="relative w-64 h-36 rounded-lg overflow-hidden border-2 border-primary/20 bg-muted">
-                          <img 
-                            src={thumbPreview || currentThumbnailUrl || ""} 
-                            alt="Video thumbnail" 
-                            className="w-full h-full object-cover"
-                            onLoad={() => setImageLoading(false)}
-                            onError={(e) => {
+                          <Image
+                            src={thumbPreview || (video?.thumbnailKey ? `/api/images/thumb?key=${encodeURIComponent(video.thumbnailKey)}&v=${encodeURIComponent(video?.updatedAt || video?.uploadedAt || "")}` : "")}
+                            alt="Video thumbnail"
+                            fill
+                            sizes="256px"
+                            className="object-cover"
+                            onLoadingComplete={() => setImageLoading(false)}
+                            onError={() => {
                               console.warn("Thumbnail failed to load; refreshing signed URL");
                               if (video?.thumbnailKey) {
-                                // Clear any cached URL and fetch a fresh signed URL
                                 try { videoCache.setThumbnailUrl(video.id, ""); } catch {}
                                 loadThumbnailUrl(video.thumbnailKey);
                               } else {
@@ -1199,34 +1261,78 @@ export default function VideoPreviewPage() {
                   )}
                 </div>
               </div>
-              <div className="card p-4 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">Status: <span className="font-medium text-foreground capitalize">{video.status || 'PROCESSING'}</span></div>
-                <div className="flex gap-3">
-                  {/* Editor Actions */}
-                  {role === "EDITOR" && (video.status === "PROCESSING" || !video.status) && (
-                    <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                      {submitting ? "Sending Request..." : "📧 Send Publish Request"}
-                    </button>
-                  )}
-                  {role === "EDITOR" && video.status === "PENDING" && (
-                    <span className="inline-flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
-                      <Clock className="w-4 h-4" /> 
-                      Publish request sent • Awaiting owner approval
-                    </span>
-                  )}
-                  {role === "EDITOR" && video.status === "PUBLISHED" && (
-                    <span className="inline-flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
-                      <CheckCircle className="w-4 h-4" /> 
-                      ✅ Published & Live
-                    </span>
-                  )}
-                  
-                  {/* Owner Actions */}
-                  {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && video.status === "PENDING" && (
-                    <button className="btn btn-success" disabled={submitting} onClick={() => approveVideo()}>
-                      {submitting ? "Approving..." : "✅ Approve & Publish"}
-                    </button>
-                  )}
+              {/* Edit button between player and status card */}
+              <div className="px-2">
+                <button
+                  className="btn btn-ghost w-full"
+                  onClick={() => {
+                    const el = document.getElementById('edit-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                >
+                  <Edit3 className="w-4 h-4 mr-1" /> Edit Video
+                </button>
+              </div>
+              <div className="card p-4">
+                {/* Row 1: Status pill */}
+                <div className="flex items-center justify-between gap-3">
+                  <StatusChip status={(video.status || 'PROCESSING') as any} />
+                </div>
+
+                {/* Row 2: Subtitle */}
+                {video.status === "PENDING" && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {role === "EDITOR" ? (
+                      <span>Awaiting publish — edits are locked. The owner can send this back for editing.</span>
+                    ) : (
+                      <span>Approve and publish, or send back for editing to unlock editor changes.</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Row 3: Actions */}
+                <div className="mt-3 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    {/* Editor: request publish */}
+                    {role === "EDITOR" && (video.status === "PROCESSING" || !video.status) && (
+                      <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
+                        {submitting ? "Sending Request..." : "📧 Send Publish Request"}
+                      </button>
+                    )}
+                    {/* Owner/Admin/Manager actions while pending */}
+                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && video.status === "PENDING" && (
+                      <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button className="btn btn-success sm:order-1" disabled={submitting} onClick={() => approveVideo()}>
+                          {submitting ? "Approving..." : "✅ Approve & Publish"}
+                        </button>
+                        {role === "OWNER" && (
+                          <button
+                            className="btn btn-ghost sm:order-2"
+                            disabled={submitting}
+                            title="Revert to Processing so editors can continue editing"
+                            onClick={async () => {
+                              try {
+                                setSubmitting(true);
+                                const res = await fetch(`/api/videos/${video.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ status: "PROCESSING" })
+                                });
+                                if (!res.ok) throw new Error();
+                                await res.json();
+                                setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
+                                notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
+                              } catch {
+                                notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
+                              } finally {
+                                setSubmitting(false);
+                              }
+                            }}
+                          >
+                            ↩ Send back for editing
+                          </button>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
               {/* Upload timeline removed per request */}
@@ -1236,6 +1342,18 @@ export default function VideoPreviewPage() {
       </div>
       
       
+      {/* Force Publish Confirmation */}
+      <ConfirmationModal
+        isOpen={forcePublishOpen}
+        onClose={() => (!forcePublishing ? setForcePublishOpen(false) : null)}
+        onConfirm={doApproveAndPublish}
+        title="Force publish?"
+        message="The editor hasn't sent this for publish yet. Do you want to publish to YouTube anyway?"
+        confirmText={forcePublishing ? "Publishing..." : "Force Publish"}
+        cancelText="Cancel"
+        variant="warning"
+        isLoading={forcePublishing}
+      />
     </AppShell>
   );
 }

@@ -43,9 +43,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Check access: uploader, team OWNER, or team ADMIN/MANAGER
-    let hasDeleteAccess = video.userId === user.id; // Uploader can delete
-    if (!hasDeleteAccess && video.teamId) {
+    // Check access: team OWNER or team ADMIN/MANAGER
+    // Editors and personal uploaders cannot delete (server-enforced)
+    let hasDeleteAccess = false;
+    if (video.teamId) {
       // Team owner can delete
       const team = await prisma.team.findUnique({ where: { id: video.teamId }, select: { ownerId: true } });
       if (team?.ownerId === user.id) {
@@ -58,6 +59,9 @@ export async function DELETE(
         });
         hasDeleteAccess = !!membership && ['ADMIN', 'MANAGER'].includes(membership.role as string);
       }
+    } else {
+      // Personal workspace: only the account owner (uploader) can delete
+      hasDeleteAccess = video.userId === user.id;
     }
     
     if (!hasDeleteAccess) {

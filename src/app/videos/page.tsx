@@ -3,10 +3,15 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/layout/AppShell";
-import { Play, Trash2 } from "lucide-react";
+import { Play, Image as ImageIcon, X, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { StatusChip } from "@/components/ui/StatusChip";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+export const dynamic = "force-dynamic";
 
 interface VideoItem {
   id: string;
@@ -14,9 +19,14 @@ interface VideoItem {
   thumbnail: string;
   status: "PROCESSING" | "PENDING" | "PUBLISHED";
   uploadedAt: string;
+  updatedAt: string; // added to match API shape
+  thumbnailKey?: string | null; // added to match API shape
+  userRole?: "OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | null;
+  uploader?: { name?: string | null; email?: string | null };
 }
 
 export default function AllVideosPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; video: VideoItem | null; isDeleting: boolean }>({
@@ -33,7 +43,32 @@ export default function AllVideosPage() {
         const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
         const res = await fetch(apiUrl);
         const data = await res.json();
-        setVideos(Array.isArray(data) ? data : []);
+        const baseList: any[] = Array.isArray(data) ? data : [];
+        // Enrich with per-video role so we can conditionally show admin actions
+        const enriched: VideoItem[] = await Promise.all(
+          baseList.map(async (v: any) => {
+            let role: VideoItem["userRole"] = null;
+            try {
+              const r = await fetch(`/api/videos/${v.id}/role`);
+              if (r.ok) {
+                const rr = await r.json();
+                role = rr?.role ?? null;
+              }
+            } catch {}
+            return {
+              id: v.id,
+              title: v.title,
+              thumbnail: v.thumbnail ?? "",
+              status: v.status,
+              uploadedAt: v.uploadedAt,
+              updatedAt: v.updatedAt,
+              thumbnailKey: v.thumbnailKey,
+              userRole: role,
+              uploader: v.uploader ? { name: v.uploader.name, email: v.uploader.email } : undefined,
+            } as VideoItem;
+          })
+        );
+        setVideos(enriched);
       } finally {
         setLoading(false);
       }
@@ -59,7 +94,7 @@ export default function AllVideosPage() {
       case "PUBLISHED":
         return "Published";
       case "PENDING":
-        return "Pending";
+        return "Awaiting Publish";
       case "PROCESSING":
         return "Processing";
       default:
@@ -116,17 +151,36 @@ export default function AllVideosPage() {
 
   return (
     <AppShell>
+      <NextSeoNoSSR
+        title="All Videos"
+        description="Browse all your uploaded videos."
+        canonical={typeof window !== "undefined" ? window.location.origin + "/videos" : undefined}
+        noindex
+        nofollow
+      />
       <div className="max-w-7xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="heading-2">
-            {selectedTeam ? `${selectedTeam.name} - All Videos` : "Personal Videos"}
-          </h1>
-          <p className="text-muted-foreground">
-            {selectedTeam 
-              ? `All videos uploaded to ${selectedTeam.name}` 
-              : "Your personal uploaded videos"
-            }
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="heading-2">
+                {selectedTeam ? `${selectedTeam.name} - All Videos` : "Personal Videos"}
+              </h1>
+              <p className="text-muted-foreground">
+                {selectedTeam 
+                  ? `All videos uploaded to ${selectedTeam.name}` 
+                  : "Your personal uploaded videos"
+                }
+              </p>
+            </div>
+            <button
+              onClick={() => router.push("/dashboard")}
+              title="Close and go back"
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </motion.div>
 
         {loading ? (
@@ -147,25 +201,58 @@ export default function AllVideosPage() {
               return (
                 <div key={video.id} className="card p-4">
                   <div className="flex gap-4 items-start">
-                    <div className="w-40 h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
+                    <div className="w-40 h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
+                      {video.thumbnailKey ? (
+                        <Image
+                          src={`/api/images/thumb?key=${encodeURIComponent(video.thumbnailKey)}&v=${encodeURIComponent(video.updatedAt || video.uploadedAt)}`}
+                          alt={`Thumbnail for ${fullTitle}`}
+                          fill
+                          sizes="160px"
+                          className="object-cover"
+                          onError={(e) => {
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) {
+                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-muted-foreground text-xs"><span>No thumbnail</span></div>';
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          <div className="flex flex-col items-center gap-1">
+                            <ImageIcon className="w-6 h-6" />
+                            <span>No thumbnail</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="font-semibold text-foreground truncate" title={fullTitle}>{title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(video.status)}`}>{getStatusText(video.status)}</span>
+                        <StatusChip status={video.status} />
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">Uploaded: {uploaded}</div>
+                      <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                        <div>Uploaded: {uploaded}</div>
+                        {video.uploader && (
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            <span>By: {video.uploader.name || video.uploader.email || "Unknown"}</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="mt-3 flex gap-2">
                         <button className="btn btn-ghost btn-sm" onClick={() => location.assign(`/videos/${video.id}`)}>
                           <Play className="w-4 h-4 mr-1" /> Preview
                         </button>
-                        <button 
-                          className="btn btn-ghost btn-sm text-gray-500 hover:text-red-500 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/30"
-                          onClick={() => handleDeleteVideo(video)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" /> Delete
-                        </button>
+                        {video.userRole && ["MANAGER", "ADMIN", "OWNER"].includes(video.userRole) && (
+                          <button 
+                            className="btn btn-ghost btn-sm text-gray-500 hover:text-red-500 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/30"
+                            onClick={() => handleDeleteVideo(video)}
+                          >
+                            {/* Reuse Delete from admin role only */}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-1"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

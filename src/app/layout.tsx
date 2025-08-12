@@ -2,8 +2,8 @@ import "./globals.css";
 import Providers from "./providers";
 
 export const metadata = {
-  title: "YTUploader - Team Video Management",
-  description: "Collaborate on YouTube video uploads with your team",
+  title: "Uplora - Team YouTube Workflow",
+  description: "Editors upload, owners approve, videos go straight to YouTube",
 };
 
 export default function RootLayout({

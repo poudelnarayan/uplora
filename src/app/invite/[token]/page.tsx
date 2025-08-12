@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useSession, signIn } from "next-auth/react";
 import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { NextSeo } from "next-seo";
 
 interface Invitation {
   id: string;
@@ -129,6 +130,7 @@ export default function InvitePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
+      <NextSeo title="Team Invitation" noindex nofollow />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

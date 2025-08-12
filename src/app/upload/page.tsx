@@ -5,12 +5,15 @@ import { Upload, Users, User } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import UploadZone from "@/components/upload/UploadZone";
 import { useTeam } from "@/context/TeamContext";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+export const dynamic = "force-dynamic";
 
 export default function UploadPage() {
   const { selectedTeam } = useTeam();
   
   return (
     <AppShell>
+      <NextSeoNoSSR title="Upload" noindex nofollow />
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <motion.div

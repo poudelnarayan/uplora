@@ -1,16 +1,18 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { motion } from "framer-motion";
 
 export default function AboutPage() {
   return (
     <AppShell>
+      <NextSeoNoSSR title="About" description="About YTUploader — team video collaboration and approvals." />
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-        <h1 className="heading-2">About YTUploader</h1>
+          <h1 className="heading-2">About Uplora</h1>
         <div className="card p-6 space-y-4">
           <p className="text-muted-foreground">
-            YTUploader is a collaborative workspace for teams who produce YouTube videos. It streamlines uploads to cloud storage, keeps projects organized per team, and gives owners control over roles and permissions (Owner, Admin, Manager, Editor).
+            Uplora is a collaborative workspace for YouTube teams. Editors upload to Uplora, owners/admins approve, and approved videos go straight to YouTube. No more downloading from Drive and re-uploading manually.
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg border bg-card">

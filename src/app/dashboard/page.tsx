@@ -20,11 +20,13 @@ import {
   Edit3,
   Image as ImageIcon,
 } from "lucide-react";
+import Image from "next/image";
 import AppShell from "@/components/layout/AppShell";
 import { useRouter } from "next/navigation";
 import { useNotifications } from "@/components/ui/Notification";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useTeam } from "@/context/TeamContext";
+import { StatusChip } from "@/components/ui/StatusChip";
 
 interface VideoItem {
   id: string;
@@ -155,7 +157,7 @@ export default function Dashboard() {
       case "PUBLISHED":
         return "Published";
       case "PENDING":
-        return "Pending";
+        return "Awaiting Publish";
       case "PROCESSING":
         return "Processing";
       default:
@@ -311,7 +313,7 @@ export default function Dashboard() {
                 <Clock className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-sm text-muted-foreground">Awaiting Publish</p>
                 <p className="text-2xl font-bold text-foreground">{videos.filter(v => v.status === "PENDING").length}</p>
               </div>
             </div>
@@ -334,9 +336,6 @@ export default function Dashboard() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Recent Videos</h2>
-            {videos.length > 3 && (
-              <button className="btn btn-ghost text-sm" onClick={() => router.push('/videos')}>View all</button>
-            )}
           </div>
 
           {loading ? (
@@ -354,6 +353,7 @@ export default function Dashboard() {
               <button className="btn btn-primary" onClick={() => router.push('/upload')}>Upload a Video</button>
             </div>
           ) : (
+            <>
             <div className="space-y-4">
               {videos.slice(0, 3).map((video) => {
                 const fullTitle = video.title || "Untitled";
@@ -372,20 +372,21 @@ export default function Dashboard() {
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                           </div>
                         ) : thumbnailUrl ? (
-                          <img 
-                            src={thumbnailUrl} 
-                            alt={`Thumbnail for ${fullTitle}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Hide broken image and show fallback
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-muted-foreground text-xs"><span>No thumbnail</span></div>';
-                              }
-                            }}
-                          />
+                          <div className="relative w-full h-full">
+                            <Image
+                              src={`/api/images/thumb?key=${encodeURIComponent(video.thumbnailKey!)}&v=${encodeURIComponent(video.updatedAt || video.uploadedAt || "")}`}
+                              alt={`Thumbnail for ${fullTitle}`}
+                              fill
+                              sizes="160px"
+                              className="object-cover"
+                              onError={(e) => {
+                                const parent = (e.target as HTMLImageElement).parentElement;
+                                if (parent) {
+                                  parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-muted-foreground text-xs"><span>No thumbnail</span></div>';
+                                }
+                              }}
+                            />
+                          </div>
                         ) : video.thumbnailKey ? (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Loading...</div>
                         ) : (
@@ -402,10 +403,7 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between gap-3">
                           <h3 className="font-semibold text-foreground truncate" title={fullTitle}>{title}</h3>
                           <div className="flex items-center gap-2">
-                            {/* Always show status chips for all statuses */}
-                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${getStatusColor(video.status)}`}>
-                              {getStatusIcon(video.status)} {getStatusText(video.status)}
-                            </span>
+                            <StatusChip status={video.status as any} />
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground mt-1 space-y-1">
@@ -418,41 +416,33 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div className="mt-3 flex gap-2 flex-wrap">
-                          {/* Preview Chip */}
+                          {/* Preview - matches All Videos ghost style */}
                           <button 
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                            className="btn btn-ghost btn-sm"
                             onClick={() => router.push(`/videos/${video.id}`)}
                           >
-                            <Play className="w-3 h-3" /> Preview
+                            <Play className="w-4 h-4 mr-1" /> Preview
                           </button>
-                          
-                          {/* Send for Publish Chip - Only for PROCESSING videos and EDITOR/MANAGER/ADMIN (not OWNER) */}
+
+                          {/* Request for Publish - ghost with green emphasis */}
                           {video.status === "PROCESSING" && video.userRole && ["EDITOR", "MANAGER", "ADMIN"].includes(video.userRole) && (
                             <button 
-                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                              className="btn btn-ghost btn-sm text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/20"
                               onClick={() => changeVideoStatus(video.id, 'PENDING')}
                             >
-                              <Upload className="w-3 h-3" /> Request for Publish
+                              <Upload className="w-4 h-4 mr-1" /> Request for Publish
                             </button>
                           )}
-                          
-                          {/* Approve Chip - Only for PENDING videos and MANAGERS+ */}
-                          {video.status === "PENDING" && video.userRole && ["MANAGER", "ADMIN", "OWNER"].includes(video.userRole) && (
-                            <button 
-                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
-                              onClick={() => changeVideoStatus(video.id, 'PUBLISHED')}
-                            >
-                              <CheckCircle className="w-3 h-3" /> Approve
-                            </button>
-                          )}
-                          
-                          {/* Delete Video Chip - Only for MANAGERS+ */}
+
+                          {/* Approve removed: approval happens in the video preview page */}
+
+                          {/* Delete - ghost with red emphasis */}
                           {video.userRole && ["MANAGER", "ADMIN", "OWNER"].includes(video.userRole) && (
                             <button 
-                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                              className="btn btn-ghost btn-sm text-gray-500 hover:text-red-500 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/30"
                               onClick={() => handleDeleteVideo(video)}
                             >
-                              <Trash2 className="w-3 h-3" /> Delete Video
+                              <Trash2 className="w-4 h-4 mr-1" /> Delete
                             </button>
                           )}
                         </div>
@@ -462,6 +452,12 @@ export default function Dashboard() {
                 );
               })}
             </div>
+            {videos.length > 3 && (
+              <div className="mt-3">
+                <button className="btn btn-ghost w-full" onClick={() => router.push('/videos')}>View all</button>
+              </div>
+            )}
+            </>
           )}
         </motion.div>
 

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useAnimation } from "framer-motion";
 import { Video, Users, Shield, ArrowRight, Upload, CheckCircle, Clock, Play, Star } from "lucide-react";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
@@ -56,6 +57,16 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
+      <NextSeoNoSSR
+        title="Collaborative YouTube Uploads"
+        description="Upload to S3, manage approvals, and collaborate with your team."
+        canonical={typeof window !== "undefined" ? window.location.origin + "/" : undefined}
+        openGraph={{
+          url: typeof window !== "undefined" ? window.location.href : undefined,
+          title: "Collaborative YouTube Uploads",
+          description: "Upload to S3, manage approvals, and collaborate with your team.",
+        }}
+      />
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
@@ -68,8 +79,8 @@ export default function LandingPage() {
               <Video className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gradient">YTUploader</h1>
-              <p className="text-sm text-muted-foreground">Team Video Management</p>
+              <h1 className="text-xl font-bold text-gradient">Uplora</h1>
+              <p className="text-sm text-muted-foreground">Team YouTube Workflow</p>
             </div>
           </div>
         </div>
@@ -87,13 +98,12 @@ export default function LandingPage() {
           >
             <div className="space-y-6">
               <h2 className="text-5xl lg:text-6xl font-bold text-gradient leading-tight">
-                Manage YouTube Content
+                Upload • Approve • Publish
                 <br />
-                <span className="text-foreground">with Your Team</span>
+                <span className="text-foreground">directly to YouTube</span>
               </h2>
               <p className="text-xl text-muted-foreground leading-relaxed">
-                Upload, collaborate, and grow your YouTube channel together. 
-                Perfect for content creators, agencies, and teams.
+                 Editors upload to Uplora. Owners approve. Videos publish to YouTube—no manual downloads.
               </p>
             </div>
 
@@ -214,8 +224,8 @@ export default function LandingPage() {
                         <p className="text-xs text-muted-foreground">Reviewing title & tags</p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-xs text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">
-                      <Clock className="w-3.5 h-3.5" /> Pending
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200 text-[12.5px] sm:text-sm font-medium whitespace-nowrap leading-none antialiased">
+                      <Clock className="w-4 h-4" /> Awaiting Publish
                     </span>
                   </div>
                 </div>

@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import SignInForm from "@/components/auth/SignInForm";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 
-export default function SignInPage() {
+function SignInContent() {
   const params = useSearchParams();
   const verified = params.get("verified");
   const showSuccess = verified === "1";
@@ -12,7 +14,31 @@ export default function SignInPage() {
   const showError = verified === "0";
 
   return (
+    <>
+      {showSuccess && (
+        <div className="mb-4 p-3 rounded-md border bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm">
+          Email verified successfully. Please sign in below.
+        </div>
+      )}
+      {showExpired && (
+        <div className="mb-4 p-3 rounded-md border bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 text-sm">
+          Verification link expired. Please register again to receive a new link.
+        </div>
+      )}
+      {showError && (
+        <div className="mb-4 p-3 rounded-md border bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">
+          Verification failed. Please try again.
+        </div>
+      )}
+      <SignInForm />
+    </>
+  );
+}
+
+export default function SignInPage() {
+  return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
+      <NextSeoNoSSR title="Sign in" noindex nofollow />
       <div className="container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -23,24 +49,9 @@ export default function SignInPage() {
             <h1 className="heading-2">Sign in</h1>
             <p className="text-muted-foreground">Welcome back. Continue to your dashboard.</p>
           </div>
-
-          {showSuccess && (
-            <div className="mb-4 p-3 rounded-md border bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm">
-              Email verified successfully. Please sign in below.
-            </div>
-          )}
-          {showExpired && (
-            <div className="mb-4 p-3 rounded-md border bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 text-sm">
-              Verification link expired. Please register again to receive a new link.
-            </div>
-          )}
-          {showError && (
-            <div className="mb-4 p-3 rounded-md border bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">
-              Verification failed. Please try again.
-            </div>
-          )}
-
-          <SignInForm />
+          <Suspense fallback={<div className="spinner" />}>
+            <SignInContent />
+          </Suspense>
         </motion.div>
       </div>
     </div>
