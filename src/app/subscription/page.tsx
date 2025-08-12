@@ -3,7 +3,7 @@
 import AppShell from "@/components/layout/AppShell";
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { NextSeo } from "next-seo";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 export const dynamic = "force-dynamic";
 
 // User-facing benefits (as requested)
@@ -38,7 +38,7 @@ export default function SubscriptionPage() {
 
   return (
     <AppShell>
-      <NextSeo title="Pricing" description="Choose a YTUploader plan." />
+      <NextSeoNoSSR title="Pricing" description="Choose a Uplora plan." />
       <div className="max-w-7xl mx-auto py-12">
         <div className="text-center mb-12">
           <h1 className="heading-2">Choose your plan</h1>
