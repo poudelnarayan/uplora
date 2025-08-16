@@ -5,7 +5,7 @@ import { CheckCircle, Clock } from "lucide-react";
 type Status = "PROCESSING" | "PENDING" | "PUBLISHED";
 
 export function StatusChip({ status }: { status: Status }) {
-  const base = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] sm:text-sm font-medium whitespace-nowrap leading-none antialiased";
+  const base = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap leading-none antialiased";
 
   if (status === "PUBLISHED") {
     return (

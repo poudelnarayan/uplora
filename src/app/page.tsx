@@ -373,7 +373,7 @@ export default function LandingPage() {
         <div className="card p-6">
           <h3 className="text-lg font-semibold mb-2">Why this matters</h3>
           <p className="text-muted-foreground">
-            Without YTUploader, video collaboration is a patchwork of emails, drive links, and manual handoffs.
+            Without Uplora, video collaboration is a patchwork of emails, drive links, and manual handoffs.
             Editors wait for access, managers chase approvals, and owners guess what's ready. We bring everything
             into one place: secure uploads to S3, simple approvals, and clean handoffs. Less chaos, more publishing.
           </p>

@@ -18,7 +18,7 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center"
+          className="text-center mt-6"
         >
           <h1 className="heading-2 mb-2">Settings</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">

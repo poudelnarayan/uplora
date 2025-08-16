@@ -184,7 +184,7 @@ export default function AllVideosPage() {
         noindex
         nofollow
       />
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto mt-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -219,15 +219,27 @@ export default function AllVideosPage() {
             <p className="text-muted-foreground">No videos found. Upload your first video.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {videos.map((video) => {
               const fullTitle = video.title || "Untitled";
               const title = fullTitle.length > 50 ? fullTitle.slice(0, 50) + "..." : fullTitle;
-              const uploaded = new Date(video.uploadedAt).toLocaleString();
+              const uploadedDate = new Date(video.uploadedAt);
+              const uploaded = uploadedDate.toLocaleString();
+              const uploadedMobile = uploadedDate.toLocaleString(undefined, {
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              });
               return (
-                <div key={video.id} className="card p-4">
-                  <div className="flex gap-4 items-start">
-                    <div className="w-40 h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
+                <div
+                  key={video.id}
+                  className="card p-3 sm:p-4 cursor-pointer"
+                  onClick={() => router.push(`/videos/${video.id}`)}
+                >
+                  <div className="grid grid-cols-[120px_1fr] gap-3 items-start">
+                    <div className="w-[120px] h-[68px] sm:w-40 sm:h-24 rounded-lg bg-muted overflow-hidden relative">
                       {video.thumbnailKey ? (
                         <Image
                           src={`/api/images/thumb?key=${encodeURIComponent(video.thumbnailKey)}&v=${encodeURIComponent(video.updatedAt || video.uploadedAt)}`}
@@ -238,7 +250,7 @@ export default function AllVideosPage() {
                           onError={(e) => {
                             const parent = (e.target as HTMLImageElement).parentElement;
                             if (parent) {
-                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-muted-foreground text-xs"><span>No thumbnail</span></div>';
+                              parent.innerHTML = '<div class=\"w-full h-full flex items-center justify-center text-muted-foreground text-xs\"><span>No thumbnail</span></div>';
                             }
                           }}
                         />
@@ -251,33 +263,48 @@ export default function AllVideosPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="font-semibold text-foreground truncate" title={fullTitle}>{title}</h3>
+                    <div className="min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3
+                          className="font-bold text-foreground text-sm sm:text-base pr-2"
+                          title={fullTitle}
+                          style={{ display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                        >
+                          {title}
+                        </h3>
+                        <div className="hidden sm:flex ml-auto">
+                          <StatusChip status={video.status} />
+                        </div>
+                      </div>
+                      <div className="mt-1 sm:hidden ml-auto w-fit">
                         <StatusChip status={video.status} />
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                        <div>Uploaded: {uploaded}</div>
-                        {video.uploader && (
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            <span>By: {video.uploader.name || video.uploader.email || "Unknown"}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-3 flex gap-2">
-                        <button className="btn btn-ghost btn-sm" onClick={() => location.assign(`/videos/${video.id}`)}>
+                      <div className="mt-2 hidden sm:flex items-center gap-2">
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}
+                        >
                           <Play className="w-4 h-4 mr-1" /> Preview
                         </button>
-                        {video.userRole && ["MANAGER", "ADMIN", "OWNER"].includes(video.userRole) && (
-                          <button 
-                            className="btn btn-ghost btn-sm text-gray-500 hover:text-red-500 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/30"
-                            onClick={() => handleDeleteVideo(video)}
+                        {video.status === 'PROCESSING' && video.userRole && ["EDITOR","MANAGER","ADMIN","OWNER"].includes(video.userRole) && (
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}
                           >
-                            {/* Reuse Delete from admin role only */}
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-1"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                            Delete
+                            Request Publish
                           </button>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2 hidden sm:block">
+                        Uploaded: {uploaded}
+                        {video.uploader && (
+                          <span className="ml-2">By: {video.uploader.name || video.uploader.email || 'Unknown'}</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2 sm:hidden">
+                        <div>Uploaded on: {uploadedMobile}</div>
+                        {video.uploader && (
+                          <div>By: {video.uploader.name || video.uploader.email || 'Unknown'}</div>
                         )}
                       </div>
                     </div>

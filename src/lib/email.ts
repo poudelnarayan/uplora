@@ -1,73 +1,76 @@
 import nodemailer from "nodemailer";
 
-interface SendEmailArgs {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
+const defaultHost = process.env.SMTP_HOST!;
+const defaultPort = Number(process.env.SMTP_PORT || 465);
+const defaultSecure = String(process.env.SMTP_SECURE || "true") === "true";
+const enableDebug = String(process.env.SMTP_DEBUG || "false") === "true";
+const connectionTimeoutMs = Number(process.env.SMTP_CONNECTION_TIMEOUT || 15000);
+const socketTimeoutMs = Number(process.env.SMTP_SOCKET_TIMEOUT || 20000);
+const dnsTimeoutMs = Number(process.env.SMTP_DNS_TIMEOUT || 5000);
+
+function createTransporter(host: string, port: number, secure: boolean) {
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user: process.env.SMTP_USER!,
+      pass: process.env.SMTP_PASS!,
+    },
+    connectionTimeout: connectionTimeoutMs,
+    socketTimeout: socketTimeoutMs,
+    dnsTimeout: dnsTimeoutMs,
+    logger: enableDebug,
+    debug: enableDebug,
+    tls: {
+      servername: host,
+    },
+  });
 }
 
-function getMailerConfig() {
-  const {
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_USER,
-    SMTP_PASS,
-    SMTP_FROM,
-    EMAIL_SERVER,
-    EMAIL_FROM,
-    SMTP_URL,
-  } = process.env as Record<string, string | undefined>;
+export async function sendMail(opts: {
+  to: string | string[];
+  subject: string;
+  text?: string;
+  html?: string;
+  replyTo?: string;
+}) {
+  const from = process.env.SMTP_FROM || `Uplora <${process.env.SMTP_USER}>`;
 
-  // Prefer URL-style config if provided (NextAuth/commonly used)
-  const url = EMAIL_SERVER || SMTP_URL;
-  if (url) {
+  // Attempt with configured settings first
+  let lastError: unknown = null;
+  for (const attempt of [
+    { host: defaultHost, port: defaultPort, secure: defaultSecure },
+    // Fallback: try STARTTLS on 587 if implicit TLS:465 fails
+    { host: defaultHost, port: 587, secure: false },
+  ]) {
     try {
-      const parsed = new URL(url);
-      const host = parsed.hostname;
-      const port = Number(parsed.port || (parsed.protocol === "smtps:" ? 465 : 587));
-      const secure = parsed.protocol === "smtps:" || port === 465;
-      const user = decodeURIComponent(parsed.username || "");
-      const pass = decodeURIComponent(parsed.password || "");
-      const from = EMAIL_FROM || SMTP_FROM;
-      if (host && port && user && pass && from) {
-        return { host, port, secure, user, pass, from };
-      }
-    } catch {
-      // ignore parse errors and fall back to discrete vars
+      const transporter = createTransporter(attempt.host, attempt.port, attempt.secure);
+      const info = await transporter.sendMail({
+        from,
+        to: opts.to,
+        subject: opts.subject,
+        text: opts.text,
+        html: opts.html,
+        replyTo: opts.replyTo,
+      });
+      return info;
+    } catch (err) {
+      lastError = err;
+      // Try next attempt
     }
   }
 
-  // Fallback to discrete SMTP_* vars
-  if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && (SMTP_FROM || EMAIL_FROM)) {
-    return {
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: Number(SMTP_PORT) === 465,
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-      from: SMTP_FROM || (EMAIL_FROM as string),
-    };
-  }
-
-  return null;
+  throw lastError instanceof Error ? lastError : new Error("SMTP send failed");
 }
 
-export async function sendEmail({ to, subject, html, text }: SendEmailArgs): Promise<void> {
-  const cfg = getMailerConfig();
-
-  if (!cfg) {
-    console.log("[email] SMTP not configured. Logging email instead.");
-    console.log({ to, subject, html, text });
-    return;
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: cfg.host,
-    port: cfg.port,
-    secure: cfg.secure,
-    auth: { user: cfg.user, pass: cfg.pass },
-  });
-
-  await transporter.sendMail({ from: cfg.from, to, subject, html, text });
+// Backwards compatibility with existing imports
+export async function sendEmail(opts: {
+  to: string | string[];
+  subject: string;
+  text?: string;
+  html?: string;
+  replyTo?: string;
+}) {
+  return sendMail(opts);
 }

@@ -98,7 +98,7 @@ export default function Sidebar() {
   };
 
   const handleSignOut = () => {
-    notifications.info("Signing out...", "See you next time!");
+    notifications.addNotification({ type: "info", title: "Signing out...", message: "See you next time!" });
     setTimeout(() => signOut(), 1000);
   };
 
@@ -205,7 +205,7 @@ export default function Sidebar() {
                   <Video className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gradient">YTUploader</h1>
+                  <h1 className="text-xl font-bold text-gradient">Uplora</h1>
                   <p className="text-sm text-muted-foreground">Team Management</p>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function Sidebar() {
         message="Are you sure you want to sign out? You'll need to sign in again to access your account."
         confirmText="Sign Out"
         cancelText="Cancel"
-        confirmVariant="destructive"
+        type="danger"
       />
     </>
   );

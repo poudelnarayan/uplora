@@ -846,7 +846,7 @@ export default function VideoPreviewPage() {
         />
       )}
       <div className="space-y-6 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-6">
           <h1 className="heading-2">Video Preview</h1>
           <button
             onClick={() => router.back()}
@@ -898,9 +898,42 @@ export default function VideoPreviewPage() {
         ) : !video ? (
           <div className="text-muted-foreground">Video not found</div>
         ) : (
-            <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left: metadata editor */}
-              <div id="edit-section" className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* On mobile, video first; on desktop, editor left */}
+              <div className="lg:hidden order-1">
+                <div className="card p-2">
+                  <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+                    {urlError ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-red-400 p-4">
+                        <div className="text-sm mb-2">Error loading video:</div>
+                        <div className="text-xs">{urlError}</div>
+                      </div>
+                    ) : webOptimizedUrl ? (
+                      <video key={webOptimizedUrl} controls className="w-full h-full object-contain" preload="metadata" src={webOptimizedUrl} />
+                    ) : blobUrl ? (
+                      <video key={blobUrl} controls className="w-full h-full object-contain" src={blobUrl} />
+                    ) : playUrl ? (
+                      <video key={playUrl} controls className="w-full h-full object-contain" preload="metadata" playsInline src={playUrl} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">Generating preview...</div>
+                    )}
+                  </div>
+                </div>
+                {/* Mobile: quick edit button just below the player */}
+                <div className="mt-2 px-2">
+                  <button
+                    className="btn btn-ghost w-full"
+                    onClick={() => {
+                      const el = document.getElementById('edit-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" /> Edit Video
+                  </button>
+                </div>
+              </div>
+
+              <div id="edit-section" className="order-2 lg:order-none lg:col-span-2 space-y-6 -mx-2 sm:mx-0">
               {/* Save Status Indicator */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
@@ -935,7 +968,7 @@ export default function VideoPreviewPage() {
                 )}
               </div>
               
-              <div className={`card p-6 space-y-5 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
+                <div className={`card p-4 sm:p-6 space-y-5 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 {video.status === "PENDING" && (
                   <div className="mb-3 text-sm flex items-center gap-2 p-3 rounded-md border bg-amber-50 text-amber-800 border-amber-200">
                     <Clock className="w-4 h-4" />
@@ -1024,9 +1057,9 @@ export default function VideoPreviewPage() {
                 {/* Thumbnail Section */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Thumbnail</label>
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
                     {/* Thumbnail Preview Box */}
-                    <div className="relative group">
+                    <div className="relative group mx-auto sm:mx-0">
                       {thumbnailLoading ? (
                         // Show shimmer loading state
                         <ThumbnailShimmer text="Loading thumbnail..." className="w-64 h-36" />
@@ -1087,7 +1120,7 @@ export default function VideoPreviewPage() {
                         </div>
                       ) : (
                         // Show dotted box when no thumbnail
-                        <label className="block w-64 h-36 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                        <label className="block w-64 h-36 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-primary/50 transition-colors mx-auto sm:mx-0">
                           <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground hover:text-primary transition-colors">
                             <ImageIcon className="w-12 h-12 mb-2" />
                             <span className="text-sm">Upload thumbnail</span>
@@ -1103,7 +1136,7 @@ export default function VideoPreviewPage() {
                     </div>
                     
                     {/* Thumbnail Info */}
-                    <div className="flex-1 text-sm text-muted-foreground">
+                    <div className="flex-1 w-full sm:w-auto text-sm text-muted-foreground mt-3 sm:mt-0">
                       <p className="mb-2">
                         Upload a custom thumbnail following YouTube's requirements.
                       </p>
@@ -1203,8 +1236,8 @@ export default function VideoPreviewPage() {
               </div>
             </div>
 
-            {/* Right: sticky small player + status/timeline */}
-            <div className="space-y-4 lg:sticky lg:top-4 self-start">
+            {/* Right: sticky small player + status/timeline (desktop) */}
+            <div className="hidden lg:block space-y-4 lg:sticky lg:top-4 self-start">
               <div className="card p-2">
                 <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
                   {urlError ? (

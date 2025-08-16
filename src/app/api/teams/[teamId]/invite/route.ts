@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { broadcast } from "@/lib/realtime";
+import { sendMail } from "@/lib/email";
 
 export async function POST(
   request: NextRequest,
@@ -114,41 +115,56 @@ export async function POST(
       );
     }
 
-    // If an invite exists (any status), reuse and update it; otherwise create new
+    // Prepare email content before writing to DB
+    const inviterName = currentUser.name || "";
+    const inviterEmail = currentUser.email || "";
+    const inviteUrl = `${process.env.NEXTAUTH_URL}/invite/${token}`;
+
+    // Persist the invitation first, but roll back on email failure
+    let createdNew = false;
+    const previousSnapshot = invitation
+      ? { token: invitation.token, expiresAt: invitation.expiresAt, status: invitation.status, inviterId: invitation.inviterId, role: invitation.role }
+      : null;
+
     if (invitation) {
       invitation = await prisma.teamInvite.update({
         where: { id: invitation.id },
-        data: {
-          role,
-          token,
-          expiresAt,
-          status: "PENDING",
-          inviterId: currentUser.id,
-        },
-        include: {
-          team: { select: { name: true } },
-          inviter: { select: { name: true, email: true } },
-        },
+        data: { role, token, expiresAt, status: "PENDING", inviterId: currentUser.id },
+        include: { team: { select: { name: true } }, inviter: { select: { name: true, email: true } } },
       });
     } else {
+      createdNew = true;
       invitation = await prisma.teamInvite.create({
-        data: {
-          email,
-          role,
-          token,
-          expiresAt,
-          teamId: params.teamId,
-          inviterId: currentUser.id,
-        },
-        include: {
-          team: { select: { name: true } },
-          inviter: { select: { name: true, email: true } },
-        },
+        data: { email, role, token, expiresAt, teamId: params.teamId, inviterId: currentUser.id },
+        include: { team: { select: { name: true } }, inviter: { select: { name: true, email: true } } },
       });
     }
 
-    const inviteUrl = `${process.env.NEXTAUTH_URL}/invite/${invitation.token}`;
-    const emailSent = await sendInviteEmail(invitation.team.name, invitation.inviter?.name || "", invitation.inviter?.email || "", email, invitation.role, inviteUrl, invitation.expiresAt);
+    // Try to send the email now
+    try {
+      await sendInviteEmail(invitation.team.name, inviterName, inviterEmail, email, role, inviteUrl, expiresAt);
+    } catch (e) {
+      // Rollback DB change so we don't leave a pending invite without an email
+      try {
+        if (createdNew) {
+          await prisma.teamInvite.delete({ where: { id: invitation.id } });
+        } else if (previousSnapshot) {
+          await prisma.teamInvite.update({
+            where: { id: invitation.id },
+            data: {
+              token: previousSnapshot.token,
+              expiresAt: previousSnapshot.expiresAt,
+              status: previousSnapshot.status,
+              inviterId: previousSnapshot.inviterId,
+              role: previousSnapshot.role,
+            },
+          });
+        }
+      } catch (rollbackErr) {
+        console.error("Failed to rollback invitation after email error:", rollbackErr);
+      }
+      return NextResponse.json({ error: "Failed to send invitation email" }, { status: 502 });
+    }
 
     const resp = {
       id: invitation.id,
@@ -158,8 +174,8 @@ export async function POST(
       expiresAt: invitation.expiresAt,
       team: invitation.team,
       inviter: invitation.inviter,
-      emailSent,
-      reused: true,
+      emailSent: true,
+      reused: Boolean(previousSnapshot),
     };
     broadcast({ type: "team.invite", teamId: params.teamId, payload: { email, role } });
     return NextResponse.json(resp);
@@ -174,18 +190,18 @@ export async function POST(
 
 async function sendInviteEmail(teamName: string, inviterName: string, inviterEmail: string, to: string, role: string, inviteUrl: string, expiresAt: Date) {
   const prettyDate = expiresAt.toLocaleDateString();
-  const subject = `You're invited to join "${teamName}" on YTUploader`;
+  const subject = `You're invited to join "${teamName}" on Uplora`;
 
   const emailText = [
-    `You're invited to join ${teamName} on YTUploader`,
+    `You're invited to join ${teamName} on Uplora`,
     ``,
-    `${inviterName || "A teammate"} (${inviterEmail || "noreply@ytuploader"}) invited you to join "${teamName}" as a ${role}.`,
+    `${inviterName || "A teammate"} (${inviterEmail || "noreply@uplora.io"}) invited you to join "${teamName}" as a ${role}.`,
     ``,
     `Accept your invitation: ${inviteUrl}`,
     ``,
     `This invitation expires on ${prettyDate}. If you didn't expect this email, you can safely ignore it.`,
     ``,
-    `— YTUploader`
+    `— Uplora`
   ].join("\n");
 
   const safeTeam = teamName.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -231,7 +247,7 @@ async function sendInviteEmail(teamName: string, inviterName: string, inviterEma
   <div class="container">
     <div class="card">
       <div class="header">
-        <div class="brand">YTUploader</div>
+        <div class="brand">Uplora</div>
       </div>
       <div class="content">
         <h1>You're invited to join "${safeTeam}"</h1>
@@ -251,7 +267,7 @@ async function sendInviteEmail(teamName: string, inviterName: string, inviterEma
         <p class="muted">If you didn’t expect this email, you can safely ignore it.</p>
       </div>
       <div class="footer">
-        <div>© ${new Date().getFullYear()} YTUploader. All rights reserved.</div>
+        <div>© ${new Date().getFullYear()} Uplora. All rights reserved.</div>
       </div>
     </div>
   </div>
@@ -260,17 +276,10 @@ async function sendInviteEmail(teamName: string, inviterName: string, inviterEma
 </html>`;
 
   try {
-    const emailResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/send-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to, subject, text: emailText, html: emailHtml }),
-    });
-    if (emailResponse.ok) {
-      const emailResult = await emailResponse.json();
-      return emailResult.method === "email";
-    }
+    await sendMail({ to, subject, text: emailText, html: emailHtml });
+    return true;
   } catch (e) {
     console.error("Failed to send invitation email:", e);
+    throw e;
   }
-  return false;
 }

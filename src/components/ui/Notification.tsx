@@ -42,8 +42,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const addNotification = (notification: Omit<NotificationProps, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
-    const defaultDuration = notification.sticky ? 0 : (notification.duration || 3000);
-    const newNotification = { ...notification, id, duration: defaultDuration };
+    const shouldSticky = notification.sticky ?? (notification.type === "error");
+    const stickyConditions = shouldSticky
+      ? (notification.stickyConditions || { dismissOnRouteChange: true })
+      : notification.stickyConditions;
+    const defaultDuration = shouldSticky ? 0 : (notification.duration || 3000);
+    const newNotification = { ...notification, id, sticky: shouldSticky, stickyConditions, duration: defaultDuration } as NotificationProps;
     // Replace existing notifications; show only the latest
     setNotifications([newNotification]);
   };

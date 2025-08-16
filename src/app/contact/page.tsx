@@ -49,7 +49,7 @@ export default function ContactPage() {
 
   return (
     <AppShell>
-      <NextSeoNoSSR title="Contact" description="Get in touch with the YTUploader team." />
+      <NextSeoNoSSR title="Contact" description="Get in touch with the Uplora team." />
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <h1 className="heading-2">Contact us</h1>

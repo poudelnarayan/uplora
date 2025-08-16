@@ -43,7 +43,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               <OrganizationJsonLdNoSSR
                 type="Organization"
                 id={`${siteUrl}/#organization`}
-                name="YTUploader"
+                name="Uplora"
                 url={siteUrl}
                 sameAs={[]}
               />

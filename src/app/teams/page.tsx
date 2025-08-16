@@ -300,7 +300,13 @@ export default function TeamsPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        notifications.addNotification({ type: "error", title: "Failed to send invitation", message: err.error || "Please try again" });
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to send invitation", 
+          message: err.error || "Please try again",
+          sticky: true,
+          stickyConditions: { dismissOnRouteChange: true }
+        });
         return;
       }
 
@@ -332,7 +338,13 @@ export default function TeamsPage() {
       setInvitation({ email: "", role: "EDITOR" });
       setShowInviteModal(false);
     } catch (err) {
-      notifications.addNotification({ type: "error", title: "Failed to send invitation", message: "Network error" });
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to send invitation", 
+        message: "Network error",
+        sticky: true,
+        stickyConditions: { dismissOnRouteChange: true }
+      });
     } finally {
       setInviting(false);
     }
@@ -344,15 +356,34 @@ export default function TeamsPage() {
     if (!team || !inv) return;
     try {
       setResendingId(invitationId);
-      await fetch(`/api/teams/${team.id}/invite`, {
+      const res = await fetch(`/api/teams/${team.id}/invite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: inv.email, role: inv.role, resend: true })
       });
-    } catch {}
-    setTeams(prev => prev.map(t => t.id !== teamId ? t : ({...t, invitations: t.invitations.map(i => i.id === invitationId ? { ...i, invitedAt: new Date() } : i)})));
-    notifications.addNotification({ type: "info", title: "Invitation resent" });
-    setResendingId(null);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Resend failed", 
+          message: err.error || "Could not resend invitation",
+          sticky: true,
+          stickyConditions: { dismissOnRouteChange: true }
+        });
+        return;
+      }
+      setTeams(prev => prev.map(t => t.id !== teamId ? t : ({...t, invitations: t.invitations.map(i => i.id === invitationId ? { ...i, invitedAt: new Date() } : i)})));
+      notifications.addNotification({ type: "success", title: "Invitation resent" });
+    } catch {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Network error",
+        sticky: true,
+        stickyConditions: { dismissOnRouteChange: true }
+      });
+    } finally {
+      setResendingId(null);
+    }
   };
 
   // Removed simulated acceptance. Acceptance occurs via invite link.
@@ -443,7 +474,7 @@ export default function TeamsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto mt-6">
         {/* Page Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center justify-between">
@@ -451,10 +482,16 @@ export default function TeamsPage() {
               <h1 className="heading-2 mb-2">Team Management</h1>
               <p className="text-muted-foreground">Manage your team members and invitations</p>
             </div>
-            <button onClick={() => setShowCreateTeam(true)} className="btn btn-primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Team
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowCreateTeam(true)}
+                className="btn btn-primary btn-sm"
+                aria-label="Create team"
+                title="Create team"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -530,10 +567,16 @@ export default function TeamsPage() {
                       )}
                     </div>
                     {isOwner ? (
-                      <button onClick={() => { setSelectedTeam(team); setShowInviteModal(true); }} className="btn btn-primary">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Invite Member
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => { setSelectedTeam(team); setShowInviteModal(true); }}
+                          className="btn btn-primary btn-sm"
+                          aria-label="Invite member"
+                          title="Invite member"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                        </button>
+                      </div>
                     ) : (
                       <button onClick={() => setConfirmState({ open: true, action: "leave", teamId: team.id, teamName: team.name })} className="btn btn-ghost text-red-600 hover:text-red-700">
                         Leave team
@@ -547,16 +590,16 @@ export default function TeamsPage() {
                     <div className="space-y-3">
                       {membersToShow.map((member) => (
                         <div key={member.id} className={`flex items-center justify-between p-3 rounded-lg border ${member.role === "OWNER" ? "bg-blue-500/10 border-blue-500/20" : "bg-muted/50"}`}>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                              <span className="text-sm font-medium text-white">{member.name[0].toUpperCase()}</span>
-                            </div>
-                            <div className="min-w-0">
-                              {/* Top row: name + email */}
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm text-foreground truncate max-w-[180px]">{member.name}</p>
-                                <span className="text-xs text-muted-foreground truncate">{member.email}</span>
-                              </div>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                  <span className="text-sm font-medium text-white">{member.name[0].toUpperCase()}</span>
+                </div>
+                <div className="min-w-0 max-w-full">
+                  {/* Name and email on separate lines */}
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">{member.name}</p>
+                    <span className="text-xs text-muted-foreground block truncate">{member.email}</span>
+                  </div>
                               {/* Second row: role + status chips below username */}
                               <div className="mt-1 flex items-center gap-2 flex-wrap">
                                 <span
@@ -611,16 +654,16 @@ export default function TeamsPage() {
                   </div>
 
                   {/* Pending Invitations */}
-                  {isOwner && invitationsToShow.filter(inv => inv.status === "pending").length > 0 && (
+              {isOwner && invitationsToShow.filter(inv => inv.status === "pending").length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-4 text-foreground">Pending Invitations ({invitationsToShow.filter(inv => inv.status === "pending").length})</h4>
                       <div className="space-y-3">
-                        {invitationsToShow.filter(inv => inv.status === "pending").map((invitation) => (
-                          <div key={invitation.id} className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                            <div className="flex items-center gap-3">
+                    {invitationsToShow.filter(inv => inv.status === "pending").map((invitation) => (
+                      <div key={invitation.id} className="flex items-center justify-between gap-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                        <div className="flex items-center gap-3 min-w-0">
                               <Mail className="w-5 h-5 text-yellow-500" />
-                              <div>
-                                <p className="font-medium text-foreground">{invitation.email}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground truncate max-w-[50vw] sm:max-w-[360px]">{invitation.email}</p>
                                 <p className="text-sm text-muted-foreground">Invited as {invitation.role.toLowerCase()} • {invitation.invitedAt.toLocaleString()}</p>
                               </div>
                             </div>

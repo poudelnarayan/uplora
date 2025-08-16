@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export default function AboutPage() {
   return (
     <AppShell>
-      <NextSeoNoSSR title="About" description="About YTUploader — team video collaboration and approvals." />
+      <NextSeoNoSSR title="About" description="About Uplora — team video collaboration and approvals." />
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <h1 className="heading-2">About Uplora</h1>
         <div className="card p-6 space-y-4">

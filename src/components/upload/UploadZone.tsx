@@ -36,7 +36,7 @@ export default function UploadZone() {
   const [s3Key, setS3Key] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [videoTitle, setVideoTitle] = useState("My Awesome Video");
-  const [videoDescription, setVideoDescription] = useState("Uploaded with YTUploader");
+  const [videoDescription, setVideoDescription] = useState("Uploaded with Uplora");
   const [privacyStatus, setPrivacyStatus] = useState<"private" | "unlisted" | "public">("private");
 
   // Mirror global uploads to detect completion for this page
@@ -79,7 +79,9 @@ export default function UploadZone() {
           notifications.addNotification({ 
             type: "error", 
             title: "Upload failed", 
-            message: currentUpload.error || "Upload failed" 
+            message: currentUpload.error || "Upload failed",
+            sticky: true,
+            stickyConditions: { dismissOnRouteChange: true }
           });
         } else if (currentUpload.status === "completed" && statusChanged) {
           // Upload completed, set s3Key and reset upload state
@@ -288,7 +290,7 @@ export default function UploadZone() {
       setUploadProgress(100);
       notifications.addNotification({ type: "success", title: "Upload complete!", message: "Your video is ready to publish" });
     } catch (e) {
-      notifications.addNotification({ type: "error", title: "Upload failed", message: e instanceof Error ? e.message : "Please try again" });
+      notifications.addNotification({ type: "error", title: "Upload failed", message: e instanceof Error ? e.message : "Please try again", sticky: true, stickyConditions: { dismissOnRouteChange: true } });
       setUploadProgress(0);
     } finally {
       setIsUploading(false);
@@ -319,14 +321,14 @@ export default function UploadZone() {
         setS3Key("");
         setUploadProgress(0);
         setVideoTitle("My Awesome Video");
-        setVideoDescription("Uploaded with YTUploader");
+        setVideoDescription("Uploaded with Uplora");
         setPrivacyStatus("private");
         router.push("/dashboard");
       } else {
-        notifications.addNotification({ type: "error", title: "Publishing failed", message: result.error || "Please try again" });
+        notifications.addNotification({ type: "error", title: "Publishing failed", message: result.error || "Please try again", sticky: true, stickyConditions: { dismissOnRouteChange: true } });
       }
     } catch {
-      notifications.addNotification({ type: "error", title: "Publishing failed", message: "Please check your connection" });
+      notifications.addNotification({ type: "error", title: "Publishing failed", message: "Please check your connection", sticky: true, stickyConditions: { dismissOnRouteChange: true } });
     } finally {
       setIsPublishing(false);
     }
@@ -384,7 +386,7 @@ export default function UploadZone() {
                 </p>
               </div>
               
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="hidden sm:flex flex-wrap gap-2 justify-center">
                 {['MP4', 'MOV', 'AVI', 'WebM', 'MKV'].map(format => (
                   <span
                     key={format}
@@ -394,8 +396,8 @@ export default function UploadZone() {
                   </span>
                 ))}
               </div>
-              
-              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+
+              <div className="hidden sm:flex items-center justify-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4" />
                   <span>Fast upload</span>

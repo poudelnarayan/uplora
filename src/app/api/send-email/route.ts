@@ -1,32 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { sendMail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
     const { to, subject, text, html } = await request.json();
 
     // Check if we have email credentials
-    const hasCredentials = process.env.SMTP_USER && 
-                          process.env.SMTP_PASS && 
-                          process.env.SMTP_USER !== "YOUR_ACTUAL_EMAIL@gmail.com" &&
-                          process.env.SMTP_PASS !== "YOUR_16_CHAR_APP_PASSWORD";
+    const hasCredentials = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 
     if (hasCredentials) {
       try {
-        // Create transporter
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || "smtp.gmail.com",
-          port: parseInt(process.env.SMTP_PORT || "587"),
-          secure: false, // true for 465, false for other ports
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        });
-
-        // Send email
-        const info = await transporter.sendMail({
-          from: `"YTUploader" <${process.env.SMTP_USER}>`,
+        const info = await sendMail({
           to,
           subject,
           text,

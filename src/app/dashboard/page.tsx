@@ -312,8 +312,8 @@ export default function Dashboard() {
     <AppShell>
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-2 mb-8">
+          <div className="flex items-center justify-between mt-6">
             <div>
               <h1 className="heading-2 mb-2">
                 {selectedTeam ? `${selectedTeam.name} - Videos` : "Personal Videos"}
@@ -393,15 +393,29 @@ export default function Dashboard() {
               {videos.slice(0, 3).map((video) => {
                 const fullTitle = video.title || "Untitled";
                 const title = fullTitle.length > 50 ? fullTitle.slice(0, 50) + "..." : fullTitle;
-                const uploaded = new Date(video.uploadedAt).toLocaleString();
+                const uploadedDate = new Date(video.uploadedAt);
+                const uploaded = uploadedDate.toLocaleString();
+                const uploadedMobile = uploadedDate.toLocaleString(undefined, {
+                  month: 'long',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                });
                 const thumbnailUrl = thumbnailUrls.get(video.id);
                 const isLoadingThumbnail = loadingThumbnails.has(video.id);
                 
                 return (
-                  <motion.div key={video.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card p-4">
-                    <div className="flex gap-4 items-start">
+                  <motion.div
+                    key={video.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="card p-3 sm:p-4 cursor-pointer"
+                    onClick={() => router.push(`/videos/${video.id}`)}
+                  >
+                    <div className="grid grid-cols-[120px_1fr] gap-3 items-start sm:flex sm:gap-4">
                       {/* Thumbnail */}
-                      <div className="w-40 h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
+                      <div className="w-[120px] h-[68px] sm:w-40 sm:h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
                         {isLoadingThumbnail ? (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -434,51 +448,48 @@ export default function Dashboard() {
                         )}
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-3">
-                          <h3 className="font-semibold text-foreground truncate" title={fullTitle}>{title}</h3>
-                          <div className="flex items-center gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3
+                            className="font-bold text-foreground text-sm sm:text-base pr-2"
+                            title={fullTitle}
+                            style={{ display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                          >
+                            {title}
+                          </h3>
+                          <div className="hidden sm:flex ml-auto">
                             <StatusChip status={video.status as any} />
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                          <div>Uploaded: {uploaded}</div>
-                          {video.uploader && (
-                            <div className="flex items-center gap-1">
-                              <User className="w-3 h-3" />
-                              <span>By: {video.uploader.name || video.uploader.email}</span>
-                            </div>
-                          )}
+                        <div className="mt-1 sm:hidden ml-auto w-fit">
+                          <StatusChip status={video.status as any} />
                         </div>
-                        <div className="mt-3 flex gap-2 flex-wrap">
-                          {/* Preview - matches All Videos ghost style */}
-                          <button 
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => router.push(`/videos/${video.id}`)}
+                        <div className="mt-2 hidden sm:flex items-center gap-2">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}
                           >
                             <Play className="w-4 h-4 mr-1" /> Preview
                           </button>
-
-                          {/* Request for Publish - ghost with green emphasis */}
-                          {video.status === "PROCESSING" && video.userRole && ["EDITOR", "MANAGER", "ADMIN"].includes(video.userRole) && (
-                            <button 
-                              className="btn btn-ghost btn-sm text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/20"
-                              onClick={() => changeVideoStatus(video.id, 'PENDING')}
+                          {video.status === 'PROCESSING' && video.userRole && ["EDITOR","MANAGER","ADMIN","OWNER"].includes(video.userRole) && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={(e) => { e.stopPropagation(); changeVideoStatus(video.id, 'PENDING'); }}
                             >
-                              <Upload className="w-4 h-4 mr-1" /> Request for Publish
+                              Request Publish
                             </button>
                           )}
-
-                          {/* Approve removed: approval happens in the video preview page */}
-
-                          {/* Delete - ghost with red emphasis */}
-                          {video.userRole && ["MANAGER", "ADMIN", "OWNER"].includes(video.userRole) && (
-                            <button 
-                              className="btn btn-ghost btn-sm text-gray-500 hover:text-red-500 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/30"
-                              onClick={() => handleDeleteVideo(video)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" /> Delete
-                            </button>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-2 hidden sm:block">
+                          Uploaded: {uploaded}
+                          {video.uploader && (
+                            <span className="ml-2">By: {video.uploader.name || video.uploader.email}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-2 sm:hidden">
+                          <div>Uploaded on: {uploadedMobile}</div>
+                          {video.uploader && (
+                            <div>By: {video.uploader.name || video.uploader.email}</div>
                           )}
                         </div>
                       </div>
