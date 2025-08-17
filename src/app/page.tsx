@@ -11,61 +11,12 @@ export default function LandingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Check if we're on admin subdomain
-  const isAdminSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('admin.');
-
   useEffect(() => {
-    // Handle admin subdomain routing
-    if (isAdminSubdomain) {
-      if (session) {
-        // Check if user is admin
-        const checkAdmin = async () => {
-          try {
-            const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
-            const adminData = await adminCheck.json();
-            
-            if (adminData.isAdmin) {
-              router.push("/admin");
-            } else {
-              router.push("/admin-login");
-            }
-          } catch (error) {
-            router.push("/admin-login");
-          }
-        };
-        checkAdmin();
-      } else {
-        router.push("/admin-login");
-      }
-      return;
-    }
-
-    // Main domain - normal flow
+    // Redirect authenticated users to dashboard
     if (session) {
       router.push("/dashboard");
     }
-  }, [session, router, isAdminSubdomain]);
-
-  // Show loading for admin subdomain
-  if (isAdminSubdomain && status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="spinner-lg mx-auto mb-4" />
-          <p className="text-white">Loading admin portal...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Don't show main home page on admin subdomain
-  if (isAdminSubdomain) {
-    return null;
-  }
+  }, [session, router]);
 
   if (status === "loading") {
     return (
