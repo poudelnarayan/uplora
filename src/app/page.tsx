@@ -590,7 +590,7 @@ export default function LandingPage() {
               </div>
               
               <div className="text-sm text-muted-foreground">
-                Copyright ©2025 Uplora | <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a> | <a href="/terms" className="hover:text-foreground transition-colors">Terms</a> | Security
+                Copyright ©2025 Uplora | <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a> | <a href="/terms" className=\"hover:text-foreground transition-colors">Terms</a> | Security
               </div>
             </div>
           </div>
