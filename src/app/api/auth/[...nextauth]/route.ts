@@ -90,7 +90,6 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       session.user.id = token.sub;
-      // @ts-expect-error custom property
       session.provider = token.provider;
       return session;
     },
