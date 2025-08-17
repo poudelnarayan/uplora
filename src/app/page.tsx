@@ -34,7 +34,7 @@ export default function LandingPage() {
   }
 
   if (session) {
-    return null; // Will redirect to dashboard
+    return null;
   }
 
   return (
