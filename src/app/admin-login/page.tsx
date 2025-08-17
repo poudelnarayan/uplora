@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Shield, Mail, Lock, Eye, EyeOff, AlertTriangle, LogIn } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
@@ -16,73 +16,90 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const isAdminCheckInitiated = useRef(false); // New ref
 
   // Check if user is already logged in and is admin
   useEffect(() => {
-    let mounted = true;
     const checkAdminStatus = async () => {
-      if (status !== "authenticated") return;
-      try {
-        const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
-        const adminData = await adminCheck.json();
-        if (mounted && adminData.isAdmin) {
+      if (status === "loading" || isAdminCheckInitiated.current) return;
+
+      if (session?.user?.email) {
+        isAdminCheckInitiated.current = true;
+        try {
+          const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
+          const adminData = await adminCheck.json();
+
+          if (adminData.isAdmin) {
+            notifications.addNotification({
+              type: "success",
+              title: "Welcome Admin",
+              message: "Redirecting to admin dashboard..."
+            });
+            router.push("/admin");
+          } else {
+            await signIn("credentials", { redirect: false });
+            notifications.addNotification({
+              type: "error",
+              title: "Access Denied",
+              message: "You don't have admin privileges for this portal."
+            });
+          }
+        } catch (error) {
+          console.error("Admin check failed:", error);
           notifications.addNotification({
-            type: "success",
-            title: "Welcome Admin",
-            message: "Redirecting to admin dashboard..."
+            type: "error",
+            title: "Error",
+            message: "Failed to verify admin status."
           });
-          router.push("/admin");
         }
-      } catch {}
+      }
     };
+
     checkAdminStatus();
-    return () => { mounted = false; };
-  }, [status]);
+  }, [session, status, router, notifications]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", { 
-        email: formData.email, 
-        password: formData.password, 
-        redirect: false 
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false
       });
 
       if (result?.error) {
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Login Failed", 
-          message: "Invalid email or password" 
+        notifications.addNotification({
+          type: "error",
+          title: "Login Failed",
+          message: "Invalid email or password"
         });
       } else {
-        // Check if user is admin
-        const adminCheck = await fetch("/api/admin/check");
+        const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
         const adminData = await adminCheck.json();
 
         if (adminData.isAdmin) {
-          notifications.addNotification({ 
-            type: "success", 
-            title: "Welcome Admin", 
-            message: "Redirecting to admin dashboard..." 
+          notifications.addNotification({
+            type: "success",
+            title: "Welcome Admin",
+            message: "Redirecting to admin dashboard..."
           });
           router.push("/admin");
         } else {
-          notifications.addNotification({ 
-            type: "error", 
-            title: "Access Denied", 
-            message: "You don't have admin privileges" 
+          notifications.addNotification({
+            type: "error",
+            title: "Access Denied",
+            message: "You don't have admin privileges"
           });
-          // Sign out the user
           await signIn("credentials", { redirect: false });
         }
       }
     } catch (error) {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Error", 
-        message: "An error occurred during login" 
+      notifications.addNotification({
+        type: "error",
+        title: "Error",
+        message: "An error occurred during login"
       });
     } finally {
       setLoading(false);
@@ -92,7 +109,6 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <NextSeoNoSSR title="Admin Login" noindex nofollow />
-      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -129,9 +145,9 @@ export default function AdminLoginPage() {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: (e.target as HTMLInputElement).value })}
               rightIcon={
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
                   className="text-slate-400 hover:text-white"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -141,8 +157,8 @@ export default function AdminLoginPage() {
               className="bg-white/5 border-white/20 text-white placeholder-slate-400"
             />
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
@@ -158,40 +174,38 @@ export default function AdminLoginPage() {
                 </>
               )}
             </button>
-
-            {/* Credentials-only: Google sign-in intentionally removed */}
           </form>
 
-                  {/* Session Status */}
-        {session?.user?.email && (
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          {/* Session Status */}
+          {session?.user?.email && (
+            <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="flex items-start gap-3">
+                <LogIn className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="text-blue-400 font-medium mb-1">Logged In</p>
+                  <p className="text-slate-400">
+                    Currently signed in as: {session.user.email}
+                  </p>
+                  <p className="text-slate-400 text-xs mt-1">
+                    If this is an admin account, you'll be redirected automatically.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Security Notice */}
+          <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
             <div className="flex items-start gap-3">
-              <LogIn className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
               <div className="text-sm">
-                <p className="text-blue-400 font-medium mb-1">Logged In</p>
+                <p className="text-red-400 font-medium mb-1">Restricted Access</p>
                 <p className="text-slate-400">
-                  Currently signed in as: {session.user.email}
-                </p>
-                <p className="text-slate-400 text-xs mt-1">
-                  If this is an admin account, you'll be redirected automatically.
+                  This portal is for authorized administrators only. All access attempts are logged and monitored.
                 </p>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Security Notice */}
-        <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm">
-              <p className="text-red-400 font-medium mb-1">Restricted Access</p>
-              <p className="text-slate-400">
-                This portal is for authorized administrators only. All access attempts are logged and monitored.
-              </p>
-            </div>
-          </div>
-        </div>
         </div>
 
         {/* Footer */}

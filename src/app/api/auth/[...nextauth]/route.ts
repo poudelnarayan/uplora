@@ -95,12 +95,20 @@ export const authOptions: NextAuthOptions = {
       session.user.id = token.sub;
       session.provider = token.provider;
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Handle admin subdomain redirects
+      if (url.startsWith('/admin')) {
+        return `${baseUrl}${url}`;
+      }
+      // Handle main domain redirects
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      return baseUrl;
     }
   },
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/signin",
-  },
   debug: process.env.NODE_ENV === "development",
 };
 
