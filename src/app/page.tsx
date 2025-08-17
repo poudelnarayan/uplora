@@ -15,27 +15,8 @@ export default function LandingPage() {
     // Redirect authenticated users to dashboard
     if (session) {
       router.push("/dashboard");
-    }
-  }, [session, router]);
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-card to-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="spinner-lg mx-auto mb-4" />
-          <p className="text-foreground">Loading...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (session) {
-    return null;
-  }
+export default function LandingPage() {
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-white">
