@@ -113,7 +113,7 @@ export default function ConfirmationModal({
           >
             {/* Header */}
             <div className="flex items-start p-6 pb-4">
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg}`}>
+              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center bg-card border border-border`}>
                 <AlertTriangle className={`w-6 h-6 ${styles.icon}`} />
               </div>
               <div className="ml-4 flex-1">
@@ -121,7 +121,7 @@ export default function ConfirmationModal({
                   {title}
                 </h3>
                 {itemName && (
-                  <div className="mt-2 p-2 bg-muted rounded-md">
+                  <div className="mt-2 p-2 bg-muted/50 rounded-md">
                     <p className="text-sm font-medium text-foreground truncate" title={itemName}>
                       "{itemName.length > 40 ? itemName.slice(0, 40) + '...' : itemName}"
                     </p>
@@ -138,7 +138,7 @@ export default function ConfirmationModal({
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 rounded-md transition-all duration-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-ghost flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancelText}
               </button>

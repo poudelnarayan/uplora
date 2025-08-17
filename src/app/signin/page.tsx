@@ -37,7 +37,7 @@ function SignInContent() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
       <NextSeoNoSSR title="Sign in" noindex nofollow />
       <div className="container mx-auto px-4 py-16">
         <motion.div

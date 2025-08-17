@@ -72,7 +72,7 @@ export function Modal({
           >
             {/* Header */}
             {(title || showCloseButton) && (
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800"> {/* Header background matches modal body */}
+              <div className="flex items-center justify-between p-6 border-b border-border bg-card"> {/* Header background matches modal body */}
                 {title && (
                   <h2 className="text-lg font-semibold text-foreground">{title}</h2>
                 )}
@@ -89,7 +89,7 @@ export function Modal({
             )}
             
             {/* Body */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] bg-white dark:bg-slate-800"> {/* Body background matches modal body */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] bg-card"> {/* Body background matches modal body */}
               {children}
             </div>
           </motion.div>

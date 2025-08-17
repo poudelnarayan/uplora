@@ -9,15 +9,21 @@ import { UploadProvider } from "@/context/UploadContext";
 import UploadTray from "@/components/layout/UploadTray";
 import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
 import defaultSeo from "@/seo.config";
+import { Sun, Moon } from "lucide-react";
 
 // Theme Provider
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const savedTheme = localStorage.getItem("theme") as "dark" | "light";
     if (savedTheme) {
       setTheme(savedTheme);
+    } else {
+      // Default to light theme to match homepage
+      setTheme("light");
     }
   }, []);
 
@@ -26,7 +32,31 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  return <div data-theme={theme}>{children}</div>;
+  const toggleTheme = () => {
+    setTheme(prev => prev === "dark" ? "light" : "dark");
+  };
+
+  if (!mounted) {
+    return <div data-theme="light">{children}</div>;
+  }
+
+  return (
+    <div data-theme={theme}>
+      {children}
+      <button
+        onClick={toggleTheme}
+        className="theme-toggle"
+        aria-label="Toggle theme"
+        title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      >
+        {theme === "dark" ? (
+          <Sun className="w-5 h-5" />
+        ) : (
+          <Moon className="w-5 h-5" />
+        )}
+      </button>
+    </div>
+  );
 }
 
 // Main Providers Component
