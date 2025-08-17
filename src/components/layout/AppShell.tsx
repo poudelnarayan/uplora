@@ -258,7 +258,116 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Page content */}
-      <main className="flex-1 overflow-y-auto p-6 lg:p-10 lg:ml-64 ml-0 pt-14 lg:pt-0">
+      <main className="flex-1 overflow-y-auto lg:ml-64 ml-0">
+        {/* Top bar with account/notification icons */}
+        <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="flex items-center justify-between px-4 lg:px-8 py-3">
+            {/* Mobile menu button */}
+            <button 
+              aria-label="Open menu" 
+              className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors" 
+              onClick={() => setMobileNavOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            
+            {/* Logo for mobile */}
+            <div className="lg:hidden">
+              <Image src="/text-logo.png" alt="Uplora" width={96} height={24} className="h-6 w-auto" />
+            </div>
+            
+            {/* Right side icons */}
+            <div className="flex items-center gap-2">
+              <button 
+                aria-label="Notifications" 
+                className="p-2 rounded-lg hover:bg-muted transition-colors relative" 
+                onClick={() => setNotifOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                  <path d="M6 8a6 6 0 1 1 12 0c0 7 3 5 3 9H3c0-4 3-2 3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+              
+              <div className="relative" ref={userMenuRef}>
+                <button 
+                  aria-label="Profile" 
+                  className="p-2 rounded-lg hover:bg-muted transition-colors" 
+                  onClick={() => setUserMenuOpen(v => !v)}
+                >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    <span className="text-xs font-medium text-white">
+                      {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
+                    </span>
+                  </div>
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-lg border bg-card shadow-xl p-2 z-10">
+                    <div className="px-2 py-1.5 text-xs uppercase tracking-wide text-muted-foreground">Account</div>
+                    {session?.user?.email && (
+                      <div className="px-3 py-2 text-xs text-muted-foreground break-all border-b mb-1">
+                        {session.user.email}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="mt-1 w-full inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 dark:text-red-400 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Page content with proper centering */}
+        <div className="min-h-[calc(100vh-4rem)] flex flex-col">
+          <div className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
+            <div className="max-w-6xl mx-auto w-full h-full">
+              {children}
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      {/* Remove old desktop header */}
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="relative hidden lg:flex items-center justify-end mb-12 gap-2">
+          <button aria-label="Notifications" className="p-2 rounded-md border bg-card hover:bg-muted" onClick={() => setNotifOpen(true)}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 5 3 9H3c0-4 3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
+          <div className="relative" ref={userMenuRef}>
+            <button aria-label="Profile" className="p-2 rounded-md border bg-card hover:bg-muted" onClick={() => setUserMenuOpen(v => !v)}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>
+            {userMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-lg border bg-white dark:bg-slate-900 shadow-xl p-2 z-10">
+                <div className="px-2 py-1.5 text-xs uppercase tracking-wide text-muted-foreground">Account</div>
+                {/* User email */}
+                {session?.user?.email && (
+                  <div className="px-3 py-2 text-xs text-muted-foreground break-all border-b mb-1">
+                    {session.user.email}
+                  </div>
+                )}
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="mt-1 w-full inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 dark:text-red-400 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {children}
+      </div>
         {/* Mobile top bar */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <div className="flex items-center justify-between px-3 py-2">

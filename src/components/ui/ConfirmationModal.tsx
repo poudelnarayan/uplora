@@ -110,10 +110,11 @@ export default function ConfirmationModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             className="relative w-full max-w-md mx-4 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-border"
+            className="relative w-full max-w-md mx-4 bg-card rounded-lg shadow-xl border border-border"
           >
             {/* Header */}
             <div className="flex items-start p-6 pb-4">
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center bg-card border border-border`}>
+              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg}`}>
                 <AlertTriangle className={`w-6 h-6 ${styles.icon}`} />
               </div>
               <div className="ml-4 flex-1">

@@ -474,15 +474,15 @@ export default function TeamsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto mt-6">
+      <div className="h-full flex flex-col">
         {/* Page Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="text-center lg:text-left lg:flex lg:items-center lg:justify-between">
             <div>
               <h1 className="heading-2 mb-2">Team Management</h1>
               <p className="text-muted-foreground">Manage your team members and invitations</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center lg:justify-start gap-2 mt-4 lg:mt-0">
               <button
                 onClick={() => setShowCreateTeam(true)}
                 className="btn btn-primary btn-sm"
@@ -499,13 +499,13 @@ export default function TeamsPage() {
 
         {/* Teams Display */}
         {loading ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center justify-center">
             <div className="spinner-lg mx-auto mb-4" />
             <p className="text-muted-foreground">Loading your teams...</p>
           </motion.div>
         ) : (
           teams.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-24 flex flex-col items-center justify-center text-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center py-12">
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6">
                 <Users className="w-7 h-7 text-muted-foreground" />
               </div>
@@ -516,29 +516,29 @@ export default function TeamsPage() {
               </button>
             </motion.div>
           ) : (
-          <div className="space-y-6">
+          <div className="flex-1 space-y-4 lg:space-y-6">
             {teams.map((team) => {
               const membersToShow = team.members;
               const invitationsToShow = team.invitations;
               const isOwner = (session?.user?.email || "").toLowerCase() === (team.ownerEmail || "").toLowerCase();
 
               return (
-                <motion.div key={team.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
+                <motion.div key={team.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card p-4 lg:p-6 hover:shadow-lg transition-all duration-200">
                   {/* Team Header */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="min-w-0">
                       {renamingTeamId === team.id ? (
                         <div className="flex items-center gap-2">
-                          <input value={renameValue} onChange={(e) => setRenameValue((e.target as HTMLInputElement).value)} className="input w-64" maxLength={80} />
-                          <button onClick={() => saveRename(team.id)} className="btn btn-primary btn-sm">Save</button>
-                          <button onClick={() => setRenamingTeamId(null)} className="btn btn-ghost btn-sm">Cancel</button>
+                          <input value={renameValue} onChange={(e) => setRenameValue((e.target as HTMLInputElement).value)} className="input w-48 lg:w-64" maxLength={80} />
+                          <button onClick={() => saveRename(team.id)} className="btn btn-primary btn-sm text-xs lg:text-sm">Save</button>
+                          <button onClick={() => setRenamingTeamId(null)} className="btn btn-ghost btn-sm text-xs lg:text-sm">Cancel</button>
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-xl font-semibold text-foreground truncate">{team.name}</h3>
                             {isOwner && (
-                              <div className="flex items-center gap-1 ml-1">
+                              <div className="hidden lg:flex items-center gap-1 ml-1">
                                 <button
                                   title="Rename team"
                                   onClick={() => startRename(team.id, team.name)}
@@ -570,7 +570,7 @@ export default function TeamsPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => { setSelectedTeam(team); setShowInviteModal(true); }}
-                          className="btn btn-primary btn-sm"
+                          className="btn btn-primary btn-sm text-xs lg:text-sm"
                           aria-label="Invite member"
                           title="Invite member"
                         >
@@ -578,7 +578,7 @@ export default function TeamsPage() {
                         </button>
                       </div>
                     ) : (
-                      <button onClick={() => setConfirmState({ open: true, action: "leave", teamId: team.id, teamName: team.name })} className="btn btn-ghost text-red-600 hover:text-red-700">
+                      <button onClick={() => setConfirmState({ open: true, action: "leave", teamId: team.id, teamName: team.name })} className="btn btn-ghost text-red-600 hover:text-red-700 btn-sm text-xs lg:text-sm">
                         Leave team
                       </button>
                     )}
@@ -586,19 +586,19 @@ export default function TeamsPage() {
 
                   {/* Team Members */}
                   <div className="mb-6">
-                    <h4 className="text-base font-semibold mb-4 text-foreground">Team Members ({membersToShow.length})</h4>
-                    <div className="space-y-3">
+                    <h4 className="text-sm lg:text-base font-semibold mb-3 lg:mb-4 text-foreground">Team Members ({membersToShow.length})</h4>
+                    <div className="space-y-2 lg:space-y-3">
                       {membersToShow.map((member) => (
-                        <div key={member.id} className={`flex items-center justify-between p-3 rounded-lg border ${member.role === "OWNER" ? "bg-blue-500/10 border-blue-500/20" : "bg-muted/50"}`}>
+                        <div key={member.id} className={`flex items-center justify-between p-2 lg:p-3 rounded-lg border ${member.role === "OWNER" ? "bg-blue-500/10 border-blue-500/20" : "bg-muted/50"}`}>
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
                   <span className="text-sm font-medium text-white">{member.name[0].toUpperCase()}</span>
                 </div>
                 <div className="min-w-0 max-w-full">
                   {/* Name and email on separate lines */}
                   <div className="min-w-0">
-                    <p className="font-medium text-sm text-foreground truncate">{member.name}</p>
-                    <span className="text-xs text-muted-foreground block truncate">{member.email}</span>
+                    <p className="font-medium text-xs lg:text-sm text-foreground truncate">{member.name}</p>
+                    <span className="text-[10px] lg:text-xs text-muted-foreground block truncate">{member.email}</span>
                   </div>
                               {/* Second row: role + status chips below username */}
                               <div className="mt-1 flex items-center gap-2 flex-wrap">
@@ -638,11 +638,11 @@ export default function TeamsPage() {
                                       nextStatus: member.status === "PAUSED" ? "ACTIVE" : "PAUSED",
                                     })
                                   }
-                                  className="btn btn-ghost btn-sm"
+                                  className="btn btn-ghost btn-sm text-xs"
                                 >
                                   {member.status === "PAUSED" ? "Set active" : "Set inactive"}
                                 </button>
-                                <button onClick={() => setConfirmState({ open: true, action: "remove-member", teamId: team.id, teamName: team.name, memberId: member.id })} className="btn btn-ghost btn-sm text-red-600 hover:text-red-700">
+                                <button onClick={() => setConfirmState({ open: true, action: "remove-member", teamId: team.id, teamName: team.name, memberId: member.id })} className="btn btn-ghost btn-sm text-red-600 hover:text-red-700 text-xs">
                                   Remove
                                 </button>
                               </>
@@ -656,24 +656,24 @@ export default function TeamsPage() {
                   {/* Pending Invitations */}
               {isOwner && invitationsToShow.filter(inv => inv.status === "pending").length > 0 && (
                     <div>
-                      <h4 className="font-semibold mb-4 text-foreground">Pending Invitations ({invitationsToShow.filter(inv => inv.status === "pending").length})</h4>
-                      <div className="space-y-3">
+                      <h4 className="text-sm lg:text-base font-semibold mb-3 lg:mb-4 text-foreground">Pending Invitations ({invitationsToShow.filter(inv => inv.status === "pending").length})</h4>
+                      <div className="space-y-2 lg:space-y-3">
                     {invitationsToShow.filter(inv => inv.status === "pending").map((invitation) => (
-                      <div key={invitation.id} className="flex items-center justify-between gap-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                      <div key={invitation.id} className="flex items-center justify-between gap-2 lg:gap-3 p-2 lg:p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                         <div className="flex items-center gap-3 min-w-0">
-                              <Mail className="w-5 h-5 text-yellow-500" />
+                              <Mail className="w-4 h-4 lg:w-5 lg:h-5 text-yellow-500" />
                           <div className="min-w-0">
-                            <p className="font-medium text-foreground truncate max-w-[50vw] sm:max-w-[360px]">{invitation.email}</p>
-                                <p className="text-sm text-muted-foreground">Invited as {invitation.role.toLowerCase()} • {invitation.invitedAt.toLocaleString()}</p>
+                            <p className="font-medium text-xs lg:text-sm text-foreground truncate max-w-[40vw] lg:max-w-[360px]">{invitation.email}</p>
+                                <p className="text-[10px] lg:text-xs text-muted-foreground">Invited as {invitation.role.toLowerCase()}</p>
                               </div>
                             </div>
                             {isOwner && (
-                              <div className="flex items-center gap-2">
-                                <button onClick={() => handleResendInvitation(team.id, invitation.id)} className="btn btn-ghost btn-sm" disabled={resendingId === invitation.id}>
+                              <div className="flex flex-col lg:flex-row items-center gap-1 lg:gap-2">
+                                <button onClick={() => handleResendInvitation(team.id, invitation.id)} className="btn btn-ghost btn-sm text-xs" disabled={resendingId === invitation.id}>
                                   {resendingId === invitation.id ? <div className="spinner mr-2" /> : null}
                                   {resendingId === invitation.id ? "Resending..." : "Resend"}
                                 </button>
-                                <button onClick={() => handleCancelInvitation(team.id, invitation.id)} className="btn btn-ghost btn-sm text-red-600 hover:text-red-700">
+                                <button onClick={() => handleCancelInvitation(team.id, invitation.id)} className="btn btn-ghost btn-sm text-red-600 hover:text-red-700 text-xs">
                                   Cancel Invitation
                                 </button>
                               </div>

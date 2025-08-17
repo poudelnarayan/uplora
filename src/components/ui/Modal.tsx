@@ -67,12 +67,12 @@ export function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden text-gray-900 dark:text-white`} // Explicit text colors
+            className={`relative bg-card border border-border rounded-lg shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             {(title || showCloseButton) && (
-              <div className="flex items-center justify-between p-6 border-b border-border bg-card"> {/* Header background matches modal body */}
+              <div className="flex items-center justify-between p-6 border-b border-border">
                 {title && (
                   <h2 className="text-lg font-semibold text-foreground">{title}</h2>
                 )}
@@ -89,7 +89,7 @@ export function Modal({
             )}
             
             {/* Body */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] bg-card"> {/* Body background matches modal body */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               {children}
             </div>
           </motion.div>

@@ -310,10 +310,10 @@ export default function Dashboard() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto">
+      <div className="h-full flex flex-col">
         {/* Page Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-2 mb-8">
-          <div className="flex items-center justify-between mt-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="text-center lg:text-left">
             <div>
               <h1 className="heading-2 mb-2">
                 {selectedTeam ? `${selectedTeam.name} - Videos` : "Personal Videos"}
@@ -329,7 +329,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Stats Overview */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <div className="card p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
@@ -368,8 +368,8 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Recent Videos */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6">
-          <div className="flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex-1 space-y-4 lg:space-y-6">
+          <div className="flex items-center justify-between text-center lg:text-left">
             <h2 className="text-xl font-semibold text-foreground">Recent Videos</h2>
           </div>
 
@@ -380,7 +380,7 @@ export default function Dashboard() {
             </div>
           ) : videos.length === 0 ? (
             <div className="card p-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+              <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
                 <Upload className="w-8 h-8" />
               </div>
               <h4 className="text-lg font-semibold mb-2 text-foreground">No videos yet</h4>
@@ -389,7 +389,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               {videos.slice(0, 3).map((video) => {
                 const fullTitle = video.title || "Untitled";
                 const title = fullTitle.length > 50 ? fullTitle.slice(0, 50) + "..." : fullTitle;
@@ -410,12 +410,12 @@ export default function Dashboard() {
                     key={video.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="card p-3 sm:p-4 cursor-pointer"
+                    className="card p-3 lg:p-4 cursor-pointer hover:shadow-lg transition-all duration-200"
                     onClick={() => router.push(`/videos/${video.id}`)}
                   >
-                    <div className="grid grid-cols-[120px_1fr] gap-3 items-start sm:flex sm:gap-4">
+                    <div className="grid grid-cols-[100px_1fr] lg:grid-cols-[120px_1fr] gap-3 items-start lg:flex lg:gap-4">
                       {/* Thumbnail */}
-                      <div className="w-[120px] h-[68px] sm:w-40 sm:h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
+                      <div className="w-[100px] h-[56px] lg:w-[120px] lg:h-[68px] xl:w-40 xl:h-24 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
                         {isLoadingThumbnail ? (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -451,7 +451,7 @@ export default function Dashboard() {
                       <div className="min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <h3
-                            className="font-bold text-foreground text-sm sm:text-base pr-2"
+                            className="font-bold text-foreground text-sm lg:text-base pr-2"
                             title={fullTitle}
                             style={{ display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
                           >
@@ -461,10 +461,10 @@ export default function Dashboard() {
                             <StatusChip status={video.status as any} />
                           </div>
                         </div>
-                        <div className="mt-1 sm:hidden ml-auto w-fit">
+                        <div className="mt-1 lg:hidden ml-auto w-fit">
                           <StatusChip status={video.status as any} />
                         </div>
-                        <div className="mt-2 hidden sm:flex items-center gap-2">
+                        <div className="mt-2 hidden lg:flex items-center gap-2">
                           <button
                             className="btn btn-primary btn-sm"
                             onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}
@@ -480,13 +480,13 @@ export default function Dashboard() {
                             </button>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-2 hidden sm:block">
+                        <div className="text-xs text-muted-foreground mt-2 hidden lg:block">
                           Uploaded: {uploaded}
                           {video.uploader && (
                             <span className="ml-2">By: {video.uploader.name || video.uploader.email}</span>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-2 sm:hidden">
+                        <div className="text-xs text-muted-foreground mt-2 lg:hidden">
                           <div>Uploaded on: {uploadedMobile}</div>
                           {video.uploader && (
                             <div>By: {video.uploader.name || video.uploader.email}</div>
@@ -499,7 +499,7 @@ export default function Dashboard() {
               })}
             </div>
             {videos.length > 3 && (
-              <div className="mt-3">
+              <div className="mt-4 text-center">
                 <button className="btn btn-ghost w-full" onClick={() => router.push('/videos')}>View all</button>
               </div>
             )}
@@ -507,9 +507,6 @@ export default function Dashboard() {
           )}
         </motion.div>
 
-        {/* Team Activity & Upcoming Uploads removed per request */}
-
-        {/* Quick Actions and Insights removed as requested */}
       </div>
       
       {/* Delete Confirmation Modal */}

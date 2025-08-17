@@ -39,12 +39,12 @@ export default function SettingsPage() {
   return (
     <AppShell>
       <NextSeoNoSSR title="Settings" noindex nofollow />
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="h-full flex flex-col">
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mt-6"
+          className="text-center mb-6"
         >
           <h1 className="heading-2 mb-2">Settings</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -57,10 +57,10 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 content-start"
         >
           {/* Profile Settings */}
-          <div className="card p-6">
+          <div className="card p-4 lg:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <User className="w-5 h-5 text-blue-500" />
@@ -81,7 +81,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Notification Settings */}
-          <div className="card p-6">
+          <div className="card p-4 lg:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                 <Bell className="w-5 h-5 text-green-500" />
@@ -109,7 +109,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <div className="card p-6">
+          <div className="card p-4 lg:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-red-500" />
@@ -124,7 +124,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Appearance Settings */}
-          <div className="card p-6">
+          <div className="card p-4 lg:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
                 <Palette className="w-5 h-5 text-purple-500" />
@@ -149,7 +149,7 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="space-y-6"
+          className="mt-6 space-y-4 lg:space-y-6"
         >
           <div className="text-center">
             <h2 className="text-xl font-semibold text-foreground mb-2">Platform Connections</h2>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
         </motion.div>
 
         {/* Danger Zone */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6 border-red-500/20">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-6 card p-4 lg:p-6 border-red-500/20">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
               <Trash2 className="w-5 h-5 text-red-500" />

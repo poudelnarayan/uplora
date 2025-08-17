@@ -184,9 +184,9 @@ export default function AllVideosPage() {
         noindex
         nofollow
       />
-      <div className="max-w-7xl mx-auto mt-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center justify-between">
+      <div className="h-full flex flex-col">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="text-center lg:text-left lg:flex lg:items-center lg:justify-between">
             <div>
               <h1 className="heading-2">
                 {selectedTeam ? `${selectedTeam.name} - All Videos` : "Personal Videos"}
@@ -198,7 +198,7 @@ export default function AllVideosPage() {
                 }
               </p>
             </div>
-            <button
+            <button className="mt-4 lg:mt-0"
               onClick={() => router.push("/dashboard")}
               title="Close and go back"
               className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -210,16 +210,18 @@ export default function AllVideosPage() {
         </motion.div>
 
         {loading ? (
-          <div className="text-center py-12">
+          <div className="flex-1 flex items-center justify-center">
             <div className="spinner-lg mx-auto mb-4" />
             <p className="text-muted-foreground">Loading videos...</p>
           </div>
         ) : videos.length === 0 ? (
-          <div className="card p-10 text-center">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="card p-8 lg:p-10 text-center max-w-md mx-auto">
             <p className="text-muted-foreground">No videos found. Upload your first video.</p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="flex-1 space-y-3 lg:space-y-4">
             {videos.map((video) => {
               const fullTitle = video.title || "Untitled";
               const title = fullTitle.length > 50 ? fullTitle.slice(0, 50) + "..." : fullTitle;
@@ -235,17 +237,17 @@ export default function AllVideosPage() {
               return (
                 <div
                   key={video.id}
-                  className="card p-3 sm:p-4 cursor-pointer"
+                  className="card p-3 lg:p-4 cursor-pointer hover:shadow-lg transition-all duration-200"
                   onClick={() => router.push(`/videos/${video.id}`)}
                 >
-                  <div className="grid grid-cols-[120px_1fr] gap-3 items-start">
-                    <div className="w-[120px] h-[68px] sm:w-40 sm:h-24 rounded-lg bg-muted overflow-hidden relative">
+                  <div className="grid grid-cols-[100px_1fr] lg:grid-cols-[120px_1fr] xl:grid-cols-[160px_1fr] gap-3 items-start">
+                    <div className="w-[100px] h-[56px] lg:w-[120px] lg:h-[68px] xl:w-40 xl:h-24 rounded-lg bg-muted overflow-hidden relative">
                       {video.thumbnailKey ? (
                         <Image
                           src={`/api/images/thumb?key=${encodeURIComponent(video.thumbnailKey)}&v=${encodeURIComponent(video.updatedAt || video.uploadedAt)}`}
                           alt={`Thumbnail for ${fullTitle}`}
                           fill
-                          sizes="160px"
+                          sizes="(max-width: 768px) 100px, (max-width: 1024px) 120px, 160px"
                           className="object-cover"
                           onError={(e) => {
                             const parent = (e.target as HTMLImageElement).parentElement;
@@ -266,7 +268,7 @@ export default function AllVideosPage() {
                     <div className="min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <h3
-                          className="font-bold text-foreground text-sm sm:text-base pr-2"
+                          className="font-bold text-foreground text-sm lg:text-base pr-2"
                           title={fullTitle}
                           style={{ display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
                         >
@@ -276,10 +278,10 @@ export default function AllVideosPage() {
                           <StatusChip status={video.status} />
                         </div>
                       </div>
-                      <div className="mt-1 sm:hidden ml-auto w-fit">
+                      <div className="mt-1 lg:hidden ml-auto w-fit">
                         <StatusChip status={video.status} />
                       </div>
-                      <div className="mt-2 hidden sm:flex items-center gap-2">
+                      <div className="mt-2 hidden lg:flex items-center gap-2">
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}
@@ -295,13 +297,13 @@ export default function AllVideosPage() {
                           </button>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-2 hidden sm:block">
+                      <div className="text-xs text-muted-foreground mt-2 hidden lg:block">
                         Uploaded: {uploaded}
                         {video.uploader && (
                           <span className="ml-2">By: {video.uploader.name || video.uploader.email || 'Unknown'}</span>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-2 sm:hidden">
+                      <div className="text-xs text-muted-foreground mt-2 lg:hidden">
                         <div>Uploaded on: {uploadedMobile}</div>
                         {video.uploader && (
                           <div>By: {video.uploader.name || video.uploader.email || 'Unknown'}</div>
