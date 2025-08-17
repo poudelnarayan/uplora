@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
           };
         } catch (error) {
-          console.error("Database error during auth:", error);
+          console.error("Database error during credentials auth:", error);
           return null;
         }
       }
@@ -63,45 +63,41 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Create basic user record on first Google sign-in
+      // Only handle Google provider account creation; never block sign-in on error
       if (account?.provider === "google" && user?.email) {
         try {
-          const existingUser = await prisma.user.findUnique({ where: { email: user.email } });
-          if (!existingUser) {
-            await prisma.user.create({
-              data: {
-                email: user.email,
-                name: user.name ?? null,
-                emailVerified: new Date(),
-              }
-            });
-          }
+          const email = user.email.toLowerCase();
+          await prisma.user.upsert({
+            where: { email },
+            update: { name: user.name ?? null, emailVerified: new Date() },
+            create: { email, name: user.name ?? null, emailVerified: new Date() },
+          });
         } catch (err) {
-          console.error("Google sign-in user create failed", err);
-          return false;
+          console.error("Google sign-in user upsert failed", {
+            message: (err as Error).message,
+          });
+          // Do not block sign-in; let user proceed with Google session
+          return true;
         }
       }
       return true;
     },
     async jwt({ token, account }) {
-      // On initial sign-in, store basic account info
       if (account) {
         token.provider = account.provider;
       }
       return token;
     },
     async session({ session, token }) {
-      // Only pass basic user info to session
       session.user.id = token.sub;
+      // @ts-expect-error custom property
       session.provider = token.provider;
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Handle admin subdomain redirects
       if (url.startsWith('/admin')) {
         return `${baseUrl}${url}`;
       }
-      // Handle main domain redirects
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`;
       }
@@ -110,7 +106,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/signin", // Use our custom signin page
+    signIn: "/signin",
   },
   debug: process.env.NODE_ENV === "development",
 };
