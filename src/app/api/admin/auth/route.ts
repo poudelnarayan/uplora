@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 // List of admin email addresses (credentials-only)
 const ADMIN_EMAILS = [
-  "kan77bct049@kec.edu.np",
+  "kan077bct049@kec.edu.np",
 ];
 
 export async function POST(request: NextRequest) {
