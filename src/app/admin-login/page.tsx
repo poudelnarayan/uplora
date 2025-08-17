@@ -16,12 +16,15 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const isAdminCheckInitiated = useRef(false); // New ref
+  const isAdminCheckInitiated = useRef(false);
 
-  // Check if user is already logged in and is admin
+  // Check if we're on admin subdomain
+  const isAdminSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('admin.');
+
+  // Check if user is already logged in and is admin (only on admin subdomain)
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (status === "loading" || isAdminCheckInitiated.current) return;
+      if (status === "loading" || isAdminCheckInitiated.current || !isAdminSubdomain) return;
 
       if (session?.user?.email) {
         isAdminCheckInitiated.current = true;
@@ -37,6 +40,7 @@ export default function AdminLoginPage() {
             });
             router.push("/admin");
           } else {
+            // If not admin, sign out and show error
             await signIn("credentials", { redirect: false });
             notifications.addNotification({
               type: "error",
@@ -56,7 +60,7 @@ export default function AdminLoginPage() {
     };
 
     checkAdminStatus();
-  }, [session, status, router, notifications]);
+  }, [session, status, router, notifications, isAdminSubdomain]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,23 +80,29 @@ export default function AdminLoginPage() {
           message: "Invalid email or password"
         });
       } else {
-        const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
-        const adminData = await adminCheck.json();
+        // Only check admin status if on admin subdomain
+        if (isAdminSubdomain) {
+          const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
+          const adminData = await adminCheck.json();
 
-        if (adminData.isAdmin) {
-          notifications.addNotification({
-            type: "success",
-            title: "Welcome Admin",
-            message: "Redirecting to admin dashboard..."
-          });
-          router.push("/admin");
+          if (adminData.isAdmin) {
+            notifications.addNotification({
+              type: "success",
+              title: "Welcome Admin",
+              message: "Redirecting to admin dashboard..."
+            });
+            router.push("/admin");
+          } else {
+            notifications.addNotification({
+              type: "error",
+              title: "Access Denied",
+              message: "You don't have admin privileges"
+            });
+            await signIn("credentials", { redirect: false });
+          }
         } else {
-          notifications.addNotification({
-            type: "error",
-            title: "Access Denied",
-            message: "You don't have admin privileges"
-          });
-          await signIn("credentials", { redirect: false });
+          // On main domain, just redirect to dashboard
+          router.push("/dashboard");
         }
       }
     } catch (error) {

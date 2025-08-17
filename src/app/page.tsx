@@ -13,11 +13,40 @@ export default function LandingPage() {
   const controlsRow1 = useAnimation();
   const controlsRow2 = useAnimation();
 
+  // Check if we're on admin subdomain
+  const isAdminSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('admin.');
+
   useEffect(() => {
+    // Handle admin subdomain routing
+    if (isAdminSubdomain) {
+      if (session) {
+        // Check if user is admin
+        const checkAdmin = async () => {
+          try {
+            const adminCheck = await fetch("/api/admin/check", { cache: "no-store" });
+            const adminData = await adminCheck.json();
+            
+            if (adminData.isAdmin) {
+              router.push("/admin");
+            } else {
+              router.push("/admin-login");
+            }
+          } catch (error) {
+            router.push("/admin-login");
+          }
+        };
+        checkAdmin();
+      } else {
+        router.push("/admin-login");
+      }
+      return;
+    }
+
+    // Main domain - normal flow
     if (session) {
       router.push("/dashboard");
     }
-  }, [session, router]);
+  }, [session, router, isAdminSubdomain]);
 
   useEffect(() => {
     const startRow1 = () => {
@@ -35,6 +64,27 @@ export default function LandingPage() {
     startRow1();
     startRow2();
   }, [controlsRow1, controlsRow2]);
+
+  // Show loading for admin subdomain
+  if (isAdminSubdomain && status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="spinner-lg mx-auto mb-4" />
+          <p className="text-white">Loading admin portal...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Don't show main home page on admin subdomain
+  if (isAdminSubdomain) {
+    return null;
+  }
 
   if (status === "loading") {
     return (
@@ -315,7 +365,7 @@ export default function LandingPage() {
                         <Star key={s} className="w-5 h-5 fill-current" />
                       ))}
                     </div>
-                    <p className="text-base text-foreground mb-2">“{r.text}”</p>
+                    <p className="text-base text-foreground mb-2">"{r.text}"</p>
                     <p className="text-xs text-muted-foreground">{r.name}</p>
                   </motion.div>
                 ))}
@@ -355,7 +405,7 @@ export default function LandingPage() {
                         <Star key={s} className="w-5 h-5 fill-current" />
                       ))}
                     </div>
-                    <p className="text-base text-foreground mb-2">“{r.text}”</p>
+                    <p className="text-base text-foreground mb-2">"{r.text}"</p>
                     <p className="text-xs text-muted-foreground">{r.name}</p>
                   </motion.div>
                 ))}

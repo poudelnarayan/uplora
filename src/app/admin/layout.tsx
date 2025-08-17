@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Shield, LogOut, Users, Settings, BarChart3, AlertTriangle } from "lucide-react";
@@ -18,21 +18,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const notifications = useNotifications();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const hasCheckedRef = useRef(false);
+  const isAdminCheckInitiated = useRef(false);
+
+  // Check if we're on admin subdomain
+  const isAdminSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('admin.');
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (hasCheckedRef.current) return;
-      if (status === "loading") return;
-
-      hasCheckedRef.current = true;
+      if (status === "loading" || isAdminCheckInitiated.current) return;
 
       if (!session) {
-        setLoading(false);
-        router.push("/admin-login");
+        if (isAdminSubdomain) {
+          router.push("/admin-login");
+        } else {
+          router.push("/signin");
+        }
         return;
       }
 
+      isAdminCheckInitiated.current = true;
       try {
         const response = await fetch("/api/admin/check", { cache: "no-store" });
         const data = await response.json();
@@ -40,26 +44,38 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         if (data.isAdmin) {
           setIsAdmin(true);
         } else {
-          notifications.addNotification({
-            type: "error",
-            title: "Access Denied",
-            message: "You don't have admin privileges"
-          });
-          router.push("/admin-login");
+          if (isAdminSubdomain) {
+            notifications.addNotification({
+              type: "error",
+              title: "Access Denied",
+              message: "You don't have admin privileges"
+            });
+            router.push("/admin-login");
+          } else {
+            router.push("/dashboard");
+          }
         }
       } catch (error) {
         console.error("Admin check failed:", error);
-        router.push("/admin-login");
+        if (isAdminSubdomain) {
+          router.push("/admin-login");
+        } else {
+          router.push("/signin");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     checkAdminStatus();
-  }, [status, session, router]);
+  }, [session, status, router, notifications, isAdminSubdomain]);
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/admin-login" });
+    if (isAdminSubdomain) {
+      signOut({ callbackUrl: "/admin-login" });
+    } else {
+      signOut({ callbackUrl: "/signin" });
+    }
   };
 
   if (status === "loading" || loading) {
@@ -92,7 +108,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <p className="text-xs text-slate-400">Administrative Portal</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm font-medium">{session.user?.name}</p>
