@@ -1,24 +1,10 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import { Video, Users, Shield, ArrowRight, Upload, CheckCircle, Clock, Play, Star, Youtube, Zap, Target, Eye } from "lucide-react";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 
-export default function LandingPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect authenticated users to dashboard
-    if (session) {
-      router.push("/dashboard");
-    }
-  }
-  )
-}
 export default function LandingPage() {
   const router = useRouter();
 
@@ -604,7 +590,7 @@ export default function LandingPage() {
               </div>
               
               <div className="text-sm text-gray-400">
-                Copyright ©2025 Uplora | <a href="/privacy" className="hover:text-white transition-colors">Privacy</a> | <a href="/terms" className=\"hover:text-white transition-colors">Terms</a> | Security
+                Copyright ©2025 Uplora | <a href="/privacy" className="hover:text-white transition-colors">Privacy</a> | <a href="/terms" className="hover:text-white transition-colors">Terms</a> | Security
               </div>
             </div>
           </div>
