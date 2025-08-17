@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -22,7 +22,8 @@ import {
   Bell,
   Search,
   Menu,
-  X
+  X,
+  ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -88,6 +89,26 @@ export default function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin (only once)
+  useEffect(() => {
+    let cancelled = false;
+    const checkAdminStatus = async () => {
+      if (!session?.user?.email) return;
+      try {
+        const response = await fetch("/api/admin/check", { cache: "no-store" });
+        if (!cancelled && response.ok) {
+          const data = await response.json();
+          setIsAdmin(!!data.isAdmin);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    checkAdminStatus();
+    return () => { cancelled = true; };
+  }, [!!session?.user?.email]);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -240,6 +261,31 @@ export default function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {navItems.map(item => renderNavItem(item))}
+            
+            {/* Admin Section */}
+            {isAdmin && (
+              <div className="pt-4 border-t border-border">
+                <div className="px-4 py-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Admin</p>
+                </div>
+                <Link href="/admin">
+                  <motion.div
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
+                      pathname === '/admin'
+                        ? 'bg-red-500/10 text-red-600 border border-red-200 dark:border-red-800' 
+                        : 'hover:bg-red-500/10 text-muted-foreground hover:text-red-600'
+                    }`}
+                    whileHover={{ x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className={`${pathname === '/admin' ? 'text-red-600' : 'text-muted-foreground group-hover:text-red-600'}`}>
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Admin Dashboard</span>
+                  </motion.div>
+                </Link>
+              </div>
+            )}
           </nav>
 
           {/* Footer */}

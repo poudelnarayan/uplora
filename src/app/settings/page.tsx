@@ -5,11 +5,37 @@ import { Settings, User, Bell, Shield, Palette, Globe, Key, Trash2 } from "lucid
 import AppShell from "@/components/layout/AppShell";
 import { useSession } from "next-auth/react";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import YouTubeConnection from "@/components/settings/YouTubeConnection";
+import { useEffect, useState } from "react";
 export const dynamic = "force-dynamic";
 // Avoid exporting revalidate from a client page; build was interpreting it on server.
 
 export default function SettingsPage() {
   const { data: session } = useSession();
+  const [youtubeData, setYouTubeData] = useState<{
+    isConnected: boolean;
+    channelTitle?: string | null;
+  }>({ isConnected: false });
+
+  useEffect(() => {
+    // Fetch YouTube connection status
+    const fetchYouTubeStatus = async () => {
+      try {
+        const response = await fetch("/api/youtube/status");
+        if (response.ok) {
+          const data = await response.json();
+          setYouTubeData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch YouTube status:", error);
+      }
+    };
+
+    if (session?.user?.id) {
+      fetchYouTubeStatus();
+    }
+  }, [session?.user?.id]);
+
   return (
     <AppShell>
       <NextSeoNoSSR title="Settings" noindex nofollow />
@@ -116,6 +142,25 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Platform Connections */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-6"
+        >
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Platform Connections</h2>
+            <p className="text-muted-foreground">Connect your social media accounts to enable video uploads</p>
+          </div>
+          
+          <YouTubeConnection
+            isConnected={youtubeData.isConnected}
+            channelTitle={youtubeData.channelTitle}
+            onConnect={() => {}}
+          />
         </motion.div>
 
         {/* Danger Zone */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { NotificationProvider } from "@/components/ui/Notification";
 import { useState, useEffect } from "react";
 import { TeamProvider } from "@/context/TeamContext";
@@ -30,28 +31,44 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
+  const pathname = typeof window !== "undefined" ? window.location.pathname : undefined;
   const siteUrl =
     (typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) ||
     "http://localhost:3000";
+  const isAuthPage = pathname === "/signin" || pathname === "/admin-login";
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
       <NotificationProvider>
-        <TeamProvider>
-          <UploadProvider>
-            <ThemeProvider>
-              <DefaultSeoNoSSR {...defaultSeo} />
-              <OrganizationJsonLdNoSSR
-                type="Organization"
-                id={`${siteUrl}/#organization`}
-                name="Uplora"
-                url={siteUrl}
-                sameAs={[]}
-              />
-              {children}
-              <UploadTray />
-            </ThemeProvider>
-          </UploadProvider>
-        </TeamProvider>
+        {isAuthPage ? (
+          <ThemeProvider>
+            <DefaultSeoNoSSR {...defaultSeo} />
+            <OrganizationJsonLdNoSSR
+              type="Organization"
+              id={`${siteUrl}/#organization`}
+              name="Uplora"
+              url={siteUrl}
+              sameAs={[]}
+            />
+            {children}
+          </ThemeProvider>
+        ) : (
+          <TeamProvider>
+            <UploadProvider>
+              <ThemeProvider>
+                <DefaultSeoNoSSR {...defaultSeo} />
+                <OrganizationJsonLdNoSSR
+                  type="Organization"
+                  id={`${siteUrl}/#organization`}
+                  name="Uplora"
+                  url={siteUrl}
+                  sameAs={[]}
+                />
+                {children}
+                <UploadTray />
+              </ThemeProvider>
+            </UploadProvider>
+          </TeamProvider>
+        )}
       </NotificationProvider>
     </SessionProvider>
   );
