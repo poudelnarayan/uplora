@@ -37,6 +37,7 @@ export default withAuth(
     
     // If the user is not authenticated and trying to access a protected route
     if (!req.nextauth.token) {
+      // Redirect to our custom signin page instead of NextAuth default
       return NextResponse.redirect(new URL("/signin", req.url));
     }
     
