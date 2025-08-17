@@ -15,6 +15,10 @@ export default function LandingPage() {
     // Redirect authenticated users to dashboard
     if (session) {
       router.push("/dashboard");
+    }
+  }
+  )
+}
 export default function LandingPage() {
   const router = useRouter();
 
