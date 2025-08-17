@@ -42,7 +42,6 @@ export default function SignInForm() {
         if (result?.error) {
           notifications.addNotification({ type: "error", title: "Invalid credentials", message: "Please check your email and password" });
         } else {
-          // No success popup on sign-in
           router.push("/dashboard");
         }
       }
@@ -54,7 +53,6 @@ export default function SignInForm() {
   };
 
   const handleGoogleSignIn = () => {
-    // Avoid info popup for OAuth start
     signIn("google", { callbackUrl: "/dashboard" });
   };
 

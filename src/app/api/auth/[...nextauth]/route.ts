@@ -94,13 +94,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      // Handle admin routes
       if (url.startsWith('/admin')) {
         return `${baseUrl}${url}`;
       }
+      // Handle relative URLs
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`;
       }
-      return baseUrl;
+      // Handle callback URLs
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // Default redirect to dashboard after successful login
+      return `${baseUrl}/dashboard`;
     }
   },
   session: { strategy: "jwt" },
