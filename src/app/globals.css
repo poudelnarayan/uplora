@@ -755,21 +755,41 @@ textarea.field-control {
 }
 
 /* Custom scrollbar for dropdowns */
-.custom-scrollbar::-webkit-scrollbar {
+.custom-scrollbar::-webkit-scrollbar,
+.enhanced-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track,
+.enhanced-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.enhanced-scrollbar::-webkit-scrollbar-thumb {
   background: rgb(var(--muted-foreground) / 0.3);
   border-radius: 2px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.enhanced-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--muted-foreground) / 0.5);
+}
+
+/* Enhanced scrollbar with gradient */
+.enhanced-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.enhanced-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, rgb(var(--primary)), rgb(var(--secondary)));
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, rgb(var(--primary)), rgb(var(--accent)));
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Glassmorphism effects */
