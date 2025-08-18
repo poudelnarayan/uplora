@@ -16,6 +16,7 @@ import {
   X,
   MessageCircle,
   Lightbulb,
+  Plus,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/components/ui/NotificationCenter/NotificationCenter";
@@ -227,176 +228,151 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   {/* Content container */}
                   <div className="relative p-2 space-y-1">
                     {/* Header with team count */}
-                  initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 25,
-                    duration: 0.2
-                  }}
-                  className="absolute top-full left-0 right-0 mt-2 z-50"
-                  role="listbox"
-                  aria-label="Team selection menu"
-                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                  {/* Enhanced Glassmorphism Container */}
+                    <div className="px-3 py-2 border-b border-border/30 mb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                          Switch Workspace
                         </span>
-                    {/* Multi-layer backdrop for enhanced depth */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-background/30 via-background/20 to-background/30 backdrop-blur-xl rounded-2xl border border-border/40 shadow-2xl" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent rounded-2xl" />
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                          {teams.length} teams
+                        </span>
+                      </div>
+                    </div>
                     
-                    {/* Team options */}
-                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                {teams.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      setSelectedTeamId(t.id);
-                      setTeamMenuOpen(false);
-                    }}
-                    className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
-                      selectedTeamId === t.id 
-                        ? "bg-primary/20 text-primary border border-primary/30 shadow-sm" 
-                        : "text-foreground/90 hover:bg-foreground/5 hover:text-foreground hover:shadow-sm"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Team indicator dot */}
-                      {/* Enhanced team options with better grouping */}
-                      <div className="max-h-72 overflow-y-auto enhanced-scrollbar">
-                        {/* Personal workspace option */}
-                        <button
+                    {/* Enhanced team options with better grouping */}
+                    <div className="max-h-72 overflow-y-auto enhanced-scrollbar">
+                      {/* Personal workspace option */}
+                      <button
+                        onClick={() => {
+                          setSelectedTeamId(null);
+                          setTeamMenuOpen(false);
+                        }}
+                        className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 mb-2 ${
+                          !selectedTeamId 
+                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-primary border border-primary/30 shadow-sm" 
+                            : "text-foreground/90 hover:bg-gradient-to-r hover:from-foreground/5 hover:to-foreground/10 hover:text-foreground hover:shadow-sm"
+                        }`}
+                        role="option"
+                        aria-selected={!selectedTeamId}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                            !selectedTeamId 
+                              ? "bg-gradient-to-br from-primary to-secondary shadow-sm" 
+                              : "bg-muted-foreground/40 group-hover:bg-foreground/60"
+                          }`} />
+                          
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium">Personal Workspace</div>
+                            <div className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
+                              Your individual content
+                            </div>
+                          </div>
+                          
+                          {!selectedTeamId && (
+                            <div className="flex items-center gap-1">
+                              <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-primary" />
+                              </div>
+                              <span className="text-xs font-medium text-primary">Active</span>
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                      
+                      {/* Team separator */}
+                      {teams.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-2">
+                          <div className="flex-1 h-px bg-border/50" />
+                          <span className="text-xs text-muted-foreground font-medium">Teams</span>
+                          <div className="flex-1 h-px bg-border/50" />
+                        </div>
+                      )}
+                      
+                      {/* Team list with staggered animations */}
+                      {teams.map((t, index) => (
+                        <motion.button
+                          key={t.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
                           onClick={() => {
-                            setSelectedTeamId(null);
+                            setSelectedTeamId(t.id);
                             setTeamMenuOpen(false);
                           }}
-                          className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 mb-2 ${
-                            !selectedTeamId 
+                          className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                            selectedTeamId === t.id 
                               ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-primary border border-primary/30 shadow-sm" 
                               : "text-foreground/90 hover:bg-gradient-to-r hover:from-foreground/5 hover:to-foreground/10 hover:text-foreground hover:shadow-sm"
                           }`}
                           role="option"
-                          aria-selected={!selectedTeamId}
+                          aria-selected={selectedTeamId === t.id}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                              !selectedTeamId 
+                            {/* Enhanced team indicator with gradient */}
+                            <div className={\`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                              selectedTeamId === t.id 
                                 ? "bg-gradient-to-br from-primary to-secondary shadow-sm" 
                                 : "bg-muted-foreground/40 group-hover:bg-foreground/60"
                             }`} />
                             
                             <div className="min-w-0 flex-1">
-                              <div className="font-medium">Personal Workspace</div>
-                              <div className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
-                                Your individual content
+                              <div className="font-medium truncate flex items-center gap-2">
+                                {t.name}
+                                {/* Team type indicator */}
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-secondary/20 text-secondary font-medium">
+                                  Team
+                                </span>
                               </div>
+                              {t.description && (
+                                <div className="text-xs text-muted-foreground/80 truncate mt-1 group-hover:text-muted-foreground">
+                                  {t.description}
+                                </div>
+                              )}
                             </div>
                             
-                            {!selectedTeamId && (
+                            {/* Enhanced selected indicator with animation */}
+                            {selectedTeamId === t.id && (
                               <div className="flex items-center gap-1">
                                 <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-primary" />
+                                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                                 </div>
                                 <span className="text-xs font-medium text-primary">Active</span>
                               </div>
                             )}
                           </div>
-                        </button>
-                        
-                        {/* Team separator */}
-                        {teams.length > 0 && (
-                          <div className="flex items-center gap-2 px-3 py-2">
-                            <div className="flex-1 h-px bg-border/50" />
-                            <span className="text-xs text-muted-foreground font-medium">Teams</span>
-                            <div className="flex-1 h-px bg-border/50" />
-                          </div>
-                        )}
-                        
-                        {/* Team list with staggered animations */}
-                        {teams.map((t, index) => (
-                          : "bg-muted-foreground/40 group-hover:bg-foreground/60"
-                      }`} />
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                        </motion.button>
+                      ))}
                       
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{t.name}</div>
-                    {t.description && (
-                    <div className="relative p-3 space-y-2">
-                      {/* Enhanced header with search */}
-                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-primary border border-primary/30 shadow-sm" 
-                        : "text-foreground/90 hover:bg-gradient-to-r hover:from-foreground/5 hover:to-foreground/10 hover:text-foreground hover:shadow-sm"
-                          <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                    role="option"
-                    aria-selected={selectedTeamId === t.id}
-                            Switch Workspace
-                      {/* Selected indicator */}
-                      {/* Enhanced team indicator with gradient */}
-                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          ? "bg-gradient-to-br from-primary to-secondary shadow-sm" 
-                        
-                        {/* Search bar for 4+ teams */}
-                        {teams.length >= 4 && (
-                          <div className="relative">
-                        <div className="font-medium truncate flex items-center gap-2">
-                          {t.name}
-                          {/* Team type indicator */}
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-secondary/20 text-secondary font-medium">
-                            Team
-                          </span>
-                        </div>
-                        {t.description && (
-                          <div className="text-xs text-muted-foreground/80 truncate mt-1 group-hover:text-muted-foreground">
-                              className="w-full pl-8 pr-3 py-2 text-xs bg-background/60 backdrop-blur-sm border border-border/50 rounded-lg focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all"
-                              autoComplete="off"
-                        )}
-                            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {/* Enhanced selected indicator with animation */}
-                              </svg>
-                        <div className="flex items-center gap-1">
-                          <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                          </div>
-                          <span className="text-xs font-medium text-primary">Active</span>
-                        )}
-                      )}
-                    </div>
-                  </button>
-                ))}
-                        
-                        {/* Quick create team action */}
-                        <div className="mt-3 pt-2 border-t border-border/30">
-                          <button
-                            onClick={() => {
-                              setTeamMenuOpen(false);
-                              openModal("create-team", {
-                                onSubmit: async (name: string, description: string) => {
-                                  // This would need to be connected to the actual create team handler
-                                  console.log("Create team:", name, description);
-                                }
-                              });
-                            }}
-                            className="group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 border-2 border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-primary"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-2.5 h-2.5 rounded-full border-2 border-dashed border-current flex-shrink-0" />
-                              <div className="font-medium">Create New Team</div>
-                              <div className="ml-auto">
-                                <Plus className="w-4 h-4" />
-                              </div>
+                      {/* Quick create team action */}
+                      <div className="mt-3 pt-2 border-t border-border/30">
+                        <button
+                          onClick={() => {
+                            setTeamMenuOpen(false);
+                            openModal("create-team", {
+                              onSubmit: async (name: string, description: string) => {
+                                // This would need to be connected to the actual create team handler
+                                console.log("Create team:", name, description);
+                              }
+                            });
+                          }}
+                          className="group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 border-2 border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-primary"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-2.5 h-2.5 rounded-full border-2 border-dashed border-current flex-shrink-0" />
+                            <div className="font-medium">Create New Team</div>
+                            <div className="ml-auto">
+                              <Plus className="w-4 h-4" />
                             </div>
-                          </button>
-                        </div>
+                          </div>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </motion.div>
               )}
             </AnimatePresence>
-            )}
           </div>
         </div>
 
