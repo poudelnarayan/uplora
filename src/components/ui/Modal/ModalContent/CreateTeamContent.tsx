@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, FileText } from "lucide-react";
+import { Users, FileText, Plus } from "lucide-react";
 import { TextField } from "@/components/ui/TextField";
 
 interface CreateTeamContentProps {
