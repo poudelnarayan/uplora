@@ -165,12 +165,13 @@ export default function UniversalModal({
               }}
               className={`
                 relative w-full ${config.maxWidth} 
-                bg-card border border-border rounded-2xl 
+                bg-background border border-border rounded-2xl 
                 shadow-2xl overflow-hidden
                 max-h-[90vh] flex flex-col
               `}
               style={{
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)"
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                backgroundColor: "rgb(var(--background))"
               }}
               tabIndex={-1}
               role="dialog"

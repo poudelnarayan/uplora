@@ -97,8 +97,8 @@ export default function IdeaLabContent({
                 className={`
                   flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all
                   ${formData.priority === priority
-                    ? `border-primary bg-gradient-to-br ${color} text-foreground`
-                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
+                    ? `border-primary bg-gradient-to-br ${color} text-foreground shadow-sm`
+                    : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted/50"
                   }
                 `}
               >

@@ -65,8 +65,8 @@ export default function FeedbackContent({
               className={`
                 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
                 ${feedbackType === type
-                  ? `border-primary bg-gradient-to-br ${color} text-foreground`
-                  : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
+                  ? `border-primary bg-gradient-to-br ${color} text-foreground shadow-sm`
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted/50"
                 }
               `}
             >

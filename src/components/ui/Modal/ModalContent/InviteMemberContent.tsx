@@ -42,13 +42,13 @@ export default function InviteMemberContent({
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      <div className="rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+      <div className="rounded-xl p-4 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
             <Mail className="w-4 h-4 text-blue-500" />
           </div>
           <div>
-            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
               Email Invitation
             </p>
             <p className="text-xs text-blue-700 dark:text-blue-300">
