@@ -95,7 +95,7 @@ export default function TeamCard({
           ) : (
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-semibold text-foreground truncate">{team.name}</h3>
+                <h3 className="text-lg lg:text-xl font-semibold text-foreground truncate">{team.name}</h3>
                 <div className="hidden lg:flex ml-1">
                   <TeamActions
                     isOwner={isOwner}
@@ -108,7 +108,7 @@ export default function TeamCard({
                 </div>
               </div>
               {team.description && team.description.trim().length > 0 && (
-                <p className="text-xs text-muted-foreground mt-1 truncate">
+                <p className="text-xs lg:text-sm text-muted-foreground mt-1 truncate">
                   {team.description}
                 </p>
               )}
@@ -119,7 +119,7 @@ export default function TeamCard({
           <div className="flex items-center gap-2">
             <button
               onClick={onInviteMember}
-              className="btn btn-primary btn-sm text-xs lg:text-sm"
+              className="btn btn-primary btn-sm"
               aria-label="Invite member"
               title="Invite member"
             >
@@ -127,14 +127,16 @@ export default function TeamCard({
             </button>
           </div>
         ) : (
-          <TeamActions
-            isOwner={isOwner}
-            teamId={team.id}
-            teamName={team.name}
-            onStartRename={onStartRename}
-            onDeleteTeam={onDeleteTeam}
-            onLeaveTeam={onLeaveTeam}
-          />
+          <div className="lg:hidden">
+            <TeamActions
+              isOwner={isOwner}
+              teamId={team.id}
+              teamName={team.name}
+              onStartRename={onStartRename}
+              onDeleteTeam={onDeleteTeam}
+              onLeaveTeam={onLeaveTeam}
+            />
+          </div>
         )}
       </div>
 

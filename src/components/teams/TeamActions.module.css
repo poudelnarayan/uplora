@@ -24,6 +24,7 @@
 
 .deleteButton:hover {
   color: rgb(220, 38, 38);
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 .leaveButton {
@@ -43,10 +44,12 @@
 .leaveButton:hover {
   color: rgb(220, 38, 38);
   background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 @media (min-width: 1024px) {
   .leaveButton {
     font-size: 0.875rem;
+    padding: 0.625rem 1.25rem;
   }
 }

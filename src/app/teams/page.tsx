@@ -457,40 +457,18 @@ export default function TeamsPage() {
             setRenamingTeamId(teamId);
             setRenameValue(currentName);
           }}
-          onDeleteTeam={(teamId, teamName) => {
-            // Handle delete team logic here
-            console.log("Delete team:", teamId, teamName);
-          }}
-          onLeaveTeam={(teamId, teamName) => {
-            // Handle leave team logic here
-            console.log("Leave team:", teamId, teamName);
-          }}
-          onResendInvitation={async (teamId, invitationId) => {
-            setResendingId(invitationId);
-            // Implementation here
-            setResendingId(null);
-          }}
-          onCancelInvitation={async (teamId, invitationId) => {
-            // Implementation here
-          }}
-          onToggleMemberStatus={(teamId, memberId, memberName, currentStatus, teamName) => {
-            // Handle toggle member status logic here
-            console.log("Toggle member status:", teamId, memberId, currentStatus);
-          }}
-          onRemoveMember={(teamId, memberId, teamName) => {
-            // Handle remove member logic here
-            console.log("Remove member:", teamId, memberId, teamName);
-          }}
-          renamingTeamId={renamingTeamId}
-          renameValue={renameValue}
-          onRenameValueChange={setRenameValue}
-          onSaveRename={handleSaveRename}
-          onCancelRename={() => setRenamingTeamId(null)}
           onDeleteTeam={handleDeleteTeam}
           onLeaveTeam={handleLeaveTeam}
           onResendInvitation={handleResendInvitation}
           onCancelInvitation={handleCancelInvitation}
           onToggleMemberStatus={handleToggleMemberStatus}
           onRemoveMember={handleRemoveMember}
+          renamingTeamId={renamingTeamId}
+          renameValue={renameValue}
+          onRenameValueChange={setRenameValue}
+          onSaveRename={handleSaveRename}
+          onCancelRename={() => setRenamingTeamId(null)}
+          resendingId={resendingId}
+          currentUserEmail={session?.user?.email || ""}
   )
 }

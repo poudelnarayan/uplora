@@ -23,6 +23,8 @@
 .statusButton:hover {
   background: rgb(var(--muted));
   border-color: rgb(var(--ring));
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .removeButton {
@@ -41,4 +43,6 @@
   color: rgb(220, 38, 38);
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
