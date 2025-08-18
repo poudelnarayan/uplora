@@ -124,15 +124,25 @@ export async function POST(req: NextRequest) {
     try {
       await sendMail({ to, subject, text, html });
       console.log(`✅ Email sent successfully to ${to}`);
+      return NextResponse.json({ 
+        ok: true, 
+        emailSent: true,
+        message: "Feedback submitted and email sent successfully" 
+      });
     } catch (emailError) {
       console.error(`❌ Failed to send email to ${to}:`, emailError);
-      // Don't fail the request if email fails - log for manual follow-up
+      return NextResponse.json({ 
+        ok: true, 
+        emailSent: false,
+        message: "Feedback submitted but email delivery failed",
+        error: "Email delivery failed - we've logged your feedback for manual review"
+      });
     }
-
-
-    return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json({ error: "Failed to submit feedback" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to submit feedback",
+      emailSent: false 
+    }, { status: 500 });
   }
 }
 

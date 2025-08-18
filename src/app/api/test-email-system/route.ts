@@ -50,6 +50,7 @@ This is a test feedback submission to verify the email routing system is working
       return NextResponse.json({ 
         success: true, 
         message: "Test feedback email sent to feedback@uplora.io",
+        emailSent: true,
         timestamp 
       });
       
@@ -96,6 +97,7 @@ This is a test idea submission to verify the email routing system is working cor
       return NextResponse.json({ 
         success: true, 
         message: "Test idea email sent to brainstorm@uplora.io",
+        emailSent: true,
         timestamp 
       });
       
@@ -142,6 +144,7 @@ This is a test invitation email to verify the email system is working.
       return NextResponse.json({ 
         success: true, 
         message: "Test invitation email sent",
+        emailSent: true,
         timestamp 
       });
     }
@@ -152,6 +155,7 @@ This is a test invitation email to verify the email system is working.
     console.error("Email test error:", error);
     return NextResponse.json({ 
       error: "Failed to send test email", 
+      emailSent: false,
       details: error instanceof Error ? error.message : "Unknown error" 
     }, { status: 500 });
   }

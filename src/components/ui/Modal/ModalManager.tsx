@@ -58,11 +58,23 @@ export function ModalProvider({ children }: ModalProviderProps) {
     setIsLoading(true);
     try {
       if (modalProps.onSubmit) {
-        await modalProps.onSubmit(...args);
+        const result = await modalProps.onSubmit(...args);
+        
+        // Handle different response types
+        if (result && typeof result === 'object') {
+          if (result.success) {
+            // Show success message with email status
+            console.log("✅ Submission successful:", result.message);
+          } else if (result.error) {
+            console.error("❌ Submission failed:", result.error);
+            throw new Error(result.error);
+          }
+        }
       }
       closeModal();
     } catch (error) {
       console.error("Modal submission error:", error);
+      // Don't close modal on error - let user try again
     } finally {
       setIsLoading(false);
     }

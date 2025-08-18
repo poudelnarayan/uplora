@@ -49,6 +49,84 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   // Feedback handlers
   const submitFeedback = async (type: string, message: string) => {
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: message,
+          category: type,
+          type: "feedback",
+          includeEmail: true,
+          path: pathForFeedback,
+          teamId: selectedTeamId,
+          teamName: selectedTeam?.name,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        if (result.emailSent) {
+          // Success with email sent
+          return { success: true, message: "Feedback submitted and email sent successfully!" };
+        } else {
+          // Success but email failed
+          return { 
+            success: true, 
+            message: "Feedback submitted successfully, but email delivery failed. We've logged your feedback for review." 
+          };
+        }
+      } else {
+        throw new Error(result.error || "Failed to submit feedback");
+      }
+    } catch (error) {
+      console.error("Feedback submission error:", error);
+      throw new Error(error instanceof Error ? error.message : "Failed to submit feedback");
+    }
+  };
+
+  const submitIdea = async (title: string, description: string, priority: string) => {
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: description,
+          category: "Feature Request",
+          type: "idea",
+          title: title,
+          priority: priority,
+          includeEmail: true,
+          path: pathForFeedback,
+          teamId: selectedTeamId,
+          teamName: selectedTeam?.name,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        if (result.emailSent) {
+          // Success with email sent
+          return { success: true, message: "Idea submitted and email sent successfully!" };
+        } else {
+          // Success but email failed
+          return { 
+            success: true, 
+            message: "Idea submitted successfully, but email delivery failed. We've logged your idea for review." 
+          };
+        }
+      } else {
+        throw new Error(result.error || "Failed to submit idea");
+      }
+    } catch (error) {
+      console.error("Idea submission error:", error);
+      throw new Error(error instanceof Error ? error.message : "Failed to submit idea");
+    }
+  };
+
+  const submitFeedbackOld = async (type: string, message: string) => {
     await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -64,7 +142,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     });
   };
 
-  const submitIdea = async (title: string, description: string, priority: string) => {
+  const submitIdeaOld = async (title: string, description: string, priority: string) => {
     await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

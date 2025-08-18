@@ -196,28 +196,36 @@ export default function TeamsPage() {
         body: JSON.stringify({ email: email.trim(), role })
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+      const result = await res.json();
+      
+      if (res.ok) {
+        if (result.emailSent) {
+          notifications.addNotification({ 
+            type: "success", 
+            title: "Invitation sent successfully!", 
+            message: `Email delivered to ${email}` 
+          });
+        } else {
+          notifications.addNotification({ 
+            type: "warning", 
+            title: "Invitation created but email failed", 
+            message: `Invitation saved but email to ${email} could not be delivered` 
+          });
+        }
+        setShowInviteModal(false);
+        await loadTeams();
+      } else {
         notifications.addNotification({ 
           type: "error", 
           title: "Failed to send invitation", 
-          message: err.error || "Please try again"
+          message: result.error || "Please try again"
         });
-        return;
       }
-
-      notifications.addNotification({ 
-        type: "success", 
-        title: "Invitation sent!", 
-        message: `Email sent to ${email}` 
-      });
-      setShowInviteModal(false);
-      await loadTeams();
     } catch (err) {
       notifications.addNotification({ 
         type: "error", 
         title: "Failed to send invitation", 
-        message: "Network error"
+        message: "Network error - please check your connection"
       });
     } finally {
       setInviting(false);

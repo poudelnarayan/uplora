@@ -143,6 +143,7 @@ export async function POST(
     // Try to send the email now
     try {
       await sendInviteEmail(invitation.team.name, inviterName, inviterEmail, email, role, inviteUrl, expiresAt);
+      console.log(`✅ Invitation email sent successfully to ${email}`);
     } catch (e) {
       // Rollback DB change so we don't leave a pending invite without an email
       try {
@@ -163,7 +164,11 @@ export async function POST(
       } catch (rollbackErr) {
         console.error("Failed to rollback invitation after email error:", rollbackErr);
       }
-      return NextResponse.json({ error: "Failed to send invitation email" }, { status: 502 });
+      return NextResponse.json({ 
+        error: "Failed to send invitation email - please try again",
+        emailSent: false,
+        details: e instanceof Error ? e.message : "Email delivery failed"
+      }, { status: 502 });
     }
 
     const resp = {
@@ -175,6 +180,7 @@ export async function POST(
       team: invitation.team,
       inviter: invitation.inviter,
       emailSent: true,
+      message: "Invitation sent successfully",
       reused: Boolean(previousSnapshot),
     };
     broadcast({ type: "team.invite", teamId: params.teamId, payload: { email, role } });

@@ -29,7 +29,9 @@ export default function TestEmailSystemPage() {
       setResults(prev => [{
         type: testType,
         success: response.ok,
-        message: result.message || result.error || "Unknown result",
+        message: response.ok 
+          ? `✅ ${result.message} ${result.emailSent ? '(Email delivered)' : '(Email failed)'}`
+          : `❌ ${result.error || 'Test failed'}`,
         timestamp: result.timestamp || new Date().toLocaleString()
       }, ...prev.slice(0, 9)]); // Keep last 10 results
       
@@ -37,7 +39,7 @@ export default function TestEmailSystemPage() {
       setResults(prev => [{
         type: testType,
         success: false,
-        message: error instanceof Error ? error.message : "Network error",
+        message: `❌ ${error instanceof Error ? error.message : "Network error"}`,
         timestamp: new Date().toLocaleString()
       }, ...prev.slice(0, 9)]);
     } finally {
