@@ -16,6 +16,7 @@ import {
   X,
   MessageCircle,
   Lightbulb,
+  Plus,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/components/ui/NotificationCenter/NotificationCenter";
@@ -149,6 +150,28 @@ export default function AppShell({ children }: { children: ReactNode }) {
       body: JSON.stringify({
         message: description,
         category: "Feature Request",
+        type: "idea",
+        title: title,
+        priority: priority,
+        includeEmail: true,
+        path: pathForFeedback,
+        teamId: selectedTeamId,
+        teamName: selectedTeam?.name,
+      }),
+    });
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
+        {/* Header */}
+        <div className="flex items-center h-16 px-4 border-b border-border">
+          <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md" />
+        </div>
+
+        {/* Team Selector */}
+        <div className="p-4 border-b border-border">
           {/* Conditional workspace selector based on user scenario */}
           {teams.length === 0 ? (
             /* Scenario 1: Personal-only user - No switcher needed */
