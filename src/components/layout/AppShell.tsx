@@ -16,7 +16,6 @@ import {
   X,
   MessageCircle,
   Lightbulb,
-  Plus,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/components/ui/NotificationCenter/NotificationCenter";
@@ -171,48 +170,32 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* Team selector */}
         <div className="px-4 pt-4 pb-3 border-b border-border">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Current Workspace</div>
-            <div className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
-              {teams.length} {teams.length === 1 ? 'team' : 'teams'}
-            </div>
-          </div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Current Workspace</div>
           <div className="relative">
             <button
-              onClick={() => setTeamMenuOpen((o) => !o)}
+              onClick={() => teams.length > 1 && setTeamMenuOpen((o) => !o)}
               className={`group w-full inline-flex items-center justify-between px-4 py-3 rounded-xl border border-border text-sm transition-all duration-200 ${
-                "bg-gradient-to-r from-card/90 to-card/70 hover:from-card hover:to-card/90 hover:border-primary/50 hover:shadow-xl backdrop-blur-sm cursor-pointer"
+                teams.length > 1 
+                  ? "bg-card/80 hover:bg-card hover:border-primary/40 hover:shadow-lg backdrop-blur-sm" 
+                  : "bg-muted/50 cursor-default"
               }`}
-              aria-expanded={teamMenuOpen}
-              aria-haspopup="listbox"
-              role="combobox"
-              aria-label={`Current team: ${selectedTeam?.name || "No team selected"}. Click to switch teams.`}
             >
               <div className="flex items-center gap-3 min-w-0">
-                {/* Enhanced team indicator with pulse animation */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg animate-pulse" />
-                  <div className="absolute inset-0 w-3 h-3 rounded-full bg-primary/30 animate-ping" />
-                </div>
+                {/* Active team indicator */}
+                <div className="w-2 h-2 rounded-full bg-primary shadow-sm flex-shrink-0" />
                 <span className="font-medium text-foreground truncate">
-                  {selectedTeam?.name || (teams.length === 0 ? "Personal Workspace" : teams[0]?.name)}
+                  {selectedTeam?.name || (teams.length === 0 ? "No team" : teams[0]?.name)}
                 </span>
-                {/* Team role indicator */}
-                {selectedTeam && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
-                    Owner
-                  </span>
-                )}
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <ChevronDown className={`w-4 h-4 transition-all duration-300 ${
+                {teams.length > 1 && (
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
                     teamMenuOpen ? "rotate-180" : ""
-                  } group-hover:text-primary group-hover:scale-110`} />
+                  } group-hover:text-primary`} />
+                )}
               </div>
             </button>
-            
-            <AnimatePresence>
-              {teamMenuOpen && (
+            {teamMenuOpen && teams.length > 1 && (
               <motion.div
                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -228,10 +211,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   {/* Content container */}
                   <div className="relative p-2 space-y-1">
                     {/* Header with team count */}
-                    <div className="px-3 py-2 border-b border-border/30 mb-2">
+                    <div className="px-3 py-2 border-b border-border/30">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                          Switch Workspace
+                        <span className="text-xs font-medium text-foreground/80 uppercase tracking-wider">
+                          Switch Team
                         </span>
                         <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
                           {teams.length} teams
@@ -239,140 +222,52 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       </div>
                     </div>
                     
-                    {/* Enhanced team options with better grouping */}
-                    <div className="max-h-72 overflow-y-auto enhanced-scrollbar">
-                      {/* Personal workspace option */}
-                      <button
-                        onClick={() => {
-                          setSelectedTeamId(null);
-                          setTeamMenuOpen(false);
-                        }}
-                        className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 mb-2 ${
-                          !selectedTeamId 
-                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-primary border border-primary/30 shadow-sm" 
-                            : "text-foreground/90 hover:bg-gradient-to-r hover:from-foreground/5 hover:to-foreground/10 hover:text-foreground hover:shadow-sm"
-                        }`}
-                        role="option"
-                        aria-selected={!selectedTeamId}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                            !selectedTeamId 
-                              ? "bg-gradient-to-br from-primary to-secondary shadow-sm" 
-                              : "bg-muted-foreground/40 group-hover:bg-foreground/60"
-                          }`} />
-                          
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium">Personal Workspace</div>
-                            <div className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
-                              Your individual content
-                            </div>
-                          </div>
-                          
-                          {!selectedTeamId && (
-                            <div className="flex items-center gap-1">
-                              <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-primary" />
-                              </div>
-                              <span className="text-xs font-medium text-primary">Active</span>
-                            </div>
-                          )}
-                        </div>
-                      </button>
+                    {/* Team options */}
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                {teams.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setSelectedTeamId(t.id);
+                      setTeamMenuOpen(false);
+                    }}
+                    className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                      selectedTeamId === t.id 
+                        ? "bg-primary/20 text-primary border border-primary/30 shadow-sm" 
+                        : "text-foreground/90 hover:bg-foreground/5 hover:text-foreground hover:shadow-sm"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Team indicator dot */}
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        selectedTeamId === t.id 
+                          ? "bg-primary shadow-sm" 
+                          : "bg-muted-foreground/40 group-hover:bg-foreground/60"
+                      }`} />
                       
-                      {/* Team separator */}
-                      {teams.length > 0 && (
-                        <div className="flex items-center gap-2 px-3 py-2">
-                          <div className="flex-1 h-px bg-border/50" />
-                          <span className="text-xs text-muted-foreground font-medium">Teams</span>
-                          <div className="flex-1 h-px bg-border/50" />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{t.name}</div>
+                    {t.description && (
+                          <div className="text-xs text-muted-foreground/80 truncate mt-0.5 group-hover:text-muted-foreground">
+                            {t.description}
+                          </div>
+                    )}
+                      </div>
+                      
+                      {/* Selected indicator */}
+                      {selectedTeamId === t.id && (
+                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-primary" />
                         </div>
                       )}
-                      
-                      {/* Team list with staggered animations */}
-                      {teams.map((t, index) => (
-                        <motion.button
-                          key={t.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          onClick={() => {
-                            setSelectedTeamId(t.id);
-                            setTeamMenuOpen(false);
-                          }}
-                          className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
-                            selectedTeamId === t.id 
-                              ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-primary border border-primary/30 shadow-sm" 
-                              : "text-foreground/90 hover:bg-gradient-to-r hover:from-foreground/5 hover:to-foreground/10 hover:text-foreground hover:shadow-sm"
-                          }`}
-                          role="option"
-                          aria-selected={selectedTeamId === t.id}
-                        >
-                          <div className="flex items-center gap-3">
-                            {/* Enhanced team indicator with gradient */}
-                            <div className={\`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                              selectedTeamId === t.id 
-                                ? "bg-gradient-to-br from-primary to-secondary shadow-sm" 
-                                : "bg-muted-foreground/40 group-hover:bg-foreground/60"
-                            }`} />
-                            
-                            <div className="min-w-0 flex-1">
-                              <div className="font-medium truncate flex items-center gap-2">
-                                {t.name}
-                                {/* Team type indicator */}
-                                <span className="text-xs px-1.5 py-0.5 rounded bg-secondary/20 text-secondary font-medium">
-                                  Team
-                                </span>
-                              </div>
-                              {t.description && (
-                                <div className="text-xs text-muted-foreground/80 truncate mt-1 group-hover:text-muted-foreground">
-                                  {t.description}
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Enhanced selected indicator with animation */}
-                            {selectedTeamId === t.id && (
-                              <div className="flex items-center gap-1">
-                                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                </div>
-                                <span className="text-xs font-medium text-primary">Active</span>
-                              </div>
-                            )}
-                          </div>
-                        </motion.button>
-                      ))}
-                      
-                      {/* Quick create team action */}
-                      <div className="mt-3 pt-2 border-t border-border/30">
-                        <button
-                          onClick={() => {
-                            setTeamMenuOpen(false);
-                            openModal("create-team", {
-                              onSubmit: async (name: string, description: string) => {
-                                // This would need to be connected to the actual create team handler
-                                console.log("Create team:", name, description);
-                              }
-                            });
-                          }}
-                          className="group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 border-2 border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-primary"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-2.5 h-2.5 rounded-full border-2 border-dashed border-current flex-shrink-0" />
-                            <div className="font-medium">Create New Team</div>
-                            <div className="ml-auto">
-                              <Plus className="w-4 h-4" />
-                            </div>
-                          </div>
-                        </button>
-                      </div>
+                    </div>
+                  </button>
+                ))}
                     </div>
                   </div>
                 </div>
               </motion.div>
-              )}
-            </AnimatePresence>
+            )}
           </div>
         </div>
 
