@@ -51,19 +51,11 @@ export async function GET(request: NextRequest) {
       create: { email: session.user.email, name: session.user.name || "", image: session.user.image || "" },
     });
 
-    // Find all teams where the user is owner OR member
-    const teams = await prisma.team.findMany({
-      where: {
-        OR: [
-          { ownerId: user.id },
-          { members: { some: { userId: user.id } } },
-        ],
-      },
-      orderBy: { createdAt: "asc" },
-    });
-
     // Ensure user has personal workspace
-    let personalTeam = teams.find(t => t.isPersonal && t.ownerId === user.id);
+    let personalTeam = await prisma.team.findFirst({
+      where: { ownerId: user.id, isPersonal: true }
+    });
+    
     if (!personalTeam) {
       // Create personal workspace if missing
       personalTeam = await prisma.team.create({
@@ -81,15 +73,27 @@ export async function GET(request: NextRequest) {
         data: { personalTeamId: personalTeam.id }
       });
     }
-    
+
+    // Find all teams where the user is owner OR member
+    const teams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { ownerId: user.id },
+          { members: { some: { userId: user.id } } },
+        ],
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
     return NextResponse.json(teams.map(t => ({ 
       id: t.id, 
       name: t.name, 
       description: t.description, 
       createdAt: t.createdAt,
-      isPersonal: t.isPersonal 
+      isPersonal: t.isPersonal || false
     })));
   } catch (error) {
+    console.error("Teams API error:", error);
     return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 });
   }
 }

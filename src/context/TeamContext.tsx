@@ -46,7 +46,6 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
       
-      setTeams(list);
       const newEtag = res.headers.get('ETag');
       if (newEtag) setEtag(newEtag);
       try { 
