@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import AppShell from "@/components/layout/AppShell";
 import { useNotifications } from "@/components/ui/Notification";
-import { ConfirmModal } from "@/components/ui/Modal";
 import TeamHeader from "@/components/teams/TeamHeader";
 import TeamList from "@/components/teams/TeamList";
 import CreateTeamModal from "@/components/teams/CreateTeamModal";
@@ -53,16 +52,6 @@ export default function TeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [renamingTeamId, setRenamingTeamId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState<string>("");
-  const [confirmState, setConfirmState] = useState<{
-    open: boolean;
-    action: "delete" | "leave" | "remove-member" | "toggle-status" | null;
-    teamId: string | null;
-    teamName: string;
-    memberId?: string;
-    memberName?: string;
-    memberRole?: string;
-    nextStatus?: "ACTIVE" | "PAUSED";
-  }>({ open: false, action: null, teamId: null, teamName: "" });
   const [inviting, setInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
 
@@ -250,22 +239,14 @@ export default function TeamsPage() {
             setRenamingTeamId(teamId);
             setRenameValue(currentName);
           }}
-          onDeleteTeam={(teamId, teamName) => 
-            setConfirmState({ 
-              open: true, 
-              action: "delete", 
-              teamId, 
-              teamName 
-            })
-          }
-          onLeaveTeam={(teamId, teamName) => 
-            setConfirmState({ 
-              open: true, 
-              action: "leave", 
-              teamId, 
-              teamName 
-            })
-          }
+          onDeleteTeam={(teamId, teamName) => {
+            // Handle delete team logic here
+            console.log("Delete team:", teamId, teamName);
+          }}
+          onLeaveTeam={(teamId, teamName) => {
+            // Handle leave team logic here
+            console.log("Leave team:", teamId, teamName);
+          }}
           onResendInvitation={async (teamId, invitationId) => {
             setResendingId(invitationId);
             // Implementation here
@@ -274,26 +255,14 @@ export default function TeamsPage() {
           onCancelInvitation={async (teamId, invitationId) => {
             // Implementation here
           }}
-          onToggleMemberStatus={(teamId, memberId, memberName, currentStatus, teamName) => 
-            setConfirmState({
-              open: true,
-              action: "toggle-status",
-              teamId,
-              teamName,
-              memberId,
-              memberName,
-              nextStatus: currentStatus === "PAUSED" ? "ACTIVE" : "PAUSED",
-            })
-          }
-          onRemoveMember={(teamId, memberId, teamName) => 
-            setConfirmState({ 
-              open: true, 
-              action: "remove-member", 
-              teamId, 
-              teamName, 
-              memberId 
-            })
-          }
+          onToggleMemberStatus={(teamId, memberId, memberName, currentStatus, teamName) => {
+            // Handle toggle member status logic here
+            console.log("Toggle member status:", teamId, memberId, currentStatus);
+          }}
+          onRemoveMember={(teamId, memberId, teamName) => {
+            // Handle remove member logic here
+            console.log("Remove member:", teamId, memberId, teamName);
+          }}
           renamingTeamId={renamingTeamId}
           renameValue={renameValue}
           onRenameValueChange={setRenameValue}
@@ -320,42 +289,6 @@ export default function TeamsPage() {
         team={selectedTeam}
         onSubmit={handleInviteMember}
         inviting={inviting}
-      />
-
-      <ConfirmModal
-        isOpen={confirmState.open}
-        onClose={() => setConfirmState(prev => ({ ...prev, open: false }))}
-        onConfirm={() => {
-          // Handle confirmations
-          setConfirmState(prev => ({ ...prev, open: false }));
-        }}
-        title={
-          confirmState.action === "delete" ? "Delete team" :
-          confirmState.action === "leave" ? "Leave team" :
-          confirmState.action === "remove-member" ? "Remove member" :
-          confirmState.nextStatus === "PAUSED" ? "Set inactive" : "Set active"
-        }
-        message={
-          confirmState.action === "delete"
-            ? `Are you sure you want to permanently delete "${confirmState.teamName}"?`
-            : confirmState.action === "leave"
-            ? `Are you sure you want to leave "${confirmState.teamName}"?`
-            : confirmState.action === "remove-member"
-            ? `Are you sure you want to remove this member from "${confirmState.teamName}"?`
-            : `Set member ${confirmState.nextStatus === "PAUSED" ? "inactive" : "active"}?`
-        }
-        confirmText={
-          confirmState.action === "delete" ? "Delete" :
-          confirmState.action === "leave" ? "Leave" :
-          confirmState.action === "remove-member" ? "Remove" :
-          confirmState.nextStatus === "PAUSED" ? "Set inactive" : "Set active"
-        }
-        type={
-          confirmState.action === "delete" ? "danger" :
-          confirmState.action === "leave" ? "warning" :
-          confirmState.action === "remove-member" ? "danger" :
-          confirmState.nextStatus === "PAUSED" ? "warning" : "success"
-        }
       />
     </AppShell>
   );

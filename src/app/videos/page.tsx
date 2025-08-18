@@ -7,7 +7,6 @@ import { Play, Image as ImageIcon, X, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { StatusChip } from "@/components/ui/StatusChip";
-import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
@@ -25,15 +24,6 @@ interface VideoItem {
   uploader?: { name?: string | null; email?: string | null };
 }
 
-export default function AllVideosPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; video: VideoItem | null; isDeleting: boolean }>({
-    isOpen: false,
-    video: null,
-    isDeleting: false
-  });
   const notifications = useNotifications();
   const { selectedTeamId, selectedTeam } = useTeam();
 
@@ -101,79 +91,6 @@ export default function AllVideosPage() {
     } catch {}
     return () => { try { es?.close(); } catch {} };
   }, [selectedTeamId]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return "text-green-600 bg-green-100";
-      case "PENDING":
-        return "text-yellow-700 bg-yellow-100";
-      case "PROCESSING":
-        return "text-blue-600 bg-blue-100";
-      default:
-        return "text-blue-600 bg-blue-100"; // Default to processing
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "PUBLISHED":
-        return "Published";
-      case "PENDING":
-        return "Awaiting Publish";
-      case "PROCESSING":
-        return "Processing";
-      default:
-        return "Processing"; // Default to processing
-    }
-  };
-
-  const handleDeleteVideo = (video: VideoItem) => {
-    setDeleteModal({ isOpen: true, video, isDeleting: false });
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteModal.video) return;
-    
-    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
-    
-    try {
-      const response = await fetch(`/api/videos/${deleteModal.video.id}/delete`, {
-        method: "DELETE"
-      });
-      
-      if (response.ok) {
-        setVideos(prev => prev.filter(v => v.id !== deleteModal.video!.id));
-        notifications.addNotification({
-          type: "success",
-          title: "Video deleted",
-          message: "The video has been permanently removed"
-        });
-        setDeleteModal({ isOpen: false, video: null, isDeleting: false });
-      } else {
-        const error = await response.json();
-        notifications.addNotification({
-          type: "error",
-          title: "Delete failed",
-          message: error.error || "Failed to delete video"
-        });
-      }
-    } catch (error) {
-      notifications.addNotification({
-        type: "error",
-        title: "Delete failed",
-        message: "An error occurred while deleting the video"
-      });
-    } finally {
-      setDeleteModal(prev => ({ ...prev, isDeleting: false }));
-    }
-  };
-
-  const closeDeleteModal = () => {
-    if (!deleteModal.isDeleting) {
-      setDeleteModal({ isOpen: false, video: null, isDeleting: false });
-    }
-  };
 
   return (
     <AppShell>
@@ -317,20 +234,6 @@ export default function AllVideosPage() {
           </div>
         )}
       </div>
-      
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={deleteModal.isOpen}
-        onClose={closeDeleteModal}
-        onConfirm={confirmDelete}
-        title="Delete Video"
-        itemName={deleteModal.video?.title}
-        message="This action cannot be undone. The video will be permanently removed from your account and storage."
-        confirmText="Delete Video"
-        cancelText="Cancel"
-        variant="danger"
-        isLoading={deleteModal.isDeleting}
-      />
     </AppShell>
   );
 }

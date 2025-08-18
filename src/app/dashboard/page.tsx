@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import AppShell from "@/components/layout/AppShell";
 import { useNotifications } from "@/components/ui/Notification";
-import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useTeam } from "@/context/TeamContext";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsOverview from "@/components/dashboard/StatsOverview";
@@ -43,15 +42,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [thumbnailUrls, setThumbnailUrls] = useState<Map<string, string>>(new Map());
   const [loadingThumbnails, setLoadingThumbnails] = useState<Set<string>>(new Set());
-  const [deleteModal, setDeleteModal] = useState<{ 
-    isOpen: boolean; 
-    video: VideoItem | null; 
-    isDeleting: boolean 
-  }>({
-    isOpen: false,
-    video: null,
-    isDeleting: false
-  });
 
   // Function to load thumbnail URL
   const loadThumbnailUrl = async (videoId: string, thumbnailKey: string) => {
@@ -185,18 +175,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-      
-      <ConfirmationModal
-        isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, video: null, isDeleting: false })}
-        onConfirm={() => {}}
-        title="Delete Video"
-        itemName={deleteModal.video?.title}
-        message="This action cannot be undone."
-        confirmText="Delete Video"
-        variant="danger"
-        isLoading={deleteModal.isDeleting}
-      />
     </AppShell>
   );
 }
