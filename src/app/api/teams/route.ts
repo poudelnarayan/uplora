@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json(teams.map(t => ({ 
+    return NextResponse.json(teams.map(t => ({
       id: t.id, 
       name: t.name, 
       description: t.description, 

@@ -116,7 +116,21 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeamId]);
 
-  const selectedTeam = useMemo(() => teams.find(t => t.id === selectedTeamId) || null, [teams, selectedTeamId]);
+  const selectedTeam = useMemo(() => {
+    // Check regular teams first
+    const regularTeam = teams.find(t => t.id === selectedTeamId);
+    if (regularTeam) return regularTeam;
+    
+    // Check personal workspace from cache
+    try {
+      const cached = JSON.parse(localStorage.getItem('teams-cache') || 'null');
+      if (cached?.personal && cached.personal.id === selectedTeamId) {
+        return cached.personal;
+      }
+    } catch {}
+    
+    return null;
+  }, [teams, selectedTeamId]);
 
   const value: TeamContextType = {
     teams,

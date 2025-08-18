@@ -58,6 +58,9 @@ export default function TeamsPage() {
   const [inviting, setInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
 
+  // Filter out personal workspaces from team display
+  const actualTeams = teams.filter(team => !team.isPersonal);
+
   // Expose modal function globally for TeamList component
   useEffect(() => {
     (window as any).openCreateTeamModal = () => {
@@ -88,9 +91,12 @@ export default function TeamsPage() {
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
 
+      // Filter to only include non-personal teams for the teams page
+      const nonPersonalTeams = list.filter((t: any) => !t.isPersonal);
+
       // Fetch detailed team information
       const detailed: Team[] = await Promise.all(
-        list.map(async (t: any) => {
+        nonPersonalTeams.map(async (t: any) => {
           try {
             const dRes = await fetch(`/api/teams/${t.id}/details`, { cache: "no-store" });
             if (dRes.ok) {
@@ -463,37 +469,43 @@ export default function TeamsPage() {
   };
 
   // Calculate stats
-  const totalMembers = teams.reduce((sum, team) => sum + team.members.length, 0);
-  const ownedTeams = teams.filter(team => 
+  const totalMembers = actualTeams.reduce((sum, team) => sum + team.members.length, 0);
+  const ownedTeams = actualTeams.filter(team => 
     team.ownerEmail?.toLowerCase() === session?.user?.email?.toLowerCase()
   ).length;
-  const pendingInvitations = teams.reduce((sum, team) => 
+  const pendingInvitations = actualTeams.reduce((sum, team) => 
     sum + team.invitations.filter(inv => inv.status === "pending").length, 0
   );
 
   return (
     <AppShell>
       <div className="min-h-full space-y-6">
-        {/* Header with Primary Action */}
+        {/* Conditional Header Based on Team Count */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center sm:text-left"
         >
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-foreground">Team Management</h1>
-            <button
-              onClick={() => {
-                openModal("create-team", {
-                  onSubmit: handleCreateTeam
-                });
-              }}
-              className="btn btn-primary btn-lg"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create Team
-            </button>
-          </div>
+          {actualTeams.length === 0 ? (
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-foreground">Team Management</h1>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-foreground">Team Management</h1>
+              <button
+                onClick={() => {
+                  openModal("create-team", {
+                    onSubmit: handleCreateTeam
+                  });
+                }}
+                className="btn btn-primary btn-lg"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Team
+              </button>
+            </div>
+          )}
         </motion.div>
 
 
@@ -504,7 +516,7 @@ export default function TeamsPage() {
           transition={{ delay: 0.2 }}
         >
           <TeamList
-            teams={teams}
+            teams={actualTeams}
             loading={loading}
             onCreateTeam={() => {
               openModal("create-team", {
