@@ -753,3 +753,114 @@ textarea.field-control {
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--foreground));
 }
+
+/* Perfect Modal Centering System */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  
+  /* Perfect centering using flexbox */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Responsive padding */
+  padding: 1rem;
+  
+  /* Backdrop styling */
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+}
+
+.modal-container {
+  /* Responsive width constraints */
+  width: 100%;
+  max-height: 90vh;
+  
+  /* Flexbox for content layout */
+  display: flex;
+  flex-direction: column;
+  
+  /* Modern styling */
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 1rem;
+  
+  /* Enhanced shadows for depth */
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  
+  /* Prevent content overflow */
+  overflow: hidden;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 0.5rem;
+  }
+  
+  .modal-container {
+    max-height: 95vh;
+    border-radius: 0.75rem;
+  }
+}
+
+/* Tablet and desktop */
+@media (min-width: 768px) {
+  .modal-backdrop {
+    padding: 2rem;
+  }
+}
+
+/* Focus management for accessibility */
+.modal-container:focus {
+  outline: none;
+}
+
+.modal-container:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Smooth animations */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+}
+
+/* Backdrop animations */
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes backdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
