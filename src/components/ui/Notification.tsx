@@ -39,6 +39,7 @@ export function useNotifications() {
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   const addNotification = (notification: Omit<NotificationProps, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -48,8 +49,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       : notification.stickyConditions;
     const defaultDuration = shouldSticky ? 0 : (notification.duration || 3000);
     const newNotification = { ...notification, id, sticky: shouldSticky, stickyConditions, duration: defaultDuration } as NotificationProps;
-    // Replace existing notifications; show only the latest
-    setNotifications([newNotification]);
+    // Add to existing notifications instead of replacing
+    setNotifications(prev => [newNotification, ...prev.slice(0, 4)]); // Keep max 5 notifications
   };
 
   const removeNotification = (id: string) => {
@@ -100,24 +101,18 @@ function NotificationContainer() {
   // Avoid hydration mismatch by rendering after mount
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  // Decide position only on client after mount
-  const [useRight, setUseRight] = useState(false);
-  useEffect(() => {
-    if (!mounted) return;
-    setUseRight(!session?.user);
-  }, [mounted, session?.user]);
 
   if (!mounted) return null;
 
   return (
-    <div className={`fixed top-4 ${useRight ? "right-4" : "left-4 lg:left-72"} z-50 space-y-2`}>
+    <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: useRight ? 300 : -300, scale: 0.8 }}
+            initial={{ opacity: 0, x: 300, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: useRight ? 300 : -300, scale: 0.8 }}
+            exit={{ opacity: 0, x: 300, scale: 0.8 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`max-w-sm w-full bg-white dark:bg-slate-900 text-foreground border rounded-lg shadow-lg p-4 relative ${
               notification.type === "success" ? "border-green-500/20" :

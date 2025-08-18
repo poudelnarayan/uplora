@@ -175,35 +175,6 @@ export default function TeamList({
               </div>
             </div>
 
-            {/* Team Stats - Per Team Information */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <UserCheck className="w-5 h-5 text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-primary mb-1">{activeMembers.length}</div>
-                <div className="text-sm text-muted-foreground">Active Members</div>
-              </div>
-              
-              <div className="text-center p-4 rounded-lg bg-amber/10 border border-amber/20">
-                <div className="w-8 h-8 bg-amber/20 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Mail className="w-5 h-5 text-amber-600" />
-                </div>
-                <div className="text-2xl font-bold text-amber-600 mb-1">{pendingInvites.length}</div>
-                <div className="text-sm text-muted-foreground">Pending Invites</div>
-              </div>
-              
-              <div className="text-center p-4 rounded-lg bg-secondary/10 border border-secondary/20">
-                <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Clock className="w-5 h-5 text-secondary" />
-                </div>
-                <div className="text-2xl font-bold text-secondary mb-1">
-                  {Math.ceil((Date.now() - new Date(team.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
-                </div>
-                <div className="text-sm text-muted-foreground">Days Active</div>
-              </div>
-            </div>
-
             {/* Active Members - Prominent Display */}
             {activeMembers.length > 0 && (
               <div className="space-y-3">
