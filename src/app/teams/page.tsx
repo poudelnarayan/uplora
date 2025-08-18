@@ -493,7 +493,9 @@ export default function TeamsPage() {
           <TeamList
             teams={teams}
             loading={loading}
-            onCreateTeam={() => setShowCreateTeam(true)}
+            onCreateTeam={() => openModal("create-team", {
+              onSubmit: handleCreateTeam
+            })}
             onInviteMember={(team) => openModal("invite-member", {
               teamName: team.name,
               onSubmit: handleInviteMember
