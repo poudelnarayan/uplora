@@ -39,8 +39,8 @@
 }
 
 .selected {
-  border-color: rgb(var(--ring));
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-color: rgb(99, 102, 241);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .unselected {

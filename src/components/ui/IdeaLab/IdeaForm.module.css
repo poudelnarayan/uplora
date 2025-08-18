@@ -39,8 +39,8 @@
 
 .input:focus {
   outline: none;
-  border-color: rgb(var(--ring));
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-color: rgb(99, 102, 241);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .input::placeholder {
@@ -62,8 +62,8 @@
 
 .textarea:focus {
   outline: none;
-  border-color: rgb(var(--ring));
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-color: rgb(99, 102, 241);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .textarea::placeholder {
@@ -80,7 +80,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(to right, rgb(245, 158, 11), rgb(251, 191, 36));
+  background: linear-gradient(to right, rgb(16, 185, 129), rgb(52, 211, 153));
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -91,7 +91,7 @@
 
 .submitButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
 }
 
 .submitButton:disabled {
