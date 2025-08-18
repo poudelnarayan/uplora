@@ -373,8 +373,7 @@ export default function UploadZone() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mx-auto flex items-center justify-center animate-pulse-glow">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center animate-pulse-glow">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 mx-auto flex items-center justify-center animate-pulse-glow">
                 <FileVideo className="w-12 h-12 text-white" />
               </div>
               
@@ -545,7 +544,7 @@ export default function UploadZone() {
                   <CheckCircle className="w-6 h-6 text-green-500" />
                   <div>
                     <p className="font-semibold text-foreground">Upload Complete!</p>
-                  <p className="text-sm text-muted-foreground">You can find this upload in the Recent Videos on your dashboard.</p>
+                    <p className="text-sm text-muted-foreground">You can find this upload in the Recent Videos on your dashboard.</p>
                   </div>
                 </div>
               </motion.div>
