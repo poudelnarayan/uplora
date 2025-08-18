@@ -753,21 +753,3 @@ textarea.field-control {
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--foreground));
 }
-/* Mobile Navigation Bar - Force Opacity */
-@media (max-width: 1023px) {
-  .mobile-navbar-opaque {
-    background-color: #ffffff !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-  
-  [data-theme="dark"] .mobile-navbar-opaque {
-    background-color: #1e293b !important;
-  }
-}
-
-/* Ensure navbar content is always visible */
-.navbar-content {
-  position: relative;
-  z-index: 10;
-}

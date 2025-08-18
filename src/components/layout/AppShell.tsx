@@ -190,8 +190,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto lg:ml-64 ml-0">
         {/* Top Bar */}
-        <div className="sticky top-0 z-30 bg-white dark:bg-slate-800 border-b border-border lg:bg-card/95 lg:backdrop-blur-sm mobile-navbar-opaque">
-          <div className="flex items-center justify-between px-4 lg:px-8 py-3 navbar-content">
+        <div className="sticky top-0 z-30 bg-card border-b border-border backdrop-blur-none lg:bg-card/95 lg:backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 lg:px-8 py-3">
             {/* Left side - Icons and Mobile Menu */}
             <div className="flex items-center gap-3">
               {/* Perfect Circle Icons - Always Visible */}
