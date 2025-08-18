@@ -20,7 +20,8 @@ import {
   CreditCard,
   Youtube,
   Zap,
-  Crown
+  Crown,
+  Users
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useSession } from "next-auth/react";
