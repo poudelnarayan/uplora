@@ -27,6 +27,7 @@ export default function UploadZone() {
   const router = useRouter();
   const { enqueueUpload, uploads, hasActive, cancelUpload } = useUploads() as any;
   const { selectedTeamId } = useTeam();
+  
   // State management
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -134,7 +135,7 @@ export default function UploadZone() {
     } else {
       notifications.addNotification({ type: "error", title: "Invalid file type", message: "Please drop a video file (MP4, MOV, AVI, etc.)" });
     }
-  }, [notifications]);
+  }, [notifications, hasActive, isUploading]);
 
   // File size formatter
   const formatFileSize = (bytes: number) => {
@@ -373,6 +374,7 @@ export default function UploadZone() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center animate-pulse-glow">
                 <FileVideo className="w-12 h-12 text-white" />
               </div>
               
@@ -551,8 +553,6 @@ export default function UploadZone() {
           </motion.div>
         )}
       </div>
-
-      {/* Publishing Section removed per request; show only Upload Complete card */}
     </div>
   );
 }
