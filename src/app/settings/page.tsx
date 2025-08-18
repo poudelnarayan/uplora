@@ -23,6 +23,8 @@ import {
   Crown,
   Users,
   Upload,
+  CheckCircle,
+  ExternalLink
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useSession } from "next-auth/react";
