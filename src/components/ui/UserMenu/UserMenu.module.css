@@ -12,7 +12,7 @@
   justify-content: center;
   width: 2.75rem;
   height: 2.75rem;
-  border-radius: 9999px;
+  border-radius: 50%;
   background-color: rgb(var(--card));
   border: 1px solid rgb(var(--border));
   cursor: pointer;
@@ -45,6 +45,7 @@
 .dropdown {
   position: absolute;
   top: 100%;
+  left: auto;
   right: 0;
   margin-top: 0.5rem;
   width: 16rem;
@@ -52,7 +53,7 @@
   border: 1px solid rgb(var(--border));
   border-radius: 0.75rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  z-index: 60;
+  z-index: 70;
   overflow: hidden;
 }
 

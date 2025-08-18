@@ -598,13 +598,6 @@ textarea.field-control {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .theme-toggle {
-    bottom: 1rem;
-    right: 1rem;
-    width: 3rem;
-    height: 3rem;
-  }
-  
   .btn {
     padding: 0.625rem 1.25rem;
     font-size: 0.8125rem;
