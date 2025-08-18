@@ -170,88 +170,169 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* Team selector */}
         <div className="px-4 pt-4 pb-3 border-b border-border">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Current Workspace</div>
+          <div className="text-xs font-medium text-muted-foreground mb-3 flex items-center justify-between">
+            <span>Workspace</span>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
+              {teams.length}
+            </span>
+          </div>
           <div className="relative">
             <button
-              onClick={() => teams.length > 1 && setTeamMenuOpen((o) => !o)}
-              className={`group w-full inline-flex items-center justify-between px-4 py-3 rounded-xl border border-border text-sm transition-all duration-200 ${
+              onClick={() => setTeamMenuOpen((o) => !o)}
+              className={`group w-full inline-flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-200 ${
                 teams.length > 1 
-                  ? "bg-card/80 hover:bg-card hover:border-primary/40 hover:shadow-lg backdrop-blur-sm" 
-                  : "bg-muted/50 cursor-default"
+                  ? "bg-card border-border hover:border-primary/50 hover:shadow-md cursor-pointer" 
+                  : "bg-card border-border cursor-pointer"
               }`}
+              aria-expanded={teamMenuOpen}
+              aria-haspopup="listbox"
+              role="combobox"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-sm flex-shrink-0" />
+                <div className={`w-3 h-3 rounded-full flex-shrink-0 transition-all ${
+                  selectedTeam 
+                    ? "bg-gradient-to-br from-green-400 to-green-500 shadow-sm animate-pulse" 
+                    : "bg-muted-foreground/40"
+                }`} />
                 <span className="font-medium text-foreground truncate">
-                  {selectedTeam?.name || (teams.length === 0 ? "No team" : teams[0]?.name)}
+                  {selectedTeam?.name || "Personal Workspace"}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                {teams.length > 1 && (
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
-                    teamMenuOpen ? "rotate-180" : ""
-                  } group-hover:text-primary group-hover:scale-110`} />
-                )}
-              </div>
+              <ChevronDown className={`w-4 h-4 transition-all duration-200 text-muted-foreground group-hover:text-primary ${
+                teamMenuOpen ? "rotate-180" : ""
+              }`} />
             </button>
+            
             <AnimatePresence>
-              {teamMenuOpen && teams.length > 1 && (
+              {teamMenuOpen && (
                 <motion.div
-                  initial={{ opacity: 1, y: -8, scale: 0.98 }}
+                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                  transition={{ duration: 0.12, ease: "easeOut" }}
                   className="absolute top-full left-0 right-0 mt-2 z-50"
                 >
-                  <div className="bg-card border border-border rounded-xl shadow-xl overflow-hidden">
-                    {/* Clean header */}
-                    <div className="px-4 py-3 border-b border-border bg-muted/30">
+                  <div className="bg-card border border-border rounded-lg shadow-xl overflow-hidden backdrop-blur-sm">
+                    {/* Simplified header */}
+                    <div className="px-4 py-2 border-b border-border bg-muted/20">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-foreground">
-                          Switch Team
-                        </span>
-                        <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
-                          {teams.length}
+                        <span className="text-sm font-medium text-foreground">
+                          Switch Workspace
                         </span>
                       </div>
                     </div>
                     
-                    {/* Team list */}
-                    <div className="max-h-64 overflow-y-auto enhanced-scrollbar">
+                    {/* Workspace options */}
+                    <div className="max-h-56 overflow-y-auto custom-scrollbar">
                       <div className="p-2 space-y-1">
+                        {/* Personal Workspace Option */}
+                        <motion.button
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0, duration: 0.15 }}
+                          onClick={() => {
+                            setSelectedTeamId(null);
+                            setTeamMenuOpen(false);
+                          }}
+                          className={`group w-full text-left px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
+                            !selectedTeamId 
+                              ? "bg-primary text-primary-foreground shadow-sm" 
+                              : "text-foreground hover:bg-muted/60"
+                          }`}
+                          role="option"
+                          aria-selected={!selectedTeamId}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
+                              !selectedTeamId 
+                                ? "bg-primary-foreground" 
+                                : "bg-muted-foreground/50 group-hover:bg-foreground/70"
+                            }`} />
+                            <span className="font-medium">Personal Workspace</span>
+                            {!selectedTeamId && (
+                              <div className="ml-auto">
+                                <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+                              </div>
+                            )}
+                          </div>
+                        </motion.button>
+                        
+                        {/* Team separator */}
+                        {teams.length > 0 && (
+                          <div className="border-t border-border my-2" />
+                        )}
+                        
+                        {/* Team list */}
                         {teams.map((t, index) => (
                           <motion.button
                             key={t.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.03, duration: 0.2 }}
+                            transition={{ delay: (index + 1) * 0.02, duration: 0.15 }}
                             onClick={() => {
                               setSelectedTeamId(t.id);
                               setTeamMenuOpen(false);
                             }}
-                            className={`group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 ${
+                            className={`group w-full text-left px-3 py-2.5 rounded-md text-sm transition-all duration-150 ${
                               selectedTeamId === t.id 
                                 ? "bg-primary text-primary-foreground shadow-sm" 
-                                : "text-foreground hover:bg-muted hover:shadow-sm"
+                                : "text-foreground hover:bg-muted/60"
                             }`}
+                            role="option"
+                            aria-selected={selectedTeamId === t.id}
                           >
                             <div className="flex items-center gap-3">
                               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
                                 selectedTeamId === t.id 
-                                  ? "bg-primary-foreground shadow-sm" 
+                                  ? "bg-primary-foreground" 
                                   : "bg-muted-foreground/50 group-hover:bg-foreground/70"
                               }`} />
                               
-                              <div className="min-w-0 flex-1">
-                                <div className="font-medium truncate">{t.name}</div>
-                              </div>
+                              <span className="font-medium truncate flex-1">{t.name}</span>
                               
                               {selectedTeamId === t.id && (
-                                <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+                                <div className="ml-auto">
+                                  <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+                                </div>
                               )}
                             </div>
                           </motion.button>
                         ))}
+                        
+                        {/* Quick create team action */}
+                        {teams.length > 0 && (
+                          <>
+                            <div className="border-t border-border my-2" />
+                            <motion.button
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: (teams.length + 1) * 0.02, duration: 0.15 }}
+                              onClick={() => {
+                                setTeamMenuOpen(false);
+                                openModal("create-team", {
+                                  onSubmit: async (name: string, description: string) => {
+                                    // Handle team creation
+                                    const response = await fetch("/api/teams", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ name, description })
+                                    });
+                                    if (response.ok) {
+                                      // Refresh teams
+                                      window.location.reload();
+                                    }
+                                  }
+                                });
+                              }}
+                              className="group w-full text-left px-3 py-2.5 rounded-md text-sm transition-all duration-150 text-muted-foreground hover:text-foreground hover:bg-muted/40 border-2 border-dashed border-muted-foreground/30 hover:border-primary/50"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-2.5 h-2.5 rounded-full border border-dashed border-current flex-shrink-0" />
+                                <span className="font-medium">Create New Team</span>
+                              </div>
+                            </motion.button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
