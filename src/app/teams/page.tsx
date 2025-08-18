@@ -9,6 +9,7 @@ import CreateTeamModal from "@/components/teams/CreateTeamModal";
 import InviteMemberModal from "@/components/teams/InviteMemberModal";
 import { motion } from "framer-motion";
 import { Users, Plus, Crown, Mail, UserCheck, Clock } from "lucide-react";
+import { useModalManager } from "@/components/ui/Modal";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,7 @@ export default function TeamsPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const { openModal } = useModalManager();
   const [renamingTeamId, setRenamingTeamId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState<string>("");
   const [inviting, setInviting] = useState(false);
@@ -463,7 +465,9 @@ export default function TeamsPage() {
             <p className="text-muted-foreground">Manage your teams, members, and invitations</p>
           </div>
           <button
-            onClick={() => setShowCreateTeam(true)}
+            onClick={() => openModal("create-team", {
+              onSubmit: handleCreateTeam
+            })}
             className="btn btn-primary btn-lg flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
@@ -482,10 +486,10 @@ export default function TeamsPage() {
             teams={teams}
             loading={loading}
             onCreateTeam={() => setShowCreateTeam(true)}
-            onInviteMember={(team) => {
-              setSelectedTeam(team);
-              setShowInviteModal(true);
-            }}
+            onInviteMember={(team) => openModal("invite-member", {
+              teamName: team.name,
+              onSubmit: handleInviteMember
+            })}
             onStartRename={(teamId, currentName) => {
               setRenamingTeamId(teamId);
               setRenameValue(currentName);
@@ -507,19 +511,6 @@ export default function TeamsPage() {
         </motion.div>
 
         {/* Modals */}
-        <CreateTeamModal
-          isOpen={showCreateTeam}
-          onClose={() => setShowCreateTeam(false)}
-          onSubmit={handleCreateTeam}
-        />
-
-        <InviteMemberModal
-          isOpen={showInviteModal}
-          onClose={() => setShowInviteModal(false)}
-          team={selectedTeam}
-          onSubmit={handleInviteMember}
-          inviting={inviting}
-        />
       </div>
     </AppShell>
   );

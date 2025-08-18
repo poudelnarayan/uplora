@@ -25,6 +25,7 @@ import UserMenu from "@/components/ui/UserMenu/UserMenu";
 import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
 import NotificationBell from "@/components/ui/NotificationBell/NotificationBell";
 import { usePathname as usePathnameForFeedback } from "next/navigation";
+import { useModalManager } from "@/components/ui/Modal";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
@@ -44,6 +45,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [showFeedbackStudio, setShowFeedbackStudio] = useState(false);
   const [showIdeaLab, setShowIdeaLab] = useState(false);
+  const { openModal } = useModalManager();
 
   // Feedback handlers
   const submitFeedback = async (type: string, message: string) => {
@@ -155,7 +157,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
           
           {/* Feedback Studio */}
           <button
-            onClick={() => setShowFeedbackStudio(true)}
+            onClick={() => openModal("feedback-studio", {
+              onSubmit: submitFeedback
+            })}
             className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
           >
             <MessageCircle className="h-5 w-5 shrink-0" />
@@ -164,7 +168,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
           {/* Idea Lab */}
           <button
-            onClick={() => setShowIdeaLab(true)}
+            onClick={() => openModal("idea-lab", {
+              onSubmit: submitIdea
+            })}
             className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
           >
             <Lightbulb className="h-5 w-5 shrink-0" />
@@ -216,7 +222,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
             {/* Right side - User Menu */}
             <div className="flex items-center">
-              <UserMenu onFeedbackClick={() => setShowFeedbackStudio(true)} />
+              <UserMenu onFeedbackClick={() => openModal("feedback-studio", {
+                onSubmit: submitFeedback
+              })} />
             </div>
           </div>
         </div>
@@ -283,18 +291,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <NotificationCenter
         isOpen={showNotificationCenter}
         onClose={() => setShowNotificationCenter(false)}
-      />
-
-      <FeedbackStudio
-        isOpen={showFeedbackStudio}
-        onClose={() => setShowFeedbackStudio(false)}
-        onSubmit={submitFeedback}
-      />
-
-      <IdeaLab
-        isOpen={showIdeaLab}
-        onClose={() => setShowIdeaLab(false)}
-        onSubmit={submitIdea}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import UploadTray from "@/components/layout/UploadTray";
 import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
 import defaultSeo from "@/seo.config";
 import { ThemeContext } from "@/components/ui/ThemeToggle/ThemeToggle";
+import { ModalProvider } from "@/components/ui/Modal";
 
 // Theme Provider
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -78,18 +79,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         ) : (
           <TeamProvider>
             <UploadProvider>
-              <ThemeProvider>
-                <DefaultSeoNoSSR {...defaultSeo} />
-                <OrganizationJsonLdNoSSR
-                  type="Organization"
-                  id={`${siteUrl}/#organization`}
-                  name="Uplora"
-                  url={siteUrl}
-                  sameAs={[]}
-                />
-                {children}
-                <UploadTray />
-              </ThemeProvider>
+              <ModalProvider>
+                <ThemeProvider>
+                  <DefaultSeoNoSSR {...defaultSeo} />
+                  <OrganizationJsonLdNoSSR
+                    type="Organization"
+                    id={`${siteUrl}/#organization`}
+                    name="Uplora"
+                    url={siteUrl}
+                    sameAs={[]}
+                  />
+                  {children}
+                  <UploadTray />
+                </ThemeProvider>
+              </ModalProvider>
             </UploadProvider>
           </TeamProvider>
         )}
