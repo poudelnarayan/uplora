@@ -14,6 +14,8 @@ import {
   ChevronDown,
   Menu,
   X,
+  MessageCircle,
+  Lightbulb,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/components/ui/NotificationCenter/NotificationCenter";
