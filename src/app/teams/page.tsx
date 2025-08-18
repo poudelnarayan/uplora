@@ -492,3 +492,5 @@ export default function TeamsPage() {
           onCancelInvitation={handleCancelInvitation}
           onToggleMemberStatus={handleToggleMemberStatus}
           onRemoveMember={handleRemoveMember}
+  )
+}
