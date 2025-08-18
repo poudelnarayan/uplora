@@ -24,6 +24,10 @@ interface VideoItem {
   uploader?: { name?: string | null; email?: string | null };
 }
 
+export default function VideosPage() {
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const notifications = useNotifications();
   const { selectedTeamId, selectedTeam } = useTeam();
 
