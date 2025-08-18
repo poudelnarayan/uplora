@@ -14,14 +14,18 @@ import {
   LogOut,
   CreditCard,
   ChevronDown,
-  MessageSquare,
-  Lightbulb,
   Menu,
   Bell,
   User,
   X,
   Sun,
-  Moon
+  Moon,
+  MessageCircle,
+  Lightbulb,
+  Send,
+  Sparkles,
+  Heart,
+  Zap
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/components/ui/Notification";
@@ -41,32 +45,34 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const [teamMenuOpen, setTeamMenuOpen] = useState(false);
   const teamMenuRef = useRef<HTMLDivElement | null>(null);
-
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackMsg, setFeedbackMsg] = useState("");
-  const [feedbackCat, setFeedbackCat] = useState("UI/UX");
-  const [includeEmail, setIncludeEmail] = useState(true);
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
-
-  const [notifOpen, setNotifOpen] = useState(false);
-  const { notifications, clearNotifications, removeNotification } = useNotifications();
-
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
-
-  const [featureOpen, setFeatureOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [featureTitle, setFeatureTitle] = useState("");
-  const [featureImpact, setFeatureImpact] = useState("Medium");
-  const [featureUseCase, setFeatureUseCase] = useState("");
-  const [featureSubmitting, setFeatureSubmitting] = useState(false);
-  const [featureSent, setFeatureSent] = useState(false);
 
   // Theme state
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
+  // Creative notification system
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
+  const [showFeedbackStudio, setShowFeedbackStudio] = useState(false);
+  const [showIdeaLab, setShowIdeaLab] = useState(false);
+
+  // Feedback Studio state
+  const [feedbackType, setFeedbackType] = useState<"bug" | "improvement" | "praise">("improvement");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  // Idea Lab state
+  const [ideaTitle, setIdeaTitle] = useState("");
+  const [ideaDescription, setIdeaDescription] = useState("");
+  const [ideaPriority, setIdeaPriority] = useState<"low" | "medium" | "high">("medium");
+  const [ideaSubmitting, setIdeaSubmitting] = useState(false);
+  const [ideaSent, setIdeaSent] = useState(false);
+
+  const { notifications, clearNotifications, removeNotification } = useNotifications();
+
   useEffect(() => {
-    // Get theme from localStorage or default to light
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
     if (savedTheme) {
       setTheme(savedTheme);
@@ -95,55 +101,63 @@ export default function AppShell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // Close drawers/menus with ESC
-  useEffect(() => {
-    if (!feedbackOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFeedbackOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [feedbackOpen]);
-
-  useEffect(() => {
-    if (!notifOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setNotifOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [notifOpen]);
-
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setUserMenuOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [userMenuOpen]);
-
-  useEffect(() => {
-    if (!featureOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFeatureOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [featureOpen]);
-
+  // Submit feedback
   const submitFeedback = async () => {
-    if (!feedbackMsg.trim()) return;
+    if (!feedbackMessage.trim()) return;
+    
+    setFeedbackSubmitting(true);
     try {
-      setSubmittingFeedback(true);
       await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: feedbackMsg.trim(),
-          category: feedbackCat,
-          includeEmail,
+          message: `[${feedbackType.toUpperCase()}] ${feedbackMessage.trim()}`,
+          category: feedbackType,
+          includeEmail: true,
           path,
           teamId: selectedTeamId,
           teamName: selectedTeam?.name,
         }),
       });
-      setFeedbackMsg("");
-      setFeedbackOpen(false);
+      setFeedbackSent(true);
+      setTimeout(() => {
+        setShowFeedbackStudio(false);
+        setFeedbackSent(false);
+        setFeedbackMessage("");
+      }, 2000);
     } finally {
-      setSubmittingFeedback(false);
+      setFeedbackSubmitting(false);
+    }
+  };
+
+  // Submit idea
+  const submitIdea = async () => {
+    if (!ideaTitle.trim() || !ideaDescription.trim()) return;
+    
+    setIdeaSubmitting(true);
+    try {
+      const ideaContent = `Feature Request: ${ideaTitle}\nPriority: ${ideaPriority}\n\nDescription:\n${ideaDescription}`;
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: ideaContent,
+          category: "Feature Request",
+          includeEmail: true,
+          path,
+          teamId: selectedTeamId,
+          teamName: selectedTeam?.name,
+        }),
+      });
+      setIdeaSent(true);
+      setTimeout(() => {
+        setShowIdeaLab(false);
+        setIdeaSent(false);
+        setIdeaTitle("");
+        setIdeaDescription("");
+      }, 2000);
+    } finally {
+      setIdeaSubmitting(false);
     }
   };
 
@@ -155,7 +169,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <Image src="/text-logo.png" alt="Uplora" width={140} height={140} className="rounded-md block" />
         </header>
 
-        {/* Team selector block */}
+        {/* Team selector */}
         <div className="px-4 pt-4 pb-3 border-b border-border">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Current Workspace</div>
           <div className="relative" ref={teamMenuRef}>
@@ -164,9 +178,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
               className={`w-full inline-flex items-center justify-between px-3 py-2.5 rounded-lg border border-border text-sm transition-all duration-200 ${
                 teams.length > 1 ? "bg-card hover:bg-muted hover:border-primary/30" : "bg-muted cursor-default"
               }`}
-              aria-haspopup="listbox"
-              aria-expanded={teamMenuOpen}
-              aria-label="Select team workspace"
             >
               <span className="font-medium text-foreground truncate">
                 {selectedTeam?.name || (teams.length === 0 ? "No team" : teams[0]?.name)}
@@ -192,8 +203,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
                     className={`w-full text-left px-3 py-2.5 rounded-md text-sm hover:bg-muted transition-colors ${
                       selectedTeamId === t.id ? "bg-primary/10 text-primary" : "text-foreground"
                     }`}
-                    role="option"
-                    aria-selected={selectedTeamId === t.id}
                   >
                     <div className="font-medium truncate">{t.name}</div>
                     {t.description && (
@@ -213,7 +222,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                aria-current={active ? "page" : undefined}
                 className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"
@@ -226,149 +234,193 @@ export default function AppShell({ children }: { children: ReactNode }) {
             );
           })}
 
-          {/* Separator */}
-          <div className="my-4 mx-3 border-t border-border" />
-
-          {/* Send feedback */}
+          {/* Creative Action Buttons */}
+          <div className="my-6 mx-3 border-t border-border pt-4" />
+          
+          {/* Feedback Studio */}
           <button
-            onClick={() => {
-              setFeedbackOpen(true);
-              setFeatureOpen(false);
-            }}
-            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-muted"
+            onClick={() => setShowFeedbackStudio(true)}
+            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
           >
-            <MessageSquare className="h-5 w-5 shrink-0" />
-            <span className="truncate">Send feedback</span>
+            <MessageCircle className="h-5 w-5 shrink-0" />
+            <span className="truncate">Feedback Studio</span>
+            <Sparkles className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
 
-          {/* Request a feature */}
+          {/* Idea Lab */}
           <button
-            onClick={() => {
-              setFeatureOpen(true);
-              setFeedbackOpen(false);
-              setFeatureTitle("");
-              setFeatureUseCase("");
-              setFeatureImpact("Medium");
-              setFeatureSent(false);
-            }}
-            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-muted"
+            onClick={() => setShowIdeaLab(true)}
+            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
           >
             <Lightbulb className="h-5 w-5 shrink-0" />
-            <span className="truncate">Request a feature</span>
+            <span className="truncate">Idea Lab</span>
+            <Zap className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         </nav>
 
-        {/* Footer links */}
+        {/* Footer */}
         <div className="border-t border-border px-4 py-4">
           <div className="text-[11px] text-muted-foreground space-y-2">
             <div className="flex flex-wrap gap-x-3 gap-y-1">
-              <Link href="/about" className="hover:text-foreground transition-colors">
-                About
-              </Link>
-              <Link href="/copyright" className="hover:text-foreground transition-colors">
-                Copyright
-              </Link>
-              <Link href="/contact" className="hover:text-foreground transition-colors">
-                Contact
-              </Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors">
-                Terms
-              </Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors">
-                Privacy
-              </Link>
+              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+              <Link href="/copyright" className="hover:text-foreground transition-colors">Copyright</Link>
+              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             </div>
             <div>© {new Date().getFullYear()} Uplora</div>
           </div>
         </div>
       </aside>
 
-      {/* Page content */}
+      {/* Main Content */}
       <main className="flex-1 overflow-y-auto lg:ml-64 ml-0">
-        {/* Top bar with account/notification icons */}
-        <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border">
+        {/* Creative Top Bar */}
+        <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 py-3">
             {/* Mobile menu button */}
             <button
-              aria-label="Open menu"
               className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
               onClick={() => setMobileNavOpen(true)}
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Logo for mobile */}
+            {/* Mobile logo */}
             <div className="lg:hidden">
               <Image src="/text-logo.png" alt="Uplora" width={96} height={24} className="h-6 w-auto" />
             </div>
 
-            {/* Right side icons */}
-            <div className="flex items-center gap-2">
+            {/* Creative Action Bar */}
+            <div className="flex items-center gap-3">
               {/* Theme Toggle */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                aria-label="Toggle theme"
+                className="relative p-2.5 rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-500/20 hover:from-amber-400/30 hover:to-orange-500/30 transition-all duration-300 group"
                 title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
               >
-                {theme === "dark" ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-              </button>
+                <AnimatePresence mode="wait">
+                  {theme === "dark" ? (
+                    <motion.div
+                      key="sun"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Sun className="w-5 h-5 text-amber-600" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="moon"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Moon className="w-5 h-5 text-slate-600" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
 
-              {/* Notifications */}
-              <button
-                aria-label="Notifications"
-                className="p-2 rounded-lg hover:bg-muted transition-colors relative text-muted-foreground hover:text-foreground"
-                onClick={() => setNotifOpen(true)}
+              {/* Notification Center */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowNotificationCenter(true)}
+                className="relative p-2.5 rounded-xl bg-gradient-to-br from-blue-400/20 to-indigo-500/20 hover:from-blue-400/30 hover:to-indigo-500/30 transition-all duration-300"
+                title="Notification Center"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-5 h-5 text-blue-600" />
                 {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-card" />
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-card"
+                  >
+                    {notifications.length}
+                  </motion.span>
                 )}
-              </button>
+              </motion.button>
 
-              {/* User Menu */}
+              {/* User Profile */}
               <div className="relative" ref={userMenuRef}>
-                <button
-                  aria-label="Profile"
-                  className="p-1 rounded-lg hover:bg-muted transition-colors"
-                  onClick={() => setUserMenuOpen((v) => !v)}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="relative p-1 rounded-xl bg-gradient-to-br from-purple-400/20 to-pink-500/20 hover:from-purple-400/30 hover:to-pink-500/30 transition-all duration-300"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <span className="text-sm font-medium text-white">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <span className="text-sm font-bold text-white">
                       {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
                     </span>
                   </div>
-                </button>
-                {userMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl p-2 z-50"
-                  >
-                    <div className="px-3 py-2 border-b border-border mb-2">
-                      <div className="text-sm font-medium text-foreground">{session?.user?.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{session?.user?.email}</div>
-                    </div>
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-muted text-red-600 dark:text-red-400 transition-colors"
+                </motion.button>
+
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 mt-3 w-72 rounded-2xl border border-border bg-card shadow-2xl p-4 z-50"
                     >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign out</span>
-                    </button>
-                  </motion.div>
-                )}
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                          <span className="text-lg font-bold text-white">
+                            {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-foreground truncate">{session?.user?.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{session?.user?.email}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <Link
+                          href="/settings"
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Account Settings</span>
+                        </Link>
+                        
+                        <button
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            setShowFeedbackStudio(true);
+                          }}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-sm"
+                        >
+                          <Heart className="w-4 h-4 text-red-500" />
+                          <span>Share Feedback</span>
+                        </button>
+                        
+                        <div className="my-2 border-t border-border" />
+                        
+                        <button
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-red-500/10 transition-colors text-sm text-red-600"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Page content with proper centering */}
+        {/* Page content */}
         <div className="min-h-[calc(100vh-4rem)] flex flex-col">
           <div className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
             <div className="max-w-6xl mx-auto w-full h-full">{children}</div>
@@ -376,7 +428,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       </main>
 
-      {/* Mobile Sidebar Drawer */}
+      {/* Mobile Navigation */}
       <AnimatePresence>
         {mobileNavOpen && (
           <>
@@ -384,7 +436,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+              className="fixed inset-0 bg-black/40 z-50 lg:hidden"
               onClick={() => setMobileNavOpen(false)}
             />
             <motion.aside
@@ -393,8 +445,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
               exit={{ x: -280, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-card border-r border-border shadow-2xl z-50 lg:hidden flex flex-col"
-              role="dialog"
-              aria-label="Navigation"
             >
               <header className="h-auto flex items-center justify-between p-4 border-b border-border">
                 <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md block" />
@@ -403,23 +453,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 </button>
               </header>
               
-              <div className="px-4 pt-4 pb-3 border-b border-border">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Current Workspace</div>
-                <div className="relative" ref={teamMenuRef}>
-                  <button
-                    onClick={() => teams.length > 1 && setTeamMenuOpen((o) => !o)}
-                    className={`w-full inline-flex items-center justify-between px-3 py-2.5 rounded-lg border border-border text-sm transition-all ${
-                      teams.length > 1 ? "bg-card hover:bg-muted" : "bg-muted cursor-default"
-                    }`}
-                  >
-                    <span className="font-medium text-foreground truncate">
-                      {selectedTeam?.name || (teams.length === 0 ? "No team" : teams[0]?.name)}
-                    </span>
-                    {teams.length > 1 && <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </button>
-                </div>
-              </div>
-
               <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                 {routes.map(({ href, label, icon: Icon }) => {
                   const active = path === href || path.startsWith(href + "/");
@@ -440,334 +473,361 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   );
                 })}
               </nav>
-              
-              <div className="px-4 py-4 border-t border-border text-[11px] text-muted-foreground">
-                © {new Date().getFullYear()} Uplora
-              </div>
             </motion.aside>
           </>
         )}
       </AnimatePresence>
 
-      {/* Enhanced Feedback Drawer */}
+      {/* Creative Notification Center */}
       <AnimatePresence>
-        {feedbackOpen && (
+        {showNotificationCenter && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setFeedbackOpen(false)}
+              className="fixed inset-0 bg-black/30 z-50"
+              onClick={() => setShowNotificationCenter(false)}
             />
-            <motion.aside
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-[92vw] sm:w-[420px] bg-card border-l border-border shadow-2xl z-50"
-              role="dialog"
-              aria-label="Send feedback"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed top-20 right-4 w-96 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden"
             >
-              <div className="h-16 flex items-center justify-between px-6 border-b border-border bg-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-primary" />
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 p-6 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">Notification Center</h3>
+                      <p className="text-xs text-muted-foreground">Stay updated with your team</p>
+                    </div>
                   </div>
-                  <div className="text-lg font-semibold text-foreground">Send Feedback</div>
-                </div>
-                <button 
-                  onClick={() => setFeedbackOpen(false)} 
-                  className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="p-6 space-y-6 bg-card h-[calc(100%-4rem)] overflow-y-auto">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Category</label>
-                  <select 
-                    className="input w-full" 
-                    value={feedbackCat} 
-                    onChange={(e) => setFeedbackCat(e.target.value)}
-                  >
-                    <option>UI/UX</option>
-                    <option>Performance</option>
-                    <option>Team management</option>
-                    <option>Uploads</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Your feedback</label>
-                  <textarea
-                    className="textarea w-full"
-                    rows={6}
-                    placeholder="Tell us what prompted this feedback..."
-                    value={feedbackMsg}
-                    onChange={(e) => setFeedbackMsg(e.target.value)}
-                  />
-                </div>
-                
-                <label className="flex items-center gap-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={includeEmail}
-                    onChange={(e) => setIncludeEmail(e.target.checked)}
-                    className="w-4 h-4 rounded border-border"
-                  />
-                  <span className="text-foreground">Include my email for follow-up</span>
-                </label>
-                
-                <div className="flex gap-3 pt-4 border-t border-border">
-                  <button 
-                    className="btn btn-ghost flex-1" 
-                    onClick={() => setFeedbackOpen(false)}
-                  >
-                    Cancel
-                  </button>
                   <button
-                    className="btn btn-primary flex-1"
-                    disabled={!feedbackMsg.trim() || submittingFeedback}
-                    onClick={submitFeedback}
+                    onClick={() => setShowNotificationCenter(false)}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
                   >
-                    {submittingFeedback ? (
-                      <>
-                        <div className="spinner mr-2" />
-                        Sending...
-                      </>
-                    ) : (
-                      "Send Feedback"
-                    )}
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
 
-      {/* Enhanced Notifications Drawer */}
-      <AnimatePresence>
-        {notifOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setNotifOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-[92vw] sm:w-[400px] bg-card border-l border-border shadow-2xl z-50"
-              role="dialog"
-              aria-label="Notifications"
-            >
-              <div className="h-16 flex items-center justify-between px-6 border-b border-border bg-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <Bell className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div className="text-lg font-semibold text-foreground">Notifications</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {notifications.length > 0 && (
-                    <button 
-                      className="btn btn-ghost btn-sm" 
-                      onClick={() => clearNotifications()}
-                    >
-                      Clear all
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => setNotifOpen(false)} 
-                    className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              
-              <div className="p-6 space-y-4 bg-card h-[calc(100%-4rem)] overflow-y-auto">
+              {/* Content */}
+              <div className="max-h-96 overflow-y-auto p-4">
                 {notifications.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                      <Bell className="w-8 h-8 text-muted-foreground" />
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center mx-auto mb-4">
+                      <Bell className="w-8 h-8 text-blue-500" />
                     </div>
-                    <p className="text-muted-foreground">No notifications yet</p>
+                    <h4 className="font-semibold text-foreground mb-2">All caught up!</h4>
+                    <p className="text-sm text-muted-foreground">No new notifications right now</p>
                   </div>
                 ) : (
-                  notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className="flex items-start gap-4 p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                          n.type === "success"
-                            ? "bg-emerald-500"
-                            : n.type === "error"
-                            ? "bg-red-500"
-                            : n.type === "warning"
-                            ? "bg-amber-500"
-                            : "bg-blue-500"
-                        }`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-foreground">{n.title}</div>
-                        {n.message && (
-                          <div className="text-xs text-muted-foreground mt-1">{n.message}</div>
-                        )}
-                      </div>
-                      <button
-                        className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                        onClick={() => removeNotification(n.id)}
+                  <div className="space-y-3">
+                    {notifications.map((notification) => (
+                      <motion.div
+                        key={notification.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-start gap-3 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
                       >
-                        <X className="w-4 h-4" />
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          notification.type === "success" ? "bg-green-500" :
+                          notification.type === "error" ? "bg-red-500" :
+                          notification.type === "warning" ? "bg-amber-500" :
+                          "bg-blue-500"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-sm font-semibold text-foreground">{notification.title}</h5>
+                          {notification.message && (
+                            <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => removeNotification(notification.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted transition-all"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                    
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearNotifications}
+                        className="w-full mt-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Clear all notifications
                       </button>
-                    </div>
-                  ))
+                    )}
+                  </div>
                 )}
               </div>
-            </motion.aside>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* Enhanced Feature Request Drawer */}
+      {/* Creative Feedback Studio */}
       <AnimatePresence>
-        {featureOpen && (
+        {showFeedbackStudio && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setFeatureOpen(false)}
+              className="fixed inset-0 bg-black/30 z-50"
+              onClick={() => setShowFeedbackStudio(false)}
             />
-            <motion.aside
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-[92vw] sm:w-[450px] bg-card border-l border-border shadow-2xl z-50"
-              role="dialog"
-              aria-label="Request a feature"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden"
             >
-              <div className="h-16 flex items-center justify-between px-6 border-b border-border bg-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                    <Lightbulb className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <div className="text-lg font-semibold text-foreground">Request Feature</div>
+              {feedbackSent ? (
+                <div className="p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-6"
+                  >
+                    <Heart className="w-10 h-10 text-white" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Thank you!</h3>
+                  <p className="text-muted-foreground">Your feedback helps us build better experiences</p>
                 </div>
-                <button 
-                  onClick={() => setFeatureOpen(false)} 
-                  className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="p-6 space-y-6 bg-card h-[calc(100%-4rem)] overflow-y-auto">
-                {featureSent ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="w-8 h-8 text-emerald-500" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Request Sent!</h3>
-                    <p className="text-muted-foreground">Thanks for your feature request. We'll review it and get back to you.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Feature Title</label>
-                      <input
-                        className="input w-full"
-                        placeholder="Short descriptive title"
-                        value={featureTitle}
-                        onChange={(e) => setFeatureTitle(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Impact Level</label>
-                      <select
-                        className="input w-full"
-                        value={featureImpact}
-                        onChange={(e) => setFeatureImpact(e.target.value)}
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-6 border-b border-border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                          <MessageCircle className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-foreground">Feedback Studio</h3>
+                          <p className="text-sm text-muted-foreground">Help us improve Uplora</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowFeedbackStudio(false)}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
                       >
-                        <option>Low</option>
-                        <option>Medium</option>
-                        <option>High</option>
-                      </select>
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
-                    
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 space-y-6">
+                    {/* Feedback Type Selector */}
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Use Case Description</label>
+                      <label className="block text-sm font-semibold text-foreground mb-3">What's on your mind?</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { type: "bug", label: "Bug Report", icon: "🐛", color: "from-red-500/20 to-pink-500/20" },
+                          { type: "improvement", label: "Improvement", icon: "✨", color: "from-blue-500/20 to-indigo-500/20" },
+                          { type: "praise", label: "Praise", icon: "❤️", color: "from-green-500/20 to-emerald-500/20" }
+                        ].map(({ type, label, icon, color }) => (
+                          <button
+                            key={type}
+                            onClick={() => setFeedbackType(type as any)}
+                            className={`p-3 rounded-xl border transition-all text-center ${
+                              feedbackType === type
+                                ? `bg-gradient-to-br ${color} border-primary text-foreground`
+                                : "border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <div className="text-lg mb-1">{icon}</div>
+                            <div className="text-xs font-medium">{label}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Message */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-2">Your message</label>
                       <textarea
-                        className="textarea w-full"
-                        rows={6}
-                        placeholder="What problem does this solve? How would you use it?"
-                        value={featureUseCase}
-                        onChange={(e) => setFeatureUseCase(e.target.value)}
+                        value={feedbackMessage}
+                        onChange={(e) => setFeedbackMessage(e.target.value)}
+                        placeholder="Tell us what you think..."
+                        className="w-full h-32 p-4 rounded-xl border border-border bg-muted/30 text-foreground placeholder-muted-foreground resize-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
-                    
-                    <div className="flex gap-3 pt-4 border-t border-border">
-                      <button 
-                        className="btn btn-ghost flex-1" 
-                        onClick={() => setFeatureOpen(false)}
+
+                    {/* Actions */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowFeedbackStudio(false)}
+                        className="flex-1 py-3 px-4 rounded-xl border border-border hover:bg-muted transition-colors text-sm font-medium"
                       >
                         Cancel
                       </button>
                       <button
-                        className="btn btn-primary flex-1"
-                        disabled={featureSubmitting || !featureTitle.trim() || !featureUseCase.trim()}
-                        onClick={async () => {
-                          setFeatureSubmitting(true);
-                          try {
-                            const summary = `Title: ${featureTitle}\nImpact: ${featureImpact}\n\nUse case:\n${featureUseCase}`;
-                            await fetch("/api/feedback", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                message: summary,
-                                category: "Feature request",
-                                includeEmail: true,
-                                path,
-                                teamId: selectedTeamId,
-                                teamName: selectedTeam?.name,
-                              }),
-                            });
-                            setFeatureSent(true);
-                            setFeatureTitle("");
-                            setFeatureUseCase("");
-                          } finally {
-                            setFeatureSubmitting(false);
-                          }
-                        }}
+                        onClick={submitFeedback}
+                        disabled={!feedbackMessage.trim() || feedbackSubmitting}
+                        className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium disabled:opacity-50 hover:shadow-lg transition-all text-sm"
                       >
-                        {featureSubmitting ? (
-                          <>
-                            <div className="spinner mr-2" />
-                            Submitting...
-                          </>
+                        {feedbackSubmitting ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Sending...
+                          </div>
                         ) : (
-                          "Submit Request"
+                          <div className="flex items-center justify-center gap-2">
+                            <Send className="w-4 h-4" />
+                            Send Feedback
+                          </div>
                         )}
                       </button>
                     </div>
-                  </>
-                )}
-              </div>
-            </motion.aside>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Creative Idea Lab */}
+      <AnimatePresence>
+        {showIdeaLab && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 z-50"
+              onClick={() => setShowIdeaLab(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden"
+            >
+              {ideaSent ? (
+                <div className="p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-6"
+                  >
+                    <Lightbulb className="w-10 h-10 text-white" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Idea submitted!</h3>
+                  <p className="text-muted-foreground">We'll review your suggestion and get back to you</p>
+                </div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-6 border-b border-border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                          <Lightbulb className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-foreground">Idea Lab</h3>
+                          <p className="text-sm text-muted-foreground">Share your brilliant ideas</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowIdeaLab(false)}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 space-y-6">
+                    {/* Idea Title */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-2">Feature Title</label>
+                      <input
+                        type="text"
+                        value={ideaTitle}
+                        onChange={(e) => setIdeaTitle(e.target.value)}
+                        placeholder="What would you like to see?"
+                        className="w-full p-4 rounded-xl border border-border bg-muted/30 text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                      />
+                    </div>
+
+                    {/* Priority */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-3">Priority Level</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { priority: "low", label: "Nice to have", color: "from-gray-500/20 to-slate-500/20" },
+                          { priority: "medium", label: "Would help", color: "from-blue-500/20 to-indigo-500/20" },
+                          { priority: "high", label: "Game changer", color: "from-amber-500/20 to-orange-500/20" }
+                        ].map(({ priority, label, color }) => (
+                          <button
+                            key={priority}
+                            onClick={() => setIdeaPriority(priority as any)}
+                            className={`p-3 rounded-xl border transition-all text-center ${
+                              ideaPriority === priority
+                                ? `bg-gradient-to-br ${color} border-primary text-foreground`
+                                : "border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <div className="text-xs font-medium capitalize">{priority}</div>
+                            <div className="text-[10px] text-muted-foreground mt-1">{label}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-2">Tell us more</label>
+                      <textarea
+                        value={ideaDescription}
+                        onChange={(e) => setIdeaDescription(e.target.value)}
+                        placeholder="How would this feature work? What problem would it solve?"
+                        className="w-full h-32 p-4 rounded-xl border border-border bg-muted/30 text-foreground placeholder-muted-foreground resize-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                      />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowIdeaLab(false)}
+                        className="flex-1 py-3 px-4 rounded-xl border border-border hover:bg-muted transition-colors text-sm font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={submitIdea}
+                        disabled={!ideaTitle.trim() || !ideaDescription.trim() || ideaSubmitting}
+                        className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium disabled:opacity-50 hover:shadow-lg transition-all text-sm"
+                      >
+                        {ideaSubmitting ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Submitting...
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2">
+                            <Sparkles className="w-4 h-4" />
+                            Submit Idea
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </motion.div>
           </>
         )}
       </AnimatePresence>
