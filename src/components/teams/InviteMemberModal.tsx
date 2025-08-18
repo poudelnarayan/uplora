@@ -38,41 +38,38 @@ export default function InviteMemberModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="" size="md">
-      <div className="relative">
-        {/* Header with gradient background */}
-        <div className="relative mb-6 -mx-6 -mt-6 p-6 rounded-t-lg bg-white dark:bg-slate-700 border-b border-gray-200 dark:border-slate-600">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center border border-primary/20 dark:border-primary/30">
-                <Users className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">Invite Team Member</h3>
-                <p className="text-sm text-muted-foreground">Add someone to collaborate with your team</p>
-              </div>
-            </div>
+    <Modal isOpen={isOpen} onClose={onClose} title="Invite Team Member" size="md">
+      <div className="space-y-6">
+        {/* Header Section */}
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-primary" />
           </div>
-          {inviting && <div className="absolute left-0 right-0 -bottom-0.5 h-0.5 bg-gradient-to-r from-primary via-secondary to-primary animate-pulse" />}
+          <p className="text-muted-foreground">Add someone to collaborate with your team</p>
+          {inviting && (
+            <div className="mt-3 h-1 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-primary to-secondary animate-pulse" />
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Info banner */}
-          <div className="rounded-xl p-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600">
+          {/* Info banner with proper light mode styling */}
+          <div className="rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                 <Mail className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground mb-1">Email Invitation</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Email Invitation</p>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
                   They'll receive a secure invitation link to join your team. The link expires in 7 days.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Form fields with enhanced styling */}
+          {/* Form fields */}
           <div className="space-y-5">
             <div className="space-y-2">
               <TextField
@@ -84,7 +81,7 @@ export default function InviteMemberModal({
                 onChange={(e) => setInvitation({ ...invitation, email: (e.target as HTMLInputElement).value })}
                 required
               />
-              <p className="text-xs text-muted-foreground ml-1">Make sure this email address is correct</p>
+              <p className="text-xs text-muted-foreground">Make sure this email address is correct</p>
             </div>
 
             <div className="space-y-3">
@@ -100,39 +97,43 @@ export default function InviteMemberModal({
               </SelectField>
 
               {/* Role descriptions */}
-              <div className="grid grid-cols-1 gap-2 p-3 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600">
-                <div className="text-xs text-muted-foreground">
+              <div className="p-3 rounded-lg bg-muted/30 border border-border">
+                <div className="text-xs">
                   <span className="font-medium text-foreground">Role Permissions:</span>
+                  <span className="text-muted-foreground ml-1">
                   {invitation.role === "EDITOR" && " Can upload videos and collaborate on content creation."}
                   {invitation.role === "MANAGER" && " Can manage team members, approve content, and oversee projects."}
                   {invitation.role === "ADMIN" && " Has full access to team settings, billing, and member management."}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action buttons with enhanced styling */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-slate-600">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="btn btn-ghost flex-1 hover:bg-muted/60 transition-colors"
+          {/* Action buttons */}
+          <div className="flex gap-3 pt-4 border-t border-border">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-ghost flex-1"
               disabled={inviting}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
-              disabled={inviting || !invitation.email.trim()} 
-              className="btn btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-200"
+            <button
+              type="submit"
+              disabled={inviting || !invitation.email.trim()}
+              className="btn btn-primary flex-1"
             >
               {inviting ? (
                 <>
-                  <div className="spinner mr-2" /> Sending...
+                  <div className="spinner mr-2" />
+                  Sending...
                 </>
               ) : (
                 <>
-                  <Mail className="w-4 h-4 mr-2" /> Send Invitation
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send Invitation
                 </>
               )}
             </button>
