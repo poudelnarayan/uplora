@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-
+// git-upload-check
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
