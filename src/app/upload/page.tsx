@@ -65,7 +65,7 @@ export default function UploadPage() {
               <p className="text-sm font-medium text-foreground">Secure</p>
             </div>
             <div className="p-3 rounded-lg bg-card border">
-              <Video className="w-6 h-6 text-accent mx-auto mb-2" />
+              <Video className="w-6 h-6 text-green-500 mx-auto mb-2" />
               <p className="text-sm font-medium text-foreground">Direct to YouTube</p>
             </div>
           </div>

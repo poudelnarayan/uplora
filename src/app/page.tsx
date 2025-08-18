@@ -277,8 +277,8 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               className="feature-card"
             >
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-6">
-                <Shield className="w-6 h-6 text-accent" />
+              <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center mb-6">
+                <Shield className="w-6 h-6 text-green-500" />
               </div>
               <h3 className="text-xl font-semibold mb-3 text-foreground">Secure & Reliable</h3>
               <p className="text-muted-foreground">
@@ -293,8 +293,8 @@ export default function LandingPage() {
               transition={{ delay: 0.3 }}
               className="feature-card"
             >
-              <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-6">
-                <Globe className="w-6 h-6 text-warning" />
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6">
+                <Globe className="w-6 h-6 text-blue-500" />
               </div>
               <h3 className="text-xl font-semibold mb-3 text-foreground">Global Teams</h3>
               <p className="text-muted-foreground">
@@ -393,10 +393,11 @@ export default function LandingPage() {
               transition={{ delay: 0.2 }}
               className="text-center"
             >
-              <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
-                <Youtube className="w-8 h-8 text-accent" />
+              <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+                <Youtube className="w-8 h-8 text-red-500" />
               </div>
               <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent text-white text-sm font-bold mb-4">3</div>
+              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white text-sm font-bold mb-4">3</div>
               <h3 className="text-xl font-semibold mb-3 text-foreground">Publish & Track</h3>
               <p className="text-muted-foreground">
                 Approved videos go straight to YouTube. Track performance and manage your content library.

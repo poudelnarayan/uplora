@@ -73,12 +73,12 @@ export default function ContactPage() {
           </div>
           
           <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <MapPin className="w-6 h-6 text-accent" />
+            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-6 h-6 text-secondary" />
             </div>
             <h3 className="font-semibold text-foreground mb-2">Global Support</h3>
             <p className="text-sm text-muted-foreground">Available worldwide</p>
-            <p className="text-sm text-accent font-medium mt-2">24/7 Coverage</p>
+            <p className="text-sm text-secondary font-medium mt-2">24/7 Coverage</p>
           </div>
         </div>
 

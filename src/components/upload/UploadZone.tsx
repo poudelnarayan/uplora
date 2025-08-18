@@ -374,7 +374,7 @@ export default function UploadZone() {
               className="space-y-6"
             >
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mx-auto flex items-center justify-center animate-pulse-glow">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 mx-auto flex items-center justify-center animate-pulse-glow">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center animate-pulse-glow">
                 <FileVideo className="w-12 h-12 text-white" />
               </div>
               

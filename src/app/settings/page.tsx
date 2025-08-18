@@ -306,7 +306,7 @@ export default function SettingsPage() {
             <Crown className="w-6 h-6 text-warning" />
             <h2 className="text-xl font-semibold text-foreground">Current Plan</h2>
             <div className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
-              Free Trial
+              Active Plan
             </div>
           </div>
           
@@ -323,7 +323,7 @@ export default function SettingsPage() {
               </div>
               
               <div className="text-center p-4 rounded-lg bg-accent/10 border border-accent/20">
-                <div className="text-2xl font-bold text-accent mb-1">24/7</div>
+                <div className="text-2xl font-bold text-secondary mb-1">24/7</div>
                 <div className="text-sm text-muted-foreground">Support</div>
               </div>
             </div>
