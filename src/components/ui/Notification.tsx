@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -41,7 +41,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const addNotification = (notification: Omit<NotificationProps, "id">) => {
+  const addNotification = useCallback((notification: Omit<NotificationProps, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
     const shouldSticky = notification.sticky ?? (notification.type === "error");
     const stickyConditions = shouldSticky
@@ -51,41 +51,49 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const newNotification = { ...notification, id, sticky: shouldSticky, stickyConditions, duration: defaultDuration } as NotificationProps;
     // Add to existing notifications instead of replacing
     setNotifications(prev => [newNotification, ...prev.slice(0, 4)]); // Keep max 5 notifications
-  };
+  }, []);
 
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
-  };
+  }, []);
 
-  const clearNotifications = () => {
+  const clearNotifications = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
   // Handle route changes for sticky notifications
   useEffect(() => {
-    notifications.forEach(notification => {
-      if (notification.sticky && notification.stickyConditions?.dismissOnRouteChange) {
-        removeNotification(notification.id);
-      }
+    const notificationsToRemove = notifications.filter(notification => 
+      notification.sticky && notification.stickyConditions?.dismissOnRouteChange
+    );
+    
+    notificationsToRemove.forEach(notification => {
+      removeNotification(notification.id);
     });
-  }, [pathname]);
+  }, [pathname, notifications, removeNotification]);
 
   // Auto-remove notifications after duration (including sticky conditions)
   useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+    
     notifications.forEach(notification => {
       if (notification.sticky && notification.stickyConditions?.dismissAfterSeconds) {
         const timer = setTimeout(() => {
           removeNotification(notification.id);
         }, notification.stickyConditions.dismissAfterSeconds * 1000);
-        return () => clearTimeout(timer);
+        timers.push(timer);
       } else if (notification.duration && notification.duration > 0) {
         const timer = setTimeout(() => {
           removeNotification(notification.id);
         }, notification.duration);
-        return () => clearTimeout(timer);
+        timers.push(timer);
       }
     });
-  }, [notifications]);
+
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, [notifications, removeNotification]);
 
   return (
     <NotificationContext.Provider value={{ notifications, addNotification, removeNotification, clearNotifications }}>
@@ -102,11 +110,11 @@ function NotificationContainer() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null;
+  if (!mounted || !notifications.length) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
-      <AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}>
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
@@ -147,6 +155,3 @@ function NotificationContainer() {
     </div>
   );
 }
-
-// Import React for the context
-import React from 'react';

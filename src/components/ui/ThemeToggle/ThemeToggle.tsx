@@ -1,47 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import styles from "./ThemeToggle.module.css";
-
-// Create theme context
-import { createContext, useContext } from "react";
-
-interface ThemeContextType {
-  theme: "light" | "dark";
-  toggleTheme: () => void;
-  mounted: boolean;
-}
-
-const ThemeContext = createContext<ThemeContextType | null>(null);
-
-function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    // Fallback for when context is not available
-    const [theme, setTheme] = useState<"light" | "dark">("dark");
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-      setMounted(true);
-      const savedTheme = localStorage.getItem("uplora-theme") as "light" | "dark" | null;
-      if (savedTheme) {
-        setTheme(savedTheme);
-      }
-    }, []);
-
-    const toggleTheme = () => {
-      const newTheme = theme === "dark" ? "light" : "dark";
-      setTheme(newTheme);
-      localStorage.setItem("uplora-theme", newTheme);
-      document.documentElement.setAttribute("data-theme", newTheme);
-    };
-
-    return { theme, toggleTheme, mounted };
-  }
-  return context;
-}
+import { useTheme } from "@/context/ThemeContext";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme, mounted } = useTheme();
@@ -89,6 +51,3 @@ export default function ThemeToggle() {
     </motion.button>
   );
 }
-
-// Export the context for use in providers
-export { ThemeContext };

@@ -47,35 +47,41 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create a provisional video row to obtain the id
-    const created = await prisma.video.create({
-      data: {
-        key: "provisioning",
-        filename: safeName.replace(/\.[^/.]+$/, ''),
-        contentType,
-        sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
-        userId: user.id,
-        teamId: teamId || null,
-      },
-      select: { id: true, teamId: true, userId: true },
-    });
+    // Generate a temporary upload ID (not a video ID)
+    const uploadId = crypto.randomUUID();
 
-    // Compute final S3 key using requested structure
-    const finalKey = created.teamId
-      ? `teams/${created.teamId}/videos/${created.id}/original/${safeName}`
-      : `users/${created.userId}/videos/${created.id}/original/${safeName}`;
-
-    // Update the video row with the final key
-    await prisma.video.update({ where: { id: created.id }, data: { key: finalKey } });
+    // Compute final S3 key using upload ID
+    const finalKey = teamId
+      ? `teams/${teamId}/videos/${uploadId}/original/${safeName}`
+      : `users/${user.id}/videos/${uploadId}/original/${safeName}`;
 
     // Generate presigned PUT URL for final key
     const command = new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: finalKey, ContentType: contentType });
     const putUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
-    // Create upload lock
-    await prisma.uploadLock.create({ data: { userId: user.id, key: finalKey } });
+    // Create upload lock with metadata for completion
+    await prisma.uploadLock.create({ 
+      data: { 
+        userId: user.id, 
+        key: finalKey,
+        metadata: JSON.stringify({
+          filename: safeName,
+          contentType,
+          sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
+          teamId
+        })
+      } 
+    });
 
-    return NextResponse.json({ putUrl, key: finalKey, videoId: created.id });
+    return NextResponse.json({ 
+      putUrl, 
+      key: finalKey, 
+      tempId: uploadId,
+      filename: safeName,
+      contentType,
+      sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
+      teamId
+    });
   } catch (e: unknown) {
     const err = e as { message?: string };
     console.error("presign error", e);

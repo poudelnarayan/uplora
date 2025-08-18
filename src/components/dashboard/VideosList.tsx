@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Upload, Play, Image as ImageIcon } from "lucide-react";
+import { Upload, Play, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { StatusChip } from "@/components/ui/StatusChip";
@@ -26,9 +26,12 @@ interface VideoItem {
 interface VideosListProps {
   videos: VideoItem[];
   loading: boolean;
-  thumbnailUrls: Map<string, string>;
-  loadingThumbnails: Set<string>;
+  thumbnailUrls: Record<string, string>;
+  loadingThumbnails: Record<string, boolean>;
   onChangeVideoStatus: (videoId: string, newStatus: string) => void;
+  onDeleteVideo?: (videoId: string, videoTitle: string) => void;
+  processingVideoId?: string | null;
+  deletingVideoId?: string | null;
   showAll?: boolean;
 }
 
@@ -38,6 +41,9 @@ export default function VideosList({
   thumbnailUrls,
   loadingThumbnails,
   onChangeVideoStatus,
+  onDeleteVideo,
+  processingVideoId,
+  deletingVideoId,
   showAll = false
 }: VideosListProps) {
   const router = useRouter();
@@ -155,8 +161,34 @@ export default function VideosList({
                       <button
                         className="btn btn-ghost btn-sm"
                         onClick={(e) => { e.stopPropagation(); onChangeVideoStatus(video.id, 'PENDING'); }}
+                        disabled={processingVideoId === video.id}
                       >
-                        Request Publish
+                        {processingVideoId === video.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          "Request Publish"
+                        )}
+                      </button>
+                    )}
+                    {/* Delete button for owners/admins/managers */}
+                    {onDeleteVideo && video.userRole && ["OWNER","ADMIN","MANAGER"].includes(video.userRole) && (
+                      <button
+                        className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          onDeleteVideo(video.id, video.title || "Untitled"); 
+                        }}
+                        disabled={deletingVideoId === video.id}
+                        title="Delete video"
+                      >
+                        {deletingVideoId === video.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     )}
                   </div>

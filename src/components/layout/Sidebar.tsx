@@ -213,13 +213,13 @@ export default function Sidebar() {
       <motion.aside
         initial={{ x: -300 }}
         animate={{ x: isMobileOpen ? 0 : -300 }}
-        className={`fixed left-0 top-0 h-full w-80 bg-card border-r shadow-xl z-50 lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-full w-80 bg-card shadow-xl z-50 lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b">
+          <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -240,7 +240,7 @@ export default function Sidebar() {
           </div>
 
           {/* User Profile */}
-          <div className="p-4 border-b">
+          <div className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <span className="text-sm font-medium text-white">
@@ -264,7 +264,7 @@ export default function Sidebar() {
             
             {/* Admin Section */}
             {isAdmin && (
-              <div className="pt-4 border-t border-border">
+              <div className="pt-4">
                 <div className="px-4 py-2">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Admin</p>
                 </div>
@@ -289,7 +289,7 @@ export default function Sidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t">
+          <div className="p-4">
             <button
               onClick={() => setShowSignOutConfirm(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-500/10 transition-colors"

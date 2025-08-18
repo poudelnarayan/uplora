@@ -17,37 +17,52 @@ export async function POST(request: NextRequest) {
           html,
         });
 
+        console.log("✅ Email sent successfully:", {
+          to,
+          subject,
+          messageId: info.messageId
+        });
+
         return NextResponse.json({
           success: true,
           messageId: info.messageId,
           method: "email"
         });
       } catch (emailError) {
-        console.error("Email sending failed, falling back to manual mode:", emailError);
+        console.error("❌ Email sending failed, falling back to manual mode:", emailError);
       }
     }
 
-    // Fallback: Log email content for manual sharing
+    // Development mode: Log email content for manual sharing
     console.log("\n" + "=".repeat(80));
-    console.log("📧 EMAIL WOULD BE SENT TO:", to);
+    console.log("📧 DEVELOPMENT MODE - EMAIL WOULD BE SENT:");
+    console.log("📧 TO:", to);
     console.log("📧 SUBJECT:", subject);
-    console.log("📧 CONTENT:");
+    console.log("📧 TEXT CONTENT:");
     console.log(text);
+    if (html) {
+      console.log("📧 HTML CONTENT:");
+      console.log(html);
+    }
+    console.log("=".repeat(80));
+    console.log("💡 To enable real email sending, configure SMTP environment variables");
+    console.log("💡 See email setup guide for configuration options");
     console.log("=".repeat(80) + "\n");
 
     return NextResponse.json({
       success: true,
-      messageId: "manual-" + Date.now(),
-      method: "manual",
+      messageId: "dev-" + Date.now(),
+      method: "development",
       emailContent: {
         to,
         subject,
         text,
         html
-      }
+      },
+      note: "Email logged to console. Configure SMTP for real sending."
     });
   } catch (error) {
-    console.error("Email API error:", error);
+    console.error("❌ Email API error:", error);
     return NextResponse.json(
       { error: "Failed to process email" },
       { status: 500 }

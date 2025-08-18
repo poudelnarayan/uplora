@@ -24,6 +24,7 @@ function createTransporter(host: string, port: number, secure: boolean) {
     debug: enableDebug,
     tls: {
       servername: host,
+      rejectUnauthorized: false, // Add this for better compatibility
     },
   });
 }
@@ -53,6 +54,14 @@ export async function sendMail(opts: {
         text: opts.text,
         html: opts.html,
         replyTo: opts.replyTo,
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'high',
+          'X-Mailer': 'Uplora/1.0',
+          'List-Unsubscribe': `<mailto:${process.env.SMTP_USER}?subject=unsubscribe>`,
+        },
+        priority: 'high',
       });
       return info;
     } catch (err) {

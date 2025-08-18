@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Auth required" }, { status: 401 });
     }
 
-    const { key } = await req.json();
+    const { key, filename, contentType, sizeBytes, teamId } = await req.json();
     if (!key) {
       return NextResponse.json({ error: "Missing key" }, { status: 400 });
     }
@@ -28,24 +29,56 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Derive teamId from key if not provided
+    const m = key.match(/(?:teams\/(.*?)|users\/(.*?))\/videos\/(.*?)\//);
+    const teamIdFromKey = m && m[1] ? m[1] : null;
+    const finalTeamId = teamId ?? teamIdFromKey;
+
+    // Validate team access if teamId is provided
+    if (finalTeamId) {
+      // Check if user is the team owner
+      const team = await prisma.team.findFirst({
+        where: { id: finalTeamId, ownerId: user.id }
+      });
+      
+      if (!team) {
+        // If not owner, check if user is a team member
+        const membership = await prisma.teamMember.findFirst({
+          where: { teamId: finalTeamId, userId: user.id }
+        });
+        if (!membership) {
+          return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+        }
+      }
+    }
+
+    // Create the video record only after successful upload completion
+    const title = String(filename || "").replace(/\.[^/.]+$/, "") || "Untitled";
+    const video = await prisma.video.create({
+      data: {
+        key,
+        filename: title,
+        contentType: contentType || "application/octet-stream",
+        sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
+        teamId: finalTeamId,
+        userId: user.id,
+        status: "PROCESSING",
+      },
+    });
+
+    // Broadcast video creation event
+    broadcast({ 
+      type: "video.created", 
+      teamId: video.teamId || null, 
+      payload: { id: video.id, title: video.filename }
+    });
+
     // Release upload lock for this user
     await prisma.uploadLock.deleteMany({
-      where: { userId: user.id }
+      where: { userId: user.id, key }
     });
 
-    // Mark video as uploaded
-    await prisma.video.updateMany({
-      where: { 
-        key: key,
-        userId: user.id
-      },
-      data: { 
-        status: "uploaded",
-        uploadedAt: new Date()
-      }
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, videoId: video.id });
   } catch (e: unknown) {
     const err = e as { message?: string };
     console.error("put complete error", e);

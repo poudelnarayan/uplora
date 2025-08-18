@@ -1,6 +1,7 @@
 import "./globals.css";
 import Providers from "./providers";
 import { Analytics } from "@vercel/analytics/react";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export const metadata = {
   title: "Uplora - Team YouTube Workflow",
@@ -30,11 +31,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('uplora-theme');
+                  if (theme && theme !== 'dark') {
+                    document.documentElement.setAttribute('data-theme', theme);
+                  }
+                } catch (e) {
+                  // Keep default dark theme if localStorage fails
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body>
-        <Providers>
-          {children}
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            {children}
+          </Providers>
+        </ErrorBoundary>
         <Analytics />
       </body>
     </html>

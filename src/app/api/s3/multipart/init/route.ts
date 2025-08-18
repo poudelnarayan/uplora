@@ -44,23 +44,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create provisional video to get id
-    const created = await prisma.video.create({
-      data: {
-        key: "provisioning",
-        filename: safeName.replace(/\.[^/.]+$/, ''),
-        contentType,
-        sizeBytes: 0,
-        userId: user.id,
-        teamId: teamId || null,
-      },
-      select: { id: true, teamId: true, userId: true },
-    });
+    // Generate a temporary upload ID (not a video ID)
+    const uploadId = crypto.randomUUID();
 
-    // Compute final key
-    const finalKey = created.teamId
-      ? `teams/${created.teamId}/videos/${created.id}/original/${safeName}`
-      : `users/${created.userId}/videos/${created.id}/original/${safeName}`;
+    // Compute final key using upload ID
+    const finalKey = teamId
+      ? `teams/${teamId}/videos/${uploadId}/original/${safeName}`
+      : `users/${user.id}/videos/${uploadId}/original/${safeName}`;
 
     // Start multipart upload (with robust error handling)
     let out;
@@ -72,20 +62,35 @@ export async function POST(req: NextRequest) {
       });
       out = await s3.send(cmd);
     } catch (err: any) {
-      // Best-effort cleanup of provisional video row
-      try { await prisma.video.delete({ where: { id: created.id } }); } catch {}
       const message = err?.name ? `${err.name}: ${err.message || 'S3 error'}` : 'S3 CreateMultipartUpload failed';
       return NextResponse.json({ error: message }, { status: 500 });
     }
 
-    // Store upload lock and update video key
+    // Store upload lock with metadata for completion
     try {
-      // @ts-ignore
-      await prisma.uploadLock?.create({ data: { userId: user.id, key: finalKey } });
-      await prisma.video.update({ where: { id: created.id }, data: { key: finalKey } });
+      await prisma.uploadLock.create({ 
+        data: { 
+          userId: user.id, 
+          key: finalKey,
+          metadata: JSON.stringify({
+            filename: safeName,
+            contentType,
+            teamId,
+            uploadId: out.UploadId
+          })
+        } 
+      });
     } catch {}
 
-    return NextResponse.json({ uploadId: out.UploadId, key: finalKey, partSize: 8 * 1024 * 1024, videoId: created.id });
+    return NextResponse.json({ 
+      uploadId: out.UploadId, 
+      key: finalKey, 
+      partSize: 8 * 1024 * 1024, 
+      tempId: uploadId,
+      filename: safeName,
+      contentType,
+      teamId
+    });
   } catch (e: any) {
     const message = e?.message || 'Init failed';
     return NextResponse.json({ error: message }, { status: 500 });

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { broadcast } from "@/lib/realtime";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -96,6 +97,13 @@ export async function DELETE(
     // Delete from database
     await prisma.video.delete({
       where: { id }
+    });
+
+    // Broadcast deletion event
+    broadcast({ 
+      type: "video.deleted", 
+      teamId: video.teamId || null, 
+      payload: { id: video.id, teamId: video.teamId }
     });
 
     return NextResponse.json({ success: true, message: "Video deleted successfully" });

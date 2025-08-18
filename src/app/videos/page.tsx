@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import AppShell from "@/components/layout/AppShell";
-import { Play, Image as ImageIcon, X, User } from "lucide-react";
+import { Play, Image as ImageIcon, X, User, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,10 @@ interface VideoItem {
 export default function VideosPage() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingVideoId, setProcessingVideoId] = useState<string | null>(null);
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [videoToDelete, setVideoToDelete] = useState<{ id: string; title: string } | null>(null);
   const router = useRouter();
   const notifications = useNotifications();
   const { selectedTeamId, selectedTeam } = useTeam();
@@ -80,13 +85,62 @@ export default function VideosPage() {
         try {
           const evt = JSON.parse(ev.data || '{}');
           if (evt?.type?.startsWith('video.')) {
-            // Reload list; cheap due to API caching/ETag on server if added later
-            (async () => {
-              const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
-              const res = await fetch(apiUrl, { cache: 'no-store' });
-              const data = await res.json();
-              setVideos(Array.isArray(data) ? data : []);
-            })();
+            if (evt.type === 'video.created') {
+              // Add new video to list immediately
+              const newVideo = {
+                id: evt.payload.id,
+                title: evt.payload.title,
+                status: 'PROCESSING',
+                uploadedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                thumbnail: '',
+                thumbnailKey: null,
+                userRole: 'OWNER', // New videos are owned by the uploader
+                uploader: { name: session?.user?.name || '', email: session?.user?.email || '' }
+              };
+              setVideos(prev => [newVideo, ...prev]);
+              
+              notifications.addNotification({
+                type: "success",
+                title: "Video uploaded!",
+                message: `"${evt.payload.title}" has been uploaded successfully`
+              });
+            } else if (evt.type === 'video.deleted') {
+              // Remove deleted video from list immediately
+              setVideos(prev => prev.filter(video => video.id !== evt.payload.id));
+            } else if (evt.type === 'video.status') {
+              // Update video status immediately
+              setVideos(prev => prev.map(video => 
+                video.id === evt.payload.id 
+                  ? { ...video, status: evt.payload.status, updatedAt: new Date().toISOString() }
+                  : video
+              ));
+            } else if (evt.type === 'video.updated') {
+              // Refresh the specific video data
+              (async () => {
+                try {
+                  const res = await fetch(`/api/videos/${evt.payload.id}`, { cache: 'no-store' });
+                  if (res.ok) {
+                    const updatedVideo = await res.json();
+                    setVideos(prev => prev.map(video => 
+                      video.id === evt.payload.id 
+                        ? { ...video, ...updatedVideo, updatedAt: new Date().toISOString() }
+                        : video
+                    ));
+                  }
+                } catch {}
+              })();
+            } else {
+              // For other video events, reload the entire list
+              (async () => {
+                const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
+                const res = await fetch(apiUrl, { cache: 'no-store' });
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                  setVideos(data);
+                }
+              })();
+            }
           }
         } catch {}
       };
@@ -94,7 +148,104 @@ export default function VideosPage() {
       es.onerror = () => { try { es?.close(); } catch {}; es = null; };
     } catch {}
     return () => { try { es?.close(); } catch {} };
-  }, [selectedTeamId]);
+  }, [selectedTeamId, session?.user?.name, session?.user?.email, notifications]);
+
+  const deleteVideo = async (videoId: string, videoTitle: string) => {
+    // Set the video to delete and open modal
+    setVideoToDelete({ id: videoId, title: videoTitle });
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteVideo = async () => {
+    if (!videoToDelete) return;
+    
+    // Prevent multiple clicks
+    if (deletingVideoId) return;
+    
+    setDeletingVideoId(videoToDelete.id);
+    try {
+      const response = await fetch(`/api/videos/${videoToDelete.id}/delete`, { method: 'DELETE' });
+      
+      if (response.ok) {
+        setVideos(prev => prev.filter(video => video.id !== videoToDelete.id));
+        
+        notifications.addNotification({
+          type: "success",
+          title: "Video deleted",
+          message: `"${videoToDelete.title}" has been permanently deleted`
+        });
+      } else {
+        const error = await response.json();
+        notifications.addNotification({
+          type: "error",
+          title: "Delete failed",
+          message: error.error || "Failed to delete video"
+        });
+      }
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "Delete failed",
+        message: "An error occurred while deleting the video"
+      });
+    } finally {
+      setDeletingVideoId(null);
+      setDeleteModalOpen(false);
+      setVideoToDelete(null);
+    }
+  };
+
+  const changeVideoStatus = async (videoId: string, newStatus: string) => {
+    // Prevent multiple clicks
+    if (processingVideoId) return;
+    
+    setProcessingVideoId(videoId);
+    try {
+      let endpoint = '';
+      
+      if (newStatus === 'PENDING') {
+        endpoint = `/api/videos/${videoId}/request-approval`;
+      } else if (newStatus === 'PUBLISHED') {
+        endpoint = `/api/videos/${videoId}/approve`;
+      } else {
+        return;
+      }
+      
+      const response = await fetch(endpoint, { method: 'POST' });
+      
+      if (response.ok) {
+        setVideos(prev => prev.map(video => 
+          video.id === videoId 
+            ? { ...video, status: newStatus, updatedAt: new Date().toISOString() }
+            : video
+        ));
+        
+        const statusText = newStatus === 'PENDING' ? 'pending' : 
+                          newStatus === 'PUBLISHED' ? 'published' : newStatus;
+        
+        notifications.addNotification({
+          type: "success",
+          title: "Status updated",
+          message: `Video status changed to ${statusText}`
+        });
+      } else {
+        const error = await response.json();
+        notifications.addNotification({
+          type: "error",
+          title: "Status change failed",
+          message: error.error || "Failed to update video status"
+        });
+      }
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "Status change failed",
+        message: "An error occurred while updating the video status"
+      });
+    } finally {
+      setProcessingVideoId(null);
+    }
+  };
 
   return (
     <AppShell>
@@ -212,9 +363,35 @@ export default function VideosPage() {
                         {video.status === 'PROCESSING' && video.userRole && ["EDITOR","MANAGER","ADMIN"].includes(video.userRole) && (
                           <button
                             className="btn btn-ghost btn-sm"
-                            onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}
+                            onClick={(e) => { e.stopPropagation(); changeVideoStatus(video.id, 'PENDING'); }}
+                            disabled={processingVideoId === video.id}
                           >
-                            Request Publish
+                            {processingVideoId === video.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              "Request Publish"
+                            )}
+                          </button>
+                        )}
+                        {/* Delete button for owners/admins/managers */}
+                        {video.userRole && ["OWNER","ADMIN","MANAGER"].includes(video.userRole) && (
+                          <button
+                            className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              deleteVideo(video.id, video.title || "Untitled"); 
+                            }}
+                            disabled={deletingVideoId === video.id}
+                            title="Delete video"
+                          >
+                            {deletingVideoId === video.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </button>
                         )}
                       </div>
@@ -238,6 +415,20 @@ export default function VideosPage() {
           </div>
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDeleteVideo}
+        title="Delete Video?"
+        message="This action cannot be undone. The video will be permanently deleted from both the platform and YouTube (if published)."
+        itemName={videoToDelete?.title}
+        confirmText={deletingVideoId ? "Deleting..." : "Delete Permanently"}
+        cancelText="Cancel"
+        variant="danger"
+        icon="trash"
+        isLoading={!!deletingVideoId}
+      />
     </AppShell>
   );
 }

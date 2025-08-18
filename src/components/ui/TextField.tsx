@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AlertCircle } from "lucide-react";
 
 type CommonProps = {
   label?: string;
@@ -9,6 +10,7 @@ type CommonProps = {
   className?: string;
   containerClassName?: string;
   controlClassName?: string;
+  error?: string;
 };
 
 type InputProps = CommonProps &
@@ -32,6 +34,7 @@ export function TextField(props: TextFieldProps) {
     containerClassName,
     className,
     controlClassName,
+    error,
     // Extract custom and control props so they don't end up on the DOM element
     multiline,
     ...rest
@@ -46,7 +49,7 @@ export function TextField(props: TextFieldProps) {
           {label}
         </label>
       )}
-      <div className={`field ${className ?? ""}`.trim()}>
+      <div className={`field ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
         {isMultiline ? (
           <textarea {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} className={`field-control ${controlClassName ?? ""}`.trim()} />
@@ -55,6 +58,12 @@ export function TextField(props: TextFieldProps) {
         )}
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
+      {error && (
+        <div className="flex items-center gap-1 mt-1 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -62,7 +71,7 @@ export function TextField(props: TextFieldProps) {
 type SelectFieldProps = CommonProps &
   Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "className">;
 
-export function SelectField({ label, icon, rightIcon, containerClassName, className, controlClassName, children, ...props }: SelectFieldProps) {
+export function SelectField({ label, icon, rightIcon, containerClassName, className, controlClassName, error, children, ...props }: SelectFieldProps) {
   return (
     <div className={containerClassName}>
       {label && (
@@ -70,11 +79,17 @@ export function SelectField({ label, icon, rightIcon, containerClassName, classN
           {label}
         </label>
       )}
-      <div className={`field ${className ?? ""}`.trim()}>
+      <div className={`field ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
         <select {...props} className={`field-control appearance-none pr-10 ${controlClassName ?? ""}`.trim()}>{children}</select>
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
+      {error && (
+        <div className="flex items-center gap-1 mt-1 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }

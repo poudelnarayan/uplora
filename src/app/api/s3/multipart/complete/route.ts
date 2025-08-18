@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 import { tmpdir } from "os";
 import { join } from "path";
 import { createWriteStream, createReadStream, unlinkSync } from "fs";
@@ -40,24 +41,37 @@ export async function POST(req: NextRequest) {
       create: { email: session.user.email, name: session.user.name ?? "", image: session.user.image ?? "" },
     });
 
+    // Get upload lock to retrieve metadata
+    const uploadLock = await prisma.uploadLock.findFirst({
+      where: { userId: user.id, key }
+    });
+
+    if (!uploadLock) {
+      return NextResponse.json({ error: "Upload lock not found" }, { status: 404 });
+    }
+
+    // Parse metadata from upload lock
+    const metadata = uploadLock.metadata ? JSON.parse(uploadLock.metadata) : {};
+    const { filename: originalFilename, contentType, teamId: lockTeamId } = metadata;
+
     const title = String(originalFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
-    // Derive ids from key
+    // Derive teamId from key if not in metadata
     const m = key.match(/(?:teams\/(.*?)|users\/(.*?))\/videos\/(.*?)\//);
     const teamIdFromKey = m && m[1] ? m[1] : null;
-    const videoIdFromKey = m ? m[3] : null;
+    const finalTeamId = lockTeamId ?? teamId ?? teamIdFromKey;
 
     // Validate team access if teamId is provided
-    if (teamId) {
+    if (finalTeamId) {
       // Check if user is the team owner
       const team = await prisma.team.findFirst({
-        where: { id: teamId, ownerId: user.id }
+        where: { id: finalTeamId, ownerId: user.id }
       });
       
       if (!team) {
         // If not owner, check if user is a team member
         const membership = await prisma.teamMember.findFirst({
-          where: { teamId, userId: user.id }
+          where: { teamId: finalTeamId, userId: user.id }
         });
         if (!membership) {
           return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
@@ -65,17 +79,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Prisma schema shows sizeBytes Int, so keep Number
-    await prisma.video.update({
-      where: { id: videoIdFromKey ?? undefined },
+    // Create the video record only after successful upload completion
+    const video = await prisma.video.create({
       data: {
+        key,
         filename: title,
         contentType: contentType || "application/octet-stream",
         sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
-        teamId: teamId ?? teamIdFromKey,
+        teamId: finalTeamId,
         userId: user.id,
-        key,
+        status: "PROCESSING",
       },
+    });
+
+    // Broadcast video creation event
+    broadcast({ 
+      type: "video.created", 
+      teamId: video.teamId || null, 
+      payload: { id: video.id, title: video.filename }
+    });
+
+    // Clean up upload lock
+    await prisma.uploadLock.deleteMany({
+      where: { userId: user.id, key }
     });
 
     // Fire-and-forget background optimization for fast web preview
@@ -115,9 +141,9 @@ export async function POST(req: NextRequest) {
         });
 
         // Upload optimized to a deterministic preview key
-        const previewKey = (teamIdFromKey
-          ? `teams/${teamIdFromKey}/videos/${videoIdFromKey}/preview/web.mp4`
-          : `users/${user.id}/videos/${videoIdFromKey}/preview/web.mp4`);
+        const previewKey = (finalTeamId
+          ? `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`
+          : `users/${user.id}/videos/${video.id}/preview/web.mp4`);
         await s3.send(new PutObjectCommand({
           Bucket: process.env.S3_BUCKET!,
           Key: previewKey,
@@ -134,13 +160,7 @@ export async function POST(req: NextRequest) {
       }
     }, 0);
 
-    // Release upload lock if exists
-    try {
-      const owner = await prisma.user.findUnique({ where: { email: session.user.email } });
-      if (owner) await prisma.uploadLock.deleteMany({ where: { userId: owner.id } });
-    } catch {}
-
-    return NextResponse.json({ ok: true, location: completed.Location ?? null });
+    return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id });
   } catch (e) {
     try {
       await s3.send(new AbortMultipartUploadCommand({
@@ -152,10 +172,8 @@ export async function POST(req: NextRequest) {
     // Release lock on error too
     try {
       const owner = await prisma.user.findUnique({ where: { email: session.user.email } });
-      if (owner) await prisma.uploadLock.deleteMany({ where: { userId: owner.id } });
+      if (owner) await prisma.uploadLock.deleteMany({ where: { userId: owner.id, key } });
     } catch {}
     return NextResponse.json({ error: "Complete failed" }, { status: 500 });
   }
 }
-
-

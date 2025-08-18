@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import AppShell from "@/components/layout/AppShell";
 import { useNotifications } from "@/components/ui/Notification";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import TeamList from "@/components/teams/TeamList";
 import CreateTeamModal from "@/components/teams/CreateTeamModal";
 import InviteMemberModal from "@/components/teams/InviteMemberModal";
@@ -49,14 +50,17 @@ export default function TeamsPage() {
   // State management
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const { openModal } = useModalManager();
   const [renamingTeamId, setRenamingTeamId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState<string>("");
-  const [inviting, setInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [teamToLeave, setTeamToLeave] = useState<{ id: string; name: string } | null>(null);
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
+  const [leavingTeamId, setLeavingTeamId] = useState<string | null>(null);
 
   // Filter out personal workspaces from team display
   const actualTeams = teams.filter(team => !team.isPersonal);
@@ -174,6 +178,66 @@ export default function TeamsPage() {
     }
   }, [session?.user?.name, session?.user?.email]);
 
+  // Realtime: auto-refresh teams on team events
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      const url = `/api/events`;
+      es = new EventSource(url);
+      const handler = (ev: MessageEvent) => {
+        try {
+          const evt = JSON.parse(ev.data || '{}');
+          if (evt?.type?.startsWith('team.')) {
+            // Reload teams for any team-related events
+            loadTeams();
+            
+            // Show notifications for specific events
+            if (evt.type === 'team.member.added') {
+              notifications.addNotification({
+                type: "success",
+                title: "New team member",
+                message: "A new member has joined the team"
+              });
+            } else if (evt.type === 'team.member.updated') {
+              notifications.addNotification({
+                type: "info",
+                title: "Member status updated",
+                message: `Member status changed to ${evt.payload.status}`
+              });
+            } else if (evt.type === 'team.member.removed') {
+              notifications.addNotification({
+                type: "info",
+                title: "Member removed",
+                message: "A member has been removed from the team"
+              });
+            } else if (evt.type === 'team.invite') {
+              notifications.addNotification({
+                type: "info",
+                title: "Invitation sent",
+                message: `Invitation sent to ${evt.payload.email}`
+              });
+            } else if (evt.type === 'team.invite.cancelled') {
+              notifications.addNotification({
+                type: "info",
+                title: "Invitation cancelled",
+                message: "Team invitation has been cancelled"
+              });
+            } else if (evt.type === 'team.deleted') {
+              notifications.addNotification({
+                type: "info",
+                title: "Team deleted",
+                message: "A team has been deleted"
+              });
+            }
+          }
+        } catch {}
+      };
+      es.onmessage = handler;
+      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+    } catch {}
+    return () => { try { es?.close(); } catch {} };
+  }, [notifications]);
+
   // Team management handlers
   const handleCreateTeam = async (name: string, description: string) => {
     try {
@@ -203,12 +267,15 @@ export default function TeamsPage() {
     }
   };
 
-  const handleInviteMember = async (email: string, role: string) => {
-    if (!selectedTeam) return;
+  const handleInviteMember = async (email: string, role: string, team?: Team) => {
+    const targetTeam = team || selectedTeam;
     
-    setInviting(true);
+    if (!targetTeam) {
+      throw new Error("No team selected");
+    }
+    
     try {
-      const res = await fetch(`/api/teams/${selectedTeam.id}/invite`, {
+      const res = await fetch(`/api/teams/${targetTeam.id}/invite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), role })
@@ -230,24 +297,33 @@ export default function TeamsPage() {
             message: `Invitation saved but email to ${email} could not be delivered` 
           });
         }
-        setShowInviteModal(false);
         await loadTeams();
+        return { success: true, message: "Invitation sent successfully" };
       } else {
+        const errorMessage = result.error || "Please try again";
         notifications.addNotification({ 
           type: "error", 
           title: "Failed to send invitation", 
-          message: result.error || "Please try again"
+          message: errorMessage
         });
+        throw new Error(errorMessage);
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Network error - please check your connection";
       notifications.addNotification({ 
         type: "error", 
         title: "Failed to send invitation", 
-        message: "Network error - please check your connection"
+        message: errorMessage
       });
-    } finally {
-      setInviting(false);
+      throw err;
     }
+  };
+
+  // Create a wrapper function that captures the team
+  const createInviteHandler = (team: Team) => {
+    return async (email: string, role: string) => {
+      return handleInviteMember(email, role, team);
+    };
   };
 
   const handleSaveRename = async (teamId: string) => {
@@ -279,12 +355,20 @@ export default function TeamsPage() {
   };
 
   const handleDeleteTeam = async (teamId: string, teamName: string) => {
-    if (!confirm(`Are you sure you want to delete "${teamName}"? This action cannot be undone.`)) {
-      return;
-    }
+    // Set the team to delete and open modal
+    setTeamToDelete({ id: teamId, name: teamName });
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteTeam = async () => {
+    if (!teamToDelete) return;
     
+    // Prevent multiple clicks
+    if (deletingTeamId) return;
+    
+    setDeletingTeamId(teamToDelete.id);
     try {
-      const res = await fetch(`/api/teams/${teamId}`, { method: "DELETE" });
+      const res = await fetch(`/api/teams/${teamToDelete.id}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         notifications.addNotification({ 
@@ -302,16 +386,28 @@ export default function TeamsPage() {
         title: "Failed to delete team", 
         message: "Network error" 
       });
+    } finally {
+      setDeletingTeamId(null);
+      setDeleteModalOpen(false);
+      setTeamToDelete(null);
     }
   };
 
   const handleLeaveTeam = async (teamId: string, teamName: string) => {
-    if (!confirm(`Are you sure you want to leave "${teamName}"?`)) {
-      return;
-    }
+    // Set the team to leave and open modal
+    setTeamToLeave({ id: teamId, name: teamName });
+    setLeaveModalOpen(true);
+  };
+
+  const confirmLeaveTeam = async () => {
+    if (!teamToLeave) return;
     
+    // Prevent multiple clicks
+    if (leavingTeamId) return;
+    
+    setLeavingTeamId(teamToLeave.id);
     try {
-      const res = await fetch(`/api/teams/${teamId}/members/self`, { method: "DELETE" });
+      const res = await fetch(`/api/teams/${teamToLeave.id}/members/self`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         notifications.addNotification({ 
@@ -329,6 +425,10 @@ export default function TeamsPage() {
         title: "Failed to leave team", 
         message: "Network error" 
       });
+    } finally {
+      setLeavingTeamId(null);
+      setLeaveModalOpen(false);
+      setTeamToLeave(null);
     }
   };
 
@@ -523,10 +623,12 @@ export default function TeamsPage() {
                 onSubmit: handleCreateTeam
               });
             }}
-            onInviteMember={(team) => openModal("invite-member", {
-              teamName: team.name,
-              onSubmit: handleInviteMember
-            })}
+            onInviteMember={(team) => {
+              openModal("invite-member", {
+                teamName: team.name,
+                onSubmit: createInviteHandler(team)
+              });
+            }}
             onStartRename={(teamId, currentName) => {
               setRenamingTeamId(teamId);
               setRenameValue(currentName);
@@ -548,6 +650,35 @@ export default function TeamsPage() {
         </motion.div>
 
         {/* Modals */}
+        {/* Delete Team Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={confirmDeleteTeam}
+          title="Delete Team?"
+          message="This action cannot be undone. The team and all its videos will be permanently deleted."
+          itemName={teamToDelete?.name}
+          confirmText={deletingTeamId ? "Deleting..." : "Delete Permanently"}
+          cancelText="Cancel"
+          variant="danger"
+          icon="trash"
+          isLoading={!!deletingTeamId}
+        />
+
+        {/* Leave Team Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={leaveModalOpen}
+          onClose={() => setLeaveModalOpen(false)}
+          onConfirm={confirmLeaveTeam}
+          title="Leave Team?"
+          message="You will no longer have access to this team's videos and content."
+          itemName={teamToLeave?.name}
+          confirmText={leavingTeamId ? "Leaving..." : "Leave Team"}
+          cancelText="Cancel"
+          variant="warning"
+          icon="warning"
+          isLoading={!!leavingTeamId}
+        />
       </div>
     </AppShell>
   );

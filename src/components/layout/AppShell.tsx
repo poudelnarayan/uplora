@@ -164,14 +164,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card">
         {/* Header */}
-        <div className="flex items-center h-16 px-4 border-b border-border">
+        <div className="flex items-center h-16 px-4">
           <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md" />
         </div>
 
         {/* Team Selector */}
-        <div className="p-4 border-b border-border">
+        <div className="p-4">
          {/* Conditional workspace selector based on user scenario */}
          {teams.length === 0 ? (
            /* Scenario 1: Personal-only user - No switcher needed */
@@ -456,9 +456,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto lg:ml-64 ml-0">
+      <main className="flex-1 lg:ml-64 ml-0">
         {/* Top Bar */}
-        <div className="sticky top-0 z-30 bg-card border-b border-border backdrop-blur-none lg:bg-card/95 lg:backdrop-blur-sm">
+        <div className="sticky top-0 z-30 bg-card backdrop-blur-none lg:bg-card/95 lg:backdrop-blur-sm">
           <div className="flex items-center justify-between px-4 lg:px-8 py-3">
             {/* Left side - Icons and Mobile Menu */}
             <div className="flex items-center gap-3">
@@ -492,9 +492,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         {/* Page content */}
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col">
+        <div className="flex flex-col">
           <div className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
-            <div className="max-w-6xl mx-auto w-full h-full">{children}</div>
+            <div className="max-w-6xl mx-auto w-full">{children}</div>
           </div>
         </div>
       </main>

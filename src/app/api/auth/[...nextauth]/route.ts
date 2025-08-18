@@ -1,22 +1,10 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-// git-upload-check
+
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: "openid email profile",
-          access_type: "online",
-          prompt: "consent"
-        }
-      }
-    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -31,7 +19,7 @@ export const authOptions: NextAuthOptions = {
 
         try {
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
+            where: { email: credentials.email.toLowerCase() }
           });
 
           if (!user || !user.hashedPassword) {
@@ -53,6 +41,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: user.name,
+            emailVerified: user.emailVerified,
           };
         } catch (error) {
           console.error("Database error during credentials auth:", error);
@@ -62,72 +51,8 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Handle both Google and credentials provider account creation
-      if (account?.provider === "google" && user?.email) {
-        try {
-          const email = user.email.toLowerCase();
-          const existingUser = await prisma.user.findUnique({ where: { email } });
-          
-          if (!existingUser) {
-            // Create new user with personal workspace
-            const newUser = await prisma.user.create({
-              data: { 
-                email, 
-                name: user.name ?? null, 
-                emailVerified: new Date() 
-              }
-            });
-            
-            // Create personal workspace for new user
-            const personalTeam = await prisma.team.create({
-              data: {
-                name: `${newUser.name || 'Personal'}'s Workspace`,
-                description: 'Your personal video workspace',
-                ownerId: newUser.id,
-                isPersonal: true
-              }
-            });
-            
-            // Link personal workspace to user
-            await prisma.user.update({
-              where: { id: newUser.id },
-              data: { personalTeamId: personalTeam.id }
-            });
-          } else {
-            // Update existing user and ensure they have personal workspace
-            await prisma.user.update({
-              where: { email },
-              data: { name: user.name ?? null, emailVerified: new Date() }
-            });
-            
-            // Create personal workspace if missing
-            if (!existingUser.personalTeamId) {
-              const personalTeam = await prisma.team.create({
-                data: {
-                  name: `${existingUser.name || 'Personal'}'s Workspace`,
-                  description: 'Your personal video workspace',
-                  ownerId: existingUser.id,
-                  isPersonal: true
-                }
-              });
-              
-              await prisma.user.update({
-                where: { id: existingUser.id },
-                data: { personalTeamId: personalTeam.id }
-              });
-            }
-          }
-        } catch (err) {
-          console.error("Google sign-in user creation/update failed", {
-            message: (err as Error).message,
-          });
-          // Do not block sign-in; let user proceed with Google session
-          return true;
-        }
-      }
-      
-      // Handle credentials provider (email/password registration)
+    async signIn({ user, account }) {
+      // Handle credentials provider (email/password authentication)
       if (account?.provider === "credentials" && user?.email) {
         try {
           const email = user.email.toLowerCase();
@@ -160,17 +85,22 @@ export const authOptions: NextAuthOptions = {
           return true;
         }
       }
+      
       return true;
     },
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
       if (account) {
         token.provider = account.provider;
+      }
+      if (user) {
+        token.emailVerified = user.emailVerified;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.sub;
       session.provider = token.provider;
+      session.user.emailVerified = token.emailVerified;
       return session;
     },
     async redirect({ url, baseUrl }) {

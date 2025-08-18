@@ -187,6 +187,23 @@ export default function UploadZone() {
           xhr.send(file);
         });
 
+        // Call completion endpoint to create video record and broadcast event
+        const completeRes = await fetch("/api/s3/put-complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            key: presign.key,
+            filename: file.name,
+            contentType: file.type || "application/octet-stream",
+            sizeBytes: file.size,
+            teamId: selectedTeamId
+          }),
+        });
+
+        if (!completeRes.ok) {
+          throw new Error("Failed to complete upload");
+        }
+
         setS3Key(presign.key);
         setUploadProgress(100);
         notifications.addNotification({ type: "success", title: "Upload complete!", message: "Your video is ready to publish" });
@@ -197,7 +214,11 @@ export default function UploadZone() {
       const init = await fetch("/api/s3/multipart/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream" }),
+        body: JSON.stringify({ 
+          filename: file.name, 
+          contentType: file.type || "application/octet-stream",
+          teamId: selectedTeamId
+        }),
       }).then((r) => r.json());
       if (!init?.uploadId || !init?.key) throw new Error("Failed to init multipart upload");
 

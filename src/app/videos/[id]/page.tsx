@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3 } from "lucide-react";
+import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2 } from "lucide-react";
 import Image from "next/image";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { StatusChip } from "@/components/ui/StatusChip";
@@ -71,8 +71,8 @@ export default function VideoPreviewPage() {
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
   const [thumbnailDeleting, setThumbnailDeleting] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
-  const [forcePublishOpen, setForcePublishOpen] = useState(false);
-  const [forcePublishing, setForcePublishing] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   // Track original values for change detection
   const [originalMetadata, setOriginalMetadata] = useState({
@@ -238,18 +238,54 @@ export default function VideoPreviewPage() {
           const evt = JSON.parse(ev.data || '{}');
           if (!evt?.type?.startsWith('video.')) return;
           if (evt?.payload?.id !== id) return;
+          
           // If user has unsaved changes, don't clobber the form
           if (hasUnsavedChanges || isSaving) return;
-          // Soft refresh of server fields
+          
+          if (evt.type === 'video.deleted') {
+            // Video was deleted, redirect to videos page
+            notifications.addNotification({
+              type: "info",
+              title: "Video deleted",
+              message: "This video has been deleted by another user"
+            });
+            router.push("/videos");
+            return;
+          }
+          
+          if (evt.type === 'video.status') {
+            // Status change - update immediately
+            setVideo(prev => prev ? { ...prev, status: evt.payload.status } : prev);
+            
+            // Show notification for status changes
+            const statusMessages = {
+              'PROCESSING': 'Video is back in editing mode',
+              'PENDING': 'Video is awaiting approval',
+              'PUBLISHED': 'Video has been published'
+            };
+            
+            if (statusMessages[evt.payload.status]) {
+              notifications.addNotification({
+                type: "success",
+                title: "Status updated",
+                message: statusMessages[evt.payload.status]
+              });
+            }
+            return;
+          }
+          
+          // For other updates, soft refresh of server fields
           const res = await fetch(`/api/videos/${id}`, { cache: 'no-store' });
           if (!res.ok) return;
           const v = await res.json();
           setVideo(v);
+          
           // Only update form fields if they haven't been touched since last load
           setTitle((prev) => prev || (v.filename || '').replace(/\.[^/.]+$/, ''));
           setDescription((prev) => prev);
           setVisibility((prev) => prev || v.visibility || 'public');
           setMadeForKids((prev) => typeof prev === 'boolean' ? prev : (v.madeForKids || false));
+          
           // thumbnail refresh
           if (v.thumbnailKey) {
             const cached = videoCache.getThumbnailUrl(v.id);
@@ -262,7 +298,7 @@ export default function VideoPreviewPage() {
       es.onerror = () => { try { es?.close(); } catch {}; es = null; };
     } catch {}
     return () => { try { es?.close(); } catch {} };
-  }, [id, hasUnsavedChanges, isSaving]);
+  }, [id, hasUnsavedChanges, isSaving, router, notifications]);
 
   // Auto-save function
   const autoSave = async (showNotification = false) => {
@@ -694,67 +730,74 @@ export default function VideoPreviewPage() {
     if (!video) return;
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/videos/${video.id}/approve`, { method: "POST" });
-      if (response.ok) {
-        setVideo({ ...video, status: "PUBLISHED" });
-        notifications.addNotification({
-          type: "success",
-          title: "✅ Video approved!",
-          message: "The editor will be notified via email"
-        });
-      } else {
-        throw new Error("Failed to approve");
-      }
-    } catch (error) {
-      notifications.addNotification({
-        type: "error",
-        title: "❌ Approval failed", 
-        message: "Could not approve video"
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const doApproveAndPublish = async () => {
-    if (!video) return;
-    setForcePublishing(true);
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/youtube/upload", {
+      // Call approve endpoint with video metadata for YouTube upload
+      const response = await fetch(`/api/videos/${video.id}/approve`, { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          key: video.key,
           title,
           description,
           privacyStatus: visibility,
           madeForKids,
-        }),
+        })
       });
-      const json = await res.json();
-      if (!res.ok || !json?.id) {
-        throw new Error(json?.error || "Failed to upload to YouTube");
+      
+      if (response.ok) {
+        const result = await response.json();
+        setVideo({ ...video, status: "PUBLISHED" });
+        notifications.addNotification({
+          type: "success",
+          title: "✅ Video published to YouTube!",
+          message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
+        });
+        router.push("/dashboard");
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to approve");
       }
-      await fetch(`/api/videos/${video.id}/approve`, { method: "POST" });
-      setVideo({ ...video, status: "PUBLISHED" });
-      router.push("/dashboard");
-    } catch (e) {
-      notifications.addNotification({ type: 'error', title: 'Upload failed', message: 'Could not publish to YouTube' });
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "❌ Publishing failed", 
+        message: error instanceof Error ? error.message : "Could not publish video to YouTube"
+      });
     } finally {
-      setForcePublishing(false);
       setSubmitting(false);
-      setForcePublishOpen(false);
     }
   };
 
-  const approveAndPublish = async () => {
+  const deleteVideo = async () => {
     if (!video) return;
-    if (video.status !== 'PENDING') {
-      setForcePublishOpen(true);
-      return;
+    
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/videos/${video.id}/delete`, {
+        method: "DELETE"
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to delete video");
+      }
+      
+      notifications.addNotification({
+        type: "success",
+        title: "Video deleted",
+        message: "Video has been permanently deleted"
+      });
+      
+      // Redirect to videos page
+      router.push("/videos");
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "Delete failed",
+        message: error instanceof Error ? error.message : "Failed to delete video"
+      });
+    } finally {
+      setDeleting(false);
+      setDeleteModalOpen(false);
     }
-    await doApproveAndPublish();
   };
 
   
@@ -1228,7 +1271,7 @@ export default function VideoPreviewPage() {
                     </button>
                   )}
                   {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                    <button className="btn btn-primary" disabled={submitting} onClick={approveAndPublish}>
+                    <button className="btn btn-primary" disabled={submitting} onClick={approveVideo}>
                       {submitting ? 'Publishing...' : 'Publish to YouTube'}
                     </button>
                   )}
@@ -1362,14 +1405,22 @@ export default function VideoPreviewPage() {
 
                 {/* Row 3: Actions */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    {/* Editor: request publish */}
-                    {role === "EDITOR" && (video.status === "PROCESSING" || !video.status) && (
+                    {/* Editor: request publish for team videos */}
+                    {role === "EDITOR" && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                        {submitting ? "Sending Request..." : "📧 Send Publish Request"}
+                        {submitting ? "Sending Request..." : "📧 Request for Publish"}
                       </button>
                     )}
-                    {/* Owner/Admin/Manager actions while pending */}
-                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && video.status === "PENDING" && (
+                    
+                    {/* Personal workspace: direct publish */}
+                    {!video.teamId && (role === "PERSONAL_OWNER" || role === "OWNER") && (video.status === "PROCESSING" || !video.status) && (
+                      <button className="btn btn-success" disabled={submitting} onClick={() => approveVideo()}>
+                        {submitting ? "Publishing..." : "🚀 Publish to YouTube"}
+                      </button>
+                    )}
+                    
+                    {/* Owner/Admin/Manager actions for team videos while pending */}
+                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && video.teamId && video.status === "PENDING" && (
                       <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <button className="btn btn-success sm:order-1" disabled={submitting} onClick={() => approveVideo()}>
                           {submitting ? "Approving..." : "✅ Approve & Publish"}
@@ -1403,6 +1454,18 @@ export default function VideoPreviewPage() {
                         )}
                       </div>
                     )}
+                    
+                    {/* Delete button for owners/admins/managers */}
+                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER" || role === "PERSONAL_OWNER") && (
+                      <button
+                        className="btn btn-outline btn-error ml-auto"
+                        onClick={() => setDeleteModalOpen(true)}
+                        title="Delete video permanently"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete Video
+                      </button>
+                    )}
                 </div>
               </div>
               {/* Upload timeline removed per request */}
@@ -1412,17 +1475,18 @@ export default function VideoPreviewPage() {
       </div>
       
       
-      {/* Force Publish Confirmation */}
+      {/* Delete Video Confirmation */}
       <ConfirmationModal
-        isOpen={forcePublishOpen}
-        onClose={() => (!forcePublishing ? setForcePublishOpen(false) : null)}
-        onConfirm={doApproveAndPublish}
-        title="Force publish?"
-        message="The editor hasn't sent this for publish yet. Do you want to publish to YouTube anyway?"
-        confirmText={forcePublishing ? "Publishing..." : "Force Publish"}
+        isOpen={deleteModalOpen}
+        onClose={() => (!deleting ? setDeleteModalOpen(false) : null)}
+        onConfirm={deleteVideo}
+        title="Delete Video?"
+        message="This action cannot be undone. The video will be permanently deleted from both the platform and YouTube (if published)."
+        itemName={video?.filename}
+        confirmText={deleting ? "Deleting..." : "Delete Permanently"}
         cancelText="Cancel"
-        variant="warning"
-        isLoading={forcePublishing}
+        variant="danger"
+        isLoading={deleting}
       />
     </AppShell>
   );

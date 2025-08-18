@@ -2,37 +2,11 @@
 
 import { motion } from "framer-motion";
 import SignInForm from "@/components/auth/SignInForm";
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 
 function SignInContent() {
-  const params = useSearchParams();
-  const verified = params.get("verified");
-  const showSuccess = verified === "1";
-  const showExpired = verified === "expired";
-  const showError = verified === "0";
-
-  return (
-    <>
-      {showSuccess && (
-        <div className="mb-4 p-3 rounded-md border bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm">
-          Email verified successfully. Please sign in below.
-        </div>
-      )}
-      {showExpired && (
-        <div className="mb-4 p-3 rounded-md border bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 text-sm">
-          Verification link expired. Please register again to receive a new link.
-        </div>
-      )}
-      {showError && (
-        <div className="mb-4 p-3 rounded-md border bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">
-          Verification failed. Please try again.
-        </div>
-      )}
-      <SignInForm />
-    </>
-  );
+  return <SignInForm />;
 }
 
 export default function SignInPage() {

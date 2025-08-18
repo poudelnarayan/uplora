@@ -65,13 +65,16 @@ export function ModalProvider({ children }: ModalProviderProps) {
           if (result.success) {
             // Show success message with email status
             console.log("✅ Submission successful:", result.message);
+            closeModal();
           } else if (result.error) {
             console.error("❌ Submission failed:", result.error);
             throw new Error(result.error);
           }
+        } else {
+          // If no result object returned, assume success and close modal
+          closeModal();
         }
       }
-      closeModal();
     } catch (error) {
       console.error("Modal submission error:", error);
       // Don't close modal on error - let user try again

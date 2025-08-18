@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, AlertTriangle } from "lucide-react";
+import { X, AlertTriangle, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 
 interface ConfirmationModalProps {
@@ -15,6 +15,7 @@ interface ConfirmationModalProps {
   cancelText?: string;
   variant?: "danger" | "warning" | "info";
   isLoading?: boolean;
+  icon?: "trash" | "warning" | "info";
 }
 
 export default function ConfirmationModal({
@@ -27,64 +28,63 @@ export default function ConfirmationModal({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "danger",
-  isLoading = false
+  isLoading = false,
+  icon = "warning"
 }: ConfirmationModalProps) {
-  
-  // Handle ESC key
+  // Close on escape key
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isLoading) {
         onClose();
       }
     };
     
     if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
     }
-    
-    return () => {
-      document.removeEventListener("keydown", handleEsc);
-      document.body.style.overflow = "";
-    };
   }, [isOpen, onClose, isLoading]);
 
-  // Handle Enter key
+  // Prevent body scroll when modal is open
   useEffect(() => {
-    const handleEnter = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !isLoading) {
-        onConfirm();
-      }
-    };
-    
     if (isOpen) {
-      document.addEventListener("keydown", handleEnter);
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "unset";
+      };
     }
-    
-    return () => {
-      document.removeEventListener("keydown", handleEnter);
-    };
-  }, [isOpen, onConfirm, isLoading]);
+  }, [isOpen]);
+
+  const getIcon = () => {
+    switch (icon) {
+      case "trash":
+        return <Trash2 className="w-6 h-6" />;
+      case "warning":
+        return <AlertTriangle className="w-6 h-6" />;
+      default:
+        return <AlertTriangle className="w-6 h-6" />;
+    }
+  };
 
   const getVariantStyles = () => {
     switch (variant) {
       case "danger":
         return {
-          icon: "text-orange-500",
-          confirmBtn: "bg-red-500 hover:bg-red-600 active:bg-red-700 text-white transition-all duration-200 hover:shadow-md",
-          iconBg: "bg-orange-100 dark:bg-orange-900/20"
+          icon: "text-red-500",
+          confirmButton: "bg-red-500 hover:bg-red-600 text-white",
+          cancelButton: "text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
         };
       case "warning":
         return {
           icon: "text-yellow-500",
-          confirmBtn: "bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white transition-all duration-200 hover:shadow-md",
-          iconBg: "bg-yellow-100 dark:bg-yellow-900/20"
+          confirmButton: "bg-yellow-500 hover:bg-yellow-600 text-white",
+          cancelButton: "text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
         };
-      case "info":
+      default:
         return {
           icon: "text-blue-500",
-          confirmBtn: "bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-all duration-200 hover:shadow-md",
-          iconBg: "bg-blue-100 dark:bg-blue-900/20"
+          confirmButton: "bg-blue-500 hover:bg-blue-600 text-white",
+          cancelButton: "text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
         };
     }
   };
@@ -92,63 +92,74 @@ export default function ConfirmationModal({
   const styles = getVariantStyles();
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait" initial={false}>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 dark:bg-black/50"
-            onClick={() => !isLoading && onClose()}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={!isLoading ? onClose : undefined}
           />
           
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-md mx-4 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-border"
-            className="relative w-full max-w-md mx-4 bg-card rounded-lg shadow-xl border border-border"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-md bg-background rounded-lg shadow-xl border"
           >
             {/* Header */}
-            <div className="flex items-start p-6 pb-4">
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg}`}>
-                <AlertTriangle className={`w-6 h-6 ${styles.icon}`} />
+            <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center gap-3">
+                <div className={styles.icon}>
+                  {getIcon()}
+                </div>
+                <h2 className="text-lg font-semibold text-foreground">{title}</h2>
               </div>
-              <div className="ml-4 flex-1">
-                <h3 className="text-lg font-semibold text-foreground">
-                  {title}
-                </h3>
-                {itemName && (
-                  <div className="mt-2 p-2 bg-muted/50 rounded-md">
-                    <p className="text-sm font-medium text-foreground truncate" title={itemName}>
-                      "{itemName.length > 40 ? itemName.slice(0, 40) + '...' : itemName}"
-                    </p>
-                  </div>
-                )}
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {message}
-                </p>
-              </div>
+              {!isLoading && (
+                <button
+                  onClick={onClose}
+                  className="p-1 hover:bg-muted rounded-md transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
-            
+
+            {/* Content */}
+            <div className="p-6">
+              <p className="text-muted-foreground mb-4">
+                {message}
+                {itemName && (
+                  <span className="font-semibold text-foreground block mt-2">
+                    "{itemName}"
+                  </span>
+                )}
+              </p>
+            </div>
+
             {/* Actions */}
-            <div className="flex gap-3 px-6 pb-6">
+            <div className="flex items-center justify-end gap-3 p-6 border-t">
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="btn btn-ghost flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${styles.cancelButton} disabled:opacity-50`}
               >
                 {cancelText}
               </button>
               <button
                 onClick={onConfirm}
                 disabled={isLoading}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${styles.confirmBtn}`}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${styles.confirmButton} disabled:opacity-50 flex items-center gap-2`}
               >
-                {isLoading ? "Processing..." : confirmText}
+                {isLoading && (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                )}
+                {confirmText}
               </button>
             </div>
           </motion.div>

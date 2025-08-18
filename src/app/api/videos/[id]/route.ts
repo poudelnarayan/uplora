@@ -158,8 +158,22 @@ export async function PATCH(
       },
     });
 
-    // broadcast updates
-    broadcast({ type: "video.updated", teamId: updated.teamId || null, payload: { id: updated.id } });
+    // Broadcast updates with status information
+    if (statusData.status) {
+      // Status change event
+      broadcast({ 
+        type: "video.status", 
+        teamId: updated.teamId || null, 
+        payload: { id: updated.id, status: statusData.status }
+      });
+    } else {
+      // General update event
+      broadcast({ 
+        type: "video.updated", 
+        teamId: updated.teamId || null, 
+        payload: { id: updated.id }
+      });
+    }
 
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {

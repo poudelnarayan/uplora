@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 
 // Update member (pause/unpause)
 export async function PATCH(
@@ -46,6 +47,13 @@ export async function PATCH(
       select: { id: true, status: true },
     });
 
+    // Broadcast member status change
+    broadcast({ 
+      type: "team.member.updated", 
+      teamId: params.teamId, 
+      payload: { memberId: params.memberId, status }
+    });
+
     return NextResponse.json(updated);
   } catch (e) {
     console.error("Error updating member:", e);
@@ -87,6 +95,13 @@ export async function DELETE(
     }
 
     await prisma.teamMember.delete({ where: { id: params.memberId } });
+
+    // Broadcast member removal
+    broadcast({ 
+      type: "team.member.removed", 
+      teamId: params.teamId, 
+      payload: { memberId: params.memberId }
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e) {
