@@ -5,11 +5,29 @@ import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json();
+    const body = await request.json();
+    const rawEmail = typeof body?.email === "string" ? body.email : "";
+    const email = rawEmail.toLowerCase().trim();
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const password = typeof body?.password === "string" ? body.password : "";
 
     if (!email || !password || !name) {
       return NextResponse.json(
         { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return NextResponse.json(
+        { message: "Invalid email address" },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { message: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }
@@ -29,41 +47,39 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user with personal workspace
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        hashedPassword,
-      },
-    });
-    
-    // Create personal workspace for new user
-    const personalTeam = await prisma.team.create({
-      data: {
-        name: `${user.name}'s Workspace`,
-        description: 'Your personal video workspace',
-        ownerId: user.id,
-        isPersonal: true
-      }
-    });
-    
-    // Link personal workspace to user
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { personalTeamId: personalTeam.id }
-    });
-
-    // Create verification token
+    // Prepare verification token
     const token = crypto.randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        verificationToken: token,
-        verificationTokenExpires: expires,
-      }
+    // Create everything atomically
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          email,
+          name,
+          hashedPassword,
+        },
+      });
+
+      const personalTeam = await tx.team.create({
+        data: {
+          name: `${createdUser.name || "Personal"}'s Workspace`,
+          description: "Your personal video workspace",
+          ownerId: createdUser.id,
+          isPersonal: true,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: createdUser.id },
+        data: {
+          personalTeamId: personalTeam.id,
+          verificationToken: token,
+          verificationTokenExpires: expires,
+        },
+      });
+
+      return createdUser;
     });
 
     // Always use absolute origin for email links
@@ -100,9 +116,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Registration error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    // Prisma and validation-safe error mapping
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
