@@ -22,6 +22,7 @@ import {
   Zap,
   Crown,
   Users
+  Upload,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useSession } from "next-auth/react";
