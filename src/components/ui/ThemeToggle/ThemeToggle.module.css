@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button:hover {
+  border-color: rgb(var(--ring));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

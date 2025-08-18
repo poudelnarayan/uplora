@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.priorityButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.75rem;
+  background-color: rgb(var(--card));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.priorityButton:hover {
+  border-color: rgb(var(--ring));
+  transform: translateY(-1px);
+}
+
+.selected {
+  border-color: rgb(var(--ring));
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.unselected {
+  background-color: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
+}
+
+.priorityName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.priorityLabel {
+  font-size: 0.625rem;
+  text-align: center;
+  color: rgb(var(--muted-foreground));
+}

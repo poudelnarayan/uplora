@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.typeButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.75rem;
+  background-color: rgb(var(--card));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.typeButton:hover {
+  border-color: rgb(var(--ring));
+  transform: translateY(-1px);
+}
+
+.selected {
+  border-color: rgb(var(--ring));
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.unselected {
+  background-color: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.typeLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
