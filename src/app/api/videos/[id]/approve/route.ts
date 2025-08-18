@@ -42,6 +42,7 @@ export async function POST(
         isOwner = team.ownerId === me.id;
       }
     } else {
+      // Personal videos: only the uploader can approve (no approval workflow needed)
       isOwner = video.userId === me.id;
     }
     if (!isOwner) return NextResponse.json({ error: "Only owner can approve" }, { status: 403 });

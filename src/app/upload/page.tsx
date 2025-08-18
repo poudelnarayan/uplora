@@ -24,11 +24,11 @@ export default function UploadPage() {
           {/* Current Workspace - Clear and Visible */}
           <div className="flex items-center justify-center">
             <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-xl border-2 ${
-              selectedTeam 
+              selectedTeamId 
                 ? "border-primary/30 bg-primary/10 text-primary" 
                 : "border-muted-foreground/30 bg-muted/20 text-muted-foreground"
             }`}>
-              {selectedTeam ? (
+              {selectedTeamId ? (
                 <>
                   <Users className="w-5 h-5" />
                   <span className="font-semibold">Team: {selectedTeam.name}</span>

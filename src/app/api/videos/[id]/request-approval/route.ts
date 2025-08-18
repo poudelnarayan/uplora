@@ -33,6 +33,11 @@ export async function POST(
     const me = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!me) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
+    // Personal videos don't need approval workflow
+    if (!video.teamId) {
+      return NextResponse.json({ error: "Personal videos don't require approval" }, { status: 400 });
+    }
+
     // Update status to PENDING
     const updated = await prisma.video.update({
       where: { id: video.id },

@@ -209,7 +209,7 @@ export default function VideosPage() {
                         >
                           <Play className="w-4 h-4 mr-1" /> Preview
                         </button>
-                        {video.status === 'PROCESSING' && video.userRole && ["EDITOR","MANAGER","ADMIN","OWNER"].includes(video.userRole) && (
+                        {video.status === 'PROCESSING' && video.userRole && ["EDITOR","MANAGER","ADMIN"].includes(video.userRole) && (
                           <button
                             className="btn btn-ghost btn-sm"
                             onClick={(e) => { e.stopPropagation(); router.push(`/videos/${video.id}`); }}

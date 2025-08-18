@@ -39,7 +39,7 @@ export async function GET(
 
     // Personal video: uploader is the OWNER
     if (video.userId === user.id) {
-      return NextResponse.json({ role: "OWNER", isOwner: true });
+      return NextResponse.json({ role: "PERSONAL_OWNER", isOwner: true });
     }
 
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
