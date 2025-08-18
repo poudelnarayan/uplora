@@ -172,218 +172,218 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* Team Selector */}
         <div className="p-4 border-b border-border">
-          {/* Conditional workspace selector based on user scenario */}
-          {teams.length === 0 ? (
-            /* Scenario 1: Personal-only user - No switcher needed */
-            <div className="px-4 py-3 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-secondary animate-pulse shadow-sm" />
-                <div>
-                  <span className="font-semibold text-foreground block">Personal Workspace</span>
-                  <span className="text-xs text-muted-foreground">Your private video space</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Scenario 2 & 3: Users with teams - Show full switcher */
-            <>
-              <div className="text-xs font-medium text-muted-foreground mb-3 flex items-center justify-between">
-                <span>Workspace</span>
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
-                  {teams.length + 1} spaces
-                </span>
-              </div>
-              <div className="relative">
-                <button
-                  onClick={() => setTeamMenuOpen((o) => !o)}
-                  className="group w-full inline-flex items-center justify-between px-4 py-3 rounded-lg border bg-card border-border hover:border-primary/50 hover:shadow-md cursor-pointer transition-all duration-200"
-                  aria-expanded={teamMenuOpen}
-                  aria-haspopup="listbox"
-                  role="combobox"
-                  aria-label={`Current workspace: ${selectedTeam?.name || "Personal Workspace"}`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 transition-all ${
-                      selectedTeam 
-                        ? "bg-gradient-to-br from-blue-400 to-blue-500 shadow-sm animate-pulse" 
-                        : "bg-gradient-to-br from-primary to-secondary shadow-sm animate-pulse"
-                    }`} />
-                    <span className="font-semibold text-foreground truncate">
-                      {selectedTeam?.name || "Personal Workspace"}
-                    </span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 transition-all duration-200 text-muted-foreground group-hover:text-primary group-hover:scale-110 ${
-                    teamMenuOpen ? "rotate-180" : ""
-                  }`} />
-                </button>
-                
-                <AnimatePresence>
-                  {teamMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 1, y: -4, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                      transition={{ duration: 0.12, ease: "easeOut" }}
-                      className="absolute top-full left-0 right-0 mt-2 z-50"
-                    >
-                      <div className="bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
-                        {/* Enhanced header with workspace count */}
-                        <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-muted/20 to-muted/10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-foreground">
-                              Switch Workspace
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
-                                {teams.length + 1} spaces
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Smart search for 4+ total spaces (including personal) */}
-                          {teams.length >= 3 && (
-                            <div className="mt-3">
-                              <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                  <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                  </svg>
-                                </div>
-                                <input
-                                  type="text"
-                                  placeholder="Search workspaces..."
-                                  className="w-full pl-10 pr-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Workspace options with clear hierarchy */}
-                        <div className="max-h-72 overflow-y-auto enhanced-scrollbar">
-                          <div className="p-2 space-y-1">
-                            {/* Personal Workspace - Always first */}
-                            <motion.button
-                              initial={{ opacity: 1, x: 0 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0, duration: 0.15 }}
-                              onClick={() => {
-                                setSelectedTeamId(null);
-                                setTeamMenuOpen(false);
-                              }}
-                              className={`group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 ${
-                                !selectedTeamId 
-                                  ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md" 
-                                  : "text-foreground hover:bg-muted/80 hover:shadow-sm"
-                              }`}
-                              role="option"
-                              aria-selected={!selectedTeamId}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
-                                  !selectedTeamId 
-                                    ? "bg-primary-foreground animate-pulse shadow-sm" 
-                                    : "bg-gradient-to-br from-primary to-secondary group-hover:scale-110"
-                                }`} />
-                                <div className="flex-1 min-w-0">
-                                  <span className="font-semibold">Personal Workspace</span>
-                                </div>
-                                {!selectedTeamId && (
-                                  <div className="flex items-center gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-ping" />
-                                    <span className="text-xs font-medium opacity-90">Active</span>
-                                  </div>
-                                )}
-                              </div>
-                            </motion.button>
-                            
-                            {/* Team separator with label */}
-                            <div className="flex items-center gap-2 px-3 py-2">
-                              <div className="flex-1 border-t border-border" />
-                              <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                                Teams ({teams.length})
-                              </span>
-                              <div className="flex-1 border-t border-border" />
-                            </div>
-                            
-                            {/* Team list with enhanced styling */}
-                            {teams.map((t, index) => (
-                              <motion.button
-                                key={t.id}
-                                initial={{ opacity: 1, x: 0 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: (index + 1) * 0.02, duration: 0.15 }}
-                                onClick={() => {
-                                  setSelectedTeamId(t.id);
-                                  setTeamMenuOpen(false);
-                                }}
-                                className={`group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 ${
-                                  selectedTeamId === t.id 
-                                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md" 
-                                    : "text-foreground hover:bg-muted/80 hover:shadow-sm"
-                                }`}
-                                role="option"
-                                aria-selected={selectedTeamId === t.id}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
-                                    selectedTeamId === t.id 
-                                      ? "bg-white animate-pulse shadow-sm" 
-                                      : "bg-blue-400/60 group-hover:bg-blue-500 group-hover:scale-110"
-                                  }`} />
-                                  
-                                  <span className="font-semibold truncate flex-1">{t.name}</span>
-                                  
-                                  {selectedTeamId === t.id && (
-                                    <div className="flex items-center gap-1">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                                      <span className="text-xs font-medium opacity-90">Active</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </motion.button>
-                            ))}
-                            
-                            {/* Quick create team action */}
-                            <div className="border-t border-border my-2" />
-                            <motion.button
-                              initial={{ opacity: 1, x: 0 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: (teams.length + 2) * 0.02, duration: 0.15 }}
-                              onClick={() => {
-                                setTeamMenuOpen(false);
-                                openModal("create-team", {
-                                  onSubmit: async (name: string, description: string) => {
-                                    const response = await fetch("/api/teams", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ name, description })
-                                    });
-                                    if (response.ok) {
-                                      window.location.reload();
-                                    }
-                                  }
-                                });
-                              }}
-                              className="group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-green-500/10 hover:to-emerald-500/10 border-2 border-dashed border-muted-foreground/30 hover:border-green-500/50"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full border border-dashed border-current flex-shrink-0 group-hover:border-green-500" />
-                                <span className="font-medium">Create New Team</span>
-                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Plus className="w-4 h-4" />
-                                </div>
-                              </div>
-                            </motion.button>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </>
-          )}
+         {/* Conditional workspace selector based on user scenario */}
+         {teams.length === 0 ? (
+           /* Scenario 1: Personal-only user - No switcher needed */
+           <div className="px-4 py-3 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
+             <div className="flex items-center gap-3">
+               <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-secondary animate-pulse shadow-sm" />
+               <div>
+                 <span className="font-semibold text-foreground block">Personal Workspace</span>
+                 <span className="text-xs text-muted-foreground">Your private video space</span>
+               </div>
+             </div>
+           </div>
+         ) : (
+           /* Scenario 2 & 3: Users with teams - Show full switcher */
+           <>
+             <div className="text-xs font-medium text-muted-foreground mb-3 flex items-center justify-between">
+               <span>Workspace</span>
+               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
+                 {teams.length + 1} spaces
+               </span>
+             </div>
+             <div className="relative">
+               <button
+                 onClick={() => setTeamMenuOpen((o) => !o)}
+                 className="group w-full inline-flex items-center justify-between px-4 py-3 rounded-lg border bg-card border-border hover:border-primary/50 hover:shadow-md cursor-pointer transition-all duration-200"
+                 aria-expanded={teamMenuOpen}
+                 aria-haspopup="listbox"
+                 role="combobox"
+                 aria-label={`Current workspace: ${selectedTeam?.name || "Personal Workspace"}`}
+               >
+                 <div className="flex items-center gap-3 min-w-0">
+                   <div className={`w-3 h-3 rounded-full flex-shrink-0 transition-all ${
+                     selectedTeam 
+                       ? "bg-gradient-to-br from-blue-400 to-blue-500 shadow-sm animate-pulse" 
+                       : "bg-gradient-to-br from-primary to-secondary shadow-sm animate-pulse"
+                   }`} />
+                   <span className="font-semibold text-foreground truncate">
+                     {selectedTeam?.name || "Personal Workspace"}
+                   </span>
+                 </div>
+                 <ChevronDown className={`w-4 h-4 transition-all duration-200 text-muted-foreground group-hover:text-primary group-hover:scale-110 ${
+                   teamMenuOpen ? "rotate-180" : ""
+                 }`} />
+               </button>
+               
+               <AnimatePresence>
+                 {teamMenuOpen && (
+                   <motion.div
+                     initial={{ opacity: 1, y: -8, scale: 0.98 }}
+                     animate={{ opacity: 1, y: 0, scale: 1 }}
+                     exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                     transition={{ duration: 0.12, ease: "easeOut" }}
+                     className="absolute top-full left-0 right-0 mt-2 z-50"
+                   >
+                     <div className="bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
+                       {/* Enhanced header with workspace count */}
+                       <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-muted/20 to-muted/10">
+                         <div className="flex items-center justify-between">
+                           <span className="text-sm font-semibold text-foreground">
+                             Switch Workspace
+                           </span>
+                           <div className="flex items-center gap-2">
+                             <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+                               {teams.length + 1} spaces
+                             </span>
+                           </div>
+                         </div>
+                         
+                         {/* Smart search for 4+ total spaces (including personal) */}
+                         {teams.length >= 3 && (
+                           <div className="mt-3">
+                             <div className="relative">
+                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                 <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                 </svg>
+                               </div>
+                               <input
+                                 type="text"
+                                 placeholder="Search workspaces..."
+                                 className="w-full pl-10 pr-3 py-2 text-sm bg-background border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                               />
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                       
+                       {/* Workspace options with clear hierarchy */}
+                       <div className="max-h-72 overflow-y-auto enhanced-scrollbar">
+                         <div className="p-2 space-y-1">
+                           {/* Personal Workspace - Always first */}
+                           <motion.button
+                             initial={{ opacity: 1, x: 0 }}
+                             animate={{ opacity: 1, x: 0 }}
+                             transition={{ delay: 0, duration: 0.15 }}
+                             onClick={() => {
+                               setSelectedTeamId(null);
+                               setTeamMenuOpen(false);
+                             }}
+                             className={`group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 ${
+                               !selectedTeamId 
+                                 ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-md" 
+                                 : "text-foreground hover:bg-muted/80 hover:shadow-sm"
+                             }`}
+                             role="option"
+                             aria-selected={!selectedTeamId}
+                           >
+                             <div className="flex items-center gap-3">
+                               <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
+                                 !selectedTeamId 
+                                   ? "bg-primary-foreground animate-pulse shadow-sm" 
+                                   : "bg-gradient-to-br from-primary to-secondary group-hover:scale-110"
+                               }`} />
+                               <div className="flex-1 min-w-0">
+                                 <span className="font-semibold">Personal Workspace</span>
+                               </div>
+                               {!selectedTeamId && (
+                                 <div className="flex items-center gap-1">
+                                   <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-ping" />
+                                   <span className="text-xs font-medium opacity-90">Active</span>
+                                 </div>
+                               )}
+                             </div>
+                           </motion.button>
+                           
+                           {/* Team separator with label */}
+                           <div className="flex items-center gap-2 px-3 py-2">
+                             <div className="flex-1 border-t border-border" />
+                             <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                               Teams ({teams.length})
+                             </span>
+                             <div className="flex-1 border-t border-border" />
+                           </div>
+                           
+                           {/* Team list with enhanced styling */}
+                           {teams.map((t, index) => (
+                             <motion.button
+                               key={t.id}
+                               initial={{ opacity: 1, x: 0 }}
+                               animate={{ opacity: 1, x: 0 }}
+                               transition={{ delay: (index + 1) * 0.02, duration: 0.15 }}
+                               onClick={() => {
+                                 setSelectedTeamId(t.id);
+                                 setTeamMenuOpen(false);
+                               }}
+                               className={`group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 ${
+                                 selectedTeamId === t.id 
+                                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md" 
+                                   : "text-foreground hover:bg-muted/80 hover:shadow-sm"
+                               }`}
+                               role="option"
+                               aria-selected={selectedTeamId === t.id}
+                             >
+                               <div className="flex items-center gap-3">
+                                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${
+                                   selectedTeamId === t.id 
+                                     ? "bg-white animate-pulse shadow-sm" 
+                                     : "bg-blue-400/60 group-hover:bg-blue-500 group-hover:scale-110"
+                                 }`} />
+                                 
+                                 <span className="font-semibold truncate flex-1">{t.name}</span>
+                                 
+                                 {selectedTeamId === t.id && (
+                                   <div className="flex items-center gap-1">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                     <span className="text-xs font-medium opacity-90">Active</span>
+                                   </div>
+                                 )}
+                               </div>
+                             </motion.button>
+                           ))}
+                           
+                           {/* Quick create team action */}
+                           <div className="border-t border-border my-2" />
+                           <motion.button
+                             initial={{ opacity: 1, x: 0 }}
+                             animate={{ opacity: 1, x: 0 }}
+                             transition={{ delay: (teams.length + 2) * 0.02, duration: 0.15 }}
+                             onClick={() => {
+                               setTeamMenuOpen(false);
+                               openModal("create-team", {
+                                 onSubmit: async (name: string, description: string) => {
+                                   const response = await fetch("/api/teams", {
+                                     method: "POST",
+                                     headers: { "Content-Type": "application/json" },
+                                     body: JSON.stringify({ name, description })
+                                   });
+                                   if (response.ok) {
+                                     window.location.reload();
+                                   }
+                                 }
+                               });
+                             }}
+                             className="group w-full text-left px-3 py-3 rounded-lg text-sm transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-green-500/10 hover:to-emerald-500/10 border-2 border-dashed border-muted-foreground/30 hover:border-green-500/50"
+                           >
+                             <div className="flex items-center gap-3">
+                               <div className="w-2.5 h-2.5 rounded-full border border-dashed border-current flex-shrink-0 group-hover:border-green-500" />
+                               <span className="font-medium">Create New Team</span>
+                               <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                 <Plus className="w-4 h-4" />
+                               </div>
+                             </div>
+                           </motion.button>
+                         </div>
+                       </div>
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+             </div>
+           </>
+         )}
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
