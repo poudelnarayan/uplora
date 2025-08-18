@@ -220,7 +220,7 @@ export default function TeamList({
                         </div>
                       </div>
                       
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                      {isOwner && member.role !== "OWNER" && (
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => onToggleMemberStatus(team.id, member.id, member.name, member.status || "ACTIVE", team.name)}
@@ -228,7 +228,7 @@ export default function TeamList({
                           >
                             {member.status === "PAUSED" ? "Activate" : "Pause"}
                           </button>
-                        <><Crown className="w-3 h-3 inline mr-1 text-blue-600 dark:text-blue-400" />Owner</>
+                          <button 
                             onClick={() => onRemoveMember(team.id, member.id, team.name)} 
                             className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
