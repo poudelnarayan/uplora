@@ -42,6 +42,7 @@ function useTheme() {
   }
   return context;
 }
+
 export default function ThemeToggle() {
   const { theme, toggleTheme, mounted } = useTheme();
 
@@ -54,8 +55,6 @@ export default function ThemeToggle() {
     );
   }
 
-// Export the context for use in providers
-export { ThemeContext };
   return (
     <motion.button
       whileHover={{ scale: 1.05 }}
@@ -90,3 +89,6 @@ export { ThemeContext };
     </motion.button>
   );
 }
+
+// Export the context for use in providers
+export { ThemeContext };
