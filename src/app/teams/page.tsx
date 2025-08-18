@@ -58,6 +58,18 @@ export default function TeamsPage() {
   const [inviting, setInviting] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
 
+  // Expose modal function globally for TeamList component
+  useEffect(() => {
+    (window as any).openCreateTeamModal = () => {
+      openModal("create-team", {
+        onSubmit: handleCreateTeam
+      });
+    };
+    return () => {
+      delete (window as any).openCreateTeamModal;
+    };
+  }, [openModal]);
+
   // Load teams from server
   const loadTeams = async () => {
     try {
@@ -466,21 +478,12 @@ export default function TeamsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="text-center sm:text-left"
         >
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Team Management</h1>
             <p className="text-muted-foreground">Manage your teams, members, and invitations</p>
           </div>
-          <button
-            onClick={() => openModal("create-team", {
-              onSubmit: handleCreateTeam
-            })}
-            className="btn btn-primary btn-lg flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Create Team
-          </button>
         </motion.div>
 
 
@@ -493,9 +496,11 @@ export default function TeamsPage() {
           <TeamList
             teams={teams}
             loading={loading}
-            onCreateTeam={() => openModal("create-team", {
-              onSubmit: handleCreateTeam
-            })}
+            onCreateTeam={() => {
+              openModal("create-team", {
+                onSubmit: handleCreateTeam
+              });
+            }}
             onInviteMember={(team) => openModal("invite-member", {
               teamName: team.name,
               onSubmit: handleInviteMember

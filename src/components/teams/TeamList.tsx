@@ -92,7 +92,17 @@ export default function TeamList({
         </div>
         <h3 className="text-2xl font-semibold text-foreground mb-3">No Teams Yet</h3>
         <p className="text-muted-foreground mb-8 max-w-md mx-auto">Create your first team to start collaborating with others and streamline your content workflow.</p>
-        <button onClick={onCreateTeam} className="btn btn-primary btn-lg">
+        <button 
+          onClick={() => {
+            // Use the modal system from the parent component
+            if (typeof window !== 'undefined' && (window as any).openCreateTeamModal) {
+              (window as any).openCreateTeamModal();
+            } else {
+              onCreateTeam();
+            }
+          }} 
+          className="btn btn-primary btn-lg"
+        >
           <Plus className="w-5 h-5 mr-2" />
           Create Your First Team
         </button>
