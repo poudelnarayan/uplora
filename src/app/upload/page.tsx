@@ -5,14 +5,11 @@ import { Upload, Users, User, Video, Shield, Zap, CheckCircle } from "lucide-rea
 import AppShell from "@/components/layout/AppShell";
 import UploadZone from "@/components/upload/UploadZone";
 import { useTeam } from "@/context/TeamContext";
-import { useTeam } from "@/context/TeamContext";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 export const dynamic = "force-dynamic";
 
 export default function UploadPage() {
   const { selectedTeamId, selectedTeam } = useTeam();
-  
-  const { selectedTeam } = useTeam();
   
   return (
     <AppShell>
