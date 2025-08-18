@@ -7,11 +7,8 @@ import {
   Bell, 
   Shield, 
   Palette, 
-  Globe, 
   Key, 
-  Trash2, 
   Mail,
-  Lock,
   Smartphone,
   Monitor,
   Sun,
@@ -19,12 +16,10 @@ import {
   Languages,
   CreditCard,
   Youtube,
-  Zap,
   Crown,
-  Users,
-  Upload,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
+  Upload
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { useSession } from "next-auth/react";
@@ -61,398 +56,288 @@ export default function SettingsPage() {
   return (
     <AppShell>
       <NextSeoNoSSR title="Settings" noindex nofollow />
-      <div className="min-h-full">
-        {/* Hero Header */}
+      <div className="min-h-full space-y-8">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="flex items-center justify-between"
         >
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-3xl blur-3xl"></div>
-            <div className="relative bg-gradient-to-br from-card to-muted/30 rounded-2xl p-8 border border-border/50">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
-                <Settings className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="heading-2 mb-3">Account Settings</h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Customize your experience, manage security, and configure integrations for your perfect workflow.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Account Settings</h1>
+            <p className="text-muted-foreground">Manage your account, integrations, and preferences</p>
+          </div>
+          <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+            <Settings className="w-6 h-6 text-primary" />
           </div>
         </motion.div>
 
-        {/* Settings Sections */}
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Profile & Account */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Profile & Account</h2>
-              <p className="text-muted-foreground">Manage your personal information and account details</p>
+        {/* YouTube Integration - Most Important */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <Youtube className="w-6 h-6 text-red-500" />
+            <h2 className="text-xl font-semibold text-foreground">YouTube Integration</h2>
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+              youtubeData.isConnected 
+                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800"
+            }`}>
+              {youtubeData.isConnected ? "Connected" : "Not Connected"}
             </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Profile Settings */}
-              <div className="card p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center">
-                    <User className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Profile Information</h3>
-                    <p className="text-sm text-muted-foreground">Update your personal details</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">Display Name</label>
-                    <div className="field">
-                      <span className="field-addon"><User className="w-4 h-4" /></span>
-                      <input 
-                        type="text" 
-                        className="field-control" 
-                        placeholder="Your display name" 
-                        defaultValue={session?.user?.name || ""} 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">Email Address</label>
-                    <div className="field">
-                      <span className="field-addon"><Mail className="w-4 h-4" /></span>
-                      <input 
-                        type="email" 
-                        className="field-control" 
-                        placeholder="your@email.com" 
-                        defaultValue={session?.user?.email || ""} 
-                        disabled 
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Email cannot be changed for security reasons</p>
-                  </div>
-                  
-                  <button className="btn btn-primary w-full">
-                    <User className="w-4 h-4 mr-2" />
-                    Update Profile
-                  </button>
+          </div>
+          
+          <YouTubeConnection
+            isConnected={youtubeData.isConnected}
+            channelTitle={youtubeData.channelTitle}
+            onConnect={() => {}}
+          />
+        </motion.section>
+
+        {/* Profile Settings - Core Functionality */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <User className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">Profile Information</h2>
+          </div>
+          
+          <div className="card p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-foreground">Display Name</label>
+                <div className="field">
+                  <span className="field-addon"><User className="w-4 h-4" /></span>
+                  <input 
+                    type="text" 
+                    className="field-control" 
+                    placeholder="Your display name" 
+                    defaultValue={session?.user?.name || ""} 
+                  />
                 </div>
               </div>
-
-              {/* Security Settings */}
-              <div className="card p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/10 to-pink-500/10 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-red-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Security & Privacy</h3>
-                    <p className="text-sm text-muted-foreground">Protect your account</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <button className="btn btn-ghost w-full justify-start group hover:bg-blue-500/10">
-                    <Key className="w-4 h-4 mr-3 text-blue-500" />
-                    <span>Change Password</span>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    </div>
-                  </button>
-                  
-                  <button className="btn btn-ghost w-full justify-start group hover:bg-green-500/10">
-                    <Smartphone className="w-4 h-4 mr-3 text-green-500" />
-                    <span>Two-Factor Authentication</span>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    </div>
-                  </button>
-                  
-                  <button className="btn btn-ghost w-full justify-start group hover:bg-purple-500/10">
-                    <Globe className="w-4 h-4 mr-3 text-purple-500" />
-                    <span>Connected Accounts</span>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Notifications & Preferences */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Notifications & Preferences</h2>
-              <p className="text-muted-foreground">Control how you receive updates and customize your experience</p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Notification Settings */}
-              <div className="card p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 flex items-center justify-center">
-                    <Bell className="w-6 h-6 text-green-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Notifications</h3>
-                    <p className="text-sm text-muted-foreground">Choose what updates you receive</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm font-medium text-foreground">Email notifications</span>
-                    </div>
-                    <input type="checkbox" className="toggle" defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <Users className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-medium text-foreground">Team invitations</span>
-                    </div>
-                    <input type="checkbox" className="toggle" defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <Upload className="w-4 h-4 text-purple-500" />
-                      <span className="text-sm font-medium text-foreground">Upload status updates</span>
-                    </div>
-                    <input type="checkbox" className="toggle" defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm font-medium text-foreground">Approval notifications</span>
-                    </div>
-                    <input type="checkbox" className="toggle" defaultChecked />
-                  </div>
-                </div>
-              </div>
-
-              {/* Appearance Settings */}
-              <div className="card p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
-                    <Palette className="w-6 h-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Appearance</h3>
-                    <p className="text-sm text-muted-foreground">Customize your interface</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-3 text-foreground">Theme Preference</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button className="p-3 rounded-lg border border-border hover:border-primary/50 transition-all group">
-                        <Sun className="w-5 h-5 mx-auto mb-2 text-amber-500" />
-                        <span className="text-xs font-medium">Light</span>
-                      </button>
-                      <button className="p-3 rounded-lg border border-primary bg-primary/10 transition-all group">
-                        <Moon className="w-5 h-5 mx-auto mb-2 text-primary" />
-                        <span className="text-xs font-medium text-primary">Dark</span>
-                      </button>
-                      <button className="p-3 rounded-lg border border-border hover:border-primary/50 transition-all group">
-                        <Monitor className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
-                        <span className="text-xs font-medium">System</span>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-foreground">Language</label>
-                    <div className="field">
-                      <span className="field-addon"><Languages className="w-4 h-4" /></span>
-                      <select className="field-control">
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Platform Integrations */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Platform Integrations</h2>
-              <p className="text-muted-foreground">Connect your social media accounts to enable seamless publishing</p>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* YouTube Connection */}
-              <YouTubeConnection
-                isConnected={youtubeData.isConnected}
-                channelTitle={youtubeData.channelTitle}
-                onConnect={() => {}}
-              />
               
-              {/* Coming Soon Integrations */}
-              <div className="card p-6 opacity-60 hover:opacity-80 transition-opacity">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500/10 to-slate-500/10 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-gray-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">More Platforms</h3>
-                    <p className="text-sm text-muted-foreground">Additional integrations coming soon</p>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-foreground">Email Address</label>
+                <div className="field">
+                  <span className="field-addon"><Mail className="w-4 h-4" /></span>
+                  <input 
+                    type="email" 
+                    className="field-control" 
+                    placeholder="your@email.com" 
+                    defaultValue={session?.user?.email || ""} 
+                    disabled 
+                  />
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-muted-foreground/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
-                        <span className="text-xs font-bold text-red-500">TT</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">TikTok (Coming Soon)</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-muted-foreground/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                        <span className="text-xs font-bold text-blue-500">IG</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">Instagram (Coming Soon)</span>
-                    </div>
-                  </div>
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">Email cannot be changed for security reasons</p>
               </div>
             </div>
-          </motion.section>
-
-          {/* Billing & Subscription */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Billing & Subscription</h2>
-              <p className="text-muted-foreground">Manage your subscription and billing information</p>
-            </div>
             
-            <div className="card p-6 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center">
-                  <Crown className="w-6 h-6 text-amber-500" />
+            <button className="btn btn-primary">
+              <User className="w-4 h-4 mr-2" />
+              Update Profile
+            </button>
+          </div>
+        </motion.section>
+
+        {/* Notifications - Important for Team Workflow */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <Bell className="w-6 h-6 text-secondary" />
+            <h2 className="text-xl font-semibold text-foreground">Notification Preferences</h2>
+          </div>
+          
+          <div className="card p-6 space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-primary" />
+                  <div>
+                    <span className="font-medium text-foreground">Email notifications</span>
+                    <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle" defaultChecked />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-secondary" />
+                  <div>
+                    <span className="font-medium text-foreground">Team invitations</span>
+                    <p className="text-sm text-muted-foreground">Get notified of team invites</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle" defaultChecked />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
+                <div className="flex items-center gap-3">
+                  <Upload className="w-5 h-5 text-accent" />
+                  <div>
+                    <span className="font-medium text-foreground">Upload status updates</span>
+                    <p className="text-sm text-muted-foreground">Track upload progress</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle" defaultChecked />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <div>
+                    <span className="font-medium text-foreground">Approval notifications</span>
+                    <p className="text-sm text-muted-foreground">Video approval updates</p>
+                  </div>
+                </div>
+                <input type="checkbox" className="toggle" defaultChecked />
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Security Settings */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <Shield className="w-6 h-6 text-warning" />
+            <h2 className="text-xl font-semibold text-foreground">Security & Privacy</h2>
+          </div>
+          
+          <div className="card p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left">
+                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                  <Key className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Current Plan</h3>
-                  <p className="text-sm text-muted-foreground">Free Trial - 14 days remaining</p>
+                  <div className="font-medium text-foreground">Change Password</div>
+                  <div className="text-sm text-muted-foreground">Update your password</div>
                 </div>
-              </div>
+              </button>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                  <div className="text-2xl font-bold text-green-600 mb-1">∞</div>
-                  <div className="text-xs text-muted-foreground">Uploads</div>
+              <button className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors text-left">
+                <div className="w-10 h-10 bg-secondary/20 rounded-lg flex items-center justify-center">
+                  <Smartphone className="w-5 h-5 text-secondary" />
                 </div>
-                
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">5</div>
-                  <div className="text-xs text-muted-foreground">Team Members</div>
+                <div>
+                  <div className="font-medium text-foreground">Two-Factor Auth</div>
+                  <div className="text-sm text-muted-foreground">Add extra security</div>
                 </div>
-                
-                <div className="text-center p-4 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">24/7</div>
-                  <div className="text-xs text-muted-foreground">Support</div>
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <button className="btn btn-primary flex-1">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Upgrade Plan
-                </button>
-                <button className="btn btn-ghost">
-                  View Billing
-                </button>
-              </div>
+              </button>
             </div>
-          </motion.section>
+          </div>
+        </motion.section>
 
-          {/* Advanced Settings */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-foreground mb-2">Advanced Settings</h2>
-              <p className="text-muted-foreground">Advanced configuration and account management</p>
-            </div>
-            
-            <div className="space-y-6">
-              {/* Export Data */}
-              <div className="card p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-blue-500" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Export Your Data</h4>
-                      <p className="text-sm text-muted-foreground">Download a copy of your account data</p>
-                    </div>
-                  </div>
-                  <button className="btn btn-ghost">
-                    Export
+        {/* Theme Settings */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <Palette className="w-6 h-6 text-accent" />
+            <h2 className="text-xl font-semibold text-foreground">Appearance</h2>
+          </div>
+          
+          <div className="card p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-3 text-foreground">Theme Preference</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button className="p-4 rounded-lg border border-border hover:border-primary/50 transition-all group text-center">
+                    <Sun className="w-6 h-6 mx-auto mb-2 text-amber-500" />
+                    <span className="text-sm font-medium text-foreground">Light</span>
+                  </button>
+                  <button className="p-4 rounded-lg border border-primary bg-primary/10 transition-all group text-center">
+                    <Moon className="w-6 h-6 mx-auto mb-2 text-primary" />
+                    <span className="text-sm font-medium text-primary">Dark</span>
+                  </button>
+                  <button className="p-4 rounded-lg border border-border hover:border-primary/50 transition-all group text-center">
+                    <Monitor className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">System</span>
                   </button>
                 </div>
               </div>
-
-              {/* Danger Zone */}
-              <div className="card p-6 border-red-500/20 bg-gradient-to-br from-red-500/5 to-pink-500/5 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-                    <Trash2 className="w-6 h-6 text-red-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Danger Zone</h3>
-                    <p className="text-sm text-muted-foreground">Irreversible account actions</p>
-                  </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-foreground">Language</label>
+                <div className="field">
+                  <span className="field-addon"><Languages className="w-4 h-4" /></span>
+                  <select className="field-control">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                  </select>
                 </div>
-                
-                <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mb-4">
-                  <p className="text-sm text-red-700 dark:text-red-300">
-                    <strong>Warning:</strong> Once you delete your account, there is no going back. All your data, teams, and videos will be permanently removed.
-                  </p>
-                </div>
-                
-                <button className="btn btn-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Account
-                </button>
               </div>
             </div>
-          </motion.section>
-        </div>
+          </div>
+        </motion.section>
+
+        {/* Subscription Info */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <Crown className="w-6 h-6 text-warning" />
+            <h2 className="text-xl font-semibold text-foreground">Current Plan</h2>
+            <div className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
+              Free Trial
+            </div>
+          </div>
+          
+          <div className="card p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="text-2xl font-bold text-primary mb-1">∞</div>
+                <div className="text-sm text-muted-foreground">Uploads</div>
+              </div>
+              
+              <div className="text-center p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+                <div className="text-2xl font-bold text-secondary mb-1">5</div>
+                <div className="text-sm text-muted-foreground">Team Members</div>
+              </div>
+              
+              <div className="text-center p-4 rounded-lg bg-accent/10 border border-accent/20">
+                <div className="text-2xl font-bold text-accent mb-1">24/7</div>
+                <div className="text-sm text-muted-foreground">Support</div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button className="btn btn-primary flex-1">
+                <CreditCard className="w-4 h-4 mr-2" />
+                Upgrade Plan
+              </button>
+              <button className="btn btn-secondary">
+                View Billing
+              </button>
+            </div>
+          </div>
+        </motion.section>
       </div>
     </AppShell>
   );

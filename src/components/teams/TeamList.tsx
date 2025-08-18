@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Crown, Shield, Target, Edit3, Mail, Clock, UserCheck } from "lucide-react";
 import TeamCard from "./TeamCard";
 
 interface TeamMember {
@@ -75,69 +75,249 @@ export default function TeamList({
 }: TeamListProps) {
   if (loading) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center justify-center">
-        <div className="spinner-lg mx-auto mb-4" />
-        <p className="text-muted-foreground">Loading your teams...</p>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="spinner-lg mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your teams...</p>
+        </div>
       </motion.div>
     );
   }
 
   if (teams.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center py-16">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-3xl blur-2xl"></div>
-          <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-muted to-card border border-border flex items-center justify-center mb-8 shadow-lg">
-            <Users className="w-12 h-12 text-muted-foreground" />
-          </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+        <div className="w-20 h-20 bg-muted/50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <Users className="w-10 h-10 text-muted-foreground" />
         </div>
         <h3 className="text-2xl font-semibold text-foreground mb-3">No Teams Yet</h3>
-        <p className="text-muted-foreground mb-8 max-w-md">Create your first team to start collaborating with others and streamline your content workflow.</p>
+        <p className="text-muted-foreground mb-8 max-w-md mx-auto">Create your first team to start collaborating with others and streamline your content workflow.</p>
         <button onClick={onCreateTeam} className="btn btn-primary btn-lg">
-          <Plus className="w-4 h-4 mr-2" /> Create Team
+          <Plus className="w-5 h-5 mr-2" />
+          Create Your First Team
         </button>
-        
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl">
-          <div className="text-center p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <Users className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Invite collaborators</p>
-          </div>
-          <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-            <Shield className="w-6 h-6 text-green-500 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Role-based permissions</p>
-          </div>
-          <div className="text-center p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-            <Target className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Streamlined workflow</p>
-          </div>
-        </div>
       </motion.div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {teams.map((team) => (
-        <TeamCard
-          key={team.id}
-          team={team}
-          onInviteMember={() => onInviteMember(team)}
-          onStartRename={onStartRename}
-          onDeleteTeam={onDeleteTeam}
-          onLeaveTeam={onLeaveTeam}
-          onResendInvitation={onResendInvitation}
-          onCancelInvitation={onCancelInvitation}
-          onToggleMemberStatus={onToggleMemberStatus}
-          onRemoveMember={onRemoveMember}
-          renamingTeamId={renamingTeamId}
-          renameValue={renameValue}
-          onRenameValueChange={onRenameValueChange}
-          onSaveRename={onSaveRename}
-          onCancelRename={onCancelRename}
-          resendingId={resendingId}
-          currentUserEmail={currentUserEmail}
-        />
-      ))}
+      {teams.map((team) => {
+        const isOwner = currentUserEmail.toLowerCase() === (team.ownerEmail || "").toLowerCase();
+        const activeMembers = team.members.filter(m => m.status !== "PAUSED");
+        const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
+
+        return (
+          <motion.div
+            key={team.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-6 space-y-6"
+          >
+            {/* Team Header with Status */}
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                {renamingTeamId === team.id ? (
+                  <div className="flex items-center gap-2">
+                    <input 
+                      value={renameValue} 
+                      onChange={(e) => onRenameValueChange(e.target.value)} 
+                      className="text-xl font-bold bg-transparent border-b-2 border-primary focus:outline-none text-foreground"
+                      maxLength={80} 
+                    />
+                    <button 
+                      onClick={() => onSaveRename(team.id)} 
+                      className="btn btn-primary btn-sm"
+                    >
+                      Save
+                    </button>
+                    <button 
+                      onClick={onCancelRename} 
+                      className="btn btn-ghost btn-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-foreground">{team.name}</h3>
+                    {isOwner && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+                        <Crown className="w-3 h-3" />
+                        <span className="text-xs font-medium">Owner</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {team.description && (
+                  <p className="text-muted-foreground mt-1">{team.description}</p>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {isOwner && (
+                  <button
+                    onClick={() => onInviteMember(team)}
+                    className="btn btn-primary"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Invite Member
+                  </button>
+                )}
+                {!isOwner && (
+                  <button 
+                    onClick={() => onLeaveTeam(team.id, team.name)} 
+                    className="btn btn-outline text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    Leave Team
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Team Stats - Visible Overview */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <UserCheck className="w-5 h-5 text-primary mx-auto mb-1" />
+                <div className="text-lg font-bold text-primary">{activeMembers.length}</div>
+                <div className="text-xs text-muted-foreground">Active Members</div>
+              </div>
+              
+              <div className="text-center p-3 rounded-lg bg-warning/10 border border-warning/20">
+                <Mail className="w-5 h-5 text-warning mx-auto mb-1" />
+                <div className="text-lg font-bold text-warning">{pendingInvites.length}</div>
+                <div className="text-xs text-muted-foreground">Pending Invites</div>
+              </div>
+              
+              <div className="text-center p-3 rounded-lg bg-secondary/10 border border-secondary/20">
+                <Clock className="w-5 h-5 text-secondary mx-auto mb-1" />
+                <div className="text-lg font-bold text-secondary">{Math.ceil((Date.now() - team.createdAt.getTime()) / (1000 * 60 * 60 * 24))}</div>
+                <div className="text-xs text-muted-foreground">Days Active</div>
+              </div>
+            </div>
+
+            {/* Active Members - Prominent Display */}
+            {activeMembers.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-primary" />
+                  Active Members ({activeMembers.length})
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {activeMembers.map((member) => (
+                    <div 
+                      key={member.id} 
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {member.name[0].toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{member.name}</p>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium border ${
+                              member.role === "OWNER"
+                                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700"
+                                : member.role === "ADMIN"
+                                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+                                : member.role === "MANAGER"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700"
+                                : "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700"
+                            }`}>
+                              {member.role === "OWNER" ? (
+                                <><Crown className="w-3 h-3 inline mr-1" />Owner</>
+                              ) : member.role === "ADMIN" ? (
+                                <><Shield className="w-3 h-3 inline mr-1" />Admin</>
+                              ) : member.role === "MANAGER" ? (
+                                <><Target className="w-3 h-3 inline mr-1" />Manager</>
+                              ) : (
+                                <><Edit3 className="w-3 h-3 inline mr-1" />Editor</>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {isOwner && member.role !== "OWNER" && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => onToggleMemberStatus(team.id, member.id, member.name, member.status || "ACTIVE", team.name)}
+                            className="btn btn-ghost btn-sm"
+                          >
+                            {member.status === "PAUSED" ? "Activate" : "Pause"}
+                          </button>
+                          <button 
+                            onClick={() => onRemoveMember(team.id, member.id, team.name)} 
+                            className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pending Invitations - Visible When Present */}
+            {isOwner && pendingInvites.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-warning" />
+                  Pending Invitations ({pendingInvites.length})
+                </h4>
+                <div className="space-y-2">
+                  {pendingInvites.map((invitation) => (
+                    <div 
+                      key={invitation.id} 
+                      className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                          <Mail className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{invitation.email}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Invited as {invitation.role.toLowerCase()} • {new Date(invitation.invitedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => onResendInvitation(team.id, invitation.id)} 
+                          className="btn btn-ghost btn-sm"
+                          disabled={resendingId === invitation.id}
+                        >
+                          {resendingId === invitation.id ? (
+                            <>
+                              <div className="spinner w-3 h-3 mr-1" />
+                              Resending...
+                            </>
+                          ) : (
+                            "Resend"
+                          )}
+                        </button>
+                        <button 
+                          onClick={() => onCancelInvitation(team.id, invitation.id)} 
+                          className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        );
+      })}
     </div>
   );
 }

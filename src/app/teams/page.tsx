@@ -8,7 +8,7 @@ import TeamList from "@/components/teams/TeamList";
 import CreateTeamModal from "@/components/teams/CreateTeamModal";
 import InviteMemberModal from "@/components/teams/InviteMemberModal";
 import { motion } from "framer-motion";
-import { Users, Plus, Crown, Target, TrendingUp, Sparkles } from "lucide-react";
+import { Users, Plus, Crown, Mail, UserCheck, Clock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -451,102 +451,72 @@ export default function TeamsPage() {
 
   return (
     <AppShell>
-      <div className="min-h-full">
-        {/* Hero Header */}
+      <div className="min-h-full space-y-6">
+        {/* Header with Primary Action */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-3xl blur-3xl"></div>
-            <div className="relative bg-gradient-to-br from-card to-muted/30 rounded-2xl p-8 border border-border/50">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
-                <Users className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="heading-2 mb-3">Team Management</h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Build and manage your content creation teams. Invite collaborators, assign roles, and streamline your workflow.
-              </p>
-              
-              <div className="flex justify-center mt-6">
-                <button
-                  onClick={() => setShowCreateTeam(true)}
-                  className="btn btn-primary btn-lg"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create New Team
-                </button>
-              </div>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Team Management</h1>
+            <p className="text-muted-foreground">Manage your teams, members, and invitations</p>
           </div>
+          <button
+            onClick={() => setShowCreateTeam(true)}
+            className="btn btn-primary btn-lg flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Create Team
+          </button>
         </motion.div>
 
-        {/* Stats Overview */}
+        {/* Key Stats - Prominent Display */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
-          <div className="card p-6 text-center hover:shadow-lg transition-all duration-300">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Users className="w-6 h-6 text-blue-500" />
+          <div className="card p-6 text-center">
+            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Users className="w-6 h-6 text-primary" />
             </div>
             <div className="text-2xl font-bold text-foreground mb-1">{teams.length}</div>
             <div className="text-sm text-muted-foreground">Active Teams</div>
           </div>
           
-          <div className="card p-6 text-center hover:shadow-lg transition-all duration-300">
-            <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Target className="w-6 h-6 text-green-500" />
+          <div className="card p-6 text-center">
+            <div className="w-12 h-12 bg-secondary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <UserCheck className="w-6 h-6 text-secondary" />
             </div>
             <div className="text-2xl font-bold text-foreground mb-1">{totalMembers}</div>
             <div className="text-sm text-muted-foreground">Total Members</div>
           </div>
           
-          <div className="card p-6 text-center hover:shadow-lg transition-all duration-300">
-            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Crown className="w-6 h-6 text-amber-500" />
+          <div className="card p-6 text-center">
+            <div className="w-12 h-12 bg-accent/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Crown className="w-6 h-6 text-accent" />
             </div>
             <div className="text-2xl font-bold text-foreground mb-1">{ownedTeams}</div>
             <div className="text-sm text-muted-foreground">Teams You Own</div>
           </div>
           
-          <div className="card p-6 text-center hover:shadow-lg transition-all duration-300">
-            <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="w-6 h-6 text-purple-500" />
+          <div className="card p-6 text-center">
+            <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Mail className="w-6 h-6 text-warning" />
             </div>
             <div className="text-2xl font-bold text-foreground mb-1">{pendingInvitations}</div>
             <div className="text-sm text-muted-foreground">Pending Invites</div>
           </div>
         </motion.div>
 
-        {/* Teams List */}
+        {/* Teams List - Core Functionality */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">Your Teams</h2>
-                <p className="text-muted-foreground">Manage your team collaborations and member permissions</p>
-              </div>
-              
-              {teams.length > 0 && (
-                <button
-                  onClick={() => setShowCreateTeam(true)}
-                  className="btn btn-primary"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Team
-                </button>
-              )}
-            </div>
-          </div>
-          
           <TeamList
             teams={teams}
             loading={loading}
@@ -574,45 +544,6 @@ export default function TeamsPage() {
             currentUserEmail={session?.user?.email || ""}
           />
         </motion.div>
-
-        {/* Team Growth Tips */}
-        {teams.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8"
-          >
-            <div className="card p-6 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-2">Team Growth Tips</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Assign clear roles to team members for better workflow organization</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Use team descriptions to clarify purpose and goals</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Regularly review member permissions and access levels</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-warning rounded-full mt-2 flex-shrink-0"></div>
-                      <span>Create specialized teams for different content types</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {/* Modals */}
         <CreateTeamModal
