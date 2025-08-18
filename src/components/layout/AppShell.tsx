@@ -192,23 +192,30 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {/* Top Bar */}
         <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 py-3">
-            {/* Mobile menu button */}
-            <button
-              className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setMobileNavOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            {/* Left side - Icons and Mobile Menu */}
+            <div className="flex items-center gap-3">
+              {/* Perfect Circle Icons - Always Visible */}
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <NotificationBell onClick={() => setShowNotificationCenter(true)} />
+              </div>
+              
+              {/* Mobile menu button */}
+              <button
+                className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+                onClick={() => setMobileNavOpen(true)}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
 
-            {/* Mobile logo */}
-            <div className="lg:hidden">
-              <Image src="/text-logo.png" alt="Uplora" width={96} height={24} className="h-6 w-auto" />
+              {/* Mobile logo */}
+              <div className="lg:hidden">
+                <Image src="/text-logo.png" alt="Uplora" width={96} height={24} className="h-6 w-auto" />
+              </div>
             </div>
 
-            {/* Action Bar */}
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <NotificationBell onClick={() => setShowNotificationCenter(true)} />
+            {/* Right side - User Menu */}
+            <div className="flex items-center">
               <UserMenu onFeedbackClick={() => setShowFeedbackStudio(true)} />
             </div>
           </div>
