@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+}
+
+.container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--border));
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.sm {
+  width: 20rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.md {
+  width: 28rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.lg {
+  width: 32rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.xl {
+  width: 48rem;
+  max-width: calc(100vw - 2rem);
+}
+
+.header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgb(var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgb(var(--foreground));
+}
+
+.closeButton {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: rgb(var(--muted));
+}
+
+.content {
+  padding: 1.5rem;
+}

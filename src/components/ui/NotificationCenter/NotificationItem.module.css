@@ -1,39 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .container {
-  @apply flex items-start gap-3 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(var(--muted), 0.3);
+  transition: background-color 0.2s;
+}
+
+.container:hover {
+  background-color: rgba(var(--muted), 0.5);
 }
 
 .indicator {
-  @apply w-2 h-2 rounded-full mt-2 flex-shrink-0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
 }
 
 .indicator.success {
-  @apply bg-green-500;
+  background-color: rgb(34, 197, 94);
 }
 
 .indicator.error {
-  @apply bg-red-500;
+  background-color: rgb(239, 68, 68);
 }
 
 .indicator.warning {
-  @apply bg-yellow-500;
+  background-color: rgb(245, 158, 11);
 }
 
 .indicator.info {
-  @apply bg-blue-500;
+  background-color: rgb(59, 130, 246);
 }
 
 .content {
-  @apply flex-1 min-w-0;
+  flex: 1;
+  min-width: 0;
 }
 
 .title {
-  @apply text-sm font-semibold text-foreground;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--foreground));
 }
 
 .message {
-  @apply text-xs text-muted-foreground mt-1;
+  font-size: 0.75rem;
+  color: rgb(var(--muted-foreground));
+  margin-top: 0.25rem;
 }
 
 .removeButton {
-  @apply opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted transition-all;
+  opacity: 0;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.container:hover .removeButton {
+  opacity: 1;
+}
+
+.removeButton:hover {
+  background-color: rgb(var(--muted));
 }

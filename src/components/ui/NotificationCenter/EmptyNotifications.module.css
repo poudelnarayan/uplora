@@ -1,15 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .container {
-  @apply text-center py-12;
+  text-align: center;
+  padding: 3rem 0;
 }
 
 .iconContainer {
-  @apply w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center mx-auto mb-4;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
 }
 
 .title {
-  @apply font-semibold text-foreground mb-2;
+  font-weight: 600;
+  color: rgb(var(--foreground));
+  margin-bottom: 0.5rem;
 }
 
 .message {
-  @apply text-sm text-muted-foreground;
+  font-size: 0.875rem;
+  color: rgb(var(--muted-foreground));
 }
