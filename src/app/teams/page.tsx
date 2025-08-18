@@ -471,4 +471,5 @@ export default function TeamsPage() {
           resendingId={resendingId}
           currentUserEmail={session?.user?.email || ""}
   )
+  )
 }
