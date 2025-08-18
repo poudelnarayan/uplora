@@ -9,6 +9,7 @@ import { UploadProvider } from "@/context/UploadContext";
 import UploadTray from "@/components/layout/UploadTray";
 import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
 import defaultSeo from "@/seo.config";
+import { ThemeContext } from "@/components/ui/ThemeToggle/ThemeToggle";
 
 // Theme Provider
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -17,28 +18,38 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    const savedTheme = localStorage.getItem("theme") as "dark" | "light";
+    const savedTheme = localStorage.getItem("uplora-theme") as "dark" | "light" | null;
     if (savedTheme) {
       setTheme(savedTheme);
     } else {
-      // Default to light theme to match homepage
-      setTheme("light");
+      // Default to dark theme
+      setTheme("dark");
+      localStorage.setItem("uplora-theme", "dark");
     }
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+    localStorage.setItem("uplora-theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === "dark" ? "light" : "dark");
   };
 
+  // Provide theme context to children
+  const themeContextValue = {
+    theme,
+    toggleTheme,
+    mounted
+  };
   return (
-    <div data-theme={theme}>
-      {children}
-    </div>
+    <ThemeContext.Provider value={themeContextValue}>
+      <div data-theme={theme}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
   );
 }
 
