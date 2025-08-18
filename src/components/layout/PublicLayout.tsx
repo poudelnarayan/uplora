@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Video, X, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -21,10 +22,7 @@ export default function PublicLayout({ children, title, showBackButton = true }:
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Video className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold font-display text-foreground">Uplora</span>
+              <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="h-8 w-auto" />
             </Link>
             
             {showBackButton && (
@@ -52,7 +50,7 @@ export default function PublicLayout({ children, title, showBackButton = true }:
               <h1 className="heading-2 mb-4">{title}</h1>
             </div>
             
-            <div className="prose prose-lg max-w-none">
+            <div className="max-w-none">
               {children}
             </div>
           </motion.div>
@@ -64,10 +62,7 @@ export default function PublicLayout({ children, title, showBackButton = true }:
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Video className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold text-foreground">Uplora</span>
+              <Image src="/text-logo.png" alt="Uplora" width={100} height={25} className="h-6 w-auto" />
             </div>
             
             <div className="flex items-center gap-6 text-sm">

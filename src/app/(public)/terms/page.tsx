@@ -3,6 +3,7 @@
 import PublicLayout from "@/components/layout/PublicLayout";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import Link from "next/link";
+import Link from "next/link";
 
 export default function TermsPage() {
   return (
