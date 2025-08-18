@@ -203,7 +203,6 @@ export default function TeamsPage() {
         return;
       }
 
-      const result = await res.json();
       notifications.addNotification({ 
         type: "success", 
         title: "Invitation sent!", 
@@ -470,6 +469,23 @@ export default function TeamsPage() {
           onCancelRename={() => setRenamingTeamId(null)}
           resendingId={resendingId}
           currentUserEmail={session?.user?.email || ""}
-  )
-  )
+        />
+
+        {/* Modals */}
+        <CreateTeamModal
+          isOpen={showCreateTeam}
+          onClose={() => setShowCreateTeam(false)}
+          onSubmit={handleCreateTeam}
+        />
+
+        <InviteMemberModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          team={selectedTeam}
+          onSubmit={handleInviteMember}
+          inviting={inviting}
+        />
+      </div>
+    </AppShell>
+  );
 }
