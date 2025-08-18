@@ -226,7 +226,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                      transition={{ duration: 0.12, ease: "easeOut" }}
                      className="absolute top-full left-0 right-0 mt-2 z-50"
                    >
-                     <div className="bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
+                     <div className="bg-background/95 backdrop-blur-md border border-border rounded-xl shadow-2xl overflow-hidden">
                        {/* Enhanced header with workspace count */}
                        <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-muted/20 to-muted/10">
                          <div className="flex items-center justify-between">

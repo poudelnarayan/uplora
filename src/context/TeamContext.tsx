@@ -31,18 +31,47 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       if (res.status === 304) return;
       if (!res.ok) return;
       const data = await res.json();
-      const list: TeamBasic[] = Array.isArray(data) ? data : [];
+      const allTeams: TeamBasic[] = Array.isArray(data) ? data : [];
+      
+      // Separate personal workspace from regular teams
+      const personalWorkspace = allTeams.find(t => (t as any).isPersonal);
+      const regularTeams = allTeams.filter(t => !(t as any).isPersonal);
+      
+      setTeams(regularTeams);
+      
+      // Store personal workspace separately for context
+      if (personalWorkspace) {
+        try {
+          localStorage.setItem('personal-workspace', JSON.stringify(personalWorkspace));
+        } catch {}
+      }
+      
       setTeams(list);
       const newEtag = res.headers.get('ETag');
       if (newEtag) setEtag(newEtag);
-      try { localStorage.setItem('teams-cache', JSON.stringify({ data: list, etag: newEtag, t: Date.now() })); } catch {}
+      try { 
+        localStorage.setItem('teams-cache', JSON.stringify({ 
+          data: regularTeams, 
+          personal: personalWorkspace,
+          etag: newEtag, 
+          t: Date.now() 
+        })); 
+      } catch {}
+      
       // Ensure a valid selection
       const stored = localStorage.getItem("currentTeamId");
-      const existing = stored && list.some(t => t.id === stored) ? stored : null;
+      const existing = stored && (
+        regularTeams.some(t => t.id === stored) || 
+        (personalWorkspace && personalWorkspace.id === stored)
+      ) ? stored : null;
+      
       if (existing) {
         setSelectedTeamIdState(existing);
-      } else if (list.length > 0) {
-        setSelectedTeamIdState(list[0].id);
+      } else if (personalWorkspace) {
+        // Default to personal workspace
+        setSelectedTeamIdState(personalWorkspace.id);
+      } else if (regularTeams.length > 0) {
+        setSelectedTeamIdState(regularTeams[0].id);
       } else {
         setSelectedTeamIdState(null);
       }

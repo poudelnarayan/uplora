@@ -29,13 +29,29 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user with personal workspace
     const user = await prisma.user.create({
       data: {
         email,
         name,
         hashedPassword,
       },
+    });
+    
+    // Create personal workspace for new user
+    const personalTeam = await prisma.team.create({
+      data: {
+        name: `${user.name}'s Workspace`,
+        description: 'Your personal video workspace',
+        ownerId: user.id,
+        isPersonal: true
+      }
+    });
+    
+    // Link personal workspace to user
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { personalTeamId: personalTeam.id }
     });
 
     // Create verification token

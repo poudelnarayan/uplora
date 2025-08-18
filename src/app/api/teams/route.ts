@@ -62,8 +62,33 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "asc" },
     });
 
-    // Do not auto-create a default team. If none, return empty list.
-    return NextResponse.json(teams.map(t => ({ id: t.id, name: t.name, description: t.description, createdAt: t.createdAt })));
+    // Ensure user has personal workspace
+    let personalTeam = teams.find(t => t.isPersonal && t.ownerId === user.id);
+    if (!personalTeam) {
+      // Create personal workspace if missing
+      personalTeam = await prisma.team.create({
+        data: {
+          name: `${user.name || 'Personal'}'s Workspace`,
+          description: 'Your personal video workspace',
+          ownerId: user.id,
+          isPersonal: true
+        }
+      });
+      
+      // Update user with personal team reference
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { personalTeamId: personalTeam.id }
+      });
+    }
+    
+    return NextResponse.json(teams.map(t => ({ 
+      id: t.id, 
+      name: t.name, 
+      description: t.description, 
+      createdAt: t.createdAt,
+      isPersonal: t.isPersonal 
+    })));
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch teams" }, { status: 500 });
   }

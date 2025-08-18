@@ -63,20 +63,100 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Only handle Google provider account creation; never block sign-in on error
+      // Handle both Google and credentials provider account creation
       if (account?.provider === "google" && user?.email) {
         try {
           const email = user.email.toLowerCase();
-          await prisma.user.upsert({
-            where: { email },
-            update: { name: user.name ?? null, emailVerified: new Date() },
-            create: { email, name: user.name ?? null, emailVerified: new Date() },
-          });
+          const existingUser = await prisma.user.findUnique({ where: { email } });
+          
+          if (!existingUser) {
+            // Create new user with personal workspace
+            const newUser = await prisma.user.create({
+              data: { 
+                email, 
+                name: user.name ?? null, 
+                emailVerified: new Date() 
+              }
+            });
+            
+            // Create personal workspace for new user
+            const personalTeam = await prisma.team.create({
+              data: {
+                name: `${newUser.name || 'Personal'}'s Workspace`,
+                description: 'Your personal video workspace',
+                ownerId: newUser.id,
+                isPersonal: true
+              }
+            });
+            
+            // Link personal workspace to user
+            await prisma.user.update({
+              where: { id: newUser.id },
+              data: { personalTeamId: personalTeam.id }
+            });
+          } else {
+            // Update existing user and ensure they have personal workspace
+            await prisma.user.update({
+              where: { email },
+              data: { name: user.name ?? null, emailVerified: new Date() }
+            });
+            
+            // Create personal workspace if missing
+            if (!existingUser.personalTeamId) {
+              const personalTeam = await prisma.team.create({
+                data: {
+                  name: `${existingUser.name || 'Personal'}'s Workspace`,
+                  description: 'Your personal video workspace',
+                  ownerId: existingUser.id,
+                  isPersonal: true
+                }
+              });
+              
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { personalTeamId: personalTeam.id }
+              });
+            }
+          }
         } catch (err) {
-          console.error("Google sign-in user upsert failed", {
+          console.error("Google sign-in user creation/update failed", {
             message: (err as Error).message,
           });
           // Do not block sign-in; let user proceed with Google session
+          return true;
+        }
+      }
+      
+      // Handle credentials provider (email/password registration)
+      if (account?.provider === "credentials" && user?.email) {
+        try {
+          const email = user.email.toLowerCase();
+          const existingUser = await prisma.user.findUnique({ 
+            where: { email },
+            include: { ownedTeams: { where: { isPersonal: true } } }
+          });
+          
+          // Create personal workspace if user exists but doesn't have one
+          if (existingUser && !existingUser.personalTeamId) {
+            const personalTeam = await prisma.team.create({
+              data: {
+                name: `${existingUser.name || 'Personal'}'s Workspace`,
+                description: 'Your personal video workspace',
+                ownerId: existingUser.id,
+                isPersonal: true
+              }
+            });
+            
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: { personalTeamId: personalTeam.id }
+            });
+          }
+        } catch (err) {
+          console.error("Credentials sign-in personal workspace setup failed", {
+            message: (err as Error).message,
+          });
+          // Do not block sign-in
           return true;
         }
       }
