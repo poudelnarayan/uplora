@@ -6,29 +6,30 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  name           String?
-  image          String?
-  hashedPassword String?
-  emailVerified  DateTime?
-  verificationToken String?
+  id                       String    @id @default(cuid())
+  email                    String    @unique
+  name                     String?
+  image                    String?
+  hashedPassword           String?
+  emailVerified            DateTime?
+  verificationToken        String?
   verificationTokenExpires DateTime?
-  personalTeamId String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  personalTeamId           String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   // YouTube connection
-  youtubeAccessToken   String?
-  youtubeRefreshToken  String?
-  youtubeExpiresAt     DateTime?
-  youtubeChannelId     String?
-  youtubeChannelTitle  String?
+  youtubeAccessToken  String?
+  youtubeRefreshToken String?
+  youtubeExpiresAt    DateTime?
+  youtubeChannelId    String?
+  youtubeChannelTitle String?
 
   // Team relationships
   ownedTeams      Team[]
@@ -37,8 +38,8 @@ model User {
   receivedInvites TeamInvite[] @relation("InviteeRelation")
 
   // Videos
-  videos          Video[]
-  uploadLock      UploadLock?
+  videos     Video[]
+  uploadLock UploadLock?
 
   @@map("users")
 }
@@ -52,20 +53,20 @@ model Team {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  owner    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId  String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String
 
-  members  TeamMember[]
-  invites  TeamInvite[]
+  members TeamMember[]
+  invites TeamInvite[]
 
   @@map("teams")
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  role      Role     @default(EDITOR)
-  joinedAt  DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String       @id @default(cuid())
+  role      Role         @default(EDITOR)
+  joinedAt  DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
   status    MemberStatus @default(ACTIVE)
 
   // Relationships
@@ -90,13 +91,13 @@ model TeamInvite {
   updatedAt DateTime     @updatedAt
 
   // Relationships
-  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
 
   inviter   User   @relation("InviterRelation", fields: [inviterId], references: [id], onDelete: Cascade)
   inviterId String
 
-  invitee   User?  @relation("InviteeRelation", fields: [inviteeId], references: [id], onDelete: SetNull)
+  invitee   User?   @relation("InviteeRelation", fields: [inviteeId], references: [id], onDelete: SetNull)
   inviteeId String?
 
   @@unique([email, teamId])
@@ -104,28 +105,28 @@ model TeamInvite {
 }
 
 model Video {
-  id           String      @id @default(cuid())
-  key          String
-  filename     String
-  contentType  String
-  sizeBytes    Int
-  uploadedAt   DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  status       VideoStatus @default(PROCESSING)
+  id                String      @id @default(cuid())
+  key               String
+  filename          String
+  contentType       String
+  sizeBytes         Int
+  uploadedAt        DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  status            VideoStatus @default(PROCESSING)
   requestedByUserId String?
   approvedByUserId  String?
 
   // Owner
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 
   // Optional associations
-  teamId   String?
+  teamId String?
 
   // Editable metadata
   description  String?
-  visibility   String?   // public | private | unlisted
-  madeForKids  Boolean   @default(false)
+  visibility   String? // public | private | unlisted
+  madeForKids  Boolean @default(false)
   thumbnailKey String?
 
   @@index([userId, uploadedAt])
@@ -163,7 +164,7 @@ enum MemberStatus {
 }
 
 enum VideoStatus {
-  PROCESSING  // Initial state - being processed
-  PENDING     // Sent for publish (awaiting owner approval)
-  PUBLISHED   // Published/approved by owner
+  PROCESSING // Initial state - being processed
+  PENDING // Sent for publish (awaiting owner approval)
+  PUBLISHED // Published/approved by owner
 }
