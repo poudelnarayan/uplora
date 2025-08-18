@@ -1,0 +1,39 @@
+.container {
+  @apply flex items-start gap-3 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors;
+}
+
+.indicator {
+  @apply w-2 h-2 rounded-full mt-2 flex-shrink-0;
+}
+
+.indicator.success {
+  @apply bg-green-500;
+}
+
+.indicator.error {
+  @apply bg-red-500;
+}
+
+.indicator.warning {
+  @apply bg-yellow-500;
+}
+
+.indicator.info {
+  @apply bg-blue-500;
+}
+
+.content {
+  @apply flex-1 min-w-0;
+}
+
+.title {
+  @apply text-sm font-semibold text-foreground;
+}
+
+.message {
+  @apply text-xs text-muted-foreground mt-1;
+}
+
+.removeButton {
+  @apply opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted transition-all;
+}

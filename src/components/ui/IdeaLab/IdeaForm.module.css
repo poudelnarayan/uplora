@@ -1,0 +1,43 @@
+.container {
+  @apply space-y-6;
+}
+
+.titleSection {
+  @apply space-y-2;
+}
+
+.descriptionSection {
+  @apply space-y-2;
+}
+
+.label {
+  @apply block text-sm font-semibold text-foreground;
+}
+
+.input {
+  @apply w-full p-4 rounded-xl border border-border bg-muted/30 text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all;
+}
+
+.textarea {
+  @apply w-full h-32 p-4 rounded-xl border border-border bg-muted/30 text-foreground placeholder-muted-foreground resize-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all;
+}
+
+.actions {
+  @apply flex justify-end;
+}
+
+.submitButton {
+  @apply py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium disabled:opacity-50 hover:shadow-lg transition-all text-sm;
+}
+
+.submittingContent {
+  @apply flex items-center justify-center gap-2;
+}
+
+.submitContent {
+  @apply flex items-center justify-center gap-2;
+}
+
+.spinner {
+  @apply w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin;
+}

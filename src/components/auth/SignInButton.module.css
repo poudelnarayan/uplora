@@ -1,0 +1,11 @@
+.button {
+  @apply btn btn-primary flex items-center gap-2;
+}
+
+.icon {
+  @apply w-5 h-5;
+}
+
+.text {
+  @apply font-medium;
+}

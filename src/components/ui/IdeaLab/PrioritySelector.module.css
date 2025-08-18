@@ -1,0 +1,31 @@
+.container {
+  @apply space-y-3;
+}
+
+.label {
+  @apply block text-sm font-semibold text-foreground;
+}
+
+.grid {
+  @apply grid grid-cols-3 gap-2;
+}
+
+.priorityButton {
+  @apply p-3 rounded-xl border transition-all text-center;
+}
+
+.selected {
+  @apply border-primary text-foreground;
+}
+
+.unselected {
+  @apply border-border hover:bg-muted text-muted-foreground hover:text-foreground;
+}
+
+.priorityName {
+  @apply text-xs font-medium capitalize;
+}
+
+.priorityLabel {
+  @apply text-[10px] text-muted-foreground mt-1;
+}
