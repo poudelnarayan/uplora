@@ -481,10 +481,7 @@ export default function TeamsPage() {
           className="text-center sm:text-left"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Team Management</h1>
-              <p className="text-muted-foreground">Manage your teams, members, and invitations</p>
-            </div>
+            <h1 className="text-3xl font-bold text-foreground">Team Management</h1>
             <button
               onClick={() => {
                 openModal("create-team", {
