@@ -354,13 +354,22 @@ export default function AppShell({ children }: { children: ReactNode }) {
                                setTeamMenuOpen(false);
                                openModal("create-team", {
                                  onSubmit: async (name: string, description: string) => {
-                                   const response = await fetch("/api/teams", {
-                                     method: "POST",
-                                     headers: { "Content-Type": "application/json" },
-                                     body: JSON.stringify({ name, description })
-                                   });
-                                   if (response.ok) {
-                                     window.location.reload();
+                                   try {
+                                     const response = await fetch("/api/teams", {
+                                       method: "POST",
+                                       headers: { "Content-Type": "application/json" },
+                                       body: JSON.stringify({ name, description })
+                                     });
+                                     if (response.ok) {
+                                       // Refresh teams context instead of full page reload
+                                       window.location.reload();
+                                     } else {
+                                       const error = await response.json();
+                                       throw new Error(error.error || "Failed to create team");
+                                     }
+                                   } catch (error) {
+                                     console.error("Team creation error:", error);
+                                     throw error;
                                    }
                                  }
                                });

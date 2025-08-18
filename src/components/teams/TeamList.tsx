@@ -112,6 +112,27 @@ export default function TeamList({
 
   return (
     <div className="space-y-6">
+      {/* Create Team Button - Always Available */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Your Teams ({teams.length})</h2>
+          <p className="text-sm text-muted-foreground">Manage your teams and collaborate with others</p>
+        </div>
+        <button 
+          onClick={() => {
+            if (typeof window !== 'undefined' && (window as any).openCreateTeamModal) {
+              (window as any).openCreateTeamModal();
+            } else {
+              onCreateTeam();
+            }
+          }} 
+          className="btn btn-primary"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create New Team
+        </button>
+      </div>
+
       {teams.map((team) => {
         const isOwner = currentUserEmail.toLowerCase() === (team.ownerEmail || "").toLowerCase();
         const activeMembers = team.members.filter(m => m.status !== "PAUSED");

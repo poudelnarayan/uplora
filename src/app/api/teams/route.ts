@@ -21,9 +21,27 @@ export async function POST(request: NextRequest) {
       create: { email: session.user.email, name: session.user.name || "", image: session.user.image || "" },
     });
 
-    // Allow multiple teams per owner
+    // Check for duplicate team names for this user (optional validation)
+    const existingTeam = await prisma.team.findFirst({
+      where: { 
+        ownerId: currentUser.id, 
+        name: name.trim(),
+        isPersonal: false // Only check non-personal teams
+      }
+    });
+    
+    if (existingTeam) {
+      return NextResponse.json({ error: "You already have a team with this name" }, { status: 400 });
+    }
+
+    // Create new team (multiple teams allowed per owner)
     const team = await prisma.team.create({
-      data: { name: name.trim(), description: description?.trim() || "", ownerId: currentUser.id },
+      data: { 
+        name: name.trim(), 
+        description: description?.trim() || "", 
+        ownerId: currentUser.id,
+        isPersonal: false // Explicitly set as non-personal team
+      },
     });
 
     // Realtime notify all connected clients to refresh team lists

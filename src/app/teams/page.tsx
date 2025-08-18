@@ -480,9 +480,22 @@ export default function TeamsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center sm:text-left"
         >
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Team Management</h1>
-            <p className="text-muted-foreground">Manage your teams, members, and invitations</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Team Management</h1>
+              <p className="text-muted-foreground">Manage your teams, members, and invitations</p>
+            </div>
+            <button
+              onClick={() => {
+                openModal("create-team", {
+                  onSubmit: handleCreateTeam
+                });
+              }}
+              className="btn btn-primary btn-lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Team
+            </button>
           </div>
         </motion.div>
 
