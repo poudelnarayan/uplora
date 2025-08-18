@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Edit, Trash2, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import TeamMembersList from "./TeamMembersList";
 import TeamInvitationsList from "./TeamInvitationsList";
+import TeamActions from "./TeamActions";
+import TeamRenameForm from "./TeamRenameForm";
 
 interface TeamMember {
   id: string;
@@ -83,44 +85,27 @@ export default function TeamCard({
       <div className="flex items-center justify-between mb-2">
         <div className="min-w-0">
           {renamingTeamId === team.id ? (
-            <div className="flex items-center gap-2">
-              <input 
-                value={renameValue} 
-                onChange={(e) => onRenameValueChange(e.target.value)} 
-                className="input w-48 lg:w-64" 
-                maxLength={80} 
-              />
-              <button onClick={() => onSaveRename(team.id)} className="btn btn-primary btn-sm text-xs lg:text-sm">
-                Save
-              </button>
-              <button onClick={onCancelRename} className="btn btn-ghost btn-sm text-xs lg:text-sm">
-                Cancel
-              </button>
-            </div>
+            <TeamRenameForm
+              teamId={team.id}
+              renameValue={renameValue}
+              onRenameValueChange={onRenameValueChange}
+              onSaveRename={onSaveRename}
+              onCancelRename={onCancelRename}
+            />
           ) : (
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-semibold text-foreground truncate">{team.name}</h3>
-                {isOwner && (
-                  <div className="hidden lg:flex items-center gap-1 ml-1">
-                    <button
-                      title="Rename team"
-                      onClick={() => onStartRename(team.id, team.name)}
-                      className="p-1.5 rounded-md hover:bg-muted transition-colors"
-                      aria-label="Rename team"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      title="Delete team"
-                      onClick={() => onDeleteTeam(team.id, team.name)}
-                      className="p-1.5 rounded-md hover:bg-muted transition-colors text-red-600 hover:text-red-700"
-                      aria-label="Delete team"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="hidden lg:flex ml-1">
+                  <TeamActions
+                    isOwner={isOwner}
+                    teamId={team.id}
+                    teamName={team.name}
+                    onStartRename={onStartRename}
+                    onDeleteTeam={onDeleteTeam}
+                    onLeaveTeam={onLeaveTeam}
+                  />
+                </div>
               </div>
               {team.description && team.description.trim().length > 0 && (
                 <p className="text-xs text-muted-foreground mt-1 truncate">
@@ -142,12 +127,14 @@ export default function TeamCard({
             </button>
           </div>
         ) : (
-          <button 
-            onClick={() => onLeaveTeam(team.id, team.name)} 
-            className="btn btn-ghost text-red-600 hover:text-red-700 btn-sm text-xs lg:text-sm"
-          >
-            Leave team
-          </button>
+          <TeamActions
+            isOwner={isOwner}
+            teamId={team.id}
+            teamName={team.name}
+            onStartRename={onStartRename}
+            onDeleteTeam={onDeleteTeam}
+            onLeaveTeam={onLeaveTeam}
+          />
         )}
       </div>
 

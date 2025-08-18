@@ -222,6 +222,224 @@ export default function TeamsPage() {
     }
   };
 
+  const handleSaveRename = async (teamId: string) => {
+    try {
+      const res = await fetch(`/api/teams/${teamId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: renameValue.trim() })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to rename team", 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ type: "success", title: "Team renamed!" });
+      setRenamingTeamId(null);
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to rename team", 
+        message: "Network error" 
+      });
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string, teamName: string) => {
+    if (!confirm(`Are you sure you want to delete "${teamName}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/teams/${teamId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to delete team", 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ type: "success", title: "Team deleted!" });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to delete team", 
+        message: "Network error" 
+      });
+    }
+  };
+
+  const handleLeaveTeam = async (teamId: string, teamName: string) => {
+    if (!confirm(`Are you sure you want to leave "${teamName}"?`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/teams/${teamId}/members/self`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to leave team", 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ type: "success", title: "Left team successfully!" });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to leave team", 
+        message: "Network error" 
+      });
+    }
+  };
+
+  const handleResendInvitation = async (teamId: string, invitationId: string) => {
+    setResendingId(invitationId);
+    try {
+      const invitation = teams.find(t => t.id === teamId)?.invitations.find(i => i.id === invitationId);
+      if (!invitation) return;
+      
+      const res = await fetch(`/api/teams/${teamId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: invitation.email, 
+          role: invitation.role, 
+          resend: true 
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to resend invitation", 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ type: "success", title: "Invitation resent!" });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to resend invitation", 
+        message: "Network error" 
+      });
+    } finally {
+      setResendingId(null);
+    }
+  };
+
+  const handleCancelInvitation = async (teamId: string, invitationId: string) => {
+    try {
+      const res = await fetch(`/api/teams/${teamId}/invite/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: invitationId })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to cancel invitation", 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ type: "success", title: "Invitation cancelled!" });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to cancel invitation", 
+        message: "Network error" 
+      });
+    }
+  };
+
+  const handleToggleMemberStatus = async (teamId: string, memberId: string, memberName: string, currentStatus: string, teamName: string) => {
+    const newStatus = currentStatus === "PAUSED" ? "ACTIVE" : "PAUSED";
+    const action = newStatus === "ACTIVE" ? "activate" : "pause";
+    
+    if (!confirm(`Are you sure you want to ${action} ${memberName}?`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/teams/${teamId}/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: `Failed to ${action} member`, 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ 
+        type: "success", 
+        title: `Member ${action}d!`, 
+        message: `${memberName} has been ${action}d` 
+      });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: `Failed to ${action} member`, 
+        message: "Network error" 
+      });
+    }
+  };
+
+  const handleRemoveMember = async (teamId: string, memberId: string, teamName: string) => {
+    const member = teams.find(t => t.id === teamId)?.members.find(m => m.id === memberId);
+    if (!member) return;
+    
+    if (!confirm(`Are you sure you want to remove ${member.name} from "${teamName}"?`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/teams/${teamId}/members/${memberId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to remove member", 
+          message: err.error || "Try again" 
+        });
+        return;
+      }
+      notifications.addNotification({ 
+        type: "success", 
+        title: "Member removed!", 
+        message: `${member.name} has been removed from the team` 
+      });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to remove member", 
+        message: "Network error" 
+      });
+    }
+  };
+
   return (
     <AppShell>
       <div className="h-full flex flex-col">
@@ -266,30 +484,11 @@ export default function TeamsPage() {
           renamingTeamId={renamingTeamId}
           renameValue={renameValue}
           onRenameValueChange={setRenameValue}
-          onSaveRename={async (teamId) => {
-            // Implementation here
-            setRenamingTeamId(null);
-          }}
+          onSaveRename={handleSaveRename}
           onCancelRename={() => setRenamingTeamId(null)}
-          resendingId={resendingId}
-          currentUserEmail={session?.user?.email || ""}
-        />
-      </div>
-
-      {/* Modals */}
-      <CreateTeamModal
-        isOpen={showCreateTeam}
-        onClose={() => setShowCreateTeam(false)}
-        onSubmit={handleCreateTeam}
-      />
-
-      <InviteMemberModal
-        isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-        team={selectedTeam}
-        onSubmit={handleInviteMember}
-        inviting={inviting}
-      />
-    </AppShell>
-  );
-}
+          onDeleteTeam={handleDeleteTeam}
+          onLeaveTeam={handleLeaveTeam}
+          onResendInvitation={handleResendInvitation}
+          onCancelInvitation={handleCancelInvitation}
+          onToggleMemberStatus={handleToggleMemberStatus}
+          onRemoveMember={handleRemoveMember}

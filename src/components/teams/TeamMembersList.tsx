@@ -1,6 +1,7 @@
 "use client";
 
 import { Crown, Shield, Target, Edit3 } from "lucide-react";
+import MemberActions from "./MemberActions";
 
 interface TeamMember {
   id: string;
@@ -99,26 +100,15 @@ export default function TeamMembersList({
             </div>
             <div className="flex items-center gap-2">
               {isOwner && member.role !== "OWNER" && (
-                <>
-                  <button
-                    onClick={() => onToggleMemberStatus(
-                      teamId, 
-                      member.id, 
-                      member.name, 
-                      member.status || "ACTIVE", 
-                      teamName
-                    )}
-                    className="btn btn-ghost btn-sm text-xs"
-                  >
-                    {member.status === "PAUSED" ? "Set active" : "Set inactive"}
-                  </button>
-                  <button 
-                    onClick={() => onRemoveMember(teamId, member.id, teamName)} 
-                    className="btn btn-ghost btn-sm text-red-600 hover:text-red-700 text-xs"
-                  >
-                    Remove
-                  </button>
-                </>
+                <MemberActions
+                  teamId={teamId}
+                  memberId={member.id}
+                  memberName={member.name}
+                  currentStatus={member.status || "ACTIVE"}
+                  teamName={teamName}
+                  onToggleMemberStatus={onToggleMemberStatus}
+                  onRemoveMember={onRemoveMember}
+                />
               )}
             </div>
           </div>

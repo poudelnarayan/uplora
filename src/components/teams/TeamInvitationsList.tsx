@@ -1,6 +1,7 @@
 "use client";
 
 import { Mail } from "lucide-react";
+import InvitationActions from "./InvitationActions";
 
 interface TeamInvitation {
   id: string;
@@ -57,28 +58,13 @@ export default function TeamInvitationsList({
               </div>
             </div>
             {isOwner && (
-              <div className="flex flex-col lg:flex-row items-center gap-1 lg:gap-2">
-                <button 
-                  onClick={() => onResendInvitation(teamId, invitation.id)} 
-                  className="btn btn-ghost btn-sm text-xs" 
-                  disabled={resendingId === invitation.id}
-                >
-                  {resendingId === invitation.id ? (
-                    <>
-                      <div className="spinner mr-2" />
-                      Resending...
-                    </>
-                  ) : (
-                    "Resend"
-                  )}
-                </button>
-                <button 
-                  onClick={() => onCancelInvitation(teamId, invitation.id)} 
-                  className="btn btn-ghost btn-sm text-red-600 hover:text-red-700 text-xs"
-                >
-                  Cancel Invitation
-                </button>
-              </div>
+              <InvitationActions
+                teamId={teamId}
+                invitationId={invitation.id}
+                resendingId={resendingId}
+                onResendInvitation={onResendInvitation}
+                onCancelInvitation={onCancelInvitation}
+              />
             )}
           </div>
         ))}
