@@ -174,24 +174,56 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="relative">
             <button
               onClick={() => teams.length > 1 && setTeamMenuOpen((o) => !o)}
-              className={`w-full inline-flex items-center justify-between px-3 py-2.5 rounded-lg border border-border text-sm transition-all duration-200 ${
-                teams.length > 1 ? "bg-card hover:bg-muted hover:border-primary/30" : "bg-muted cursor-default"
+              className={`group w-full inline-flex items-center justify-between px-4 py-3 rounded-xl border border-border text-sm transition-all duration-200 ${
+                teams.length > 1 
+                  ? "bg-card/80 hover:bg-card hover:border-primary/40 hover:shadow-lg backdrop-blur-sm" 
+                  : "bg-muted/50 cursor-default"
               }`}
             >
-              <span className="font-medium text-foreground truncate">
-                {selectedTeam?.name || (teams.length === 0 ? "No team" : teams[0]?.name)}
-              </span>
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Active team indicator */}
+                <div className="w-2 h-2 rounded-full bg-primary shadow-sm flex-shrink-0" />
+                <span className="font-medium text-foreground truncate">
+                  {selectedTeam?.name || (teams.length === 0 ? "No team" : teams[0]?.name)}
+                </span>
+              </div>
               <div className="flex items-center gap-2 text-muted-foreground">
-                {teams.length > 1 && <ChevronDown className="w-4 h-4" />}
+                {teams.length > 1 && (
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
+                    teamMenuOpen ? "rotate-180" : ""
+                  } group-hover:text-primary`} />
+                )}
               </div>
             </button>
             {teamMenuOpen && teams.length > 1 && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl z-50 p-1"
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="absolute top-full left-0 right-0 mt-3 z-50"
               >
+                {/* Glassmorphism Container */}
+                <div className="relative">
+                  {/* Backdrop blur effect */}
+                  <div className="absolute inset-0 bg-background/40 backdrop-blur-md rounded-2xl border border-border/50 shadow-2xl" />
+                  
+                  {/* Content container */}
+                  <div className="relative p-2 space-y-1">
+                    {/* Header with team count */}
+                    <div className="px-3 py-2 border-b border-border/30">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground/80 uppercase tracking-wider">
+                          Switch Team
+                        </span>
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                          {teams.length} teams
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Team options */}
+                    <div className="max-h-64 overflow-y-auto custom-scrollbar">
                 {teams.map((t) => (
                   <button
                     key={t.id}
@@ -199,16 +231,41 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       setSelectedTeamId(t.id);
                       setTeamMenuOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2.5 rounded-md text-sm hover:bg-muted transition-colors ${
-                      selectedTeamId === t.id ? "bg-primary/10 text-primary" : "text-foreground"
+                    className={`group w-full text-left px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                      selectedTeamId === t.id 
+                        ? "bg-primary/20 text-primary border border-primary/30 shadow-sm" 
+                        : "text-foreground/90 hover:bg-foreground/5 hover:text-foreground hover:shadow-sm"
                     }`}
                   >
-                    <div className="font-medium truncate">{t.name}</div>
+                    <div className="flex items-center gap-3">
+                      {/* Team indicator dot */}
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        selectedTeamId === t.id 
+                          ? "bg-primary shadow-sm" 
+                          : "bg-muted-foreground/40 group-hover:bg-foreground/60"
+                      }`} />
+                      
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{t.name}</div>
                     {t.description && (
-                      <div className="text-xs text-muted-foreground truncate mt-0.5">{t.description}</div>
+                          <div className="text-xs text-muted-foreground/80 truncate mt-0.5 group-hover:text-muted-foreground">
+                            {t.description}
+                          </div>
                     )}
+                      </div>
+                      
+                      {/* Selected indicator */}
+                      {selectedTeamId === t.id && (
+                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                        </div>
+                      )}
+                    </div>
                   </button>
                 ))}
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
           </div>
