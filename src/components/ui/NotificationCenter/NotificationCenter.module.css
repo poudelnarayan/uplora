@@ -14,7 +14,7 @@
 
 .container {
   position: fixed;
-  top: 5rem;
+  top: 4rem;
   right: 1rem;
   width: 24rem;
   max-width: calc(100vw - 2rem);

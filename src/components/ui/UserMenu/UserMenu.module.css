@@ -10,18 +10,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
   background-color: rgb(var(--card));
   border: 1px solid rgb(var(--border));
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .trigger:hover {
   border-color: rgb(var(--ring));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .avatar {
@@ -50,7 +52,7 @@
   border: 1px solid rgb(var(--border));
   border-radius: 0.75rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  z-index: 50;
+  z-index: 60;
   overflow: hidden;
 }
 
