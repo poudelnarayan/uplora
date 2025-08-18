@@ -176,25 +176,6 @@ export default function TeamList({
             </div>
 
             {/* Team Stats - Visible Overview */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
-                <UserCheck className="w-5 h-5 text-primary mx-auto mb-1" />
-                <div className="text-lg font-bold text-primary">{activeMembers.length}</div>
-                <div className="text-xs text-muted-foreground">Active Members</div>
-              </div>
-              
-              <div className="text-center p-3 rounded-lg bg-warning/10 border border-warning/20">
-                <Mail className="w-5 h-5 text-warning mx-auto mb-1" />
-                <div className="text-lg font-bold text-warning">{pendingInvites.length}</div>
-                <div className="text-xs text-muted-foreground">Pending Invites</div>
-              </div>
-              
-              <div className="text-center p-3 rounded-lg bg-secondary/10 border border-secondary/20">
-                <Clock className="w-5 h-5 text-secondary mx-auto mb-1" />
-                <div className="text-lg font-bold text-secondary">{Math.ceil((Date.now() - team.createdAt.getTime()) / (1000 * 60 * 60 * 24))}</div>
-                <div className="text-xs text-muted-foreground">Days Active</div>
-              </div>
-            </div>
 
             {/* Active Members - Prominent Display */}
             {activeMembers.length > 0 && (

@@ -471,45 +471,6 @@ export default function TeamsPage() {
           </button>
         </motion.div>
 
-        {/* Key Stats - Prominent Display */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
-        >
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{teams.length}</div>
-            <div className="text-sm text-muted-foreground">Active Teams</div>
-          </div>
-          
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-secondary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <UserCheck className="w-6 h-6 text-secondary" />
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{totalMembers}</div>
-            <div className="text-sm text-muted-foreground">Total Members</div>
-          </div>
-          
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-accent/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Crown className="w-6 h-6 text-accent" />
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{ownedTeams}</div>
-            <div className="text-sm text-muted-foreground">Teams You Own</div>
-          </div>
-          
-          <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Mail className="w-6 h-6 text-warning" />
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{pendingInvitations}</div>
-            <div className="text-sm text-muted-foreground">Pending Invites</div>
-          </div>
-        </motion.div>
 
         {/* Teams List - Core Functionality */}
         <motion.div
