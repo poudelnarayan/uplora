@@ -21,7 +21,7 @@ import {
   Youtube,
   Zap,
   Crown,
-  Users
+  Users,
   Upload,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
