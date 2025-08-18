@@ -84,21 +84,39 @@ export default function TeamList({
 
   if (teams.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center py-12">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6">
-          <Users className="w-7 h-7 text-muted-foreground" />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center py-16">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-3xl blur-2xl"></div>
+          <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-muted to-card border border-border flex items-center justify-center mb-8 shadow-lg">
+            <Users className="w-12 h-12 text-muted-foreground" />
+          </div>
         </div>
-        <h3 className="text-xl font-semibold text-foreground mb-2">No team created</h3>
-        <p className="text-sm text-muted-foreground mb-6">Create a team and start growing.</p>
-        <button onClick={onCreateTeam} className="btn btn-primary">
+        <h3 className="text-2xl font-semibold text-foreground mb-3">No Teams Yet</h3>
+        <p className="text-muted-foreground mb-8 max-w-md">Create your first team to start collaborating with others and streamline your content workflow.</p>
+        <button onClick={onCreateTeam} className="btn btn-primary btn-lg">
           <Plus className="w-4 h-4 mr-2" /> Create Team
         </button>
+        
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl">
+          <div className="text-center p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <Users className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">Invite collaborators</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+            <Shield className="w-6 h-6 text-green-500 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">Role-based permissions</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+            <Target className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">Streamlined workflow</p>
+          </div>
+        </div>
       </motion.div>
     );
   }
 
   return (
-    <div className="flex-1 space-y-4 lg:space-y-6">
+    <div className="space-y-6">
       {teams.map((team) => (
         <TeamCard
           key={team.id}
