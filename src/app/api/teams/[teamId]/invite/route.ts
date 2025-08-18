@@ -215,63 +215,33 @@ async function sendInviteEmail(teamName: string, inviterName: string, inviterEma
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${subject}</title>
-  <style>
-    body { margin:0; background:#f6f9fc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color:#0f172a; }
-    .container { width:100%; padding:24px; }
-    .card { max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(15,23,42,0.04); overflow:hidden; }
-    .header { padding:24px; border-bottom:1px solid #e2e8f0; background:linear-gradient(180deg,#ffffff, #f8fafc); }
-    .brand { font-weight:800; letter-spacing:-0.01em; color:#111827; font-size:14px; }
-    .content { padding:24px; }
-    h1 { margin:0 0 8px; font-size:20px; color:#111827; }
-    p { margin:0 0 12px; color:#334155; line-height:1.6; }
-    .details { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0; }
-    .muted { color:#64748b; font-size:13px; }
-    .cta { display:inline-block; padding:12px 18px; background:#2563eb; color:#ffffff !important; text-decoration:none; border-radius:10px; font-weight:600; }
-    .cta:hover { background:#1d4ed8; }
-    .footer { padding:16px 24px; border-top:1px solid #e2e8f0; background:#ffffff; color:#64748b; font-size:12px; }
-    .spacer { height:8px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    @media (prefers-color-scheme: dark) {
-      body { background:#0b1220; color:#e5e7eb; }
-      .card { background:#0f172a; border-color:#1f2937; box-shadow:0 2px 8px rgba(0,0,0,0.4); }
-      .header { background:linear-gradient(180deg,#111827,#0f172a); border-color:#1f2937; }
-      .brand { color:#e5e7eb; }
-      h1 { color:#f8fafc; }
-      p, .muted { color:#cbd5e1; }
-      .details { background:#0b1220; border-color:#1f2937; }
-      .footer { background:#0f172a; border-color:#1f2937; color:#94a3b8; }
-    }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <div class="brand">Uplora</div>
+<body style="margin:0;background:#f6f9fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+  <div style="width:100%;padding:24px;">
+    <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(15,23,42,0.04);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;padding:24px;">
+        <h1 style="margin:0;font-size:24px;">Team Invitation</h1>
+        <p style="margin:8px 0 0;opacity:0.9;">Uplora</p>
       </div>
-      <div class="content">
-        <h1>You're invited to join "${safeTeam}"</h1>
-        <p><strong>${safeInviter || "A teammate"}</strong> ${safeInviterEmail ? `&lt;${safeInviterEmail}&gt;` : ""} invited you to join the team as <strong>${safeRole}</strong>.</p>
-        <div class="details">
-          <p><strong>Team</strong>: ${safeTeam}</p>
-          <p><strong>Role</strong>: ${safeRole}</p>
-          <p class="muted">This invitation expires on <span class="mono">${prettyDate}</span>.</p>
+      <div style="padding:24px;">
+        <h2 style="color:#1e293b;margin:0 0 16px;">You're invited to join "${safeTeam}"</h2>
+        <p style="color:#475569;margin:0 0 16px;"><strong>${safeInviter || "A teammate"}</strong> ${safeInviterEmail ? `&lt;${safeInviterEmail}&gt;` : ""} invited you to join the team as <strong>${safeRole}</strong>.</p>
+        <div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:4px 0;"><strong>Team:</strong> ${safeTeam}</p>
+          <p style="margin:4px 0;"><strong>Role:</strong> ${safeRole}</p>
+          <p style="margin:4px 0;color:#64748b;font-size:13px;">Expires: ${prettyDate}</p>
         </div>
-        <p>Click the button below to accept and get started:</p>
-        <p style="margin:16px 0 20px">
-          <a class="cta" href="${inviteUrl}" target="_blank" rel="noopener">Accept Invitation</a>
-        </p>
-        <p class="muted">Or copy and paste this URL into your browser:</p>
-        <p class="muted mono" style="word-break:break-all;">${inviteUrl}</p>
-        <div class="spacer"></div>
-        <p class="muted">If you didn’t expect this email, you can safely ignore it.</p>
+        <div style="text-align:center;margin:20px 0;">
+          <a href="${inviteUrl}" style="display:inline-block;padding:12px 24px;background:#3b82f6;color:white;text-decoration:none;border-radius:8px;font-weight:600;">Accept Invitation</a>
+        </div>
+        <p style="color:#64748b;font-size:13px;margin:16px 0;">Or copy this link: ${inviteUrl}</p>
+        <p style="color:#64748b;font-size:13px;">If you didn't expect this email, you can safely ignore it.</p>
       </div>
-      <div class="footer">
-        <div>© ${new Date().getFullYear()} Uplora. All rights reserved.</div>
+      <div style="padding:16px 24px;border-top:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:12px;">
+        © ${new Date().getFullYear()} Uplora. All rights reserved.
       </div>
     </div>
   </div>
-  
 </body>
 </html>`;
 

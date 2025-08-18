@@ -53,8 +53,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: `[${type.toUpperCase()}] ${message}`,
+        message: message,
         category: type,
+        type: "feedback",
         includeEmail: true,
         path: pathForFeedback,
         teamId: selectedTeamId,
@@ -64,13 +65,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   };
 
   const submitIdea = async (title: string, description: string, priority: string) => {
-    const ideaContent = `Feature Request: ${title}\nPriority: ${priority}\n\nDescription:\n${description}`;
     await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: ideaContent,
+        message: description,
         category: "Feature Request",
+        type: "idea",
+        title: title,
+        priority: priority,
         includeEmail: true,
         path: pathForFeedback,
         teamId: selectedTeamId,
