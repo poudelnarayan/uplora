@@ -127,3 +127,22 @@ export const publishApprovedTemplate = (data: {
     - Status: ✅ Approved & Published
   `
 });
+
+export const passwordResetTemplate = (data: { resetUrl: string; email: string }) => ({
+  subject: `Reset your Uplora password`,
+  html: `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="color:#2563eb;margin:0;font-size:22px;letter-spacing:.2px;">Uplora</h1>
+        <p style="color: #6b7280; margin: 6px 0 0 0; font-size: 13px;">Password Reset</p>
+      </div>
+      <p style="color:#334155">We received a request to reset the password for <strong>${data.email}</strong>.</p>
+      <p style="color:#334155">If you made this request, click the button below to set a new password. This link will expire in 30 minutes.</p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${data.resetUrl}" style="background:#2563eb;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a>
+      </div>
+      <p style="color:#64748b;font-size:13px">If you didn't request a password reset, you can safely ignore this email.</p>
+    </div>
+  `,
+  text: `Reset your Uplora password\n\nUse this link within 30 minutes: ${data.resetUrl}`,
+});

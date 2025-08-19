@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
+
+// Type assertion to fix Framer Motion typing issues
+const MotionDiv = motion.div as any;
+const MotionAside = motion.aside as any;
 import { 
   Home, 
   Upload, 
@@ -138,7 +142,7 @@ export default function Sidebar() {
     return (
       <div key={item.id}>
         <Link href={item.href}>
-          <motion.div
+          <MotionDiv
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
               active 
                 ? 'bg-primary text-primary-foreground shadow-lg' 
@@ -162,13 +166,13 @@ export default function Sidebar() {
                 }}
               />
             )}
-          </motion.div>
+          </MotionDiv>
         </Link>
         
         {hasChildren && (
           <AnimatePresence>
             {isExpanded && (
-              <motion.div
+              <MotionDiv
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -178,7 +182,7 @@ export default function Sidebar() {
                 <div className="mt-2 space-y-1">
                   {item.children!.map(child => renderNavItem(child, level + 1))}
                 </div>
-              </motion.div>
+              </MotionDiv>
             )}
           </AnimatePresence>
         )}
@@ -199,7 +203,7 @@ export default function Sidebar() {
       {/* Mobile Overlay */}
       <AnimatePresence>
         {isMobileOpen && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -210,7 +214,7 @@ export default function Sidebar() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <motion.aside
+      <MotionAside
         initial={{ x: -300 }}
         animate={{ x: isMobileOpen ? 0 : -300 }}
         className={`fixed left-0 top-0 h-full w-80 bg-card shadow-xl z-50 lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${
@@ -269,7 +273,7 @@ export default function Sidebar() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Admin</p>
                 </div>
                 <Link href="/admin">
-                  <motion.div
+                  <MotionDiv
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
                       pathname === '/admin'
                         ? 'bg-red-500/10 text-red-600 border border-red-200 dark:border-red-800' 
@@ -282,7 +286,7 @@ export default function Sidebar() {
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <span className="font-medium">Admin Dashboard</span>
-                  </motion.div>
+                  </MotionDiv>
                 </Link>
               </div>
             )}
@@ -299,7 +303,7 @@ export default function Sidebar() {
             </button>
           </div>
         </div>
-      </motion.aside>
+      </MotionAside>
 
       {/* Sign Out Confirmation */}
       <ConfirmModal

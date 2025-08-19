@@ -13,7 +13,7 @@ import { ModalProvider } from "@/components/ui/Modal";
 
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const pathname = typeof window !== "undefined" ? window.location.pathname : undefined;
+  const pathname = usePathname();
   const siteUrl =
     (typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) ||
     "http://localhost:3000";

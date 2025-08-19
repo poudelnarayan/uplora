@@ -1,23 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, User2, CheckCircle, AlertCircle } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 import { TextField } from "@/components/ui/TextField";
-import { useRouter } from "next/navigation";
 import { api } from "@/lib/fetcher";
 import { loginSchema, registerSchema, handleZodError } from "@/lib/validation";
 
 export default function SignInForm() {
   const notifications = useNotifications();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [formData, setFormData] = useState({ 
     email: "", 
     password: "", 
@@ -25,6 +27,24 @@ export default function SignInForm() {
     name: "" 
   });
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // Handle authentication errors from URL parameters
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      if (error === "CredentialsSignin" || error === "Invalid email or password") {
+        setAuthError("Invalid email or password");
+      } else if (error === "Missing email or password") {
+        setAuthError("Please enter both email and password");
+      } else {
+        setAuthError("Authentication failed. Please try again.");
+      }
+      // Clear the error from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams]);
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -69,6 +89,7 @@ export default function SignInForm() {
 
     setLoading(true);
     setErrors({});
+    setAuthError(null);
 
     try {
       if (isSignUp) {
@@ -113,55 +134,32 @@ export default function SignInForm() {
         }
       } else {
         try {
-          const result = await signIn("credentials", { 
+          // Use redirect: false to prevent page reload and handle errors inline
+          const res = await signIn("credentials", { 
             email: formData.email, 
             password: formData.password, 
-            redirect: false
+            redirect: false,
+            callbackUrl: "/dashboard"
           });
-          
-          console.log("SignIn result:", result);
-          
-          if (result?.error) {
-            // Map NextAuth errors to user-friendly messages
-            let errorMessage = "Please check your email and password";
-            if (result.error === "CredentialsSignin") {
-              errorMessage = "Invalid email or password";
-            } else if (result.error === "Missing email or password") {
-              errorMessage = "Please enter both email and password";
-            }
-            
-            notifications.addNotification({ 
-              type: "error", 
-              title: "Sign in failed", 
-              message: errorMessage
-            });
-          } else if (result?.ok) {
-            router.push("/dashboard");
-          } else {
-            // Handle unexpected response
-            console.error("SignIn result:", result);
-            notifications.addNotification({ 
-              type: "error", 
-              title: "Authentication failed", 
-              message: "Please try again" 
-            });
+
+          if (res?.error) {
+            // Single compact error indicator; no per-field red
+            setAuthError("Invalid email or password");
+            return;
           }
+
+          // Success: navigate without page reload
+          const targetUrl = res?.url || "/dashboard";
+          router.push(targetUrl);
+          router.refresh();
         } catch (error) {
           console.error("SignIn error:", error);
-          notifications.addNotification({ 
-            type: "error", 
-            title: "Authentication failed", 
-            message: "Please try again" 
-          });
+          setAuthError("Authentication failed. Please try again.");
         }
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Something went wrong", 
-        message: "Please check your connection and try again" 
-      });
+      setAuthError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -169,9 +167,12 @@ export default function SignInForm() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: "" });
+    // Clear field error and global auth error when user starts typing
+    if (errors[field] || authError) {
+      const newErrors = { ...errors };
+      delete newErrors[field];
+      setErrors(newErrors);
+      setAuthError(null);
     }
   };
 
@@ -203,6 +204,20 @@ export default function SignInForm() {
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               <span className="text-sm font-medium">{info}</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Single compact error message */}
+        {authError && (
+          <motion.div 
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 rounded-md border bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">{authError}</div>
             </div>
           </motion.div>
         )}
@@ -315,6 +330,7 @@ export default function SignInForm() {
               setFormData({ email: "", password: "", confirmPassword: "", name: "" });
               setErrors({});
               setInfo(null);
+              setAuthError(null);
             }}
             className="text-muted-foreground hover:text-foreground transition-colors text-sm"
           >
@@ -323,6 +339,11 @@ export default function SignInForm() {
               : "Need an account? Create one"
             }
           </button>
+          {!isSignUp && (
+            <div className="mt-3">
+              <a href="/forgot-password" className="text-sm text-primary hover:underline">Forgot password?</a>
+            </div>
+          )}
         </div>
 
 
