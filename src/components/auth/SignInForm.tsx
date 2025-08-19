@@ -224,6 +224,7 @@ export default function SignInForm() {
                 onClick={() => setShowPassword(!showPassword)} 
                 aria-label="Toggle password visibility" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -251,6 +252,7 @@ export default function SignInForm() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
                     aria-label="Toggle confirm password visibility" 
                     className="text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
                   >
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
