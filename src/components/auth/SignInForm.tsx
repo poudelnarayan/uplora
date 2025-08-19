@@ -79,6 +79,8 @@ export default function SignInForm() {
 
         if (response.ok) {
           const result = await response.json();
+          console.log("Registration result:", result);
+          
           notifications.addNotification({
             type: "success",
             title: "Account Created!",
@@ -96,31 +98,44 @@ export default function SignInForm() {
             setFormData({ email: formData.email, password: "", confirmPassword: "", name: "" });
           }
         } else {
-          const error = await response.json();
+          const errorData = await response.json().catch(() => ({ message: "Registration failed" }));
+          console.error("Registration error:", errorData);
           notifications.addNotification({ 
             type: "error", 
             title: "Registration failed", 
-            message: error.message || "Please try again" 
-          });
+            message: errorData.message || "Please try again" 
+                    });
+        }
         }
       } else {
-        const result = await signIn("credentials", { 
-          email: formData.email, 
-          password: formData.password, 
-          redirect: false,
-          callbackUrl: "/dashboard"
-        });
-        
-        if (result?.error) {
-          notifications.addNotification({ 
-            type: "error", 
-            title: "Invalid credentials", 
-            message: "Please check your email and password" 
+        try {
+          const result = await signIn("credentials", { 
+            email: formData.email, 
+            password: formData.password, 
+            redirect: false
           });
-        } else if (result?.ok) {
-          router.push("/dashboard");
-        } else {
-          // Handle unexpected response
+          
+          console.log("SignIn result:", result);
+          
+          if (result?.error) {
+            notifications.addNotification({ 
+              type: "error", 
+              title: "Invalid credentials", 
+              message: "Please check your email and password" 
+            });
+          } else if (result?.ok) {
+            router.push("/dashboard");
+          } else {
+            // Handle unexpected response
+            console.error("SignIn result:", result);
+            notifications.addNotification({ 
+              type: "error", 
+              title: "Authentication failed", 
+              message: "Please try again" 
+            });
+          }
+        } catch (error) {
+          console.error("SignIn error:", error);
           notifications.addNotification({ 
             type: "error", 
             title: "Authentication failed", 
