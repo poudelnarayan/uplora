@@ -66,21 +66,38 @@ export default function Dashboard() {
         body: JSON.stringify({ email: session.user.email }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
         notifications.addNotification({
           type: "success",
           title: "Verification email sent!",
           message: "Please check your inbox for the verification link."
         });
+      } else if (response.status === 400 && result.message === "Email is already verified") {
+        // Email is already verified in database but session is stale
+        notifications.addNotification({
+          type: "info",
+          title: "Email Already Verified",
+          message: "Your email is already verified. Refreshing your session..."
+        });
+        
+        // Force session refresh
+        await updateSession();
+        
+        // Hide the banner after a brief delay
+        setTimeout(() => {
+          setShowEmailBanner(false);
+        }, 2000);
       } else {
-        const error = await response.json();
         notifications.addNotification({
           type: "error",
           title: "Failed to resend email",
-          message: error.message || "Please try again later."
+          message: result.message || "Please try again later."
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Resend verification error:", error);
       notifications.addNotification({
         type: "error",
         title: "Something went wrong",
@@ -156,6 +173,46 @@ export default function Dashboard() {
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
+
+  // Check for stale session on mount and refresh if needed
+  useEffect(() => {
+    const checkSessionFreshness = async () => {
+      if (!session?.user?.email || session.user.emailVerified) {
+        return; // No need to check if already verified or not logged in
+      }
+
+      try {
+        // Check if email is actually verified in database
+        const response = await fetch("/api/debug/refresh-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.needsRefresh) {
+            console.log("🔄 Detected stale session, refreshing...");
+            
+            // Update the session to get fresh data
+            await updateSession();
+            
+            notifications.addNotification({
+              type: "success",
+              title: "Session Updated",
+              message: "Your email verification status has been refreshed."
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Session freshness check failed:", error);
+      }
+    };
+
+    // Run the check after a short delay to ensure session is loaded
+    const timer = setTimeout(checkSessionFreshness, 1000);
+    return () => clearTimeout(timer);
+  }, [session?.user?.email, updateSession, notifications]);
 
   // Realtime: auto-refresh list on video events
   useEffect(() => {
