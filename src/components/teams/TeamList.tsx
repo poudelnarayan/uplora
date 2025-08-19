@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Users, Plus, Crown, Shield, Target, Edit3, Mail, Clock, UserCheck } from "lucide-react";
 import TeamCard from "./TeamCard";
 

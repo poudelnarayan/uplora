@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Upload, Play, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

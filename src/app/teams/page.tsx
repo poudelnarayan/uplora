@@ -10,7 +10,7 @@ import CreateTeamModal from "@/components/teams/CreateTeamModal";
 import InviteMemberModal from "@/components/teams/InviteMemberModal";
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Users, Plus, Crown, Mail, UserCheck, Clock } from "lucide-react";
 import { useModalManager } from "@/components/ui/Modal";
 

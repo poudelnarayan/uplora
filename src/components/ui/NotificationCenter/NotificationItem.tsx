@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { X } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 import type { NotificationProps } from "@/components/ui/Notification";

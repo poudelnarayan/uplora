@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Youtube, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 

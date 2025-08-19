@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 
 interface VideoItem {

@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import Sidebar from './Sidebar';
 
 interface AppLayoutProps {

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Settings, Heart, LogOut, X } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";

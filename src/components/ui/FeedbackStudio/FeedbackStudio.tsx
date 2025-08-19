@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { MessageCircle, X } from "lucide-react";
 import FeedbackForm from "./FeedbackForm";
 import FeedbackSuccess from "./FeedbackSuccess";

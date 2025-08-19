@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { useSession, signIn } from "next-auth/react";
 import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
 import toast from "react-hot-toast";

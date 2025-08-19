@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Sun, Moon } from "lucide-react";
 import styles from "./ThemeToggle.module.css";
 import { useTheme } from "@/context/ThemeContext";

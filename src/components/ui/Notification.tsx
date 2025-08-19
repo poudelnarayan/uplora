@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";

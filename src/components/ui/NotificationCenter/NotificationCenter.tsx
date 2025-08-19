@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Bell, X } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 import NotificationItem from "./NotificationItem";

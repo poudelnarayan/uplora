@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import styles from "./Modal.module.css";

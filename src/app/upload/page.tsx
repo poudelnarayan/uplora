@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Upload, Users, User, Video, Shield, Zap, CheckCircle } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import UploadZone from "@/components/upload/UploadZone";

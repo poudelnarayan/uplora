@@ -4,7 +4,7 @@ import PublicLayout from "@/components/layout/PublicLayout";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { 
   Users, 
   Target, 

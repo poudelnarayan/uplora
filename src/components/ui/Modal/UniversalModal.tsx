@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { X, Users, MessageCircle, Lightbulb, Plus } from "lucide-react";
 import { useEffect, useRef, ReactNode } from "react";
 

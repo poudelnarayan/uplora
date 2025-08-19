@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { X, AlertTriangle, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 

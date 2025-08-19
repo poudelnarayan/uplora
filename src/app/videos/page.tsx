@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import AppShell from "@/components/layout/AppShell";
 import { Play, Image as ImageIcon, X, User, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";

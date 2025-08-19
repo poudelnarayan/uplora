@@ -4,6 +4,7 @@ import { createErrorResponse, ErrorCodes } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes max duration
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {

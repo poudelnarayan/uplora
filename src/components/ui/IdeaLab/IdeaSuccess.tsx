@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const MotionDiv = MotionDiv as any;
+const MotionDiv = motion.div as any;
 import { Lightbulb } from "lucide-react";
 import styles from "./IdeaSuccess.module.css";
 
