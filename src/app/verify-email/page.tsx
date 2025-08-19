@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = motion.div as any;
 import { Mail, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { useNotifications } from "@/components/ui/Notification";
 
@@ -15,6 +17,16 @@ function VerifyEmailContent() {
   
   const email = params.get("email");
   const status = params.get("status");
+
+  // Auto-redirect to dashboard after successful verification
+  useEffect(() => {
+    if (status === "success") {
+      const timer = setTimeout(() => {
+        router.push("/dashboard");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, router]);
 
   const handleResendEmail = async () => {
     if (!email) return;
@@ -102,20 +114,20 @@ function VerifyEmailContent() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
       <NextSeoNoSSR title="Verify Email" noindex nofollow />
       <div className="container mx-auto px-4 py-16">
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md mx-auto"
         >
           <div className="card p-8 text-center">
-            <motion.div
+            <MotionDiv
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
               className="mb-6"
             >
               {content.icon}
-            </motion.div>
+            </MotionDiv>
 
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
@@ -135,7 +147,7 @@ function VerifyEmailContent() {
               {content.message}
             </motion.p>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -171,10 +183,10 @@ function VerifyEmailContent() {
               >
                 Back to Sign In
               </button>
-            </motion.div>
+            </MotionDiv>
 
             {!status && email && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
@@ -188,10 +200,10 @@ function VerifyEmailContent() {
                     <li>• Wait a few minutes for delivery</li>
                   </ul>
                 </div>
-              </motion.div>
+              </MotionDiv>
             )}
           </div>
-        </motion.div>
+        </MotionDiv>
       </div>
     </div>
   );

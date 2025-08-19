@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Lightbulb, X } from "lucide-react";
 import IdeaForm from "./IdeaForm";
 import IdeaSuccess from "./IdeaSuccess";
@@ -29,14 +31,14 @@ export default function IdeaLab({ isOpen, onClose, onSubmit }: IdeaLabProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className={styles.backdrop}
             onClick={onClose}
           />
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -68,7 +70,7 @@ export default function IdeaLab({ isOpen, onClose, onSubmit }: IdeaLabProps) {
                 </div>
               </>
             )}
-          </motion.div>
+          </MotionDiv>
         </>
       )}
     </AnimatePresence>

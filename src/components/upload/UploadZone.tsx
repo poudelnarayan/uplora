@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { 
   Upload, 
   FileVideo, 
@@ -361,7 +363,7 @@ export default function UploadZone() {
       {/* Upload Zone */}
       <div className="space-y-6">
         {!file ? (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`upload-zone ${isDragOver ? 'dragover' : ''} ${hasActive ? 'opacity-70 cursor-not-allowed' : ''}`}
@@ -390,7 +392,7 @@ export default function UploadZone() {
               className="hidden"
             />
             
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
@@ -433,10 +435,10 @@ export default function UploadZone() {
                   <span>Direct to YouTube</span>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </MotionDiv>
+          </MotionDiv>
         ) : (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-6"
@@ -472,7 +474,7 @@ export default function UploadZone() {
 
               {/* Upload Progress */}
               {isUploading && (
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   className="mt-4 space-y-3"
@@ -489,7 +491,7 @@ export default function UploadZone() {
                       style={{ width: `${currentUploadId ? (() => { const it = uploads.find((u: any) => u.id === currentUploadId); return it ? it.progress : uploadProgress; })() : uploadProgress}%` }}
                     />
                   </div>
-                </motion.div>
+                </MotionDiv>
               )}
             </div>
 
@@ -557,7 +559,7 @@ export default function UploadZone() {
 
             {/* Upload Complete */}
             {s3Key && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="card p-4 border-green-500/20 bg-green-500/5"
@@ -569,9 +571,9 @@ export default function UploadZone() {
                     <p className="text-sm text-muted-foreground">You can find this upload in the Recent Videos on your dashboard.</p>
                   </div>
                 </div>
-              </motion.div>
+              </MotionDiv>
             )}
-          </motion.div>
+          </MotionDiv>
         )}
       </div>
     </div>

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Video, X, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -41,7 +43,7 @@ export default function PublicLayout({ children, title, showBackButton = true }:
       {/* Content */}
       <main className="py-8 sm:py-12 lg:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
@@ -53,7 +55,7 @@ export default function PublicLayout({ children, title, showBackButton = true }:
             <div className="max-w-none">
               {children}
             </div>
-          </motion.div>
+          </MotionDiv>
         </div>
       </main>
 

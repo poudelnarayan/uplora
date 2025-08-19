@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -116,7 +118,7 @@ function NotificationContainer() {
     <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence mode="wait" initial={false}>
         {notifications.map((notification) => (
-          <motion.div
+          <MotionDiv
             key={notification.id}
             initial={{ opacity: 0, x: 300, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -149,7 +151,7 @@ function NotificationContainer() {
                 )}
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         ))}
       </AnimatePresence>
     </div>

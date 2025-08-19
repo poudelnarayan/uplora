@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { 
   Settings, 
   User, 
@@ -59,7 +61,7 @@ export default function SettingsPage() {
       <NextSeoNoSSR title="Settings" noindex nofollow />
       <div className="min-h-full space-y-8">
         {/* Header */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between"
@@ -71,7 +73,7 @@ export default function SettingsPage() {
           <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
             <Settings className="w-6 h-6 text-primary" />
           </div>
-        </motion.div>
+        </MotionDiv>
 
         {/* YouTube Integration - Most Important */}
         <motion.section

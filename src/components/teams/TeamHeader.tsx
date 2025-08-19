@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Plus } from "lucide-react";
 
 interface TeamHeaderProps {
@@ -9,7 +11,7 @@ interface TeamHeaderProps {
 
 export default function TeamHeader({ onCreateTeam }: TeamHeaderProps) {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+    <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
       <div className="text-center lg:text-left lg:flex lg:items-center lg:justify-between">
         <div>
           <h1 className="heading-2 mb-2">Team Management</h1>
@@ -26,6 +28,6 @@ export default function TeamHeader({ onCreateTeam }: TeamHeaderProps) {
           </button>
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

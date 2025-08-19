@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from 'framer-motion';
+
+const MotionDiv = MotionDiv as any;
 import { Users, Video, Mail } from 'lucide-react';
 
 interface Activity {
@@ -18,7 +20,7 @@ interface RecentActivityProps {
 
 export default function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.25 }}
@@ -33,7 +35,7 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
         </div>
         <div className="space-y-3">
           {activities.map((activity) => (
-            <motion.div
+            <MotionDiv
               key={activity.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -48,10 +50,10 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
                   {activity.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-            </motion.div>
+            </MotionDiv>
           ))}
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

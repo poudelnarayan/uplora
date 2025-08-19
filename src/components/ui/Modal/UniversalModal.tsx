@@ -1,6 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { X, Users, MessageCircle, Lightbulb, Plus } from "lucide-react";
 import { useEffect, useRef, ReactNode } from "react";
 
@@ -134,7 +136,7 @@ export default function UniversalModal({
       {isOpen && (
         <>
           {/* Backdrop with perfect centering */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -152,7 +154,7 @@ export default function UniversalModal({
             }}
           >
             {/* Modal Container - Perfectly Centered */}
-            <motion.div
+            <MotionDiv
               ref={modalRef}
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -240,8 +242,8 @@ export default function UniversalModal({
                   {children}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </MotionDiv>
+          </MotionDiv>
         </>
       )}
     </AnimatePresence>

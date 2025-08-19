@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Mail, Lock, Eye, EyeOff, User2, CheckCircle, AlertCircle } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 import { TextField } from "@/components/ui/TextField";
@@ -178,7 +180,7 @@ export default function SignInForm() {
 
   return (
     <div className="card max-w-md w-full mx-auto p-6 md:p-8">
-      <motion.div 
+      <MotionDiv 
         initial={{ scale: 0.98 }} 
         animate={{ scale: 1 }} 
         transition={{ duration: 0.2 }}
@@ -196,7 +198,7 @@ export default function SignInForm() {
         </div>
 
         {info && (
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
@@ -205,12 +207,12 @@ export default function SignInForm() {
               <CheckCircle className="w-4 h-4" />
               <span className="text-sm font-medium">{info}</span>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {/* Single compact error message */}
         {authError && (
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-4 p-3 rounded-md border bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
@@ -219,12 +221,12 @@ export default function SignInForm() {
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div className="text-sm">{authError}</div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {isSignUp && (
-            <motion.div 
+            <MotionDiv 
               initial={{ opacity: 0, y: 8 }} 
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -238,7 +240,7 @@ export default function SignInForm() {
                 error={errors.name}
                 required
               />
-            </motion.div>
+            </MotionDiv>
           )}
 
           <TextField
@@ -275,7 +277,7 @@ export default function SignInForm() {
           />
 
           {isSignUp && (
-            <motion.div 
+            <MotionDiv 
               initial={{ opacity: 0, y: 8 }} 
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -301,7 +303,7 @@ export default function SignInForm() {
                 }
                 required
               />
-            </motion.div>
+            </MotionDiv>
           )}
 
           <motion.button 
@@ -347,7 +349,7 @@ export default function SignInForm() {
         </div>
 
 
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 }

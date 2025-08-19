@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from 'framer-motion';
+
+const MotionDiv = MotionDiv as any;
 import { useRouter } from 'next/navigation';
 import { 
   Upload, 
@@ -81,7 +83,7 @@ export default function QuickActions({ teams }: QuickActionsProps) {
   ];
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
@@ -102,6 +104,6 @@ export default function QuickActions({ teams }: QuickActionsProps) {
           <p className="text-xs text-muted-foreground">{action.description}</p>
         </motion.button>
       ))}
-    </motion.div>
+    </MotionDiv>
   );
 }

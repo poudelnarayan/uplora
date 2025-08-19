@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Mail, Send, CheckCircle, AlertCircle, Lightbulb, MessageCircle, Users } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 
@@ -51,17 +53,17 @@ export default function TestEmailSystemPage() {
     <AppShell>
       <div className="min-h-full space-y-8">
         {/* Header */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
           <h1 className="text-3xl font-bold text-foreground mb-2">Email System Testing</h1>
           <p className="text-muted-foreground">Test the Idea Lab, Feedback Studio, and Team Invitation email routing</p>
-        </motion.div>
+        </MotionDiv>
 
         {/* Test Buttons */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -150,10 +152,10 @@ export default function TestEmailSystemPage() {
               )}
             </button>
           </div>
-        </motion.div>
+        </MotionDiv>
 
         {/* Email Configuration Info */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -177,11 +179,11 @@ export default function TestEmailSystemPage() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </MotionDiv>
 
         {/* Test Results */}
         {results.length > 0 && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -215,11 +217,11 @@ export default function TestEmailSystemPage() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {/* Instructions */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -255,7 +257,7 @@ export default function TestEmailSystemPage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </MotionDiv>
       </div>
     </AppShell>
   );

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import AppShell from "@/components/layout/AppShell";
 import { Play, Image as ImageIcon, X, User, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -257,7 +259,7 @@ export default function VideosPage() {
         nofollow
       />
       <div className="h-full flex flex-col">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="text-center lg:text-left lg:flex lg:items-center lg:justify-between">
             <div>
               <h1 className="heading-2">
@@ -279,7 +281,7 @@ export default function VideosPage() {
               <X className="w-6 h-6" />
             </button>
           </div>
-        </motion.div>
+        </MotionDiv>
 
         {loading ? (
           <div className="flex-1 flex items-center justify-center">

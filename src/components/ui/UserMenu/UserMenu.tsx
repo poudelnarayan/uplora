@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Settings, Heart, LogOut, X } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -43,7 +45,7 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -92,7 +94,7 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
                 <span>Sign Out</span>
               </button>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
     </div>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Youtube, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 
@@ -57,7 +59,7 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
   };
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="card p-6"
@@ -145,6 +147,6 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
           </button>
         </div>
       )}
-    </motion.div>
+    </MotionDiv>
   );
 }

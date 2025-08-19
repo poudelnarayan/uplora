@@ -3,6 +3,8 @@
 import PublicLayout from "@/components/layout/PublicLayout";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { 
   Users, 
   Target, 
@@ -28,7 +30,7 @@ export default function AboutPage() {
       <div className="space-y-12">
         {/* Mission Statement */}
         <div className="card p-8 text-center">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto"
@@ -41,12 +43,12 @@ export default function AboutPage() {
               Uplora eliminates the chaos of team video workflows, letting creators focus 
               on what they do best—creating amazing content.
             </p>
-          </motion.div>
+          </MotionDiv>
         </div>
 
         {/* Problem & Solution */}
         <div className="grid md:grid-cols-2 gap-8">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="card p-8"
@@ -61,9 +63,9 @@ export default function AboutPage() {
               <p>• File sharing chaos with multiple versions and confusion</p>
               <p>• Lack of role-based permissions creates security risks</p>
             </div>
-          </motion.div>
+          </MotionDiv>
 
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="card p-8"
@@ -78,14 +80,14 @@ export default function AboutPage() {
               <p>• Centralized workspace for all team content</p>
               <p>• Secure, role-based access with audit trails</p>
             </div>
-          </motion.div>
+          </MotionDiv>
         </div>
 
         {/* Core Values */}
         <div className="card p-8">
           <h2 className="text-2xl font-bold text-foreground mb-8 text-center">What Drives Us</h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -98,9 +100,9 @@ export default function AboutPage() {
               <p className="text-muted-foreground">
                 Every feature is designed to save time and eliminate friction in your content workflow.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -113,9 +115,9 @@ export default function AboutPage() {
               <p className="text-muted-foreground">
                 Built specifically for teams who need clear roles, permissions, and collaboration tools.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -128,7 +130,7 @@ export default function AboutPage() {
               <p className="text-muted-foreground">
                 Your content and data are protected with enterprise-grade security measures.
               </p>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
 

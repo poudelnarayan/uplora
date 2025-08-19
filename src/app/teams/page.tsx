@@ -9,6 +9,8 @@ import TeamList from "@/components/teams/TeamList";
 import CreateTeamModal from "@/components/teams/CreateTeamModal";
 import InviteMemberModal from "@/components/teams/InviteMemberModal";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Users, Plus, Crown, Mail, UserCheck, Clock } from "lucide-react";
 import { useModalManager } from "@/components/ui/Modal";
 
@@ -581,7 +583,7 @@ export default function TeamsPage() {
     <AppShell>
       <div className="min-h-full space-y-6">
         {/* Conditional Header Based on Team Count */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center sm:text-left"
@@ -606,11 +608,11 @@ export default function TeamsPage() {
               </button>
             </div>
           )}
-        </motion.div>
+        </MotionDiv>
 
 
         {/* Teams List - Core Functionality */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -647,7 +649,7 @@ export default function TeamsPage() {
             resendingId={resendingId}
             currentUserEmail={session?.user?.email || ""}
           />
-        </motion.div>
+        </MotionDiv>
 
         {/* Modals */}
         {/* Delete Team Confirmation Modal */}

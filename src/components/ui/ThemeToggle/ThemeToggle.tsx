@@ -1,6 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Sun, Moon } from "lucide-react";
 import styles from "./ThemeToggle.module.css";
 import { useTheme } from "@/context/ThemeContext";
@@ -27,7 +29,7 @@ export default function ThemeToggle() {
     >
       <AnimatePresence mode="wait">
         {theme === "dark" ? (
-          <motion.div
+          <MotionDiv
             key="sun"
             initial={{ rotate: -90, opacity: 0 }}
             animate={{ rotate: 0, opacity: 1 }}
@@ -35,9 +37,9 @@ export default function ThemeToggle() {
             transition={{ duration: 0.2 }}
           >
             <Sun className="w-5 h-5 text-amber-600" />
-          </motion.div>
+          </MotionDiv>
         ) : (
-          <motion.div
+          <MotionDiv
             key="moon"
             initial={{ rotate: 90, opacity: 0 }}
             animate={{ rotate: 0, opacity: 1 }}
@@ -45,7 +47,7 @@ export default function ThemeToggle() {
             transition={{ duration: 0.2 }}
           >
             <Moon className="w-5 h-5 text-slate-600" />
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
     </motion.button>

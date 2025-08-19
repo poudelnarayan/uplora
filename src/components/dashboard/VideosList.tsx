@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Upload, Play, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -92,7 +94,7 @@ export default function VideosList({
           const isLoadingThumbnail = loadingThumbnails.has(video.id);
           
           return (
-            <motion.div
+            <MotionDiv
               key={video.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -206,7 +208,7 @@ export default function VideosList({
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           );
         })}
       </div>

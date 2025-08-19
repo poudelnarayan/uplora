@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { useSession, signIn } from "next-auth/react";
 import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -131,7 +133,7 @@ export default function InvitePage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <NextSeo title="Team Invitation" noindex nofollow />
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="card max-w-md w-full p-6 rounded-lg"
@@ -213,7 +215,7 @@ export default function InvitePage() {
             </div>
           )}
         </div>
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 }

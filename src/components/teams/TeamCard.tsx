@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { UserPlus } from "lucide-react";
 import TeamMembersList from "./TeamMembersList";
 import TeamInvitationsList from "./TeamInvitationsList";
@@ -75,7 +77,7 @@ export default function TeamCard({
   const isOwner = currentUserEmail.toLowerCase() === (team.ownerEmail || "").toLowerCase();
 
   return (
-    <motion.div 
+    <MotionDiv 
       key={team.id} 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
@@ -159,6 +161,6 @@ export default function TeamCard({
         onCancelInvitation={onCancelInvitation}
         resendingId={resendingId}
       />
-    </motion.div>
+    </MotionDiv>
   );
 }

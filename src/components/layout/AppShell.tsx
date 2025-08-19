@@ -5,6 +5,9 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = motion.div as any;
+const MotionAside = motion.aside as any;
 import {
   Video,
   Upload,
@@ -219,7 +222,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                
                <AnimatePresence>
                  {teamMenuOpen && (
-                   <motion.div
+                   <MotionDiv
                      initial={{ opacity: 1, y: -8, scale: 0.98 }}
                      animate={{ opacity: 1, y: 0, scale: 1 }}
                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -263,7 +266,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                        <div className="max-h-72 overflow-y-auto enhanced-scrollbar">
                          <div className="p-2 space-y-1">
                            {/* Personal Workspace - Always first */}
-                           <motion.button
+                           <MotionDiv
                              initial={{ opacity: 1, x: 0 }}
                              animate={{ opacity: 1, x: 0 }}
                              transition={{ delay: 0, duration: 0.15 }}
@@ -295,7 +298,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                                  </div>
                                )}
                              </div>
-                           </motion.button>
+                           </MotionDiv>
                            
                            {/* Team separator with label */}
                            <div className="flex items-center gap-2 px-3 py-2">
@@ -308,7 +311,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                            
                            {/* Team list with enhanced styling */}
                            {teams.map((t, index) => (
-                             <motion.button
+                             <MotionDiv
                                key={t.id}
                                initial={{ opacity: 1, x: 0 }}
                                animate={{ opacity: 1, x: 0 }}
@@ -341,12 +344,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
                                    </div>
                                  )}
                                </div>
-                             </motion.button>
+                             </MotionDiv>
                            ))}
                            
                            {/* Quick create team action */}
                            <div className="border-t border-border my-2" />
-                           <motion.button
+                           <MotionDiv
                              initial={{ opacity: 1, x: 0 }}
                              animate={{ opacity: 1, x: 0 }}
                              transition={{ delay: (teams.length + 2) * 0.02, duration: 0.15 }}
@@ -383,11 +386,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
                                  <Plus className="w-4 h-4" />
                                </div>
                              </div>
-                           </motion.button>
+                           </MotionDiv>
                          </div>
                        </div>
                      </div>
-                   </motion.div>
+                   </MotionDiv>
                  )}
                </AnimatePresence>
              </div>
@@ -503,14 +506,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <AnimatePresence>
         {mobileNavOpen && (
           <>
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/30 z-50 lg:hidden"
               onClick={() => setMobileNavOpen(false)}
             />
-            <motion.aside
+            <MotionAside
               initial={{ x: -280, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
@@ -544,7 +547,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   );
                 })}
               </nav>
-            </motion.aside>
+            </MotionAside>
           </>
         )}
       </AnimatePresence>

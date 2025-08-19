@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Upload, Users, User, Video, Shield, Zap, CheckCircle } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import UploadZone from "@/components/upload/UploadZone";
@@ -16,7 +18,7 @@ export default function UploadPage() {
       <NextSeoNoSSR title="Upload" noindex nofollow />
       <div className="min-h-full space-y-6">
         {/* Main Upload Section - Prominent */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
@@ -46,10 +48,10 @@ export default function UploadPage() {
           <div className="max-w-4xl mx-auto">
             <UploadZone />
           </div>
-        </motion.div>
+        </MotionDiv>
 
         {/* Quick Benefits - Minimal but Informative */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -69,7 +71,7 @@ export default function UploadPage() {
               <p className="text-sm font-medium text-foreground">Direct to YouTube</p>
             </div>
           </div>
-        </motion.div>
+        </MotionDiv>
       </div>
     </AppShell>
   );

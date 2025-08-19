@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from 'framer-motion';
+
+const MotionDiv = MotionDiv as any;
 import { Users, Video, Eye } from 'lucide-react';
 
 interface Team {
@@ -34,7 +36,7 @@ interface StatsCardsProps {
 
 export default function StatsCards({ teams, analytics }: StatsCardsProps) {
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
@@ -75,6 +77,6 @@ export default function StatsCards({ teams, analytics }: StatsCardsProps) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

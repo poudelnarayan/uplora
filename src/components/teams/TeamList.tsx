@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { Users, Plus, Crown, Shield, Target, Edit3, Mail, Clock, UserCheck } from "lucide-react";
 import TeamCard from "./TeamCard";
 
@@ -75,18 +77,18 @@ export default function TeamList({
 }: TeamListProps) {
   if (loading) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center py-12">
+      <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="spinner-lg mx-auto mb-4" />
           <p className="text-muted-foreground">Loading your teams...</p>
         </div>
-      </motion.div>
+      </MotionDiv>
     );
   }
 
   if (teams.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center py-20">
+      <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center py-20">
         <div className="text-center max-w-md">
           <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-primary/20">
             <Users className="w-12 h-12 text-primary" />
@@ -110,7 +112,7 @@ export default function TeamList({
             Add New Team
           </button>
         </div>
-      </motion.div>
+      </MotionDiv>
     );
   }
 
@@ -122,7 +124,7 @@ export default function TeamList({
         const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
 
         return (
-          <motion.div
+          <MotionDiv
             key={team.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -308,7 +310,7 @@ export default function TeamList({
                 </div>
               </div>
             )}
-          </motion.div>
+          </MotionDiv>
         );
       })}
     </div>

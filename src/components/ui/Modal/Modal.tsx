@@ -1,6 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import styles from "./Modal.module.css";
@@ -36,14 +38,14 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className={styles.backdrop}
             onClick={onClose}
           />
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -60,7 +62,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
             <div className={styles.content}>
               {children}
             </div>
-          </motion.div>
+          </MotionDiv>
         </>
       )}
     </AnimatePresence>

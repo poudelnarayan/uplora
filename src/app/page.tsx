@@ -2,6 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+
+const MotionDiv = motion.div as any;
+const MotionHeader = motion.header as any;
 import { 
   Video, 
   Users, 
@@ -42,7 +45,7 @@ export default function LandingPage() {
       />
       
       {/* Header */}
-      <motion.header
+      <MotionHeader
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 bg-background/80 backdrop-blur-md"
@@ -57,13 +60,13 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </motion.header>
+      </MotionHeader>
 
       {/* Hero Section */}
       <section className="hero-section relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="text-center">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -114,22 +117,22 @@ export default function LandingPage() {
                   <span>Unlimited team members</span>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
 
         {/* Floating Elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
             className="absolute top-20 left-20 w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center border border-red-500/20 animate-float"
           >
             <Youtube className="w-8 h-8 text-red-500" />
-          </motion.div>
+          </MotionDiv>
 
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.7, duration: 0.8 }}
@@ -137,9 +140,9 @@ export default function LandingPage() {
             style={{ animationDelay: '1s' }}
           >
             <Upload className="w-6 h-6 text-primary" />
-          </motion.div>
+          </MotionDiv>
 
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.9, duration: 0.8 }}
@@ -147,7 +150,7 @@ export default function LandingPage() {
             style={{ animationDelay: '2s' }}
           >
             <Users className="w-7 h-7 text-secondary" />
-          </motion.div>
+          </MotionDiv>
         </div>
       </section>
 
@@ -155,7 +158,7 @@ export default function LandingPage() {
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -163,9 +166,9 @@ export default function LandingPage() {
             >
               <div className="text-3xl font-bold text-foreground mb-2">15,000+</div>
               <div className="text-muted-foreground">Videos Published</div>
-            </motion.div>
+            </MotionDiv>
             
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -174,9 +177,9 @@ export default function LandingPage() {
             >
               <div className="text-3xl font-bold text-foreground mb-2">500+</div>
               <div className="text-muted-foreground">Active Teams</div>
-            </motion.div>
+            </MotionDiv>
             
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -185,9 +188,9 @@ export default function LandingPage() {
             >
               <div className="text-3xl font-bold text-foreground mb-2">98%</div>
               <div className="text-muted-foreground">Time Saved</div>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -196,7 +199,7 @@ export default function LandingPage() {
             >
               <div className="text-3xl font-bold text-foreground mb-2">24/7</div>
               <div className="text-muted-foreground">Support</div>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
       </section>
@@ -204,7 +207,7 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -214,10 +217,10 @@ export default function LandingPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               From upload to publish, we've got every step of your YouTube workflow covered.
             </p>
-          </motion.div>
+          </MotionDiv>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -230,9 +233,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Editors upload, managers review, owners approve. Everyone knows their role in the content pipeline.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -246,9 +249,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Direct uploads to YouTube. No more downloading from Drive and re-uploading manually.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -262,9 +265,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Enterprise-grade security with role-based permissions and audit trails for every action.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -278,9 +281,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Work with team members anywhere in the world. Real-time collaboration that just works.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -294,9 +297,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Track your team's performance with detailed analytics and actionable insights.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -310,7 +313,7 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Built-in review process ensures every video meets your standards before going live.
               </p>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
       </section>
@@ -318,7 +321,7 @@ export default function LandingPage() {
       {/* Workflow Section */}
       <section id="workflow" className="py-20 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -328,10 +331,10 @@ export default function LandingPage() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               A simple 3-step process that transforms how your team creates content.
             </p>
-          </motion.div>
+          </MotionDiv>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -345,9 +348,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Team members upload videos directly to your secure workspace. Add metadata, thumbnails, and descriptions.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -362,9 +365,9 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Team leads review content, provide feedback, and approve videos for publishing with one click.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -380,7 +383,7 @@ export default function LandingPage() {
               <p className="text-muted-foreground">
                 Approved videos go straight to YouTube. Track performance and manage your content library.
               </p>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
       </section>
@@ -388,7 +391,7 @@ export default function LandingPage() {
       {/* Social Proof Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -398,10 +401,10 @@ export default function LandingPage() {
             <p className="text-xl text-muted-foreground">
               Join thousands of creators who've streamlined their YouTube workflow
             </p>
-          </motion.div>
+          </MotionDiv>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -424,9 +427,9 @@ export default function LandingPage() {
                   <div className="text-sm text-muted-foreground">Content Director, TechFlow</div>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -450,9 +453,9 @@ export default function LandingPage() {
                   <div className="text-sm text-muted-foreground">YouTube Manager, CreativeHub</div>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -476,7 +479,7 @@ export default function LandingPage() {
                   <div className="text-sm text-muted-foreground">Founder, VideoFirst</div>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
       </section>
@@ -484,7 +487,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary/5 to-secondary/5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -509,7 +512,7 @@ export default function LandingPage() {
                 Talk to our team
               </button>
             </div>
-          </motion.div>
+          </MotionDiv>
         </div>
       </section>
 

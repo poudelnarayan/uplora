@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import SignInForm from "@/components/auth/SignInForm";
 import { Suspense } from "react";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
@@ -14,7 +16,7 @@ export default function SignInPage() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background">
       <NextSeoNoSSR title="Sign in" noindex nofollow />
       <div className="container mx-auto px-4 py-16">
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md mx-auto"
@@ -26,7 +28,7 @@ export default function SignInPage() {
           <Suspense fallback={<div className="spinner" />}>
             <SignInContent />
           </Suspense>
-        </motion.div>
+        </MotionDiv>
       </div>
     </div>
   );

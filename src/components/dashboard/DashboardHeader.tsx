@@ -2,13 +2,15 @@
 
 import { motion } from "framer-motion";
 
+const MotionDiv = MotionDiv as any;
+
 interface DashboardHeaderProps {
   teamName?: string;
 }
 
 export default function DashboardHeader({ teamName }: DashboardHeaderProps) {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+    <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
       <div className="text-center lg:text-left">
         <div>
           <h1 className="heading-2 mb-2">
@@ -22,6 +24,6 @@ export default function DashboardHeader({ teamName }: DashboardHeaderProps) {
           </p>
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

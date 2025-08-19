@@ -12,6 +12,8 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { AlertCircle, Mail, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const MotionDiv = motion.div as any;
+
 interface VideoItem {
   id: string;
   title: string;
@@ -37,7 +39,7 @@ interface VideoItem {
 }
 
 export default function Dashboard() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const notifications = useNotifications();
   const { selectedTeamId, selectedTeam } = useTeam();
   
@@ -164,19 +166,31 @@ export default function Dashboard() {
       const handler = (ev: MessageEvent) => {
         try {
           const evt = JSON.parse(ev.data || '{}');
-          if (evt?.type?.startsWith('video.')) {
+          if (evt?.type === 'user.email.verified' && evt?.userId === session?.user?.id) {
+            // Update session to reflect email verification
+            updateSession();
+            notifications.addNotification({
+              type: "success",
+              title: "Email verified!",
+              message: "Your email has been successfully verified."
+            });
+          } else if (evt?.type?.startsWith('video.')) {
             if (evt.type === 'video.created') {
               // Add new video to list immediately
-              const newVideo = {
+              const newVideo: VideoItem = {
                 id: evt.payload.id,
                 title: evt.payload.title,
-                status: 'PROCESSING',
+                status: 'PROCESSING' as const,
                 uploadedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 thumbnail: '',
                 thumbnailKey: null,
-                userRole: 'OWNER', // New videos are owned by the uploader
-                uploader: { name: session?.user?.name || '', email: session?.user?.email || '' }
+                userRole: 'OWNER' as const,
+                uploader: { 
+                  id: session?.user?.id || '',
+                  name: session?.user?.name || '', 
+                  email: session?.user?.email || '' 
+                }
               };
               setVideos(prev => [newVideo, ...prev]);
               
@@ -332,7 +346,7 @@ export default function Dashboard() {
       {/* Email Verification Banner */}
       <AnimatePresence mode="wait" initial={false}>
         {showEmailBanner && session?.user && !session.user.emailVerified && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -378,7 +392,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
@@ -394,8 +408,8 @@ export default function Dashboard() {
           <VideosList
             videos={videos}
             loading={loading}
-            thumbnailUrls={thumbnailUrls}
-            loadingThumbnails={loadingThumbnails}
+            thumbnailUrls={Object.fromEntries(thumbnailUrls)}
+            loadingThumbnails={Object.fromEntries([...loadingThumbnails].map(id => [id, true]))}
             onChangeVideoStatus={changeVideoStatus}
             onDeleteVideo={deleteVideo}
             processingVideoId={processingVideoId}

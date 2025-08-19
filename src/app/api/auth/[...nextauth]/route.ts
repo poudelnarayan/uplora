@@ -98,13 +98,29 @@ export const authOptions: NextAuthOptions = {
       
       return true;
     },
-    async jwt({ token, account, user }) {
+    async jwt({ token, account, user, trigger }) {
       if (account) {
         token.provider = account.provider;
       }
       if (user) {
         token.emailVerified = user.emailVerified;
       }
+      
+      // Refresh emailVerified status on update triggers (like after email verification)
+      if (trigger === "update" && token.sub) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { emailVerified: true }
+          });
+          if (dbUser) {
+            token.emailVerified = dbUser.emailVerified;
+          }
+        } catch (error) {
+          console.error("Error refreshing user session:", error);
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {

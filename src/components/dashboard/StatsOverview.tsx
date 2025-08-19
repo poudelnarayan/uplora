@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 
 interface VideoItem {
@@ -17,7 +19,7 @@ export default function StatsOverview({ videos }: StatsOverviewProps) {
   const processingCount = videos.filter(v => v.status === "PROCESSING").length;
 
   return (
-    <motion.div 
+    <MotionDiv 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
       transition={{ delay: 0.1 }} 
@@ -58,6 +60,6 @@ export default function StatsOverview({ videos }: StatsOverviewProps) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

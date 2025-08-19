@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/realtime";
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,8 +27,16 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Broadcast email verification event for real-time UI updates
+    broadcast({
+      type: "user.email.verified",
+      userId: user.id,
+      data: { email: user.email, emailVerified: new Date().toISOString() }
+    });
+
     return NextResponse.redirect(new URL(`/verify-email?status=success&email=${encodeURIComponent(user.email)}`, req.url));
   } catch (e) {
+    console.error("Email verification error:", e);
     return NextResponse.redirect(new URL("/verify-email?status=error", req.url));
   }
 }

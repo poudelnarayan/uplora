@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+const MotionDiv = MotionDiv as any;
 import { X } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
 import type { NotificationProps } from "@/components/ui/Notification";
@@ -14,7 +16,7 @@ export default function NotificationItem({ notification }: NotificationItemProps
   const { removeNotification } = useNotifications();
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       className={`${styles.container} group`}
@@ -32,6 +34,6 @@ export default function NotificationItem({ notification }: NotificationItemProps
       >
         <X className="w-3 h-3" />
       </button>
-    </motion.div>
+    </MotionDiv>
   );
 }

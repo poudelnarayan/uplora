@@ -2,6 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
+
+const MotionDiv = MotionDiv as any;
 import Sidebar from './Sidebar';
 
 interface AppLayoutProps {
@@ -14,14 +16,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-card to-background">
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
           <div className="spinner-lg mx-auto mb-4" />
           <p className="text-foreground">Loading your dashboard...</p>
-        </motion.div>
+        </MotionDiv>
       </div>
     );
   }
@@ -29,14 +31,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-card to-background">
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
           <div className="spinner-lg mx-auto mb-4" />
           <p className="text-foreground">Please sign in to continue...</p>
-        </motion.div>
+        </MotionDiv>
       </div>
     );
   }
@@ -49,13 +51,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
         
         {/* Main Content */}
         <main className="flex-1 lg:ml-80 min-h-screen">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-6 lg:p-8"
           >
             {children}
-          </motion.div>
+          </MotionDiv>
         </main>
       </div>
     </div>
