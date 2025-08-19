@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           console.log("Missing credentials");
-          return null;
+          throw new Error("Missing email or password");
         }
 
         try {
@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!user || !user.hashedPassword) {
             console.log("User not found or no password for:", credentials.email);
-            return null;
+            throw new Error("Invalid email or password");
           }
 
           console.log("User found, checking password...");
@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!isPasswordValid) {
             console.log("Invalid password for:", credentials.email);
-            return null;
+            throw new Error("Invalid email or password");
           }
 
           console.log("Authentication successful for:", credentials.email);
@@ -52,7 +52,10 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("Database error during credentials auth:", error);
-          return null;
+          if (error instanceof Error) {
+            throw error;
+          }
+          throw new Error("Authentication failed");
         }
       }
     })

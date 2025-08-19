@@ -7,6 +7,15 @@ export default withAuth(
 
     // If the user is not authenticated and trying to access a protected route
     if (!req.nextauth.token) {
+      // For API routes, return 401 instead of redirecting
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { ok: false, code: "UNAUTHORIZED", message: "Authentication required" },
+          { status: 401 }
+        );
+      }
+      
+      // For pages, redirect to signin
       return NextResponse.redirect(new URL("/signin", req.url));
     }
 
@@ -29,5 +38,9 @@ export const config = {
     "/settings/:path*",
     "/videos/:path*",
     "/subscription/:path*",
+    "/api/teams/:path*",
+    "/api/videos/:path*",
+    "/api/s3/:path*",
+    "/api/events/:path*",
   ],
 };

@@ -2,44 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { registerSchema, createErrorResponse, createSuccessResponse, ErrorCodes, handleZodError } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const rawEmail = typeof body?.email === "string" ? body.email : "";
-    const email = rawEmail.toLowerCase().trim();
-    const name = typeof body?.name === "string" ? body.name.trim() : "";
-    const password = typeof body?.password === "string" ? body.password : "";
-
-    if (!email || !password || !name) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
+    
+    // Validate input using Zod
+    const validationResult = registerSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorResponse = handleZodError(validationResult.error);
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      return NextResponse.json(
-        { message: "Invalid email address" },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { message: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
+    const { email, password, name } = validationResult.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { message: "User already exists" },
+        createErrorResponse(
+          ErrorCodes.DUPLICATE_EMAIL,
+          "An account with this email already exists",
+          { email: "This email is already registered" }
+        ),
         { status: 400 }
       );
     }
@@ -105,19 +94,40 @@ export async function POST(request: NextRequest) {
       })
     }).catch(() => {});
 
-    return NextResponse.json({
-      message: "User created successfully",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
-      redirectUrl: `/verify-email?email=${encodeURIComponent(email)}`
-    });
+    return NextResponse.json(
+      createSuccessResponse({
+        message: "User created successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        redirectUrl: `/verify-email?email=${encodeURIComponent(email)}`
+      })
+    );
   } catch (error) {
     console.error("Registration error:", error);
-    // Prisma and validation-safe error mapping
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json({ message }, { status: 500 });
+    
+    // Handle Prisma errors
+    if (error instanceof Error) {
+      if (error.message.includes("Unique constraint")) {
+        return NextResponse.json(
+          createErrorResponse(
+            ErrorCodes.DUPLICATE_EMAIL,
+            "An account with this email already exists",
+            { email: "This email is already registered" }
+          ),
+          { status: 400 }
+        );
+      }
+    }
+    
+    return NextResponse.json(
+      createErrorResponse(
+        ErrorCodes.INTERNAL_ERROR,
+        "Failed to create account. Please try again."
+      ),
+      { status: 500 }
+    );
   }
 }

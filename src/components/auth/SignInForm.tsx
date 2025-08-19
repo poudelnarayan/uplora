@@ -7,6 +7,8 @@ import { Mail, Lock, Eye, EyeOff, User2, CheckCircle, AlertCircle } from "lucide
 import { useNotifications } from "@/components/ui/Notification";
 import { TextField } from "@/components/ui/TextField";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/fetcher";
+import { loginSchema, registerSchema, handleZodError } from "@/lib/validation";
 
 export default function SignInForm() {
   const notifications = useNotifications();
@@ -27,28 +29,31 @@ export default function SignInForm() {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
-    if (isSignUp) {
-      if (!formData.name.trim()) {
-        newErrors.name = "Name is required";
+    try {
+      if (isSignUp) {
+        const validationResult = registerSchema.safeParse(formData);
+        if (!validationResult.success) {
+          validationResult.error.errors.forEach((err) => {
+            const field = err.path[0] as string;
+            newErrors[field] = err.message;
+          });
+        }
+        
+        // Additional validation for confirm password
+        if (formData.password !== formData.confirmPassword) {
+          newErrors.confirmPassword = "Passwords do not match";
+        }
+      } else {
+        const validationResult = loginSchema.safeParse(formData);
+        if (!validationResult.success) {
+          validationResult.error.errors.forEach((err) => {
+            const field = err.path[0] as string;
+            newErrors[field] = err.message;
+          });
+        }
       }
-      
-      if (formData.password.length < 8) {
-        newErrors.password = "Password must be at least 8 characters";
-      }
-      
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
-    }
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
+    } catch (error) {
+      console.error("Validation error:", error);
     }
 
     setErrors(newErrors);
@@ -67,19 +72,14 @@ export default function SignInForm() {
 
     try {
       if (isSignUp) {
-        const response = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            name: formData.name
-          }),
+        const result = await api.post("/api/auth/register", {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log("Registration result:", result);
+        if (result.ok) {
+          console.log("Registration result:", result.data);
           
           notifications.addNotification({
             type: "success",
@@ -87,10 +87,10 @@ export default function SignInForm() {
             message: "Please check your email for verification link."
           });
           
-          if (result.redirectUrl) {
+          if (result.data.redirectUrl) {
             // Small delay to show the notification
             setTimeout(() => {
-              router.push(result.redirectUrl);
+              router.push(result.data.redirectUrl);
             }, 1000);
           } else {
             setInfo("Account created successfully! Please check your email to verify your account.");
@@ -98,12 +98,17 @@ export default function SignInForm() {
             setFormData({ email: formData.email, password: "", confirmPassword: "", name: "" });
           }
         } else {
-          const errorData = await response.json().catch(() => ({ message: "Registration failed" }));
-          console.error("Registration error:", errorData);
+          console.error("Registration error:", result);
+          
+          // Handle field-specific errors
+          if (result.fieldErrors) {
+            setErrors(result.fieldErrors);
+          }
+          
           notifications.addNotification({ 
             type: "error", 
             title: "Registration failed", 
-            message: errorData.message || "Please try again" 
+            message: result.message || "Please try again" 
           });
         }
       } else {
@@ -117,10 +122,18 @@ export default function SignInForm() {
           console.log("SignIn result:", result);
           
           if (result?.error) {
+            // Map NextAuth errors to user-friendly messages
+            let errorMessage = "Please check your email and password";
+            if (result.error === "CredentialsSignin") {
+              errorMessage = "Invalid email or password";
+            } else if (result.error === "Missing email or password") {
+              errorMessage = "Please enter both email and password";
+            }
+            
             notifications.addNotification({ 
               type: "error", 
-              title: "Invalid credentials", 
-              message: "Please check your email and password" 
+              title: "Sign in failed", 
+              message: errorMessage
             });
           } else if (result?.ok) {
             router.push("/dashboard");

@@ -33,7 +33,8 @@
     "react-dom": "18.2.0",
     "react-hot-toast": "^2.5.2",
     "react-intersection-observer": "^9.16.0",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
