@@ -79,19 +79,21 @@ export default function SignInForm() {
 
         if (response.ok) {
           const result = await response.json();
+          notifications.addNotification({
+            type: "success",
+            title: "Account Created!",
+            message: "Please check your email for verification link."
+          });
+          
           if (result.redirectUrl) {
-            router.push(result.redirectUrl);
+            // Small delay to show the notification
+            setTimeout(() => {
+              router.push(result.redirectUrl);
+            }, 1000);
           } else {
             setInfo("Account created successfully! Please check your email to verify your account.");
             setIsSignUp(false);
             setFormData({ email: formData.email, password: "", confirmPassword: "", name: "" });
-            notifications.addNotification({
-              type: "success",
-              title: "Account Created!",
-              message: result.method === "development" 
-                ? "Check your terminal/console for the verification link (development mode)"
-                : "Please check your email for verification link."
-            });
           }
         } else {
           const error = await response.json();
@@ -105,7 +107,8 @@ export default function SignInForm() {
         const result = await signIn("credentials", { 
           email: formData.email, 
           password: formData.password, 
-          redirect: false 
+          redirect: false,
+          callbackUrl: "/dashboard"
         });
         
         if (result?.error) {
@@ -114,15 +117,23 @@ export default function SignInForm() {
             title: "Invalid credentials", 
             message: "Please check your email and password" 
           });
-        } else {
+        } else if (result?.ok) {
           router.push("/dashboard");
+        } else {
+          // Handle unexpected response
+          notifications.addNotification({ 
+            type: "error", 
+            title: "Authentication failed", 
+            message: "Please try again" 
+          });
         }
       }
-    } catch {
+    } catch (error) {
+      console.error("Authentication error:", error);
       notifications.addNotification({ 
         type: "error", 
         title: "Something went wrong", 
-        message: "Please try again later" 
+        message: "Please check your connection and try again" 
       });
     } finally {
       setLoading(false);
