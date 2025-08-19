@@ -19,14 +19,18 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          console.log("Attempting to authenticate:", credentials.email);
+          
           const user = await prisma.user.findUnique({
             where: { email: credentials.email.toLowerCase() }
           });
 
           if (!user || !user.hashedPassword) {
-            console.log("User not found or no password");
+            console.log("User not found or no password for:", credentials.email);
             return null;
           }
+
+          console.log("User found, checking password...");
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
@@ -34,9 +38,11 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
-            console.log("Invalid password");
+            console.log("Invalid password for:", credentials.email);
             return null;
           }
+
+          console.log("Authentication successful for:", credentials.email);
 
           return {
             id: user.id,
