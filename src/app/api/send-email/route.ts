@@ -7,6 +7,17 @@ export async function POST(request: NextRequest) {
 
     // Check if we have email credentials
     const hasCredentials = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+    
+    console.log("📧 Send email request:", {
+      to,
+      subject,
+      hasCredentials,
+      smtpHost: process.env.SMTP_HOST,
+      smtpPort: process.env.SMTP_PORT,
+      smtpSecure: process.env.SMTP_SECURE,
+      smtpUser: process.env.SMTP_USER ? process.env.SMTP_USER.replace(/(.{2}).+(@.+)/, '$1***$2') : 'Not set',
+      smtpFrom: process.env.SMTP_FROM
+    });
 
     if (hasCredentials) {
       try {
@@ -20,16 +31,26 @@ export async function POST(request: NextRequest) {
         console.log("✅ Email sent successfully:", {
           to,
           subject,
-          messageId: info.messageId
+          messageId: info.messageId,
+          accepted: (info as any)?.accepted,
+          rejected: (info as any)?.rejected
         });
 
         return NextResponse.json({
           success: true,
           messageId: info.messageId,
-          method: "email"
+          method: "email",
+          accepted: (info as any)?.accepted,
+          rejected: (info as any)?.rejected
         });
       } catch (emailError) {
-        console.error("❌ Email sending failed, falling back to manual mode:", emailError);
+        console.error("❌ Email sending failed:", emailError);
+        
+        return NextResponse.json({
+          success: false,
+          error: emailError instanceof Error ? emailError.message : "Email sending failed",
+          method: "email_failed"
+        }, { status: 500 });
       }
     }
 

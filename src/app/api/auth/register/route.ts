@@ -77,22 +77,39 @@ export async function POST(request: NextRequest) {
     const verifyUrl = `${base.replace(/\/$/, "")}/api/auth/verify?token=${token}`;
 
     // Send verification email via existing send-email endpoint
-    await fetch(`${base.replace(/\/$/, "")}/api/send-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: email,
-        subject: "Verify your Uplora account",
-        text: `Welcome to Uplora!\n\nPlease verify your email by clicking the link below:\n${verifyUrl}\n\nThis link expires in 24 hours.`,
-        html: `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
-          <h2>Verify your email</h2>
-          <p>Thanks for creating an account on <strong>Uplora</strong>. Click the button below to verify your email address.</p>
-          <p><a href="${verifyUrl}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;">Verify Email</a></p>
-          <p style="color:#64748b;font-size:13px;">If the button doesn't work, copy and paste this URL into your browser:</p>
-          <p style="color:#64748b;font-size:13px;word-break:break-all;">${verifyUrl}</p>
-        </body></html>`
-      })
-    }).catch(() => {});
+    try {
+      const emailResponse = await fetch(`${base.replace(/\/$/, "")}/api/send-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email,
+          subject: "Verify your Uplora account",
+          text: `Welcome to Uplora!\n\nPlease verify your email by clicking the link below:\n${verifyUrl}\n\nThis link expires in 24 hours.`,
+          html: `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+            <h2>Verify your email</h2>
+            <p>Thanks for creating an account on <strong>Uplora</strong>. Click the button below to verify your email address.</p>
+            <p><a href="${verifyUrl}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;">Verify Email</a></p>
+            <p style="color:#64748b;font-size:13px;">If the button doesn't work, copy and paste this URL into your browser:</p>
+            <p style="color:#64748b;font-size:13px;word-break:break-all;">${verifyUrl}</p>
+          </body></html>`
+        })
+      });
+      
+      const emailResult = await emailResponse.json();
+      console.log("📧 Registration email response:", {
+        status: emailResponse.status,
+        result: emailResult,
+        to: email
+      });
+      
+      if (!emailResponse.ok) {
+        console.error("❌ Failed to send registration email:", emailResult);
+      } else {
+        console.log("✅ Registration verification email sent successfully to:", email);
+      }
+    } catch (emailError) {
+      console.error("❌ Registration email error:", emailError);
+    }
 
     return NextResponse.json(
       createSuccessResponse({
