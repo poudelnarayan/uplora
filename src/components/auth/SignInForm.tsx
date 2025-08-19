@@ -104,8 +104,7 @@ export default function SignInForm() {
             type: "error", 
             title: "Registration failed", 
             message: errorData.message || "Please try again" 
-                    });
-        }
+          });
         }
       } else {
         try {
