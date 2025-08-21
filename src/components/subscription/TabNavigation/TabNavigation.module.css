@@ -1,0 +1,36 @@
+.navigation {
+  margin-bottom: 2rem;
+}
+
+.border {
+  border-bottom: 1px solid var(--color-light);
+}
+
+.nav {
+  display: flex;
+  gap: 2rem;
+}
+
+.button {
+  padding: 1rem 0.25rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-dark-secondary);
+}
+
+.active {
+  border-bottom-color: var(--color-teal);
+  color: var(--color-teal);
+  font-weight: 600;
+}
+
+.inactive:hover {
+  color: var(--color-brand-dark);
+  border-bottom-color: var(--color-light);
+}

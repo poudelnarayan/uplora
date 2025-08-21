@@ -1,0 +1,84 @@
+.container {
+  display: flex;
+  justify-content: center;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.25rem;
+  background-color: var(--color-light);
+  border-radius: 8px;
+}
+
+.toggleButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: var(--color-dark-secondary);
+}
+
+.toggleActive {
+  background-color: var(--color-teal);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 173, 181, 0.2);
+}
+
+.toggleInactive:hover {
+  color: var(--color-brand-dark);
+}
+
+.discountBadge {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  background-color: #FF5722;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.freeTrialIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.freeTrialText {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+}
+
+.toggleSwitch {
+  width: 2rem;
+  height: 1rem;
+  background-color: var(--color-teal);
+  border-radius: 12px;
+  position: relative;
+}
+
+.toggleSwitchActive {
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}

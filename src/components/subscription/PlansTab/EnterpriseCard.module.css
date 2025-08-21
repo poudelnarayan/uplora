@@ -1,0 +1,97 @@
+.card {
+  background: linear-gradient(135deg, rgba(57, 62, 70, 0.05), rgba(0, 173, 181, 0.05));
+  border: 1px solid var(--color-teal);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.content {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.icon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, var(--color-dark-secondary), var(--color-dark));
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.crownIcon {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  margin-bottom: 1rem;
+}
+
+.description {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btnPrimary {
+  background-color: var(--color-dark);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background-color: #1A1F26;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 40, 49, 0.25);
+}
+
+.btnOutline {
+  background-color: transparent;
+  color: var(--color-brand-dark);
+  border: 1px solid var(--color-light);
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnOutline:hover {
+  background-color: var(--color-light);
+  border-color: var(--color-dark-secondary);
+}
+
+@media (min-width: 640px) {
+  .actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}

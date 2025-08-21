@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&display=swap");
 
 /* Modern Design System - Professional Blue-Slate */
 :root {
@@ -28,6 +29,17 @@
   --input: 255 255 255;
   --ring: 59 130 246; /* Blue 500 - Focus states */
   --radius: 12px;
+  
+  /* Subscription Page Color Palette */
+  --color-dark: #222831;           /* Primary dark */
+  --color-dark-secondary: #393E46; /* Secondary dark */
+  --color-teal: #00ADB5;          /* Accent teal */
+  --color-light: #EEEEEE;         /* Light gray */
+  --color-background: #FEFEFB;     /* Soft background */
+  --color-brand-dark: #213130;    /* Dark text */
+  --color-success: #4CAF50;       /* Success green */
+  --color-warning: #FF9800;       /* Warning orange */
+  --color-error: #F44336;         /* Error red */
 }
 
 [data-theme="dark"] {
@@ -55,6 +67,10 @@
   --border: 51 65 85; /* Slate 600 - Visible but subtle */
   --input: 51 65 85;
   --ring: 96 165 250; /* Blue 400 - Focus states */
+  
+  /* Dark theme overrides for subscription colors */
+  --color-background: rgb(var(--background));
+  --color-brand-dark: rgb(var(--foreground));
 }
 
 * {
@@ -72,6 +88,23 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
   line-height: 1.6;
   font-weight: 400;
+}
+
+/* Google Sans Typography Classes */
+.font-google-sans {
+  font-family: "Google Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.text-brand-dark {
+  color: var(--color-brand-dark);
+}
+
+.text-dark-secondary {
+  color: var(--color-dark-secondary);
+}
+
+.bg-soft {
+  background-color: var(--color-background);
 }
 
 html {

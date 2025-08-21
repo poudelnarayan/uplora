@@ -1,0 +1,53 @@
+.container {
+  margin-bottom: 2rem;
+}
+
+.content {
+  display: flex;
+  items-center: space-between;
+  align-items: center;
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+}
+
+.icon {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, rgba(0, 173, 181, 0.1), rgba(0, 173, 181, 0.2));
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconSvg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-teal);
+}
+
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+}
