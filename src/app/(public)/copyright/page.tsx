@@ -4,11 +4,10 @@ import PublicLayout from "@/components/layout/PublicLayout";
 
 export default function CopyrightPage() {
   return (
-    <PublicLayout title="Copyright">
+    <PublicLayout title="Copyright Policy">
       <div className="min-h-[calc(100vh-16rem)] flex flex-col space-y-8">
         {/* Header Section */}
         <div className="text-center space-y-4 py-8">
-          <h1 className="text-4xl font-bold text-foreground">Copyright Policy</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Understanding your rights and responsibilities when using Uplora's video collaboration platform.
           </p>

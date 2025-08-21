@@ -1,8 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@clerk/nextjs/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
@@ -12,8 +11,8 @@ const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    const { userId } = auth();
+    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
     const { filename, contentType, sizeBytes, teamId, videoId } = await req.json();
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
     // Ensure user exists
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Enforce thumbnails only under team videos

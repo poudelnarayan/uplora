@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const MotionDiv = motion.div as any;
-import { useSession, signIn } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { NextSeo } from "next-seo";
@@ -28,7 +28,7 @@ interface Invitation {
 export default function InvitePage() {
   const params = useParams();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useUser();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);

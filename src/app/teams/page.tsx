@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import AppShell from "@/components/layout/AppShell";
 import { useNotifications } from "@/components/ui/Notification";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
@@ -46,7 +46,7 @@ interface Team {
 }
 
 export default function TeamsPage() {
-  const { data: session } = useSession();
+  const { user } = useUser();
   const notifications = useNotifications();
   
   // State management
@@ -143,7 +143,7 @@ export default function TeamsPage() {
                   role: inv.role,
                   status: (inv.status || "PENDING").toLowerCase(),
                   invitedAt: new Date(inv.createdAt || inv.invitedAt || Date.now()),
-                  invitedBy: session?.user?.name || "",
+                  invitedBy: user?.fullName || user?.firstName || "",
                 })),
                 createdAt: details.team.createdAt ? new Date(details.team.createdAt) : new Date(),
                 ownerEmail: ownerUser?.email || "",
@@ -175,10 +175,10 @@ export default function TeamsPage() {
   };
 
   useEffect(() => {
-    if (session) {
+    if (user) {
       loadTeams();
     }
-  }, [session?.user?.name, session?.user?.email]);
+  }, [user?.fullName, user?.emailAddresses?.[0]?.emailAddress]);
 
   // Realtime: auto-refresh teams on team events
   useEffect(() => {
@@ -258,7 +258,6 @@ export default function TeamsPage() {
         return;
       }
       notifications.addNotification({ type: "success", title: "Team created!" });
-      setShowCreateTeam(false);
       await loadTeams();
     } catch (e) {
       notifications.addNotification({ 
@@ -573,13 +572,15 @@ export default function TeamsPage() {
   // Calculate stats
   const totalMembers = actualTeams.reduce((sum, team) => sum + team.members.length, 0);
   const ownedTeams = actualTeams.filter(team => 
-    team.ownerEmail?.toLowerCase() === session?.user?.email?.toLowerCase()
+    team.ownerEmail?.toLowerCase() === (user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase()
   ).length;
   const pendingInvitations = actualTeams.reduce((sum, team) => 
     sum + team.invitations.filter(inv => inv.status === "pending").length, 0
   );
 
   return (
+    <>
+    <SignedIn>
     <AppShell>
       <div className="min-h-full space-y-6">
         {/* Conditional Header Based on Team Count */}
@@ -647,7 +648,7 @@ export default function TeamsPage() {
             onSaveRename={handleSaveRename}
             onCancelRename={() => setRenamingTeamId(null)}
             resendingId={resendingId}
-            currentUserEmail={session?.user?.email || ""}
+            currentUserEmail={user?.emailAddresses?.[0]?.emailAddress || ""}
           />
         </MotionDiv>
 
@@ -683,5 +684,10 @@ export default function TeamsPage() {
         />
       </div>
     </AppShell>
+    </SignedIn>
+    <SignedOut>
+      <RedirectToSignIn redirectUrl="/teams" />
+    </SignedOut>
+    </>
   );
 }

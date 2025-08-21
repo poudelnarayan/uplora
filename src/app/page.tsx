@@ -2,6 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { 
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton 
+} from '@clerk/nextjs';
 
 const MotionDiv = motion.div as any;
 const MotionHeader = motion.header as any;
@@ -51,12 +58,33 @@ export default function LandingPage() {
         className="relative z-10 bg-background/80 backdrop-blur-md"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-16">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <Video className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold font-display text-foreground">Uplora</span>
+            </div>
+            
+            {/* Clerk Authentication Buttons */}
+            <div className="flex items-center gap-4">
+              <SignedOut>
+                <a href="/sign-in" className="btn btn-ghost text-sm">Sign In</a>
+                <a href="/sign-up" className="btn btn-primary text-sm">Sign Up</a>
+              </SignedOut>
+              <SignedIn>
+                <UserButton 
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8",
+                      userButtonPopoverCard: "bg-card border border-border shadow-lg",
+                      userButtonPopoverActionButton: "text-foreground hover:bg-muted",
+                      userButtonPopoverActionButtonText: "text-foreground"
+                    }
+                  }}
+                  afterSignOutUrl="/"
+                />
+              </SignedIn>
             </div>
           </div>
         </div>
@@ -87,13 +115,21 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                <button 
-                  onClick={() => router.push("/signin")}
-                  className="btn btn-primary btn-lg"
-                >
-                  Start your free trial
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </button>
+                <SignedOut>
+                  <a href="/sign-up" className="btn btn-primary btn-lg">
+                    Start your free trial
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </a>
+                </SignedOut>
+                <SignedIn>
+                  <button 
+                    onClick={() => router.push("/dashboard")}
+                    className="btn btn-primary btn-lg"
+                  >
+                    Go to Dashboard
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </button>
+                </SignedIn>
                 <button 
                   onClick={() => router.push("/about")}
                   className="btn btn-secondary btn-lg"
@@ -497,13 +533,21 @@ export default function LandingPage() {
               Join thousands of content creators who've already transformed their team collaboration.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
-                onClick={() => router.push("/signin")}
-                className="btn btn-primary btn-lg"
-              >
-                Start your free trial
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </button>
+              <SignedOut>
+                <a href="/sign-up" className="btn btn-primary btn-lg">
+                  Start your free trial
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </a>
+              </SignedOut>
+              <SignedIn>
+                <button 
+                  onClick={() => router.push("/dashboard")}
+                  className="btn btn-primary btn-lg"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </button>
+              </SignedIn>
               <button 
                 onClick={() => router.push("/contact")}
                 className="btn btn-secondary btn-lg"

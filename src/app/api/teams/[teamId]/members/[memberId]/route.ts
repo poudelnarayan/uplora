@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { broadcast } from "@/lib/realtime";
 
@@ -11,11 +11,11 @@ export async function PATCH(
   try {
     const params = await context.params;
     const session = await getServerSession();
-    if (!session?.user?.email) {
+    if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const currentUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const team = await prisma.team.findUnique({ where: { id: params.teamId } });
@@ -69,11 +69,11 @@ export async function DELETE(
   try {
     const params = await context.params;
     const session = await getServerSession();
-    if (!session?.user?.email) {
+    if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const currentUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const team = await prisma.team.findUnique({ where: { id: params.teamId } });

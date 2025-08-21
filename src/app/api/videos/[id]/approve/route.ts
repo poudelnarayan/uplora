@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@clerk/nextjs/server";
+
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { publishApprovedTemplate } from "@/lib/emailTemplates";
@@ -17,8 +17,8 @@ export async function POST(
 ) {
   try {
     const params = await context.params;
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    const { userId } = auth();
+    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
     // Get request body for YouTube upload metadata (optional)
     const bodyData = await req.json().catch(() => ({}));
@@ -39,7 +39,7 @@ export async function POST(
     });
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
-    const me = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const me = await prisma.user.findUnique({ where: { id: userId } });
     if (!me) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Ensure current user is the team owner (if teamId set) or the video owner
@@ -61,7 +61,7 @@ export async function POST(
     try {
       // Get user's YouTube credentials
       const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
+        where: { id: userId },
         select: { youtubeAccessToken: true, youtubeRefreshToken: true }
       });
 

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { broadcast } from "@/lib/realtime";
-import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/validation";
-import { teamCreateSchema, handleZodError } from "@/lib/validation";
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
         { status: 401 }
@@ -17,19 +16,25 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     
-    // Validate input using Zod
-    const validationResult = teamCreateSchema.safeParse(body);
-    if (!validationResult.success) {
-      const errorResponse = handleZodError(validationResult.error);
-      return NextResponse.json(errorResponse, { status: 400 });
+    // Basic validation
+    const { name, description } = body;
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Team name is required"),
+        { status: 400 }
+      );
     }
 
-    const { name, description } = validationResult.data;
-
+    // For now, we'll use the Clerk userId as our user ID
+    // Later we can implement a proper user sync system
     const currentUser = await prisma.user.upsert({
-      where: { email: session.user.email },
+      where: { id: userId },
       update: {},
-      create: { email: session.user.email, name: session.user.name || "", image: session.user.image || "" },
+      create: { 
+        id: userId,
+        email: "", // We'll get this from Clerk webhook later
+        name: "" // We'll get this from Clerk webhook later
+      },
     });
 
     // Check for duplicate team names for this user (optional validation)
@@ -87,18 +92,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
         { status: 401 }
       );
     }
 
+    // Ensure a User row exists keyed by Clerk userId
     const user = await prisma.user.upsert({
-      where: { email: session.user.email },
+      where: { id: userId },
       update: {},
-      create: { email: session.user.email, name: session.user.name || "", image: session.user.image || "" },
+      create: { id: userId, email: "", name: "" },
     });
 
     // Ensure user has personal workspace
@@ -110,7 +116,7 @@ export async function GET(request: NextRequest) {
       // Create personal workspace if missing
       personalTeam = await prisma.team.create({
         data: {
-          name: `${user.name || 'Personal'}'s Workspace`,
+          name: `Personal Workspace`,
           description: 'Your personal video workspace',
           ownerId: user.id,
           isPersonal: true

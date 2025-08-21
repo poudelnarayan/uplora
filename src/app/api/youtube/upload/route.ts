@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-import { getToken } from "next-auth/jwt";
+import { auth } from "@clerk/nextjs/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
 import { prisma } from "@/lib/prisma";

@@ -12,9 +12,9 @@ export async function GET() {
     // Test if we can create a test user (then delete it)
     const testUser = await prisma.user.create({
       data: {
+        id: `test-${Date.now()}`,
         email: `test-${Date.now()}@example.com`,
         name: "Test User",
-        emailVerified: new Date(),
       }
     });
     

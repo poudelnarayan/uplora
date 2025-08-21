@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@clerk/nextjs/server";
 import { sendMail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
+    const { userId } = auth();
     const { message, category, includeEmail, path, teamId, teamName, type, title, priority } = await req.json();
 
     if (!message || typeof message !== "string" || message.trim().length < 3) {

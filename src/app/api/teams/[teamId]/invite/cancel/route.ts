@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { broadcast } from "@/lib/realtime";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 
 export const runtime = "nodejs";
 
@@ -12,8 +12,8 @@ export async function POST(
 ) {
   try {
     const params = await context.params;
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
@@ -22,7 +22,7 @@ export async function POST(
       return NextResponse.json({ error: "Invitation id or email required" }, { status: 400 });
     }
 
-    const currentUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Ensure current user is team owner or admin/manager

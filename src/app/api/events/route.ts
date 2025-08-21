@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { addSubscriber, removeSubscriber } from "@/lib/realtime";
-import { createErrorResponse, ErrorCodes } from "@/lib/validation";
+import { createErrorResponse, ErrorCodes } from "@/lib/api-utils";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes max duration

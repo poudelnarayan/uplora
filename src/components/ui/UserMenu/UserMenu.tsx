@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MotionDiv = motion.div as any;
 import { Settings, Heart, LogOut, X } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import styles from "./UserMenu.module.css";
 
@@ -14,7 +14,8 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
-  const { data: session } = useSession();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -30,18 +31,24 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
 
   return (
     <div className={styles.container} ref={menuRef}>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={styles.trigger}
       >
-        <div className={styles.avatar}>
-          <span className={styles.avatarText}>
-            {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
-          </span>
-        </div>
-      </motion.button>
+        {user?.imageUrl ? (
+          <img 
+            src={user.imageUrl} 
+            alt={user?.firstName || "User"} 
+            className="w-20 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+          />
+        ) : (
+          <div className={styles.avatar}>
+            <span className={styles.avatarText}>
+              {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || "U"}
+            </span>
+          </div>
+        )}
+      </button>
 
       <AnimatePresence>
         {isOpen && (
@@ -52,14 +59,28 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
             className={styles.dropdown}
           >
             <div className={styles.userInfo}>
-              <div className={styles.userAvatar}>
-                <span className={styles.userAvatarText}>
-                  {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
-                </span>
-              </div>
+              {user?.imageUrl ? (
+                <img 
+                  src={user.imageUrl} 
+                  alt={user?.firstName || "User"} 
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                />
+              ) : (
+                <div className={styles.userAvatar}>
+                  <span className={styles.userAvatarText}>
+                    {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || "U"}
+                  </span>
+                </div>
+              )}
               <div className={styles.userDetails}>
-                <div className={styles.userName}>{session?.user?.name}</div>
-                <div className={styles.userEmail}>{session?.user?.email}</div>
+                <div className={styles.userName}>
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}` 
+                    : user?.firstName || user?.emailAddresses?.[0]?.emailAddress}
+                </div>
+                <div className={styles.userEmail}>
+                  {user?.emailAddresses?.[0]?.emailAddress}
+                </div>
               </div>
             </div>
             
@@ -87,7 +108,7 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
               <div className={styles.divider} />
               
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ redirectUrl: "/" })}
                 className={styles.signOutButton}
               >
                 <LogOut className="w-4 h-4" />

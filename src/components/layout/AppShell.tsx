@@ -37,6 +37,7 @@ const routes = [
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/subscription", label: "Subscription", icon: CreditCard },
+  { href: "/social", label: "Social", icon: Plus },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

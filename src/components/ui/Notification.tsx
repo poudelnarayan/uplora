@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MotionDiv = motion.div as any;
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 
 export interface NotificationProps {
@@ -41,7 +41,7 @@ export function useNotifications() {
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { user } = useUser();
 
   const addNotification = useCallback((notification: Omit<NotificationProps, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -107,7 +107,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
 function NotificationContainer() {
   const { notifications, removeNotification } = useNotifications();
-  const { data: session } = useSession();
+  const { user } = useUser();
   // Avoid hydration mismatch by rendering after mount
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import AppShell from "@/components/layout/AppShell";
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
@@ -39,7 +40,7 @@ interface VideoItem {
 }
 
 export default function Dashboard() {
-  const { data: session, update: updateSession } = useSession();
+  const { user, isLoaded } = useUser();
   const notifications = useNotifications();
   const { selectedTeamId, selectedTeam } = useTeam();
   
@@ -54,48 +55,20 @@ export default function Dashboard() {
   const [showEmailBanner, setShowEmailBanner] = useState(true);
   const [resendingEmail, setResendingEmail] = useState(false);
 
-  // Function to resend verification email
+  // Function to resend verification email (simplified for Clerk)
   const handleResendVerification = async () => {
-    if (!session?.user?.email) return;
+    if (!user?.emailAddresses?.[0]) return;
     
     setResendingEmail(true);
     try {
-      const response = await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: session.user.email }),
+      // Use Clerk's built-in email verification
+      await user.emailAddresses[0].prepareVerification({ strategy: "email_code" });
+      
+      notifications.addNotification({
+        type: "success",
+        title: "Verification email sent!",
+        message: "Please check your inbox for the verification link."
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        notifications.addNotification({
-          type: "success",
-          title: "Verification email sent!",
-          message: "Please check your inbox for the verification link."
-        });
-      } else if (response.status === 400 && result.message === "Email is already verified") {
-        // Email is already verified in database but session is stale
-        notifications.addNotification({
-          type: "info",
-          title: "Email Already Verified",
-          message: "Your email is already verified. Refreshing your session..."
-        });
-        
-        // Force session refresh
-        await updateSession();
-        
-        // Hide the banner after a brief delay
-        setTimeout(() => {
-          setShowEmailBanner(false);
-        }, 2000);
-      } else {
-        notifications.addNotification({
-          type: "error",
-          title: "Failed to resend email",
-          message: result.message || "Please try again later."
-        });
-      }
     } catch (error) {
       console.error("Resend verification error:", error);
       notifications.addNotification({
@@ -174,45 +147,12 @@ export default function Dashboard() {
     fetchVideos();
   }, [fetchVideos]);
 
-  // Check for stale session on mount and refresh if needed
+  // Check if email is verified with Clerk
   useEffect(() => {
-    const checkSessionFreshness = async () => {
-      if (!session?.user?.email || session.user.emailVerified) {
-        return; // No need to check if already verified or not logged in
-      }
-
-      try {
-        // Check if email is actually verified in database
-        const response = await fetch("/api/debug/refresh-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.needsRefresh) {
-            console.log("🔄 Detected stale session, refreshing...");
-            
-            // Update the session to get fresh data
-            await updateSession();
-            
-            notifications.addNotification({
-              type: "success",
-              title: "Session Updated",
-              message: "Your email verification status has been refreshed."
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Session freshness check failed:", error);
-      }
-    };
-
-    // Run the check after a short delay to ensure session is loaded
-    const timer = setTimeout(checkSessionFreshness, 1000);
-    return () => clearTimeout(timer);
-  }, [session?.user?.email, updateSession, notifications]);
+    if (user?.emailAddresses?.[0]?.verification?.status === "verified") {
+      setShowEmailBanner(false);
+    }
+  }, [user]);
 
   // Realtime: auto-refresh list on video events
   useEffect(() => {
@@ -223,9 +163,9 @@ export default function Dashboard() {
       const handler = (ev: MessageEvent) => {
         try {
           const evt = JSON.parse(ev.data || '{}');
-          if (evt?.type === 'user.email.verified' && evt?.userId === session?.user?.id) {
-            // Update session to reflect email verification
-            updateSession();
+          if (evt?.type === 'user.email.verified' && evt?.userId === user?.id) {
+            // Hide email verification banner
+            setShowEmailBanner(false);
             notifications.addNotification({
               type: "success",
               title: "Email verified!",
@@ -244,9 +184,9 @@ export default function Dashboard() {
                 thumbnailKey: null,
                 userRole: 'OWNER' as const,
                 uploader: { 
-                  id: session?.user?.id || '',
-                  name: session?.user?.name || '', 
-                  email: session?.user?.email || '' 
+                  id: user?.id || '',
+                  name: user?.fullName || user?.firstName || '', 
+                  email: user?.emailAddresses?.[0]?.emailAddress || '' 
                 }
               };
               setVideos(prev => [newVideo, ...prev]);
@@ -299,7 +239,7 @@ export default function Dashboard() {
       es.onerror = () => { try { es?.close(); } catch {}; es = null; };
     } catch {}
     return () => { try { es?.close(); } catch {} };
-  }, [selectedTeamId, session?.user?.name, session?.user?.email, notifications]);
+  }, [selectedTeamId, user?.fullName, user?.emailAddresses?.[0]?.emailAddress, notifications]);
 
   const changeVideoStatus = async (videoId: string, newStatus: string) => {
     // Prevent multiple clicks
@@ -399,10 +339,12 @@ export default function Dashboard() {
   };
 
   return (
+    <>
+    <SignedIn>
     <AppShell>
       {/* Email Verification Banner */}
       <AnimatePresence mode="wait" initial={false}>
-        {showEmailBanner && session?.user && !session.user.emailVerified && (
+        {showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified" && (
           <MotionDiv
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -490,5 +432,10 @@ export default function Dashboard() {
         </div>
       </div>
     </AppShell>
+    </SignedIn>
+    <SignedOut>
+      <RedirectToSignIn redirectUrl="/dashboard" />
+      </SignedOut>
+      </>
   );
 }

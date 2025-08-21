@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@clerk/nextjs/server";
+
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { publishRequestTemplate } from "@/lib/emailTemplates";
@@ -12,8 +12,8 @@ export async function POST(
 ) {
   try {
     const params = await context.params;
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    const { userId } = auth();
+    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
     // Get video with team and user info
     const video = await prisma.video.findUnique({ 
@@ -30,7 +30,7 @@ export async function POST(
     });
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
-    const me = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const me = await prisma.user.findUnique({ where: { id: userId } });
     if (!me) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Personal videos don't need approval workflow

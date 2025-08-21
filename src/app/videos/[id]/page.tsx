@@ -3,7 +3,7 @@
 import AppShell from "@/components/layout/AppShell";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -40,7 +40,7 @@ interface Video {
 export default function VideoPreviewPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useUser();
   const notifications = useNotifications();
   const { teams } = useTeam();
   const [video, setVideo] = useState<Video | null>(null);

@@ -1,15 +1,14 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { broadcast } from "@/lib/realtime";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: "Auth required" }, { status: 401 });
     }
 
@@ -20,12 +19,12 @@ export async function POST(req: NextRequest) {
 
     // Ensure user exists
     const user = await prisma.user.upsert({
-      where: { email: session.user.email },
+      where: { id: userId },
       update: {},
       create: { 
-        email: session.user.email, 
-        name: session.user.name || "", 
-        image: session.user.image || "" 
+        id: userId, 
+        email: "", 
+        name: "" 
       },
     });
 

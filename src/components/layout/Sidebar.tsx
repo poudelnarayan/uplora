@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 
 // Type assertion to fix Framer Motion typing issues
@@ -87,7 +87,8 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar() {
-  const { data: session } = useSession();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const pathname = usePathname();
   const notifications = useNotifications();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -99,7 +100,7 @@ export default function Sidebar() {
   useEffect(() => {
     let cancelled = false;
     const checkAdminStatus = async () => {
-      if (!session?.user?.email) return;
+      if (!user?.emailAddresses?.[0]?.emailAddress) return;
       try {
         const response = await fetch("/api/admin/check", { cache: "no-store" });
         if (!cancelled && response.ok) {
@@ -112,7 +113,7 @@ export default function Sidebar() {
     };
     checkAdminStatus();
     return () => { cancelled = true; };
-  }, [!!session?.user?.email]);
+  }, [!!user?.emailAddresses?.[0]?.emailAddress]);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -124,7 +125,7 @@ export default function Sidebar() {
 
   const handleSignOut = () => {
     notifications.addNotification({ type: "info", title: "Signing out...", message: "See you next time!" });
-    setTimeout(() => signOut(), 1000);
+    setTimeout(() => signOut({ redirectUrl: '/' }), 500);
   };
 
   const isActive = (href: string) => {
@@ -248,12 +249,12 @@ export default function Sidebar() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <span className="text-sm font-medium text-white">
-                  {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
+                  {user?.fullName?.[0] || user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || "U"}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{session?.user?.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{session?.user?.email}</p>
+                <p className="text-sm font-medium truncate">{user?.fullName || user?.firstName}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress}</p>
               </div>
               <div className="flex items-center gap-1">
                 <Crown className="w-4 h-4 text-yellow-500" />
