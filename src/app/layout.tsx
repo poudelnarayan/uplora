@@ -64,34 +64,3 @@ export default function RootLayout({
     </ClerkProvider>
   );
 }
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('uplora-theme');
-                  if (theme && theme !== 'dark') {
-                    document.documentElement.setAttribute('data-theme', theme);
-                  }
-                } catch (e) {
-                  // Keep default dark theme if localStorage fails
-                }
-              })();
-            `,
-          }}
-        />
-      </head>
-      <body>
-        <ClerkProvider>
-          <ErrorBoundary>
-            <Providers>
-              {children}
-            </Providers>
-          </ErrorBoundary>
-        </ClerkProvider>
-        <Analytics />
-      </body>
-    </html>
-  );
-}
