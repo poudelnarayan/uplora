@@ -1,11 +1,17 @@
+/* ===== SUBSCRIPTION HEADER STYLES ===== */
+
 .container {
   margin-bottom: 2rem;
 }
 
 .content {
   display: flex;
-  items-center: space-between;
   align-items: center;
+  justify-content: space-between;
+}
+
+.textContent {
+  flex: 1;
 }
 
 .title {
@@ -22,9 +28,10 @@
   font-size: 1rem;
   font-weight: 400;
   color: var(--color-dark-secondary);
+  margin: 0;
 }
 
-.icon {
+.iconContainer {
   width: 3rem;
   height: 3rem;
   background: linear-gradient(135deg, rgba(0, 173, 181, 0.1), rgba(0, 173, 181, 0.2));
@@ -32,14 +39,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.iconSvg {
+.icon {
   width: 1.5rem;
   height: 1.5rem;
   color: var(--color-teal);
 }
 
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .content {
     flex-direction: column;
@@ -49,5 +58,9 @@
   
   .title {
     font-size: 1.75rem;
+  }
+  
+  .subtitle {
+    font-size: 0.875rem;
   }
 }

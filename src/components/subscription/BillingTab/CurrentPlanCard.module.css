@@ -1,4 +1,5 @@
-/* Current Plan Card Styles */
+/* ===== CURRENT PLAN CARD STYLES ===== */
+
 .card {
   background: white;
   border: 1px solid var(--color-light);
@@ -48,6 +49,7 @@
   font-size: 1rem;
   font-weight: 400;
   color: var(--color-dark-secondary);
+  margin: 0;
 }
 
 .statusContainer {
@@ -56,8 +58,6 @@
 }
 
 .statusBadge {
-  background-color: var(--color-teal);
-  color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-family: 'Google Sans', sans-serif;
@@ -65,6 +65,21 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.statusTrial {
+  background-color: var(--color-teal);
+  color: white;
+}
+
+.statusActive {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.statusExpired {
+  background-color: var(--color-error);
+  color: white;
 }
 
 .detailsGrid {
@@ -101,8 +116,10 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-brand-dark);
+  margin: 0;
 }
 
+/* ===== TRIAL NOTICES ===== */
 .trialNotice {
   background-color: #FFF8E1;
   border: 1px solid #FFE082;
@@ -114,23 +131,39 @@
   gap: 0.75rem;
 }
 
-.trialEmoji {
+.expiredNotice {
+  background-color: #FFEBEE;
+  border: 1px solid #FFCDD2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.trialEmoji,
+.expiredEmoji {
   font-size: 1.125rem;
   flex-shrink: 0;
 }
 
-.trialText {
+.trialText,
+.expiredText {
   font-family: 'Google Sans', sans-serif;
   font-size: 0.875rem;
   font-weight: 400;
   color: var(--color-brand-dark);
   line-height: 1.5;
+  margin: 0;
 }
 
-.trialText strong {
+.trialTextStrong,
+.expiredTextStrong {
   font-weight: 600;
 }
 
+/* ===== ACTION BUTTONS ===== */
 .actionButtons {
   display: flex;
   flex-wrap: wrap;
@@ -176,7 +209,7 @@
 
 .btnDanger {
   background-color: transparent;
-  color: #D32F2F;
+  color: var(--color-error);
   border: 1px solid #FFCDD2;
   border-radius: 8px;
   padding: 0.75rem 1.5rem;
@@ -192,6 +225,7 @@
   border-color: #EF5350;
 }
 
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .detailsGrid {
     grid-template-columns: 1fr;

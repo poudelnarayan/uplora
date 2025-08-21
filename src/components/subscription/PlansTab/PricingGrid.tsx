@@ -1,6 +1,5 @@
 import { Check } from "lucide-react";
-import { PricingTier } from "@/config/subscription";
-import { formatPrice } from "@/config/subscription";
+import { PricingTier, formatPrice } from "@/config/subscription";
 import styles from "./PricingGrid.module.css";
 
 interface PricingGridProps {
@@ -9,6 +8,7 @@ interface PricingGridProps {
   currentPlanId: string;
   onSubscribe: (planId: string, cycle: "monthly" | "yearly") => void;
   trialDays: number;
+  isTrialActive: boolean;
 }
 
 export default function PricingGrid({
@@ -16,7 +16,8 @@ export default function PricingGrid({
   billingCycle,
   currentPlanId,
   onSubscribe,
-  trialDays
+  trialDays,
+  isTrialActive
 }: PricingGridProps) {
   return (
     <div className={styles.grid}>
@@ -79,14 +80,22 @@ export default function PricingGrid({
                 onClick={() => onSubscribe(tier.id, billingCycle)}
                 className={styles.cta}
               >
-                Start {trialDays} day free trial →
+                {isTrialActive 
+                  ? `Switch to ${tier.name} →` 
+                  : `Start ${trialDays} day free trial →`
+                }
               </button>
             )}
 
             {/* Note */}
             <p className={styles.note}>
               <Check className={styles.noteCheck} />
-              {isCurrentPlan ? "You're on this plan" : "$0.00 due today, cancel anytime"}
+              {isCurrentPlan 
+                ? "You're on this plan" 
+                : isTrialActive 
+                  ? "Switch plans anytime during trial"
+                  : "$0.00 due today, cancel anytime"
+              }
             </p>
           </div>
         );

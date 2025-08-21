@@ -10,12 +10,12 @@ export default function SubscriptionHeader({ title, subtitle }: SubscriptionHead
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <div>
+        <div className={styles.textContent}>
           <h1 className={styles.title}>{title}</h1>
           <p className={styles.subtitle}>{subtitle}</p>
         </div>
-        <div className={styles.icon}>
-          <CreditCard className={styles.iconSvg} />
+        <div className={styles.iconContainer}>
+          <CreditCard className={styles.icon} />
         </div>
       </div>
     </div>

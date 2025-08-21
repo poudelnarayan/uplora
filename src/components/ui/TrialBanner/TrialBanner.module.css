@@ -1,0 +1,135 @@
+/* ===== TRIAL BANNER STYLES ===== */
+
+.banner {
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+  font-family: 'Google Sans', sans-serif;
+}
+
+.bannerActive {
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  border-color: #FFE082;
+}
+
+.bannerExpired {
+  background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+  border-color: #EF5350;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconContainer {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-warning);
+}
+
+.textContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+}
+
+.subtitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.upgradeButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-teal);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upgradeButton:hover {
+  background-color: #009AA1;
+  transform: translateY(-1px);
+}
+
+.buttonIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.dismissButton {
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: var(--color-dark-secondary);
+}
+
+.dismissButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.dismissIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 640px) {
+  .content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .upgradeButton {
+    flex: 1;
+    justify-content: center;
+  }
+}

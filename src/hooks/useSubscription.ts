@@ -1,18 +1,23 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { BillingInfo, SubscriptionStatus } from "@/types/subscription";
-import { subscriptionConfig, getTrialEndDate } from "@/config/subscription";
+import { BillingInfo, SubscriptionStatus, TrialInfo } from "@/types/subscription";
+import { subscriptionConfig, getTrialEndDate, getTrialDaysRemaining, isTrialExpired } from "@/config/subscription";
 
 interface UseSubscriptionReturn {
   billingInfo: BillingInfo | null;
   loading: boolean;
   error: string | null;
+  trialInfo: TrialInfo | null;
   isTrialActive: boolean;
   trialDaysRemaining: number;
+  isTrialExpired: boolean;
+  subscriptionStatus: SubscriptionStatus | null;
   refreshBillingInfo: () => Promise<void>;
   changePlan: (planId: string, cycle: "monthly" | "yearly") => Promise<void>;
   cancelSubscription: () => Promise<void>;
   pauseSubscription: () => Promise<void>;
+  resumeSubscription: () => Promise<void>;
+  extendTrial: (days: number) => Promise<void>;
 }
 
 export function useSubscription(): UseSubscriptionReturn {
@@ -96,20 +101,73 @@ export function useSubscription(): UseSubscriptionReturn {
     }
   };
 
-  // Calculate trial status
-  const isTrialActive = billingInfo?.subscription?.status === "trialing" || 
-                       billingInfo?.subscription?.status === "trial";
-  
-  const trialDaysRemaining = (() => {
-    if (!isTrialActive || !billingInfo?.subscription?.trialEnd) return 0;
+  const resumeSubscription = async () => {
+    try {
+      const response = await fetch("/api/subscription/resume", {
+        method: "POST"
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to resume subscription");
+      }
+      
+      await refreshBillingInfo();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Failed to resume subscription");
+    }
+  };
+
+  const extendTrial = async (days: number) => {
+    try {
+      const response = await fetch("/api/subscription/extend-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ additionalDays: days })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to extend trial");
+      }
+      
+      await refreshBillingInfo();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Failed to extend trial");
+    }
+  };
+
+  // Calculate trial information
+  const trialInfo: TrialInfo | null = (() => {
+    if (!billingInfo?.subscription) return null;
     
-    const now = new Date();
-    const trialEnd = new Date(billingInfo.subscription.trialEnd);
-    const diffTime = trialEnd.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const subscription = billingInfo.subscription;
+    const isActive = subscription.status === "trial";
     
-    return Math.max(0, diffDays);
+    if (!subscription.trialStart || !subscription.trialEnd) return null;
+    
+    const startDate = new Date(subscription.trialStart);
+    const endDate = new Date(subscription.trialEnd);
+    const daysRemaining = getTrialDaysRemaining(endDate);
+    const expired = isTrialExpired(endDate);
+    
+    const gracePeriodEnd = new Date(endDate);
+    gracePeriodEnd.setDate(gracePeriodEnd.getDate() + subscriptionConfig.trialConfig.gracePeriodDays);
+    const isInGracePeriod = expired && new Date() <= gracePeriodEnd;
+    
+    return {
+      isActive,
+      startDate,
+      endDate,
+      daysRemaining,
+      isExpired: expired,
+      gracePeriodEnd,
+      isInGracePeriod
+    };
   })();
+
+  const isTrialActive = trialInfo?.isActive || false;
+  const trialDaysRemaining = trialInfo?.daysRemaining || 0;
+  const isTrialExpiredValue = trialInfo?.isExpired || false;
+  const subscriptionStatus = billingInfo?.subscription?.status || null;
 
   useEffect(() => {
     fetchBillingInfo();
@@ -119,11 +177,16 @@ export function useSubscription(): UseSubscriptionReturn {
     billingInfo,
     loading,
     error,
+    trialInfo,
     isTrialActive,
     trialDaysRemaining,
+    isTrialExpired: isTrialExpiredValue,
+    subscriptionStatus,
     refreshBillingInfo,
     changePlan,
     cancelSubscription,
-    pauseSubscription
+    pauseSubscription,
+    resumeSubscription,
+    extendTrial
   };
 }

@@ -28,8 +28,10 @@ import IdeaLab from "@/components/ui/IdeaLab/IdeaLab";
 import UserMenu from "@/components/ui/UserMenu/UserMenu";
 import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
 import NotificationBell from "@/components/ui/NotificationBell/NotificationBell";
+import TrialBanner from "@/components/ui/TrialBanner/TrialBanner";
 import { usePathname as usePathnameForFeedback } from "next/navigation";
 import { useModalManager } from "@/components/ui/Modal";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
@@ -44,6 +46,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const pathForFeedback = usePathnameForFeedback();
   const { teams, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
+  const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
 
   const [teamMenuOpen, setTeamMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -497,6 +500,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* Page content */}
         <div className="flex flex-col">
+          {/* Trial Banner - Show on all pages except subscription */}
+          {(isTrialActive || isTrialExpired) && path !== "/subscription" && (
+            <div className="px-4 lg:px-8 pt-6">
+              <div className="max-w-6xl mx-auto">
+                <TrialBanner onUpgrade={() => window.location.href = "/subscription?tab=plans"} />
+              </div>
+            </div>
+          )}
+          
           <div className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
             <div className="max-w-6xl mx-auto w-full">{children}</div>
           </div>

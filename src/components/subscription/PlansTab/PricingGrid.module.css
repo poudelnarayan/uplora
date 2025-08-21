@@ -1,3 +1,5 @@
+/* ===== PRICING GRID STYLES ===== */
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -24,6 +26,7 @@
   background: linear-gradient(135deg, rgba(0, 173, 181, 0.02), rgba(0, 173, 181, 0.05));
 }
 
+/* ===== BADGES ===== */
 .currentPlanBadges {
   position: absolute;
   top: -0.75rem;
@@ -76,6 +79,7 @@
   letter-spacing: 0.5px;
 }
 
+/* ===== CARD HEADER ===== */
 .header {
   margin-bottom: 2rem;
   margin-top: 1rem;
@@ -117,6 +121,7 @@
   color: var(--color-dark-secondary);
 }
 
+/* ===== FEATURE LIST ===== */
 .featureList {
   list-style: none;
   padding: 0;
@@ -144,6 +149,7 @@
   flex-shrink: 0;
 }
 
+/* ===== CTA BUTTONS ===== */
 .cta {
   width: 100%;
   background-color: var(--color-teal);
@@ -189,10 +195,18 @@
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--color-dark-secondary);
+  margin: 0;
 }
 
 .noteCheck {
   width: 0.875rem;
   height: 0.875rem;
   color: var(--color-teal);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

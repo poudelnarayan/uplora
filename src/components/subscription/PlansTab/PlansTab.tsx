@@ -12,13 +12,17 @@ interface PlansTabProps {
   onBillingCycleChange: (cycle: "monthly" | "yearly") => void;
   currentPlanId: string;
   onSubscribe: (planId: string, cycle: "monthly" | "yearly") => void;
+  trialDaysRemaining: number;
+  isTrialActive: boolean;
 }
 
 export default function PlansTab({
   billingCycle,
   onBillingCycleChange,
   currentPlanId,
-  onSubscribe
+  onSubscribe,
+  trialDaysRemaining,
+  isTrialActive
 }: PlansTabProps) {
   return (
     <MotionDiv
@@ -30,6 +34,7 @@ export default function PlansTab({
         billingCycle={billingCycle}
         onBillingCycleChange={onBillingCycleChange}
         yearlyDiscount={subscriptionConfig.yearlyDiscount}
+        isTrialActive={isTrialActive}
       />
       
       <PricingGrid
@@ -38,6 +43,7 @@ export default function PlansTab({
         currentPlanId={currentPlanId}
         onSubscribe={onSubscribe}
         trialDays={subscriptionConfig.trialConfig.durationDays}
+        isTrialActive={isTrialActive}
       />
       
       <EnterpriseCard />

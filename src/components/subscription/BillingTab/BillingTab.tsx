@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { Calendar, CreditCard, ExternalLink } from "lucide-react";
 import CurrentPlanCard from "./CurrentPlanCard";
 import BillingPortalCard from "./BillingPortalCard";
+import { TrialInfo } from "@/types/subscription";
 import styles from "./BillingTab.module.css";
 
 const MotionDiv = motion.div as any;
@@ -14,7 +14,9 @@ interface BillingTabProps {
     status: string;
     trialEnds: string;
     nextBilling: string;
+    daysRemaining: number;
   };
+  trialInfo: TrialInfo | null;
   onChangePlan: () => void;
   onPauseSubscription: () => void;
   onCancelSubscription: () => void;
@@ -23,6 +25,7 @@ interface BillingTabProps {
 
 export default function BillingTab({
   currentPlan,
+  trialInfo,
   onChangePlan,
   onPauseSubscription,
   onCancelSubscription,
@@ -36,6 +39,7 @@ export default function BillingTab({
     >
       <CurrentPlanCard
         plan={currentPlan}
+        trialInfo={trialInfo}
         onChangePlan={onChangePlan}
         onPauseSubscription={onPauseSubscription}
         onCancelSubscription={onCancelSubscription}

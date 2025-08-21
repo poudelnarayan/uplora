@@ -4,12 +4,14 @@ interface BillingCycleToggleProps {
   billingCycle: "monthly" | "yearly";
   onBillingCycleChange: (cycle: "monthly" | "yearly") => void;
   yearlyDiscount: number;
+  isTrialActive: boolean;
 }
 
 export default function BillingCycleToggle({
   billingCycle,
   onBillingCycleChange,
-  yearlyDiscount
+  yearlyDiscount,
+  isTrialActive
 }: BillingCycleToggleProps) {
   return (
     <div className={styles.container}>
