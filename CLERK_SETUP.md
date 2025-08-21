@@ -12,21 +12,32 @@
 
 ### 2. Environment Variables
 
-Add these to your `.env.local` and Vercel environment:
+Add these to your `.env.local`:
 
 ```bash
-# Clerk Configuration
+# Clerk Configuration (Required)
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your-publishable-key-here
 CLERK_SECRET_KEY=sk_test_your-secret-key-here
 ```
 
-### 3. Clerk Dashboard Configuration
+**CRITICAL**: Both environment variables are required for Clerk to work properly:
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Used by the frontend
+- `CLERK_SECRET_KEY` - Used by the backend/API routes
+
+### 3. Get Your Keys from Clerk Dashboard
+
+1. In your Clerk Dashboard, go to "API Keys"
+2. Copy the "Publishable key" (starts with `pk_test_` or `pk_live_`)
+3. Copy the "Secret key" (starts with `sk_test_` or `sk_live_`)
+4. Add both to your `.env.local` file
+
+### 4. Clerk Dashboard Configuration
 
 In your Clerk Dashboard:
 
 - **Allowed redirect URLs**: Add your domains
   - `http://localhost:3000`
-  - `https://uplora.io`
+  - `https://your-domain.com`
 - **Sign-in URL**: `/sign-in`
 - **Sign-up URL**: `/sign-up`
 - **After sign-in URL**: `/dashboard`
@@ -44,25 +55,26 @@ In your Clerk Dashboard:
 - **Social Login**: Easy Google, GitHub, Discord integration
 - **Security**: Built-in protection against common attacks
 
-### 🔄 Migration from NextAuth
-
-- **User Data**: We'll preserve existing user data
-- **Database**: Keep your current Prisma schema
-- **API Protection**: Better API route protection
-- **Real-time Updates**: Maintain your SSE functionality
-
-## 📋 Next Steps After Environment Setup
-
-1. Configure Clerk middleware
-2. Add ClerkProvider to your app
-3. Replace authentication components
-4. Update API routes
-5. Test the integration
-6. Remove NextAuth dependencies
-
 ## 🎯 Expected Results
 
 - **Faster Development**: No custom auth code needed
 - **Better UX**: Professional authentication UI
 - **Enhanced Security**: Industry-standard protection
 - **Easy Maintenance**: Clerk handles updates and security
+
+## 🚨 Troubleshooting
+
+If you see "headers was called outside a request scope" error:
+
+1. **Check environment variables** are set correctly
+2. **Restart your development server** after adding environment variables
+3. **Verify both keys** are present in `.env.local`
+4. **Check for typos** in environment variable names
+
+## 📋 Next Steps After Environment Setup
+
+1. Get your Clerk keys from the dashboard
+2. Add them to `.env.local`
+3. Restart your development server
+4. Test the authentication flow
+5. Configure additional settings as needed
