@@ -121,7 +121,7 @@ export async function POST(
     // Prepare email content before writing to DB
     const inviterName = currentUser.name || "";
     const inviterEmail = currentUser.email || "";
-    const inviteUrl = `${process.env.NEXTAUTH_URL}/invite/${token}`;
+    const inviteUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/invite/${token}`;
 
     // Persist the invitation first, but roll back on email failure
     let createdNew = false;

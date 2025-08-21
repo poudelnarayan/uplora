@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { broadcast } from "@/lib/realtime";
 
@@ -21,6 +22,10 @@ export async function POST(
       );
     }
 
+    // Get user details from Clerk
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+
     // Find the invitation
     const invitation = await prisma.teamInvite.findFirst({
       where: {
@@ -41,7 +46,7 @@ export async function POST(
     }
 
     // Check if the email matches
-    if (invitation.email !== session.user.email) {
+    if (invitation.email !== userEmail) {
       return NextResponse.json(
         { message: "This invitation is not for your email address" },
         { status: 403 }
@@ -56,9 +61,10 @@ export async function POST(
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: session.user.email,
-          name: session.user.name || "",
-          image: session.user.image || "",
+          id: userId,
+          email: userEmail || "",
+          name: clerkUser.fullName || clerkUser.firstName || "",
+          image: clerkUser.imageUrl || "",
         },
       });
     }

@@ -11,23 +11,26 @@ const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.access_token) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // Get user's YouTube credentials from database
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { youtubeAccessToken: true, youtubeRefreshToken: true }
+    });
+
+    if (!user?.youtubeAccessToken) {
+      return NextResponse.json(
+        { error: "YouTube not connected. Please connect your YouTube account in settings." },
+        { status: 403 }
+      );
     }
 
     const { key, title, description, privacyStatus, madeForKids, thumbnailKey } = await req.json();
     if (!key) return NextResponse.json({ error: "Missing S3 key" }, { status: 400 });
-
-    const hasScope = Array.isArray(token.scopes)
-      ? token.scopes.includes("https://www.googleapis.com/auth/youtube.upload")
-      : false;
-    if (!hasScope) {
-      return NextResponse.json(
-        { error: "Missing youtube.upload scope. Sign out and sign in again to grant permission." },
-        { status: 403 }
-      );
-    }
 
     const obj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
     const body = obj.Body as Readable;
@@ -35,9 +38,12 @@ export async function POST(req: NextRequest) {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      "postmessage"
+      process.env.GOOGLE_REDIRECT_URI
     );
-    oauth2Client.setCredentials({ access_token: token.access_token as string });
+    oauth2Client.setCredentials({ 
+      access_token: user.youtubeAccessToken,
+      refresh_token: user.youtubeRefreshToken 
+    });
 
     const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 

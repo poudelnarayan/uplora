@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   try {
     // For now, just mark as processed and create a mock web-optimized key
     const video = await prisma.video.findFirst({
-      where: { id: videoId, user: { email: session.user.email } }
+      where: { id: videoId, userId: userId }
     });
     
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });

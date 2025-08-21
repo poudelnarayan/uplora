@@ -11,7 +11,7 @@ export async function PATCH(
 ) {
   try {
     const params = await context.params;
-    const session = await getServerSession();
+    const { userId } = auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -48,7 +48,7 @@ export async function DELETE(
 ) {
   try {
     const params = await context.params;
-    const session = await getServerSession();
+    const { userId } = auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }

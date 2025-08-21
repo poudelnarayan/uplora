@@ -3,27 +3,37 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (!token?.access_token) {
+    const { userId } = auth();
+    if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Need read scope
-    const scopes = Array.isArray(token.scopes) ? token.scopes : [];
-    const hasRead = scopes.includes("https://www.googleapis.com/auth/youtube.readonly") || scopes.includes("https://www.googleapis.com/auth/youtube");
-    if (!hasRead) {
-      return NextResponse.json({ error: "Missing youtube.readonly scope" }, { status: 403 });
+    // Get user's YouTube credentials from database
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { youtubeAccessToken: true, youtubeRefreshToken: true }
+    });
+
+    if (!user?.youtubeAccessToken) {
+      return NextResponse.json(
+        { error: "YouTube not connected. Please connect your YouTube account in settings." },
+        { status: 403 }
+      );
     }
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      "postmessage"
+      process.env.GOOGLE_REDIRECT_URI
     );
-    oauth2Client.setCredentials({ access_token: token.access_token as string });
+    oauth2Client.setCredentials({ 
+      access_token: user.youtubeAccessToken,
+      refresh_token: user.youtubeRefreshToken 
+    });
 
     const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 

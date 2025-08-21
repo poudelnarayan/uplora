@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     // Get video record
     const video = await prisma.video.findFirst({
-      where: { id: videoId, user: { email: session.user.email } }
+      where: { id: videoId, userId: userId }
     });
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 

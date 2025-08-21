@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { sendMail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    // Get user details from Clerk
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "Anonymous";
+
     const { message, category, includeEmail, path, teamId, teamName, type, title, priority } = await req.json();
 
     if (!message || typeof message !== "string" || message.trim().length < 3) {
       return NextResponse.json({ error: "Feedback message required" }, { status: 400 });
     }
 
-    const userEmail = includeEmail ? (session?.user?.email || "anonymous@local") : "anonymous@local";
+    const emailToUse = includeEmail ? (userEmail || "anonymous@local") : "anonymous@local";
     
     // Route emails based on submission type
     let to: string;
@@ -20,11 +30,11 @@ export async function POST(req: NextRequest) {
     if (type === "idea" || category === "Feature Request") {
       // Route ideas to brainstorm@uplora.io
       to = "brainstorm@uplora.io";
-      subject = `💡 New Idea: ${title || "Feature Request"} from ${session?.user?.name || "Anonymous"}`;
+      subject = `💡 New Idea: ${title || "Feature Request"} from ${userName}`;
     } else {
       // Route feedback to feedback@uplora.io
       to = "feedback@uplora.io";
-      subject = `📝 Feedback (${category || "General"}) from ${session?.user?.name || "Anonymous"}`;
+      subject = `📝 Feedback (${category || "General"}) from ${userName}`;
     }
 
     // Build email content based on type
@@ -38,7 +48,7 @@ export async function POST(req: NextRequest) {
         `========================`,
         `Title: ${title || "Untitled"}`,
         `Priority: ${priority || "Medium"}`,
-        `From: ${session?.user?.name || "Anonymous"} <${userEmail}>`,
+        `From: ${userName} <${emailToUse}>`,
         `Team: ${teamName || "Personal"}`,
         `Page: ${path || "unknown"}`,
         `Submitted: ${new Date().toLocaleString()}`,
@@ -61,7 +71,7 @@ export async function POST(req: NextRequest) {
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px;">
                 <div><strong>Priority:</strong> ${priority || "Medium"}</div>
                 <div><strong>Submitted:</strong> ${new Date().toLocaleString()}</div>
-                <div><strong>From:</strong> ${session?.user?.name || "Anonymous"}</div>
+                <div><strong>From:</strong> ${userName}</div>
                 <div><strong>Team:</strong> ${teamName || "Personal"}</div>
               </div>
             </div>
@@ -81,7 +91,7 @@ export async function POST(req: NextRequest) {
         `📝 FEEDBACK SUBMISSION`,
         `=====================`,
         `Category: ${category || "General"}`,
-        `From: ${session?.user?.name || "Anonymous"} <${userEmail}>`,
+        `From: ${userName} <${emailToUse}>`,
         `Team: ${teamName || "Personal"}`,
         `Page: ${path || "unknown"}`,
         `Submitted: ${new Date().toLocaleString()}`,
@@ -102,8 +112,8 @@ export async function POST(req: NextRequest) {
             <div style="background:#f3e8ff;border:1px solid #c084fc;border-radius:8px;padding:16px;margin-bottom:20px;">
               <h2 style="margin:0 0 12px;color:#7c3aed;font-size:18px;">${category || "General"} Feedback</h2>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px;">
-                <div><strong>From:</strong> ${session?.user?.name || "Anonymous"}</div>
-                <div><strong>Email:</strong> ${userEmail}</div>
+                <div><strong>From:</strong> ${userName}</div>
+                <div><strong>Email:</strong> ${emailToUse}</div>
                 <div><strong>Team:</strong> ${teamName || "Personal"}</div>
                 <div><strong>Page:</strong> ${path || "unknown"}</div>
               </div>

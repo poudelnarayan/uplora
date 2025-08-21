@@ -6,14 +6,14 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: NextRequest) {
   const { userId } = auth();
   
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // Clear YouTube connection data
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: {
         youtubeAccessToken: null,
         youtubeRefreshToken: null,

@@ -22,7 +22,7 @@ export async function DELETE(
     const video = await prisma.video.findFirst({
       where: { 
         id,
-        user: { email: session.user.email }
+        userId: userId
       }
     });
 

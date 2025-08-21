@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
@@ -16,14 +17,20 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    // Get user details from Clerk
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
     // Ensure user exists
     const user = await prisma.user.upsert({
       where: { id: userId },
       update: {},
       create: { 
-        email: session.user.email, 
-        name: session.user.name || "", 
-        image: session.user.image || "" 
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage 
       },
     });
 

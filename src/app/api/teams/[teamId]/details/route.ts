@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const params = await context.params;
-    const session = await getServerSession();
+    const { userId } = auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });

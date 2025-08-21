@@ -31,12 +31,6 @@ export async function DELETE(
         thumbnailKey: true,
         userId: true,
         teamId: true,
-        user: {
-          select: {
-            id: true,
-            email: true
-          }
-        }
       }
     });
 
