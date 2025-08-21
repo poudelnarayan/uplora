@@ -1,0 +1,129 @@
+/* ===== NOTIFICATION SECTION STYLES ===== */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-dark-secondary);
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  margin: 0;
+}
+
+.content {
+  background: white;
+  border: 1px solid var(--color-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(34, 40, 49, 0.08);
+}
+
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notificationItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(238, 238, 238, 0.3);
+  border: 1px solid var(--color-light);
+}
+
+.notificationInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notificationIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-teal);
+}
+
+.notificationText {
+  display: flex;
+  flex-direction: column;
+}
+
+.notificationTitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-brand-dark);
+}
+
+.notificationDescription {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  margin: 0;
+}
+
+.toggle {
+  appearance: none;
+  width: 3rem;
+  height: 1.5rem;
+  background: var(--color-light);
+  border-radius: 9999px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle:checked {
+  background: var(--color-teal);
+}
+
+.toggle::before {
+  content: "";
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.toggle:checked::before {
+  transform: translateX(1.5rem);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .content {
+    padding: 1.25rem;
+  }
+  
+  .notificationItem {
+    padding: 0.875rem;
+  }
+  
+  .notificationInfo {
+    gap: 0.5rem;
+  }
+}

@@ -1,0 +1,43 @@
+/* ===== DASHBOARD HEADER STYLES ===== */
+
+.container {
+  margin-bottom: 1.5rem;
+}
+
+.content {
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .content {
+    text-align: left;
+  }
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  margin: 0;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .subtitle {
+    font-size: 0.875rem;
+  }
+}

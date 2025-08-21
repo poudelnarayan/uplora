@@ -1,0 +1,131 @@
+/* ===== EMAIL VERIFICATION BANNER STYLES ===== */
+
+.banner {
+  background-color: #FFF8E1;
+  border-bottom: 1px solid #FFE082;
+  font-family: 'Google Sans', sans-serif;
+}
+
+.content {
+  max-width: 112rem;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding: 0.75rem 2rem;
+  }
+}
+
+.messageSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #F57C00;
+  flex-shrink: 0;
+}
+
+.textContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.title {
+  color: #E65100;
+  font-weight: 500;
+}
+
+.subtitle {
+  color: #FF8F00;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resendButton {
+  background-color: transparent;
+  color: #FF8F00;
+  border: 1px solid #FFE082;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resendButton:hover:not(:disabled) {
+  background-color: #FFF3E0;
+  border-color: #FFB74D;
+}
+
+.resendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loadingContent {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.buttonIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.spinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  color: #F57C00;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+}
+
+.dismissButton:hover {
+  color: #E65100;
+}
+
+.dismissIcon {
+  width: 1rem;
+  height: 1rem;
+}

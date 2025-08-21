@@ -6,14 +6,15 @@ import AppShell from "@/components/layout/AppShell";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import StatsOverview from "@/components/dashboard/StatsOverview";
-import VideosList from "@/components/dashboard/VideosList";
+import DashboardHeader from "@/components/pages/Dashboard/DashboardHeader";
+import StatsOverview from "@/components/pages/Dashboard/StatsOverview";
+import VideosList from "@/components/pages/Dashboard/VideosList";
+import EmailVerificationBanner from "@/components/pages/Dashboard/EmailVerificationBanner";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import { AlertCircle, Mail, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import styles from "./Dashboard.module.css";
 
-const MotionDiv = motion.div as any;
+export const dynamic = "force-dynamic";
 
 interface VideoItem {
   id: string;
@@ -164,7 +165,6 @@ export default function Dashboard() {
         try {
           const evt = JSON.parse(ev.data || '{}');
           if (evt?.type === 'user.email.verified' && evt?.userId === user?.id) {
-            // Hide email verification banner
             setShowEmailBanner(false);
             notifications.addNotification({
               type: "success",
@@ -173,7 +173,6 @@ export default function Dashboard() {
             });
           } else if (evt?.type?.startsWith('video.')) {
             if (evt.type === 'video.created') {
-              // Add new video to list immediately
               const newVideo: VideoItem = {
                 id: evt.payload.id,
                 title: evt.payload.title,
@@ -197,17 +196,14 @@ export default function Dashboard() {
                 message: `"${evt.payload.title}" has been uploaded successfully`
               });
             } else if (evt.type === 'video.deleted') {
-              // Remove deleted video from list immediately
               setVideos(prev => prev.filter(video => video.id !== evt.payload.id));
             } else if (evt.type === 'video.status') {
-              // Update video status immediately
               setVideos(prev => prev.map(video => 
                 video.id === evt.payload.id 
                   ? { ...video, status: evt.payload.status, updatedAt: new Date().toISOString() }
                   : video
               ));
             } else if (evt.type === 'video.updated') {
-              // Refresh the specific video data
               (async () => {
                 try {
                   const res = await fetch(`/api/videos/${evt.payload.id}`, { cache: 'no-store' });
@@ -222,7 +218,6 @@ export default function Dashboard() {
                 } catch {}
               })();
             } else {
-              // For other video events, reload the entire list
               (async () => {
                 const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
                 const res = await fetch(apiUrl, { cache: 'no-store' });
@@ -242,7 +237,6 @@ export default function Dashboard() {
   }, [selectedTeamId, user?.fullName, user?.emailAddresses?.[0]?.emailAddress, notifications]);
 
   const changeVideoStatus = async (videoId: string, newStatus: string) => {
-    // Prevent multiple clicks
     if (processingVideoId) return;
     
     setProcessingVideoId(videoId);
@@ -294,7 +288,6 @@ export default function Dashboard() {
   };
 
   const deleteVideo = async (videoId: string, videoTitle: string) => {
-    // Set the video to delete and open modal
     setVideoToDelete({ id: videoId, title: videoTitle });
     setDeleteModalOpen(true);
   };
@@ -302,7 +295,6 @@ export default function Dashboard() {
   const confirmDeleteVideo = async () => {
     if (!videoToDelete) return;
     
-    // Prevent multiple clicks
     if (deletingVideoId) return;
     
     setDeletingVideoId(videoToDelete.id);
@@ -340,102 +332,61 @@ export default function Dashboard() {
 
   return (
     <>
-    <SignedIn>
-    <AppShell>
-      {/* Email Verification Banner */}
-      <AnimatePresence mode="wait" initial={false}>
-        {showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified" && (
-          <MotionDiv
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800"
-          >
-            <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-yellow-800 dark:text-yellow-200 font-medium">
-                      Please verify your email address
-                    </span>
-                    <span className="text-yellow-700 dark:text-yellow-300">
-                      to access all features
-                    </span>
-                  </div>
+      <SignedIn>
+        <AppShell>
+          <NextSeoNoSSR title="Dashboard" noindex nofollow />
+          
+          <div className={styles.container}>
+            {/* Email Verification Banner */}
+            <EmailVerificationBanner
+              show={showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified"}
+              onResend={handleResendVerification}
+              onDismiss={() => setShowEmailBanner(false)}
+              isResending={resendingEmail}
+            />
+
+            <div className={styles.content}>
+              <DashboardHeader teamName={selectedTeam?.name} />
+              <StatsOverview videos={videos} />
+              
+              <div className={styles.videosSection}>
+                <div className={styles.videosSectionHeader}>
+                  <h2 className={styles.videosSectionTitle}>Recent Videos</h2>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleResendVerification}
-                    disabled={resendingEmail}
-                    className="btn btn-sm btn-outline text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-800/50"
-                  >
-                    {resendingEmail ? (
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                        Sending...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        Resend Email
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowEmailBanner(false)}
-                    className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+
+                <VideosList
+                  videos={videos}
+                  loading={loading}
+                  thumbnailUrls={Object.fromEntries(thumbnailUrls)}
+                  loadingThumbnails={Object.fromEntries([...loadingThumbnails].map(id => [id, true]))}
+                  onChangeVideoStatus={changeVideoStatus}
+                  onDeleteVideo={deleteVideo}
+                  processingVideoId={processingVideoId}
+                  deletingVideoId={deletingVideoId}
+                />
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmationModal
+                  isOpen={deleteModalOpen}
+                  onClose={() => setDeleteModalOpen(false)}
+                  onConfirm={confirmDeleteVideo}
+                  title="Delete Video?"
+                  message="This action cannot be undone. The video will be permanently deleted from both the platform and YouTube (if published)."
+                  itemName={videoToDelete?.title}
+                  confirmText={deletingVideoId ? "Deleting..." : "Delete Permanently"}
+                  cancelText="Cancel"
+                  variant="danger"
+                  icon="trash"
+                  isLoading={!!deletingVideoId}
+                />
               </div>
             </div>
-          </MotionDiv>
-        )}
-      </AnimatePresence>
-
-      <div className="h-full flex flex-col">
-        <DashboardHeader teamName={selectedTeam?.name} />
-        <StatsOverview videos={videos} />
-        
-        <div className="flex-1 space-y-4 lg:space-y-6">
-          <div className="flex items-center justify-between text-center lg:text-left">
-            <h2 className="text-xl font-semibold text-foreground">Recent Videos</h2>
           </div>
-
-          <VideosList
-            videos={videos}
-            loading={loading}
-            thumbnailUrls={Object.fromEntries(thumbnailUrls)}
-            loadingThumbnails={Object.fromEntries([...loadingThumbnails].map(id => [id, true]))}
-            onChangeVideoStatus={changeVideoStatus}
-            onDeleteVideo={deleteVideo}
-            processingVideoId={processingVideoId}
-            deletingVideoId={deletingVideoId}
-          />
-
-          {/* Delete Confirmation Modal */}
-          <ConfirmationModal
-            isOpen={deleteModalOpen}
-            onClose={() => setDeleteModalOpen(false)}
-            onConfirm={confirmDeleteVideo}
-            title="Delete Video?"
-            message="This action cannot be undone. The video will be permanently deleted from both the platform and YouTube (if published)."
-            itemName={videoToDelete?.title}
-            confirmText={deletingVideoId ? "Deleting..." : "Delete Permanently"}
-            cancelText="Cancel"
-            variant="danger"
-            icon="trash"
-            isLoading={!!deletingVideoId}
-          />
-        </div>
-      </div>
-    </AppShell>
-    </SignedIn>
-    <SignedOut>
-      <RedirectToSignIn redirectUrl="/dashboard" />
+        </AppShell>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn redirectUrl="/dashboard" />
       </SignedOut>
-      </>
+    </>
   );
 }

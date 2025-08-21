@@ -1,0 +1,66 @@
+/* ===== DASHBOARD PAGE STYLES ===== */
+
+.container {
+  font-family: 'Google Sans', sans-serif;
+  background-color: var(--color-background);
+  min-height: 100vh;
+  color: var(--color-brand-dark);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.videosSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.videosSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .videosSectionHeader {
+    text-align: left;
+  }
+}
+
+.videosSectionTitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  margin: 0;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .videosSection {
+    gap: 1rem;
+  }
+  
+  .videosSectionTitle {
+    font-size: 1.125rem;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

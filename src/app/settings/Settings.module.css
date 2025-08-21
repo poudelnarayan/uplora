@@ -1,0 +1,96 @@
+/* ===== SETTINGS PAGE STYLES ===== */
+
+.container {
+  font-family: 'Google Sans', sans-serif;
+  background-color: var(--color-background);
+  min-height: 100vh;
+  color: var(--color-brand-dark);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sectionIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-teal);
+}
+
+.sectionTitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  margin: 0;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--color-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(34, 40, 49, 0.08);
+}
+
+.integrationInfo {
+  text-align: center;
+}
+
+.integrationDescription {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.link {
+  color: var(--color-teal);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .content {
+    gap: 1.5rem;
+  }
+  
+  .card {
+    padding: 1.25rem;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

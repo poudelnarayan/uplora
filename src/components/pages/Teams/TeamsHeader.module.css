@@ -1,0 +1,72 @@
+/* ===== TEAMS HEADER STYLES ===== */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.emptyHeader {
+  text-align: center;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  background-color: #009AA1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.25);
+}
+
+.buttonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .createButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

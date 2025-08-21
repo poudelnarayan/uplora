@@ -1,0 +1,96 @@
+/* ===== EMPTY TEAMS STATE STYLES ===== */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+}
+
+.content {
+  text-align: center;
+  max-width: 28rem;
+}
+
+.iconContainer {
+  width: 6rem;
+  height: 6rem;
+  background: linear-gradient(135deg, rgba(0, 173, 181, 0.2), rgba(0, 173, 181, 0.1));
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  border: 1px solid rgba(0, 173, 181, 0.2);
+}
+
+.icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--color-teal);
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  margin-bottom: 1rem;
+}
+
+.description {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background-color: var(--color-teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 auto;
+}
+
+.createButton:hover {
+  background-color: #009AA1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.25);
+}
+
+.buttonIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 3rem 1rem;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .description {
+    font-size: 0.875rem;
+  }
+  
+  .createButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

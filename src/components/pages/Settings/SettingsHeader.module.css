@@ -1,0 +1,66 @@
+/* ===== SETTINGS HEADER STYLES ===== */
+
+.container {
+  margin-bottom: 2rem;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.textContent {
+  flex: 1;
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-dark-secondary);
+  margin: 0;
+}
+
+.iconContainer {
+  width: 3rem;
+  height: 3rem;
+  background: rgba(0, 173, 181, 0.1);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-teal);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .subtitle {
+    font-size: 0.875rem;
+  }
+}

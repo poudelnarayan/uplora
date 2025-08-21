@@ -1,0 +1,42 @@
+/* ===== TEAMS PAGE STYLES ===== */
+
+.container {
+  font-family: 'Google Sans', sans-serif;
+  background-color: var(--color-background);
+  min-height: 100vh;
+  color: var(--color-brand-dark);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.headerSection {
+  margin-bottom: 1rem;
+}
+
+.teamsSection {
+  flex: 1;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .content {
+    gap: 1rem;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

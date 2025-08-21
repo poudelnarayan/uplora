@@ -1,78 +1,67 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-const MotionDiv = motion.div as any;
 import { Upload, Users, User, Video, Shield, Zap, CheckCircle } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
-import UploadZone from "@/components/upload/UploadZone";
+import UploadZone from "@/components/pages/Upload/UploadZone";
+import WorkspaceIndicator from "@/components/pages/Upload/WorkspaceIndicator";
+import UploadBenefits from "@/components/pages/Upload/UploadBenefits";
 import { useTeam } from "@/context/TeamContext";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import styles from "./Upload.module.css";
+
+const MotionDiv = motion.div as any;
+
 export const dynamic = "force-dynamic";
 
 export default function UploadPage() {
   const { selectedTeamId, selectedTeam } = useTeam();
   
   return (
-    <AppShell>
-      <NextSeoNoSSR title="Upload" noindex nofollow />
-      <div className="min-h-full space-y-6">
-        {/* Main Upload Section - Prominent */}
-        <MotionDiv
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          {/* Current Workspace - Clear and Visible */}
-          <div className="flex items-center justify-center">
-            <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-xl border-2 ${
-              selectedTeamId 
-                ? "border-primary/30 bg-primary/10 text-primary" 
-                : "border-muted-foreground/30 bg-muted/20 text-muted-foreground"
-            }`}>
-              {selectedTeam ? (
-                <>
-                  <Users className="w-5 h-5" />
-                  <span className="font-semibold">Team: {selectedTeam?.name}</span>
-                </>
-              ) : (
-                <>
-                  <User className="w-5 h-5" />
-                  <span className="font-semibold">Personal Workspace</span>
-                </>
-              )}
-            </div>
-          </div>
+    <>
+      <SignedIn>
+        <AppShell>
+          <NextSeoNoSSR title="Upload" noindex nofollow />
+          
+          <div className={styles.container}>
+            <div className={styles.content}>
+              {/* Main Upload Section */}
+              <MotionDiv
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={styles.uploadSection}
+              >
+                {/* Current Workspace Indicator */}
+                <div className={styles.workspaceSection}>
+                  <WorkspaceIndicator
+                    selectedTeam={selectedTeam}
+                    selectedTeamId={selectedTeamId}
+                  />
+                </div>
 
-          {/* Upload Zone - Main Focus */}
-          <div className="max-w-4xl mx-auto">
-            <UploadZone />
-          </div>
-        </MotionDiv>
+                {/* Upload Zone */}
+                <div className={styles.uploadZoneSection}>
+                  <UploadZone />
+                </div>
+              </MotionDiv>
 
-        {/* Quick Benefits - Minimal but Informative */}
-        <MotionDiv
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-2xl mx-auto"
-        >
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-3 rounded-lg bg-card border">
-              <Zap className="w-6 h-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium text-foreground">Fast Upload</p>
-            </div>
-            <div className="p-3 rounded-lg bg-card border">
-              <Shield className="w-6 h-6 text-secondary mx-auto mb-2" />
-              <p className="text-sm font-medium text-foreground">Secure</p>
-            </div>
-            <div className="p-3 rounded-lg bg-card border">
-              <Video className="w-6 h-6 text-green-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-foreground">Direct to YouTube</p>
+              {/* Upload Benefits */}
+              <MotionDiv
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className={styles.benefitsSection}
+              >
+                <UploadBenefits />
+              </MotionDiv>
             </div>
           </div>
-        </MotionDiv>
-      </div>
-    </AppShell>
+        </AppShell>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn redirectUrl="/upload" />
+      </SignedOut>
+    </>
   );
 }
