@@ -643,17 +643,23 @@ export default function UploadZone() {
                   {isUploading || hasActive ? (
                     <>
                       <div className="spinner mr-2" />
-                      Uploading Video
+                      Creating {contentType === "reel" ? "Reel" : "Video"}
                     </>
                   ) : (
                     <>
-                      <Upload className="w-5 h-5" />
-                      Upload to Cloud
+                      {contentType === "text" ? (
+                        <FileText className="w-5 h-5" />
+                      ) : contentType === "reel" ? (
+                        <Sparkles className="w-5 h-5" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
+                      Create {contentType === "reel" ? "Reel" : contentType === "text" ? "Post" : "Video"}
                     </>
                   )}
                 </button>
                 
-                {/* Cancel Button - only show when uploading */}
+                {/* Cancel Button - only show when creating */}
                 {isUploading && currentUploadId && (
                   <button
                     onClick={() => {
@@ -664,21 +670,21 @@ export default function UploadZone() {
                         setUploadProgress(0);
                         notifications.addNotification({ 
                           type: "info", 
-                          title: "Upload cancelled", 
-                          message: "Your upload has been cancelled" 
+                          title: "Creation cancelled", 
+                          message: `Your ${contentType} creation has been cancelled` 
                         });
                       }
                     }}
                     className="btn btn-outline w-full text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <X className="w-5 h-5" />
-                    Cancel Upload
+                    Cancel Creation
                   </button>
                 )}
               </div>
             )}
 
-            {/* Upload Complete */}
+            {/* Creation Complete */}
             {s3Key && (
               <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
@@ -688,8 +694,8 @@ export default function UploadZone() {
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-6 h-6 text-green-500" />
                   <div>
-                    <p className="font-semibold text-foreground">Upload Complete!</p>
-                    <p className="text-sm text-muted-foreground">You can find this upload in the Recent Videos on your dashboard.</p>
+                    <p className="font-semibold text-foreground">{contentType === "reel" ? "Reel" : "Video"} Created!</p>
+                    <p className="text-sm text-muted-foreground">You can find this {contentType} in your dashboard.</p>
                   </div>
                 </div>
               </MotionDiv>

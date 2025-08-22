@@ -38,8 +38,8 @@ export default function QuickActions({ teams }: QuickActionsProps) {
   const quickActions = [
     {
       id: "upload",
-      title: "Upload Video",
-      description: "Share your latest content",
+      title: "Make Post",
+      description: "Create and share content",
       icon: <Upload className="w-5 h-5" />,
       action: () => router.push('/upload'),
       color: "from-blue-500 to-purple-600"

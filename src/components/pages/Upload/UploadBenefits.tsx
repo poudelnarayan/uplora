@@ -7,18 +7,18 @@ export default function UploadBenefits() {
   const benefits = [
     {
       icon: Zap,
-      title: "Fast Upload",
-      description: "Quick and reliable"
+      title: "Fast Creation",
+      description: "Quick and reliable posting"
     },
     {
       icon: Shield,
       title: "Secure",
-      description: "Protected storage"
+      description: "Protected content"
     },
     {
       icon: Video,
-      title: "Direct to YouTube",
-      description: "Seamless publishing"
+      title: "Multi-Platform",
+      description: "YouTube, TikTok & more"
     }
   ];
 

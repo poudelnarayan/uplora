@@ -67,9 +67,9 @@ export default function VideosList({
           <Upload className="w-8 h-8" />
         </div>
         <h4 className="text-lg font-semibold mb-2 text-foreground">No videos yet</h4>
-        <p className="text-muted-foreground mb-6">Upload your first video to see it here.</p>
+        <p className="text-muted-foreground mb-6">Create your first post to see it here.</p>
         <button className="btn btn-primary" onClick={() => router.push('/upload')}>
-          Upload a Video
+          Make Your First Post
         </button>
       </div>
     );
