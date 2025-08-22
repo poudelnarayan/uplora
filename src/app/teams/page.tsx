@@ -324,7 +324,7 @@ export default function TeamsPage() {
           <NextSeoNoSSR title="Teams" noindex nofollow />
           
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
-            <div className="h-full overflow-y-auto px-4 lg:px-0 space-y-6">
+            <div className="h-full px-4 lg:px-0 space-y-6">
               {/* Comprehensive Header with Stats */}
               <div className="flex items-center justify-between mb-8">
                 <div>
