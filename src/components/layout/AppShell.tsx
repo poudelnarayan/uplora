@@ -564,6 +564,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                     </Link>
                   );
                 })}
+              </nav>
             </MotionAside>
           </>
         )}
