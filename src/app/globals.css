@@ -259,6 +259,35 @@ body {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* Upload Page Specific Fixes */
+.upload-page-container {
+  min-height: calc(100vh - 8rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Prevent unwanted scrolling on upload page */
+@media (max-width: 768px) {
+  .upload-page-container {
+    min-height: calc(100vh - 6rem);
+    padding: 1rem;
+  }
+  
+  /* Ensure upload zone doesn't cause overflow */
+  .upload-zone {
+    max-width: 100%;
+    padding: 2rem 1rem;
+  }
+  
+  /* Fix any potential margin/padding issues */
+  .upload-content {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+  }
+}
+
 /* Modern Inputs - Clean Design */
 .input,
 .textarea {

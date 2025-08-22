@@ -359,14 +359,14 @@ export default function UploadZone() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 w-full max-w-2xl mx-auto">
       {/* Upload Zone */}
       <div className="space-y-6">
         {!file ? (
           <MotionDiv
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`upload-zone ${isDragOver ? 'dragover' : ''} ${hasActive ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`upload-zone w-full ${isDragOver ? 'dragover' : ''} ${hasActive ? 'opacity-70 cursor-not-allowed' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
