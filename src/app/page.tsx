@@ -107,16 +107,22 @@ export default function LandingPage() {
               <h1 className="heading-1 mb-6 max-w-4xl mx-auto">
                 The modern way to manage
                 <br />
-                <span className="text-gradient">YouTube team content</span>
+                <span style={{ 
+                  background: 'linear-gradient(135deg, rgb(0, 173, 181), rgb(0, 173, 181))',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontFamily: 'Inter, Open Sans, sans-serif'
+                }}>YouTube team content</span>
               </h1>
               
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
                 Stop the chaos of file sharing and manual uploads. Streamline your team's YouTube workflow with smart approvals and direct publishing.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <SignedOut>
-                  <a href="/sign-up" className="btn btn-primary btn-lg">
+                  <a href="/sign-up" className="btn btn-primary btn-lg" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
                     Start your free trial
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </a>
@@ -125,6 +131,7 @@ export default function LandingPage() {
                   <button 
                     onClick={() => router.push("/dashboard")}
                     className="btn btn-primary btn-lg"
+                    style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}
                   >
                     Go to Dashboard
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -133,13 +140,14 @@ export default function LandingPage() {
                 <button 
                   onClick={() => router.push("/about")}
                   className="btn btn-secondary btn-lg"
+                  style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}
                 >
                   <Play className="w-5 h-5 mr-2" />
                   Watch demo
                 </button>
               </div>
 
-              <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-success" />
                   <span>No credit card required</span>
