@@ -50,47 +50,110 @@ export default function SettingsPage() {
           
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
             <div className="h-full overflow-y-auto px-4 lg:px-0 space-y-6">
-              <SettingsHeader />
+              {/* Clean Header */}
+              <div className="mb-8">
+                <h1 className="text-2xl font-bold" style={{ color: '#222831' }}>Settings</h1>
+                <p className="text-sm" style={{ color: '#393E46' }}>Manage your account and preferences</p>
+              </div>
 
-              {/* Profile Section */}
-              <MotionSection
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="space-y-4"
-              >
-                <ProfileSection />
-              </MotionSection>
-
-              {/* Notifications Section */}
-              <MotionSection
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="space-y-4"
-              >
-                <NotificationSection />
-              </MotionSection>
-
-              {/* Social Integrations Section */}
-              <MotionSection
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center gap-3">
-                  <Youtube className={styles.sectionIcon} />
-                  <h2 className={styles.sectionTitle}>Social Integrations</h2>
+              {/* Settings Grid */}
+              <div className="grid gap-4">
+                {/* Profile Card */}
+                <div className="rounded-lg p-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold" style={{ color: '#222831' }}>Profile</h3>
+                      <p className="text-sm" style={{ color: '#393E46' }}>Manage your account information</p>
+                    </div>
+                  </div>
+                  <UserProfile 
+                    routing="path" 
+                    path="/settings" 
+                    appearance={{
+                      elements: {
+                        card: "bg-white border-0 shadow-none",
+                        headerTitle: "text-[#222831]",
+                        headerSubtitle: "text-[#393E46]",
+                        formButtonPrimary: "bg-[#00ADB5] hover:bg-[#00ADB5]/90",
+                        formFieldInput: "border-[#393E46] focus:border-[#00ADB5]",
+                        formFieldLabel: "text-[#222831]"
+                      }
+                    }} 
+                  />
                 </div>
                 
-                <div className="card p-6">
-                  <div className="text-center">
-                    <p className="text-muted-foreground">
-                      Manage your social media connections and publishing settings. 
-                      <Link href="/social" className="text-primary hover:underline ml-1">
-                        Visit Social page
-                      </Link> for full integration management.
+                {/* YouTube Integration */}
+                <div className="rounded-lg p-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                      <Youtube className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold" style={{ color: '#222831' }}>YouTube</h3>
+                      <p className="text-sm" style={{ color: '#393E46' }}>
+                        {youtubeData.isConnected 
+                          ? `Connected: ${youtubeData.channelTitle || 'Your Channel'}`
+                          : 'Connect your YouTube channel'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <Link 
+                    href="/social"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    style={{ backgroundColor: '#00ADB5', color: 'white' }}
+                  >
+                    Manage Integrations
+                  </Link>
+                </div>
+
+                {/* Notifications */}
+                <div className="rounded-lg p-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                      <Bell className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold" style={{ color: '#222831' }}>Notifications</h3>
+                      <p className="text-sm" style={{ color: '#393E46' }}>Email and push notification preferences</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Email notifications", checked: true },
+                      { label: "Team invitations", checked: true },
+                      { label: "Upload updates", checked: true }
+                    ].map((setting, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="text-sm" style={{ color: '#222831' }}>{setting.label}</span>
+                        <div className="relative">
+                          <input 
+                            type="checkbox" 
+                            defaultChecked={setting.checked}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 rounded-full transition-all peer-checked:bg-[#00ADB5] bg-[#393E46]">
+                            <div className="w-4 h-4 bg-white rounded-full shadow transform transition-transform translate-x-1 translate-y-1 peer-checked:translate-x-6"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </AppShell>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn redirectUrl="/settings" />
+      </SignedOut>
+    </>
+  );
+}
                     </p>
                   </div>
                 </div>

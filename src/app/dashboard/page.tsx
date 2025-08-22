@@ -337,23 +337,22 @@ export default function Dashboard() {
           <NextSeoNoSSR title="Dashboard" noindex nofollow />
           
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
-            {/* Email Verification Banner */}
-            <EmailVerificationBanner
-              show={Boolean(showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified")}
-              onResend={handleResendVerification}
-              onDismiss={() => setShowEmailBanner(false)}
-              isResending={resendingEmail}
-            />
 
             <div className="h-full overflow-y-auto px-4 lg:px-0">
-              <DashboardHeader teamName={selectedTeam?.name} />
-              <StatsOverview videos={videos} />
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-foreground">Recent Videos</h2>
+              {/* Clean Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold" style={{ color: '#222831' }}>
+                    {selectedTeam?.name ? `${selectedTeam.name}` : "Dashboard"}
+                  </h1>
+                  <p className="text-sm" style={{ color: '#393E46' }}>
+                    {videos.length} videos • {videos.filter(v => v.status === 'PUBLISHED').length} published
+                  </p>
                 </div>
-
+              </div>
+              
+              {/* Videos Grid */}
+              <div>
                 <VideosList
                   videos={videos}
                   loading={loading}
@@ -364,24 +363,24 @@ export default function Dashboard() {
                   processingVideoId={processingVideoId}
                   deletingVideoId={deletingVideoId}
                 />
-
-                {/* Delete Confirmation Modal */}
-                <ConfirmationModal
-                  isOpen={deleteModalOpen}
-                  onClose={() => setDeleteModalOpen(false)}
-                  onConfirm={confirmDeleteVideo}
-                  title="Delete Video?"
-                  message="This action cannot be undone. The video will be permanently deleted from both the platform and YouTube (if published)."
-                  itemName={videoToDelete?.title}
-                  confirmText={deletingVideoId ? "Deleting..." : "Delete Permanently"}
-                  cancelText="Cancel"
-                  variant="danger"
-                  icon="trash"
-                  isLoading={!!deletingVideoId}
-                />
               </div>
             </div>
           </div>
+          
+          {/* Delete Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={deleteModalOpen}
+            onClose={() => setDeleteModalOpen(false)}
+            onConfirm={confirmDeleteVideo}
+            title="Delete Video?"
+            message="This action cannot be undone. The video will be permanently deleted from both the platform and YouTube (if published)."
+            itemName={videoToDelete?.title}
+            confirmText={deletingVideoId ? "Deleting..." : "Delete Permanently"}
+            cancelText="Cancel"
+            variant="danger"
+            icon="trash"
+            isLoading={!!deletingVideoId}
+          />
         </AppShell>
       </SignedIn>
       <SignedOut>

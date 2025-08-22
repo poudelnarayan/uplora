@@ -25,41 +25,63 @@ export default function SocialPage() {
   return (
     <AppShell>
       <div className="min-h-full space-y-8">
-        <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Social Integrations</h1>
-            <p className="text-muted-foreground">Connect your social accounts for scheduling and publishing</p>
-          </div>
-        </MotionDiv>
+        {/* Clean Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold" style={{ color: '#222831' }}>Social</h1>
+          <p className="text-sm" style={{ color: '#393E46' }}>Connect your social media accounts</p>
+        </div>
 
-        <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
-          {/* YouTube */}
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Youtube className="w-6 h-6 text-red-500" />
-              <h2 className="text-xl font-semibold text-foreground">YouTube</h2>
+        {/* YouTube Connection */}
+        <div className="rounded-lg p-6 mb-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                <Youtube className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: '#222831' }}>YouTube</h3>
+                <p className="text-sm" style={{ color: '#393E46' }}>
+                  {youtubeData.isConnected 
+                    ? `Connected: ${youtubeData.channelTitle || 'Your Channel'}`
+                    : 'Connect your YouTube channel for direct uploads'
+                  }
+                </p>
+              </div>
             </div>
             <YouTubeConnection isConnected={youtubeData.isConnected} channelTitle={youtubeData.channelTitle} onConnect={() => {}} />
           </div>
+        </div>
 
-          {/* Coming soon cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[{icon: Instagram, name: 'Instagram'}, {icon: Twitter, name: 'X / Twitter'}, {icon: Facebook, name: 'Facebook'}, {icon: Linkedin, name: 'LinkedIn'}].map(({icon: Icon, name}) => (
-              <div key={name} className="card p-4 flex items-center justify-between">
+        {/* Other Platforms */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            {icon: Instagram, name: 'Instagram', desc: 'Photo & story publishing'},
+            {icon: Twitter, name: 'X / Twitter', desc: 'Tweet scheduling'},
+            {icon: Facebook, name: 'Facebook', desc: 'Page management'},
+            {icon: Linkedin, name: 'LinkedIn', desc: 'Professional content'}
+          ].map(({icon: Icon, name, desc}) => (
+            <div 
+              key={name} 
+              className="rounded-lg p-4 transition-all hover:scale-105"
+              style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}
+            >
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Icon className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#393E46' }}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
                   <div>
-                    <div className="font-semibold text-foreground">{name}</div>
-                    <div className="text-sm text-muted-foreground">Scheduling & publishing</div>
+                    <div className="font-semibold" style={{ color: '#222831' }}>{name}</div>
+                    <div className="text-sm" style={{ color: '#393E46' }}>{desc}</div>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full bg-muted">
-                  <Clock className="w-3 h-3" /> Coming soon
+                <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ backgroundColor: '#393E46', color: 'white' }}>
+                  Soon
                 </span>
               </div>
-            ))}
-          </div>
-        </MotionDiv>
+            </div>
+          ))}
+        </div>
       </div>
     </AppShell>
   );
