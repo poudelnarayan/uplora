@@ -58,7 +58,8 @@ export default function SocialPage() {
             {icon: Instagram, name: 'Instagram', desc: 'Photo & story publishing'},
             {icon: Twitter, name: 'X / Twitter', desc: 'Tweet scheduling'},
             {icon: Facebook, name: 'Facebook', desc: 'Page management'},
-            {icon: Linkedin, name: 'LinkedIn', desc: 'Professional content'}
+            {icon: Linkedin, name: 'LinkedIn', desc: 'Professional content'},
+            {icon: Video, name: 'TikTok', desc: 'Short-form video content'}
           ].map(({icon: Icon, name, desc}) => (
             <div 
               key={name} 
