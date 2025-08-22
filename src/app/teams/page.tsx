@@ -465,12 +465,12 @@ export default function TeamsPage() {
                             <span>{pendingInvites.length} pending invite{pendingInvites.length > 1 ? 's' : ''}</span>
                           </div>
                         )}
+                        </div>
                       </MotionDiv>
                     );
                   })}
                 </div>
               )}
-                        </div>
               {/* Delete Team Confirmation Modal */}
               <ConfirmationModal
                 isOpen={deleteModalOpen}

@@ -154,17 +154,3 @@ export default function SettingsPage() {
     </>
   );
 }
-                    </p>
-                  </div>
-                </div>
-              </MotionSection>
-            </div>
-          </div>
-        </AppShell>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn redirectUrl="/settings" />
-      </SignedOut>
-    </>
-  );
-}
