@@ -324,15 +324,16 @@ export default function TeamsPage() {
           <NextSeoNoSSR title="Teams" noindex nofollow />
           
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
-            <div className="h-full px-4 lg:px-0 space-y-6">
+            <div className="h-full overflow-y-auto px-4 lg:px-0">
+              <div className="space-y-4 py-4">
               {/* Comprehensive Header with Stats */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-bold" style={{ color: '#222831' }}>Team Management</h1>
                   <p className="text-lg" style={{ color: '#393E46' }}>
                     Manage your collaborative workspaces and team members
                   </p>
-                  <div className="flex items-center gap-6 mt-3">
+                  <div className="flex items-center gap-6 mt-2">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4" style={{ color: '#00ADB5' }} />
                       <span className="text-sm font-medium" style={{ color: '#393E46' }}>
@@ -367,7 +368,7 @@ export default function TeamsPage() {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-20">
+                <div className="flex items-center justify-center py-12">
                   <div className="text-center">
                     <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#00ADB5', borderTopColor: 'transparent' }} />
                     <h3 className="text-xl font-semibold mb-2" style={{ color: '#222831' }}>Loading Teams</h3>
@@ -375,7 +376,7 @@ export default function TeamsPage() {
                   </div>
                 </div>
               ) : actualTeams.length === 0 ? (
-                <div className="text-center py-20">
+                <div className="text-center py-12">
                   <div className="w-24 h-24 rounded-full mx-auto mb-8 flex items-center justify-center" style={{ backgroundColor: '#EEEEEE', border: '2px solid #00ADB5' }}>
                     <Users className="w-12 h-12" style={{ color: '#00ADB5' }} />
                   </div>
@@ -401,7 +402,7 @@ export default function TeamsPage() {
                     </button>
                     
                     {/* Team Benefits */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 max-w-4xl mx-auto">
                       <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
                         <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
                           <Users className="w-6 h-6 text-white" />
@@ -427,9 +428,9 @@ export default function TeamsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-6">
                   {/* Team Statistics Overview */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
                       <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
                         <Users className="w-6 h-6 text-white" />
@@ -467,7 +468,7 @@ export default function TeamsPage() {
                   </div>
 
                   {/* Teams Grid */}
-                  <div className="grid gap-6">
+                  <div className="grid gap-4">
                     {actualTeams.map((team) => {
                       const isOwner = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() === team.ownerEmail?.toLowerCase();
                       const activeMembers = team.members.filter(m => m.status !== "PAUSED");
@@ -478,21 +479,21 @@ export default function TeamsPage() {
                           key={team.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-xl p-8 transition-all hover:scale-[1.02] shadow-lg"
+                          className="rounded-xl p-6 transition-all hover:scale-[1.01] shadow-lg"
                           style={{ 
                             backgroundColor: '#EEEEEE',
                             border: `2px solid #393E46`
                           }}
                         >
                           {/* Team Header with Enhanced Info */}
-                          <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
-                                <Users className="w-8 h-8 text-white" />
+                              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                                <Users className="w-6 h-6 text-white" />
                               </div>
                               <div>
                                 <div className="flex items-center gap-3 mb-1">
-                                  <h3 className="text-2xl font-bold" style={{ color: '#222831' }}>{team.name}</h3>
+                                  <h3 className="text-xl font-bold" style={{ color: '#222831' }}>{team.name}</h3>
                                   {isOwner && (
                                     <div className="flex items-center gap-1 px-3 py-1 rounded-full" style={{ backgroundColor: '#00ADB5' }}>
                                       <Crown className="w-4 h-4 text-white" />
@@ -500,7 +501,7 @@ export default function TeamsPage() {
                                     </div>
                                   )}
                                 </div>
-                                <p className="text-lg" style={{ color: '#393E46' }}>{team.description || "No description"}</p>
+                                <p className="text-base" style={{ color: '#393E46' }}>{team.description || "No description"}</p>
                                 <div className="flex items-center gap-4 mt-2">
                                   <span className="text-sm" style={{ color: '#393E46' }}>
                                     {activeMembers.length} active members
@@ -542,20 +543,20 @@ export default function TeamsPage() {
 
                           {/* Active Members Section */}
                           {activeMembers.length > 0 && (
-                            <div className="mb-6">
-                              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: '#222831' }}>
+                            <div className="mb-4">
+                              <h4 className="text-base font-semibold mb-3 flex items-center gap-2" style={{ color: '#222831' }}>
                                 <UserCheck className="w-5 h-5" style={{ color: '#00ADB5' }} />
                                 Active Members ({activeMembers.length})
                               </h4>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {activeMembers.slice(0, 6).map((member) => (
                                   <div 
                                     key={member.id}
-                                    className="flex items-center gap-4 p-4 rounded-lg transition-all hover:scale-105"
+                                    className="flex items-center gap-3 p-3 rounded-lg transition-all hover:scale-105"
                                     style={{ backgroundColor: 'white', border: `2px solid #393E46` }}
                                   >
-                                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
-                                      <span className="text-lg font-bold text-white">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
+                                      <span className="text-sm font-bold text-white">
                                         {member.name[0]?.toUpperCase()}
                                       </span>
                                     </div>
@@ -592,24 +593,24 @@ export default function TeamsPage() {
 
                           {/* Pending Invitations Section */}
                           {isOwner && pendingInvites.length > 0 && (
-                            <div className="mb-6">
-                              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: '#222831' }}>
+                            <div className="mb-4">
+                              <h4 className="text-base font-semibold mb-3 flex items-center gap-2" style={{ color: '#222831' }}>
                                 <Mail className="w-5 h-5" style={{ color: '#00ADB5' }} />
                                 Pending Invitations ({pendingInvites.length})
                               </h4>
-                              <div className="space-y-3">
+                              <div className="space-y-2">
                                 {pendingInvites.map((invitation) => (
                                   <div 
                                     key={invitation.id} 
-                                    className="flex items-center justify-between p-4 rounded-lg"
+                                    className="flex items-center justify-between p-3 rounded-lg"
                                     style={{ 
                                       backgroundColor: 'white', 
                                       border: `2px solid #00ADB5`
                                     }}
                                   >
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
-                                        <Mail className="w-6 h-6 text-white" />
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                                        <Mail className="w-5 h-5 text-white" />
                                       </div>
                                       <div>
                                         <p className="font-semibold" style={{ color: '#222831' }}>{invitation.email}</p>
@@ -657,14 +658,14 @@ export default function TeamsPage() {
                           )}
 
                           {/* Team Actions */}
-                          <div className="flex items-center justify-between pt-6 border-t-2" style={{ borderColor: '#393E46' }}>
+                          <div className="flex items-center justify-between pt-4 border-t-2" style={{ borderColor: '#393E46' }}>
                             <div className="flex items-center gap-4">
-                              <button className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105" style={{ backgroundColor: '#393E46', color: 'white' }}>
+                              <button className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:scale-105" style={{ backgroundColor: '#393E46', color: 'white' }}>
                                 <Settings className="w-4 h-4" />
                                 Team Settings
                               </button>
                               {!isOwner && (
-                                <button className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105" style={{ backgroundColor: 'transparent', color: '#222831', border: '1px solid #393E46' }}>
+                                <button className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:scale-105" style={{ backgroundColor: 'transparent', color: '#222831', border: '1px solid #393E46' }}>
                                   <LogOut className="w-4 h-4" />
                                   Leave Team
                                 </button>
@@ -674,7 +675,7 @@ export default function TeamsPage() {
                             {isOwner && (
                               <button 
                                 onClick={() => handleDeleteTeam(team.id, team.name)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105" 
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:scale-105" 
                                 style={{ backgroundColor: 'transparent', color: '#222831', border: '1px solid #393E46' }}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -688,15 +689,15 @@ export default function TeamsPage() {
                   </div>
 
                   {/* Team Insights */}
-                  <div className="p-8 rounded-xl" style={{ backgroundColor: '#EEEEEE', border: `2px solid #00ADB5` }}>
-                    <h3 className="text-xl font-bold mb-6 flex items-center gap-3" style={{ color: '#222831' }}>
+                  <div className="p-6 rounded-xl" style={{ backgroundColor: '#EEEEEE', border: `2px solid #00ADB5` }}>
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-3" style={{ color: '#222831' }}>
                       <TrendingUp className="w-6 h-6" style={{ color: '#00ADB5' }} />
                       Team Insights & Recommendations
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-4">
                         <h4 className="font-semibold" style={{ color: '#222831' }}>Team Performance</h4>
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div className="flex justify-between items-center">
                             <span style={{ color: '#393E46' }}>Average team size</span>
                             <span className="font-semibold" style={{ color: '#222831' }}>
@@ -729,23 +730,24 @@ export default function TeamsPage() {
                   </div>
                 </div>
               )}
-
-              {/* Delete Team Confirmation Modal */}
-              <ConfirmationModal
-                isOpen={deleteModalOpen}
-                onClose={() => setDeleteModalOpen(false)}
-                onConfirm={confirmDeleteTeam}
-                title="Delete Team?"
-                message="This action cannot be undone. The team and all its videos will be permanently deleted."
-                itemName={teamToDelete?.name}
-                confirmText={deletingTeamId ? "Deleting..." : "Delete Permanently"}
-                cancelText="Cancel"
-                variant="danger"
-                icon="trash"
-                isLoading={!!deletingTeamId}
-              />
+              </div>
             </div>
           </div>
+
+          {/* Delete Team Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={deleteModalOpen}
+            onClose={() => setDeleteModalOpen(false)}
+            onConfirm={confirmDeleteTeam}
+            title="Delete Team?"
+            message="This action cannot be undone. The team and all its videos will be permanently deleted."
+            itemName={teamToDelete?.name}
+            confirmText={deletingTeamId ? "Deleting..." : "Delete Permanently"}
+            cancelText="Cancel"
+            variant="danger"
+            icon="trash"
+            isLoading={!!deletingTeamId}
+          />
         </AppShell>
       </SignedIn>
       <SignedOut>
