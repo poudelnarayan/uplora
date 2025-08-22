@@ -95,23 +95,6 @@ body {
 }
 
   background-color: rgb(var(--background));
-  color: var(--color-brand-dark);
-}
-
-.text-dark-secondary {
-  color: var(--color-dark-secondary);
-}
-
-.bg-soft {
-  background-color: var(--color-background);
-}
-
-html {
-  background-color: rgb(var(--background));
-  overscroll-behavior-y: none;
-  transition: background-color 0.3s ease;
-}
-
 /* Enhanced Typography System */
 .font-display {
   font-family: "Inter", "Open Sans", sans-serif;
