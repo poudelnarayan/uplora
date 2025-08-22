@@ -171,9 +171,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
         {/* Header */}
-        <div className="flex items-center h-16 px-4">
+        <div className="flex items-center h-16 px-4 bg-card border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center">
               <Video className="w-5 h-5 text-white" />
@@ -537,15 +537,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
               exit={{ x: -280, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-card border-r border-border shadow-2xl z-50 lg:hidden flex flex-col"
+              style={{ backgroundColor: 'rgb(var(--card))' }}
             >
-              <header className="h-auto flex items-center justify-between p-4 border-b border-border bg-card">
+              <header className="h-auto flex items-center justify-between p-4 border-b border-border bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
                 <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md block" />
                 <button onClick={() => setMobileNavOpen(false)} className="btn btn-ghost btn-sm">
                   <X className="w-4 h-4" />
                 </button>
               </header>
               
-              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto" style={{ backgroundColor: 'rgb(var(--card))' }}>
+              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
                 {routes.map(({ href, label, icon: Icon }) => {
                   const active = path === href || path.startsWith(href + "/");
                   return (
