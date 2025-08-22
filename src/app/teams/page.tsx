@@ -20,7 +20,11 @@ import {
   UserPlus,
   Settings,
   Trash2,
-  LogOut
+  LogOut,
+  Clock,
+  UserCheck,
+  TrendingUp,
+  Lightbulb
 } from "lucide-react";
 
 const MotionDiv = motion.div as any;
@@ -312,6 +316,7 @@ export default function TeamsPage() {
       default: return <Edit3 className="w-4 h-4" style={{ color: '#00ADB5' }} />;
     }
   };
+
   return (
     <>
       <SignedIn>
@@ -320,157 +325,411 @@ export default function TeamsPage() {
           
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
             <div className="h-full overflow-y-auto px-4 lg:px-0 space-y-6">
-              {/* Clean Header */}
+              {/* Comprehensive Header with Stats */}
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-2xl font-bold" style={{ color: '#222831' }}>Teams</h1>
-                  <p className="text-sm" style={{ color: '#393E46' }}>Manage your collaborative workspaces</p>
-                </div>
-                <button
-                  onClick={() => {
-                    openModal("create-team", {
-                      onSubmit: handleCreateTeam
-                    });
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
-                  style={{ 
-                    backgroundColor: '#00ADB5', 
-                    color: 'white'
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                  New Team
-                </button>
-              </div>
-
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#00ADB5', borderTopColor: 'transparent' }} />
-                </div>
-              ) : actualTeams.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: '#EEEEEE' }}>
-                    <Users className="w-8 h-8" style={{ color: '#00ADB5' }} />
+                  <h1 className="text-3xl font-bold" style={{ color: '#222831' }}>Team Management</h1>
+                  <p className="text-lg" style={{ color: '#393E46' }}>
+                    Manage your collaborative workspaces and team members
+                  </p>
+                  <div className="flex items-center gap-6 mt-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" style={{ color: '#00ADB5' }} />
+                      <span className="text-sm font-medium" style={{ color: '#393E46' }}>
+                        {actualTeams.length} Teams
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="w-4 h-4" style={{ color: '#00ADB5' }} />
+                      <span className="text-sm font-medium" style={{ color: '#393E46' }}>
+                        {actualTeams.reduce((sum, team) => sum + team.members.length, 0)} Total Members
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#222831' }}>Create your first team</h3>
-                  <p className="mb-6" style={{ color: '#393E46' }}>Start collaborating with your team members</p>
+                </div>
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
                       openModal("create-team", {
                         onSubmit: handleCreateTeam
                       });
                     }}
-                    className="px-6 py-3 rounded-lg font-medium transition-all hover:scale-105"
+                    className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-lg transition-all hover:scale-105 shadow-lg"
                     style={{ 
                       backgroundColor: '#00ADB5', 
                       color: 'white'
                     }}
                   >
-                    Create Team
+                    <Plus className="w-5 h-5" />
+                    Create New Team
                   </button>
                 </div>
-              ) : (
-                <div className="grid gap-4">
-                  {actualTeams.map((team) => {
-                    const isOwner = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() === team.ownerEmail?.toLowerCase();
-                    const activeMembers = team.members.filter(m => m.status !== "PAUSED");
-                    const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
+              </div>
 
-                    return (
-                      <MotionDiv
-                        key={team.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="rounded-lg p-6 transition-all hover:scale-[1.02] cursor-pointer"
-                        style={{ 
-                          backgroundColor: '#EEEEEE',
-                          border: `1px solid #393E46`
-                        }}
-                      >
-                        {/* Team Header */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
-                              <Users className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold" style={{ color: '#222831' }}>{team.name}</h3>
-                              <p className="text-sm" style={{ color: '#393E46' }}>{activeMembers.length} members</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {isOwner && (
-                              <button
-                                onClick={() => {
-                                  openModal("invite-member", {
-                                    teamName: team.name,
-                                    onSubmit: createInviteHandler(team)
-                                  });
-                                }}
-                                className="p-2 rounded-lg transition-all hover:scale-110"
-                                style={{ backgroundColor: '#00ADB5' }}
-                                title="Invite member"
-                              >
-                                <UserPlus className="w-4 h-4 text-white" />
-                              </button>
-                            )}
-                            <button className="p-2 rounded-lg transition-all hover:scale-110" style={{ backgroundColor: '#393E46' }}>
-                              <MoreVertical className="w-4 h-4 text-white" />
-                            </button>
-                          </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#00ADB5', borderTopColor: 'transparent' }} />
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: '#222831' }}>Loading Teams</h3>
+                    <p style={{ color: '#393E46' }}>Fetching your team information...</p>
+                  </div>
+                </div>
+              ) : actualTeams.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="w-24 h-24 rounded-full mx-auto mb-8 flex items-center justify-center" style={{ backgroundColor: '#EEEEEE', border: '2px solid #00ADB5' }}>
+                    <Users className="w-12 h-12" style={{ color: '#00ADB5' }} />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4" style={{ color: '#222831' }}>Create Your First Team</h3>
+                  <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: '#393E46' }}>
+                    Start collaborating with your team members by creating a shared workspace for video content management.
+                  </p>
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => {
+                        openModal("create-team", {
+                          onSubmit: handleCreateTeam
+                        });
+                      }}
+                      className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:scale-105 shadow-lg"
+                      style={{ 
+                        backgroundColor: '#00ADB5', 
+                        color: 'white'
+                      }}
+                    >
+                      <Plus className="w-6 h-6 mr-3 inline" />
+                      Create Your First Team
+                    </button>
+                    
+                    {/* Team Benefits */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+                      <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                        <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                          <Users className="w-6 h-6 text-white" />
                         </div>
+                        <h4 className="font-semibold mb-2" style={{ color: '#222831' }}>Collaborate</h4>
+                        <p className="text-sm" style={{ color: '#393E46' }}>Work together on video content with role-based permissions</p>
+                      </div>
+                      <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                        <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                          <Shield className="w-6 h-6 text-white" />
+                        </div>
+                        <h4 className="font-semibold mb-2" style={{ color: '#222831' }}>Secure</h4>
+                        <p className="text-sm" style={{ color: '#393E46' }}>Control who can upload, review, and publish content</p>
+                      </div>
+                      <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                        <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                          <TrendingUp className="w-6 h-6 text-white" />
+                        </div>
+                        <h4 className="font-semibold mb-2" style={{ color: '#222831' }}>Scale</h4>
+                        <p className="text-sm" style={{ color: '#393E46' }}>Grow your team and manage multiple projects efficiently</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Team Statistics Overview */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                      <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-2xl font-bold" style={{ color: '#222831' }}>{actualTeams.length}</div>
+                      <div className="text-sm" style={{ color: '#393E46' }}>Active Teams</div>
+                    </div>
+                    <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                      <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: '#393E46' }}>
+                        <UserCheck className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-2xl font-bold" style={{ color: '#222831' }}>
+                        {actualTeams.reduce((sum, team) => sum + team.members.filter(m => m.status !== "PAUSED").length, 0)}
+                      </div>
+                      <div className="text-sm" style={{ color: '#393E46' }}>Total Members</div>
+                    </div>
+                    <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                      <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
+                        <Crown className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-2xl font-bold" style={{ color: '#222831' }}>
+                        {actualTeams.filter(team => user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() === team.ownerEmail?.toLowerCase()).length}
+                      </div>
+                      <div className="text-sm" style={{ color: '#393E46' }}>Teams You Own</div>
+                    </div>
+                    <div className="text-center p-6 rounded-lg" style={{ backgroundColor: '#EEEEEE', border: '1px solid #393E46' }}>
+                      <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                        <Mail className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-2xl font-bold" style={{ color: '#222831' }}>
+                        {actualTeams.reduce((sum, team) => sum + team.invitations.filter(inv => inv.status === "pending").length, 0)}
+                      </div>
+                      <div className="text-sm" style={{ color: '#393E46' }}>Pending Invites</div>
+                    </div>
+                  </div>
 
-                        {/* Members Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                          {activeMembers.slice(0, 6).map((member) => (
-                            <div 
-                              key={member.id}
-                              className="flex items-center gap-3 p-3 rounded-lg"
-                              style={{ backgroundColor: 'white', border: `1px solid #393E46` }}
-                            >
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
-                                <span className="text-sm font-medium text-white">
-                                  {member.name[0]?.toUpperCase()}
-                                </span>
+                  {/* Teams Grid */}
+                  <div className="grid gap-6">
+                    {actualTeams.map((team) => {
+                      const isOwner = user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() === team.ownerEmail?.toLowerCase();
+                      const activeMembers = team.members.filter(m => m.status !== "PAUSED");
+                      const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
+
+                      return (
+                        <MotionDiv
+                          key={team.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl p-8 transition-all hover:scale-[1.02] shadow-lg"
+                          style={{ 
+                            backgroundColor: '#EEEEEE',
+                            border: `2px solid #393E46`
+                          }}
+                        >
+                          {/* Team Header with Enhanced Info */}
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                                <Users className="w-8 h-8 text-white" />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate" style={{ color: '#222831' }}>
-                                  {member.name}
-                                </p>
-                                <div className="flex items-center gap-1">
-                                  {getRoleIcon(member.role)}
-                                  <span className="text-xs" style={{ color: '#393E46' }}>
-                                    {member.role.toLowerCase()}
+                              <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                  <h3 className="text-2xl font-bold" style={{ color: '#222831' }}>{team.name}</h3>
+                                  {isOwner && (
+                                    <div className="flex items-center gap-1 px-3 py-1 rounded-full" style={{ backgroundColor: '#00ADB5' }}>
+                                      <Crown className="w-4 h-4 text-white" />
+                                      <span className="text-sm font-medium text-white">Owner</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-lg" style={{ color: '#393E46' }}>{team.description || "No description"}</p>
+                                <div className="flex items-center gap-4 mt-2">
+                                  <span className="text-sm" style={{ color: '#393E46' }}>
+                                    {activeMembers.length} active members
+                                  </span>
+                                  {pendingInvites.length > 0 && (
+                                    <span className="text-sm" style={{ color: '#00ADB5' }}>
+                                      {pendingInvites.length} pending invites
+                                    </span>
+                                  )}
+                                  <span className="text-sm" style={{ color: '#393E46' }}>
+                                    Created {team.createdAt.toLocaleDateString()}
                                   </span>
                                 </div>
                               </div>
                             </div>
-                          ))}
-                          
-                          {activeMembers.length > 6 && (
-                            <div 
-                              className="flex items-center justify-center p-3 rounded-lg border-2 border-dashed"
-                              style={{ borderColor: '#393E46' }}
-                            >
-                              <span className="text-sm font-medium" style={{ color: '#393E46' }}>
-                                +{activeMembers.length - 6} more
-                              </span>
+                            
+                            <div className="flex items-center gap-3">
+                              {isOwner && (
+                                <button
+                                  onClick={() => {
+                                    openModal("invite-member", {
+                                      teamName: team.name,
+                                      onSubmit: createInviteHandler(team)
+                                    });
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-110 shadow-md"
+                                  style={{ backgroundColor: '#00ADB5' }}
+                                  title="Invite member"
+                                >
+                                  <UserPlus className="w-5 h-5 text-white" />
+                                  <span className="text-white font-medium">Invite</span>
+                                </button>
+                              )}
+                              <button className="p-3 rounded-lg transition-all hover:scale-110 shadow-md" style={{ backgroundColor: '#393E46' }}>
+                                <MoreVertical className="w-5 h-5 text-white" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Active Members Section */}
+                          {activeMembers.length > 0 && (
+                            <div className="mb-6">
+                              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: '#222831' }}>
+                                <UserCheck className="w-5 h-5" style={{ color: '#00ADB5' }} />
+                                Active Members ({activeMembers.length})
+                              </h4>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {activeMembers.slice(0, 6).map((member) => (
+                                  <div 
+                                    key={member.id}
+                                    className="flex items-center gap-4 p-4 rounded-lg transition-all hover:scale-105"
+                                    style={{ backgroundColor: 'white', border: `2px solid #393E46` }}
+                                  >
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#222831' }}>
+                                      <span className="text-lg font-bold text-white">
+                                        {member.name[0]?.toUpperCase()}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold truncate" style={{ color: '#222831' }}>
+                                        {member.name}
+                                      </p>
+                                      <p className="text-sm truncate" style={{ color: '#393E46' }}>
+                                        {member.email}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        {getRoleIcon(member.role)}
+                                        <span className="text-sm font-medium" style={{ color: '#393E46' }}>
+                                          {member.role.toLowerCase()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                                
+                                {activeMembers.length > 6 && (
+                                  <div 
+                                    className="flex items-center justify-center p-4 rounded-lg border-2 border-dashed"
+                                    style={{ borderColor: '#393E46', backgroundColor: 'white' }}
+                                  >
+                                    <span className="text-lg font-semibold" style={{ color: '#393E46' }}>
+                                      +{activeMembers.length - 6} more members
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
-                        {/* Pending Invites */}
-                        {pendingInvites.length > 0 && (
-                          <div className="flex items-center gap-2 text-sm" style={{ color: '#393E46' }}>
-                            <Mail className="w-4 h-4" style={{ color: '#00ADB5' }} />
-                            <span>{pendingInvites.length} pending invite{pendingInvites.length > 1 ? 's' : ''}</span>
+
+                          {/* Pending Invitations Section */}
+                          {isOwner && pendingInvites.length > 0 && (
+                            <div className="mb-6">
+                              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: '#222831' }}>
+                                <Mail className="w-5 h-5" style={{ color: '#00ADB5' }} />
+                                Pending Invitations ({pendingInvites.length})
+                              </h4>
+                              <div className="space-y-3">
+                                {pendingInvites.map((invitation) => (
+                                  <div 
+                                    key={invitation.id} 
+                                    className="flex items-center justify-between p-4 rounded-lg"
+                                    style={{ 
+                                      backgroundColor: 'white', 
+                                      border: `2px solid #00ADB5`
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-4">
+                                      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
+                                        <Mail className="w-6 h-6 text-white" />
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold" style={{ color: '#222831' }}>{invitation.email}</p>
+                                        <p className="text-sm" style={{ color: '#393E46' }}>
+                                          Invited as {invitation.role.toLowerCase()} • {new Date(invitation.invitedAt).toLocaleDateString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-3">
+                                      <button 
+                                        onClick={() => {/* resend logic */}} 
+                                        className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                                        style={{ 
+                                          backgroundColor: '#00ADB5', 
+                                          color: 'white'
+                                        }}
+                                        disabled={resendingId === invitation.id}
+                                      >
+                                        {resendingId === invitation.id ? (
+                                          <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline-block" />
+                                            Resending...
+                                          </>
+                                        ) : (
+                                          "Resend"
+                                        )}
+                                      </button>
+                                      <button 
+                                        onClick={() => {/* cancel logic */}} 
+                                        className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                                        style={{ 
+                                          backgroundColor: 'transparent', 
+                                          color: '#222831',
+                                          border: '1px solid #393E46'
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Team Actions */}
+                          <div className="flex items-center justify-between pt-6 border-t-2" style={{ borderColor: '#393E46' }}>
+                            <div className="flex items-center gap-4">
+                              <button className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105" style={{ backgroundColor: '#393E46', color: 'white' }}>
+                                <Settings className="w-4 h-4" />
+                                Team Settings
+                              </button>
+                              {!isOwner && (
+                                <button className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105" style={{ backgroundColor: 'transparent', color: '#222831', border: '1px solid #393E46' }}>
+                                  <LogOut className="w-4 h-4" />
+                                  Leave Team
+                                </button>
+                              )}
+                            </div>
+                            
+                            {isOwner && (
+                              <button 
+                                onClick={() => handleDeleteTeam(team.id, team.name)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-105" 
+                                style={{ backgroundColor: 'transparent', color: '#222831', border: '1px solid #393E46' }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Team
+                              </button>
+                            )}
                           </div>
-                        )}
+                        </MotionDiv>
+                      );
+                    })}
+                  </div>
+
+                  {/* Team Insights */}
+                  <div className="p-8 rounded-xl" style={{ backgroundColor: '#EEEEEE', border: `2px solid #00ADB5` }}>
+                    <h3 className="text-xl font-bold mb-6 flex items-center gap-3" style={{ color: '#222831' }}>
+                      <TrendingUp className="w-6 h-6" style={{ color: '#00ADB5' }} />
+                      Team Insights & Recommendations
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="font-semibold" style={{ color: '#222831' }}>Team Performance</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span style={{ color: '#393E46' }}>Average team size</span>
+                            <span className="font-semibold" style={{ color: '#222831' }}>
+                              {Math.round(actualTeams.reduce((sum, team) => sum + team.members.length, 0) / Math.max(actualTeams.length, 1))} members
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span style={{ color: '#393E46' }}>Most active team</span>
+                            <span className="font-semibold" style={{ color: '#222831' }}>
+                              {actualTeams.sort((a, b) => b.members.length - a.members.length)[0]?.name || "N/A"}
+                            </span>
+                          </div>
                         </div>
-                      </MotionDiv>
-                    );
-                  })}
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="font-semibold flex items-center gap-2" style={{ color: '#222831' }}>
+                          <Lightbulb className="w-5 h-5" style={{ color: '#00ADB5' }} />
+                          Growth Tips
+                        </h4>
+                        <div className="space-y-2 text-sm" style={{ color: '#393E46' }}>
+                          {actualTeams.length < 3 ? (
+                            <p>Consider creating specialized teams for different content types to improve collaboration and organization.</p>
+                          ) : (
+                            <p>Great job! Your teams are well organized. Consider inviting more members to scale your content production.</p>
+                          )}
+                          <p>Pro tip: Use role-based permissions to maintain quality control while enabling team growth.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
+
               {/* Delete Team Confirmation Modal */}
               <ConfirmationModal
                 isOpen={deleteModalOpen}
