@@ -53,16 +53,16 @@ export default function IdeaLabContent({
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      <div className="rounded-xl p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+      <div className="rounded-xl p-4 bg-[#DBE2EF] border border-[#3F72AF]">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-            <Lightbulb className="w-4 h-4 text-amber-500" />
+          <div className="w-8 h-8 rounded-lg bg-[#3F72AF] flex items-center justify-center flex-shrink-0">
+            <Lightbulb className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">
+            <p className="text-sm font-medium text-[#112D4E] mb-1">
               Feature Request
             </p>
-            <p className="text-xs text-amber-700 dark:text-amber-300">
+            <p className="text-xs text-[#3F72AF]">
               Share your ideas to help us build features that matter to you and your team.
             </p>
           </div>
@@ -85,7 +85,7 @@ export default function IdeaLabContent({
 
         {/* Priority Selector */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-[#112D4E]">
             Priority Level
           </label>
           <div className="grid grid-cols-3 gap-3">
@@ -97,8 +97,8 @@ export default function IdeaLabContent({
                 className={`
                   flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all
                   ${formData.priority === priority
-                    ? `border-primary bg-gradient-to-br ${color} text-foreground shadow-sm`
-                    : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted/50"
+                    ? `border-[#3F72AF] bg-[#DBE2EF] text-[#112D4E] shadow-sm`
+                    : "border-[#DBE2EF] bg-[#F9F7F7] text-[#3F72AF] hover:border-[#3F72AF] hover:bg-[#DBE2EF]"
                   }
                 `}
               >
@@ -111,14 +111,14 @@ export default function IdeaLabContent({
               </button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-[#3F72AF]">
             {priorities.find(p => p.priority === formData.priority)?.description}
           </p>
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-[#112D4E]">
             Tell us more
           </label>
           <textarea
@@ -129,9 +129,9 @@ export default function IdeaLabContent({
             })}
             placeholder="How would this feature work? What problem would it solve?"
             className="
-              w-full min-h-[120px] p-3 rounded-lg border border-border 
-              bg-input text-foreground placeholder:text-muted-foreground
-              focus:border-primary focus:ring-2 focus:ring-primary/20
+              w-full min-h-[120px] p-3 rounded-lg border border-[#DBE2EF] 
+              bg-[#F9F7F7] text-[#112D4E] placeholder:text-[#3F72AF]
+              focus:border-[#3F72AF] focus:ring-2 focus:ring-[#3F72AF]/20
               transition-all resize-vertical
             "
             required
@@ -139,11 +139,11 @@ export default function IdeaLabContent({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-border">
+        <div className="flex gap-3 pt-4 border-t border-[#DBE2EF]">
           <button
             type="button"
             onClick={onCancel}
-            className="btn btn-ghost flex-1"
+            className="flex-1 px-4 py-2 rounded-lg border border-[#DBE2EF] text-[#3F72AF] hover:bg-[#DBE2EF] transition-all"
             disabled={isLoading}
           >
             Cancel
@@ -151,16 +151,16 @@ export default function IdeaLabContent({
           <button
             type="submit"
             disabled={isLoading || !formData.title.trim() || !formData.description.trim()}
-            className="btn btn-primary flex-1"
+            className="flex-1 px-4 py-2 rounded-lg bg-[#3F72AF] text-white hover:bg-[#112D4E] transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
-                <div className="spinner mr-2" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Submitting...
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Sparkles className="w-4 h-4" />
                 Submit Idea
               </>
             )}

@@ -53,7 +53,7 @@ export default function FeedbackContent({
     <div className="space-y-6">
       {/* Feedback Type Selector */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-foreground">
+        <label className="text-sm font-medium text-[#112D4E]">
           What's on your mind?
         </label>
         <div className="grid grid-cols-3 gap-3">
@@ -65,8 +65,8 @@ export default function FeedbackContent({
               className={`
                 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
                 ${feedbackType === type
-                  ? `border-primary bg-gradient-to-br ${color} text-foreground shadow-sm`
-                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted/50"
+                  ? `border-[#3F72AF] bg-[#DBE2EF] text-[#112D4E] shadow-sm`
+                  : "border-[#DBE2EF] bg-[#F9F7F7] text-[#3F72AF] hover:border-[#3F72AF] hover:bg-[#DBE2EF]"
                 }
               `}
             >
@@ -75,7 +75,7 @@ export default function FeedbackContent({
             </button>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[#3F72AF]">
           {feedbackTypes.find(t => t.type === feedbackType)?.description}
         </p>
       </div>
@@ -83,7 +83,7 @@ export default function FeedbackContent({
       {/* Message Input */}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
+          <label className="text-sm font-medium text-[#112D4E]">
             Your message
           </label>
           <textarea
@@ -91,9 +91,9 @@ export default function FeedbackContent({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Tell us what you think..."
             className="
-              w-full min-h-[120px] p-3 rounded-lg border border-border 
-              bg-input text-foreground placeholder:text-muted-foreground
-              focus:border-primary focus:ring-2 focus:ring-primary/20
+              w-full min-h-[120px] p-3 rounded-lg border border-[#DBE2EF] 
+              bg-[#F9F7F7] text-[#112D4E] placeholder:text-[#3F72AF]
+              focus:border-[#3F72AF] focus:ring-2 focus:ring-[#3F72AF]/20
               transition-all resize-vertical
             "
             required
@@ -101,11 +101,11 @@ export default function FeedbackContent({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-border">
+        <div className="flex gap-3 pt-4 border-t border-[#DBE2EF]">
           <button
             type="button"
             onClick={onCancel}
-            className="btn btn-ghost flex-1"
+            className="flex-1 px-4 py-2 rounded-lg border border-[#DBE2EF] text-[#3F72AF] hover:bg-[#DBE2EF] transition-all"
             disabled={isLoading}
           >
             Cancel
@@ -113,16 +113,16 @@ export default function FeedbackContent({
           <button
             type="submit"
             disabled={isLoading || !message.trim()}
-            className="btn btn-primary flex-1"
+            className="flex-1 px-4 py-2 rounded-lg bg-[#3F72AF] text-white hover:bg-[#112D4E] transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
-                <div className="spinner mr-2" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Sending...
               </>
             ) : (
               <>
-                <Send className="w-4 h-4 mr-2" />
+                <Send className="w-4 h-4" />
                 Send Feedback
               </>
             )}

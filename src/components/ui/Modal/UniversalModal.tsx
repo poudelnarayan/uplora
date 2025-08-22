@@ -24,33 +24,33 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     title: "Invite Team Member",
     subtitle: "Add someone to collaborate with your team",
     icon: <Users className="w-6 h-6 text-white" />,
-    iconColor: "from-blue-500 to-indigo-600",
+    iconColor: "bg-[#3F72AF]",
     maxWidth: "max-w-md",
-    headerGradient: "from-blue-500/10 to-indigo-500/10"
+    headerGradient: "bg-[#DBE2EF]"
   },
   "create-team": {
     title: "Create New Team",
     subtitle: "Start collaborating with your team",
     icon: <Plus className="w-6 h-6 text-white" />,
-    iconColor: "from-green-500 to-emerald-600",
+    iconColor: "bg-[#3F72AF]",
     maxWidth: "max-w-lg",
-    headerGradient: "from-green-500/10 to-emerald-500/10"
+    headerGradient: "bg-[#DBE2EF]"
   },
   "feedback-studio": {
     title: "Feedback Studio",
     subtitle: "Help us improve Uplora",
     icon: <MessageCircle className="w-6 h-6 text-white" />,
-    iconColor: "from-purple-500 to-violet-600",
+    iconColor: "bg-[#3F72AF]",
     maxWidth: "max-w-lg",
-    headerGradient: "from-purple-500/10 to-violet-500/10"
+    headerGradient: "bg-[#DBE2EF]"
   },
   "idea-lab": {
     title: "Idea Lab",
     subtitle: "Share your brilliant ideas",
     icon: <Lightbulb className="w-6 h-6 text-white" />,
-    iconColor: "from-amber-500 to-orange-600",
+    iconColor: "bg-[#3F72AF]",
     maxWidth: "max-w-xl",
-    headerGradient: "from-amber-500/10 to-orange-500/10"
+    headerGradient: "bg-[#DBE2EF]"
   }
 };
 
@@ -167,13 +167,13 @@ export default function UniversalModal({
               }}
               className={`
                 relative w-full ${config.maxWidth} 
-                bg-background border border-border rounded-2xl 
+                bg-[#F9F7F7] border border-[#DBE2EF] rounded-2xl 
                 shadow-2xl overflow-hidden
                 max-h-[90vh] flex flex-col
               `}
               style={{
                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                backgroundColor: "rgb(var(--background))"
+                backgroundColor: "#F9F7F7"
               }}
               tabIndex={-1}
               role="dialog"
@@ -184,15 +184,15 @@ export default function UniversalModal({
               {/* Header Section */}
               {showHeader && (
                 <div className={`
-                  bg-gradient-to-r ${config.headerGradient} 
-                  border-b border-border p-6
+                  ${config.headerGradient} 
+                  border-b border-[#DBE2EF] p-6
                 `}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {/* Icon with gradient background */}
                       <div className={`
                         w-12 h-12 rounded-xl 
-                        bg-gradient-to-br ${config.iconColor}
+                        ${config.iconColor}
                         flex items-center justify-center
                         shadow-lg
                       `}>
@@ -203,14 +203,14 @@ export default function UniversalModal({
                       <div>
                         <h2 
                           id="modal-title"
-                          className="text-xl font-bold text-foreground"
+                          className="text-xl font-bold text-[#112D4E]"
                         >
                           {customTitle || config.title}
                         </h2>
                         {(customSubtitle || config.subtitle) && (
                           <p 
                             id="modal-description"
-                            className="text-sm text-muted-foreground mt-1"
+                            className="text-sm text-[#3F72AF] mt-1"
                           >
                             {customSubtitle || config.subtitle}
                           </p>
@@ -224,13 +224,13 @@ export default function UniversalModal({
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
                       className="
-                        p-2 rounded-lg hover:bg-muted 
+                        p-2 rounded-lg hover:bg-[#DBE2EF] 
                         transition-colors duration-200
-                        focus:outline-none focus:ring-2 focus:ring-primary/50
+                        focus:outline-none focus:ring-2 focus:ring-[#3F72AF]/50
                       "
                       aria-label="Close modal"
                     >
-                      <X className="w-5 h-5 text-muted-foreground" />
+                      <X className="w-5 h-5 text-[#3F72AF]" />
                     </motion.button>
                   </div>
                 </div>

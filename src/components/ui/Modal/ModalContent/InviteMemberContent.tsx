@@ -42,16 +42,16 @@ export default function InviteMemberContent({
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      <div className="rounded-xl p-4 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700">
+      <div className="rounded-xl p-4 bg-[#DBE2EF] border border-[#3F72AF]">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-            <Mail className="w-4 h-4 text-blue-500" />
+          <div className="w-8 h-8 rounded-lg bg-[#3F72AF] flex items-center justify-center flex-shrink-0">
+            <Mail className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+            <p className="text-sm font-medium text-[#112D4E] mb-1">
               Email Invitation
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-300">
+            <p className="text-xs text-[#3F72AF]">
               They'll receive a secure invitation link to join {teamName || "your team"}. 
               The link expires in 7 days.
             </p>
@@ -77,6 +77,9 @@ export default function InviteMemberContent({
           <p className="text-xs text-muted-foreground">
             Make sure this email address is correct
           </p>
+          <p className="text-xs text-[#3F72AF]">
+            Make sure this email address is correct
+          </p>
         </div>
 
         <div className="space-y-3">
@@ -95,10 +98,10 @@ export default function InviteMemberContent({
           </SelectField>
 
           {/* Role Description */}
-          <div className="p-3 rounded-lg bg-muted/30 border border-border">
+          <div className="p-3 rounded-lg bg-[#DBE2EF] border border-[#3F72AF]">
             <div className="text-xs">
-              <span className="font-medium text-foreground">Role Permissions: </span>
-              <span className="text-muted-foreground">
+              <span className="font-medium text-[#112D4E]">Role Permissions: </span>
+              <span className="text-[#3F72AF]">
                 {getRoleDescription(formData.role)}
               </span>
             </div>
@@ -106,11 +109,11 @@ export default function InviteMemberContent({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-border">
+        <div className="flex gap-3 pt-4 border-t border-[#DBE2EF]">
           <button
             type="button"
             onClick={onCancel}
-            className="btn btn-ghost flex-1"
+            className="flex-1 px-4 py-2 rounded-lg border border-[#DBE2EF] text-[#3F72AF] hover:bg-[#DBE2EF] transition-all"
             disabled={isLoading}
           >
             Cancel
@@ -118,16 +121,16 @@ export default function InviteMemberContent({
           <button
             type="submit"
             disabled={isLoading || !formData.email.trim()}
-            className="btn btn-primary flex-1"
+            className="flex-1 px-4 py-2 rounded-lg bg-[#3F72AF] text-white hover:bg-[#112D4E] transition-all flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
-                <div className="spinner mr-2" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Sending...
               </>
             ) : (
               <>
-                <Mail className="w-4 h-4 mr-2" />
+                <Mail className="w-4 h-4" />
                 Send Invitation
               </>
             )}
