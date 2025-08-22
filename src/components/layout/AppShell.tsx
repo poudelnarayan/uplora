@@ -35,7 +35,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
-  { href: "/upload", label: "Upload", icon: Upload },
+  { href: "/upload", label: "Make Post", icon: Upload },
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/subscription", label: "Subscription", icon: CreditCard },

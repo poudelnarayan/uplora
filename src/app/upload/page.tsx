@@ -22,7 +22,7 @@ export default function UploadPage() {
     <>
       <SignedIn>
         <AppShell>
-          <NextSeoNoSSR title="Upload" noindex nofollow />
+          <NextSeoNoSSR title="Make Post" noindex nofollow />
           
           <div className="h-[calc(100vh-8rem)] flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col justify-center items-center max-w-4xl mx-auto w-full px-4">
@@ -40,13 +40,13 @@ export default function UploadPage() {
                   />
                 </div>
 
-                {/* Upload Zone */}
+                {/* Content Creation Zone */}
                 <div className="w-full max-w-xl">
                   <UploadZone />
                 </div>
               </MotionDiv>
 
-              {/* Upload Benefits */}
+              {/* Content Creation Benefits */}
               <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

@@ -31,6 +31,8 @@ export default function UploadZone() {
   const { selectedTeamId } = useTeam();
   
   // State management
+  const [contentType, setContentType] = useState<"text" | "reel" | "video">("video");
+  const [textContent, setTextContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -360,9 +362,108 @@ export default function UploadZone() {
 
   return (
     <div className="space-y-4 w-full max-w-xl mx-auto">
-      {/* Upload Zone */}
+      {/* Content Type Selector */}
+      <div className="card p-4">
+        <h3 className="text-lg font-semibold text-foreground mb-4">What would you like to create?</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => setContentType("text")}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              contentType === "text"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <FileText className="w-6 h-6" />
+              <span className="text-sm font-medium">Text Post</span>
+              <span className="text-xs text-muted-foreground">Share thoughts</span>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setContentType("reel")}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              contentType === "reel"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Sparkles className="w-6 h-6" />
+              <span className="text-sm font-medium">Reel</span>
+              <span className="text-xs text-muted-foreground">Short video</span>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setContentType("video")}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              contentType === "video"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <FileVideo className="w-6 h-6" />
+              <span className="text-sm font-medium">Long Video</span>
+              <span className="text-xs text-muted-foreground">YouTube video</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Content Creation Zone */}
       <div className="space-y-4">
-        {!file ? (
+        {contentType === "text" ? (
+          <MotionDiv
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card p-6"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Create Text Post</h3>
+                  <p className="text-muted-foreground">Share your thoughts with your audience</p>
+                </div>
+              </div>
+              
+              <textarea
+                value={textContent}
+                onChange={(e) => setTextContent(e.target.value)}
+                placeholder="What's on your mind?"
+                className="w-full min-h-[120px] p-4 rounded-lg border border-border bg-background text-foreground resize-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">
+                  {textContent.length}/280 characters
+                </span>
+                <button
+                  onClick={() => {
+                    if (textContent.trim()) {
+                      notifications.addNotification({
+                        type: "success",
+                        title: "Text post created!",
+                        message: "Your post has been shared successfully"
+                      });
+                      setTextContent("");
+                    }
+                  }}
+                  disabled={!textContent.trim() || textContent.length > 280}
+                  className="btn btn-primary"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Post
+                </button>
+              </div>
+            </div>
+          </MotionDiv>
+        ) : !file ? (
           <MotionDiv
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -378,7 +479,7 @@ export default function UploadZone() {
             <input
               id="file-input"
               type="file"
-              accept="video/*"
+              accept={contentType === "reel" ? "video/*" : "video/*"}
               disabled={hasActive || isUploading}
               onChange={(e) => {
                 const selectedFile = e.target.files?.[0];
@@ -398,33 +499,53 @@ export default function UploadZone() {
               className="space-y-4"
             >
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center">
-                <FileVideo className="w-8 h-8 text-white" />
+                {contentType === "reel" ? (
+                  <Sparkles className="w-8 h-8 text-white" />
+                ) : (
+                  <FileVideo className="w-8 h-8 text-white" />
+                )}
               </div>
               
               <div className="space-y-1">
                 <h3 className="text-2xl font-bold text-foreground">
-                  {isDragOver ? "Drop your video here!" : "Upload your video"}
+                  {isDragOver 
+                    ? `Drop your ${contentType} here!` 
+                    : `Upload your ${contentType === "reel" ? "short video" : "video"}`
+                  }
                 </h3>
                 <p className="text-muted-foreground">
-                  {hasActive ? "Uploading Video. Please wait until it finishes." : (isDragOver ? "Release to upload" : "Drag and drop or click to browse")}
+                  {hasActive 
+                    ? `Creating ${contentType}. Please wait until it finishes.` 
+                    : (isDragOver ? "Release to upload" : "Drag and drop or click to browse")
+                  }
                 </p>
               </div>
               
               <div className="flex flex-wrap gap-2 justify-center">
-                {['MP4', 'MOV', 'AVI', 'WebM', 'MKV'].map(format => (
+                {contentType === "reel" 
+                  ? ['MP4', 'MOV', 'WebM'].map(format => (
+                    <span
+                      key={format}
+                      className="px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground"
+                    >
+                      {format}
+                    </span>
+                  ))
+                  : ['MP4', 'MOV', 'AVI', 'WebM', 'MKV'].map(format => (
                   <span
                     key={format}
                     className="px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground"
                   >
                     {format}
                   </span>
-                ))}
+                  ))
+                }
               </div>
 
               <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Zap className="w-3 h-3" />
-                  <span>Fast upload</span>
+                  <span>Fast creation</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Shield className="w-3 h-3" />
@@ -432,7 +553,7 @@ export default function UploadZone() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Target className="w-3 h-3" />
-                  <span>Direct to YouTube</span>
+                  <span>{contentType === "reel" ? "Direct to platforms" : "Direct to YouTube"}</span>
                 </div>
               </div>
             </MotionDiv>
