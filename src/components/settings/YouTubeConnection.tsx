@@ -86,13 +86,13 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
 
       {isConnected ? (
         <div className="space-y-4">
-          <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+          <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)', borderColor: 'rgba(0, 173, 181, 0.3)' }}>
+            <div className="flex items-center gap-2" style={{ color: 'rgb(0, 173, 181)' }}>
               <CheckCircle className="w-4 h-4" />
               <span className="text-sm font-medium">Connected to YouTube</span>
             </div>
             {channelTitle && (
-              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+              <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
                 Channel: {channelTitle}
               </p>
             )}
@@ -118,12 +118,12 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-            <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
+          <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(57, 62, 70, 0.1)', borderColor: 'rgba(57, 62, 70, 0.3)' }}>
+            <div className="flex items-center gap-2" style={{ color: 'rgb(57, 62, 70)' }}>
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm font-medium">Not Connected</span>
             </div>
-            <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
+            <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
               Connect your YouTube channel to start uploading videos
             </p>
           </div>
