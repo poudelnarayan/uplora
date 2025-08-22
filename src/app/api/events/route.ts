@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const teamId = searchParams.get("teamId");
-    const { userId } = await auth();
+    const { userId } = auth();
 
     // Validate required parameters
     if (!userId) {
