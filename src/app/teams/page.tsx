@@ -11,7 +11,6 @@ import EmptyTeamsState from "@/components/teams/TeamInsights";
 import { motion } from "framer-motion";
 import { useModalManager } from "@/components/ui/Modal";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-import styles from "./Teams.module.css";
 
 const MotionDiv = motion.div as any;
 

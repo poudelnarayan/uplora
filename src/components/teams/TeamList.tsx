@@ -195,41 +195,72 @@ export default function TeamList({
             {activeMembers.length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-primary" />
+                  <UserCheck className="w-5 h-5" style={{ color: 'rgb(0, 173, 181)' }} />
                   Active Members ({activeMembers.length})
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {activeMembers.map((member) => (
                     <div 
                       key={member.id} 
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+                      className="flex items-center justify-between p-4 rounded-lg border transition-colors"
+                      style={{ 
+                        backgroundColor: 'rgb(238, 238, 238)', 
+                        borderColor: 'rgb(57, 62, 70)',
+                        color: 'rgb(34, 40, 49)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgb(57, 62, 70)';
+                        e.currentTarget.style.color = 'rgb(238, 238, 238)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgb(238, 238, 238)';
+                        e.currentTarget.style.color = 'rgb(34, 40, 49)';
+                      }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: 'rgb(0, 173, 181)' }}
+                        >
                           <span className="text-sm font-bold text-white">
                             {member.name[0].toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{member.name}</p>
+                          <p className="font-medium" style={{ color: 'inherit' }}>{member.name}</p>
                           <div className="flex items-center gap-2">
                             <span className={`text-xs px-2 py-1 rounded-full font-medium border ${
                               member.role === "OWNER"
-                                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700"
+                                ? ""
                                 : member.role === "ADMIN"
-                                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+                                ? ""
                                 : member.role === "MANAGER"
-                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700"
-                                : "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700"
-                            }`}>
+                                ? ""
+                                : ""
+                            }`}
+                            style={{
+                              backgroundColor: member.role === "OWNER" ? 'rgb(0, 173, 181)' :
+                                             member.role === "ADMIN" ? 'rgb(57, 62, 70)' :
+                                             member.role === "MANAGER" ? 'rgb(34, 40, 49)' :
+                                             'rgb(238, 238, 238)',
+                              color: member.role === "OWNER" ? 'white' :
+                                   member.role === "ADMIN" ? 'white' :
+                                   member.role === "MANAGER" ? 'white' :
+                                   'rgb(34, 40, 49)',
+                              borderColor: member.role === "OWNER" ? 'rgb(0, 173, 181)' :
+                                         member.role === "ADMIN" ? 'rgb(57, 62, 70)' :
+                                         member.role === "MANAGER" ? 'rgb(34, 40, 49)' :
+                                         'rgb(57, 62, 70)'
+                            }}
+                          >
                               {member.role === "OWNER" ? (
-                                <><Crown className="w-3 h-3 inline mr-1" />Owner</>
+                                <><Crown className="w-3 h-3 inline mr-1" style={{ color: 'inherit' }} />Owner</>
                               ) : member.role === "ADMIN" ? (
-                                <><Shield className="w-3 h-3 inline mr-1" />Admin</>
+                                <><Shield className="w-3 h-3 inline mr-1" style={{ color: 'inherit' }} />Admin</>
                               ) : member.role === "MANAGER" ? (
-                                <><Target className="w-3 h-3 inline mr-1" />Manager</>
+                                <><Target className="w-3 h-3 inline mr-1" style={{ color: 'inherit' }} />Manager</>
                               ) : (
-                                <><Edit3 className="w-3 h-3 inline mr-1" />Editor</>
+                                <><Edit3 className="w-3 h-3 inline mr-1" style={{ color: 'inherit' }} />Editor</>
                               )}
                             </span>
                           </div>
@@ -240,13 +271,37 @@ export default function TeamList({
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => onToggleMemberStatus(team.id, member.id, member.name, member.status || "ACTIVE", team.name)}
-                            className="btn btn-ghost btn-sm"
+                            className="btn btn-sm px-3 py-1 rounded text-sm font-medium transition-colors"
+                            style={{ 
+                              backgroundColor: 'rgb(57, 62, 70)', 
+                              color: 'white',
+                              border: '1px solid rgb(57, 62, 70)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgb(34, 40, 49)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgb(57, 62, 70)';
+                            }}
                           >
                             {member.status === "PAUSED" ? "Activate" : "Pause"}
                           </button>
                           <button 
                             onClick={() => onRemoveMember(team.id, member.id, team.name)} 
-                            className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            className="btn btn-sm px-3 py-1 rounded text-sm font-medium transition-colors"
+                            style={{ 
+                              backgroundColor: 'transparent', 
+                              color: 'rgb(34, 40, 49)',
+                              border: '1px solid rgb(34, 40, 49)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgb(34, 40, 49)';
+                              e.currentTarget.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = 'rgb(34, 40, 49)';
+                            }}
                           >
                             Remove
                           </button>
@@ -262,22 +317,30 @@ export default function TeamList({
             {isOwner && pendingInvites.length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-warning" />
+                  <Mail className="w-5 h-5" style={{ color: 'rgb(0, 173, 181)' }} />
                   Pending Invitations ({pendingInvites.length})
                 </h4>
                 <div className="space-y-2">
                   {pendingInvites.map((invitation) => (
                     <div 
                       key={invitation.id} 
-                      className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700"
+                      className="flex items-center justify-between p-4 rounded-lg border"
+                      style={{ 
+                        backgroundColor: 'rgb(238, 238, 238)', 
+                        borderColor: 'rgb(0, 173, 181)',
+                        color: 'rgb(34, 40, 49)'
+                      }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                          <Mail className="w-5 h-5 text-amber-600" />
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: 'rgb(0, 173, 181)' }}
+                        >
+                          <Mail className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{invitation.email}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="font-medium" style={{ color: 'rgb(34, 40, 49)' }}>{invitation.email}</p>
+                          <p className="text-sm" style={{ color: 'rgb(57, 62, 70)' }}>
                             Invited as {invitation.role.toLowerCase()} • {new Date(invitation.invitedAt).toLocaleDateString()}
                           </p>
                         </div>
@@ -286,7 +349,18 @@ export default function TeamList({
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => onResendInvitation(team.id, invitation.id)} 
-                          className="btn btn-ghost btn-sm"
+                          className="btn btn-sm px-3 py-1 rounded text-sm font-medium transition-colors"
+                          style={{ 
+                            backgroundColor: 'rgb(0, 173, 181)', 
+                            color: 'white',
+                            border: '1px solid rgb(0, 173, 181)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgb(57, 62, 70)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgb(0, 173, 181)';
+                          }}
                           disabled={resendingId === invitation.id}
                         >
                           {resendingId === invitation.id ? (
@@ -300,7 +374,20 @@ export default function TeamList({
                         </button>
                         <button 
                           onClick={() => onCancelInvitation(team.id, invitation.id)} 
-                          className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          className="btn btn-sm px-3 py-1 rounded text-sm font-medium transition-colors"
+                          style={{ 
+                            backgroundColor: 'transparent', 
+                            color: 'rgb(34, 40, 49)',
+                            border: '1px solid rgb(34, 40, 49)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgb(34, 40, 49)';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = 'rgb(34, 40, 49)';
+                          }}
                         >
                           Cancel
                         </button>
