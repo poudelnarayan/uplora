@@ -45,12 +45,12 @@
   /* Dark theme colors - Sophisticated Dark Palette */
   --primary: 0 173 181; /* Accent Cyan - Softer for dark backgrounds */
   --primary-foreground: 255 255 255;
-  --secondary: 57 62 70; /* Secondary Dark - Vibrant but not harsh */
-  --secondary-foreground: 255 255 255;
-  --accent: 34 40 49; /* Primary Dark - Elegant dark */
-  --accent-foreground: 255 255 255;
-  --destructive: 248 113 113; /* Red 400 - Softer danger color */
-  --destructive-foreground: 255 255 255;
+  --background: 34 40 49;
+  --foreground: 238 238 238;
+  --card: 57 62 70;
+  --card-foreground: 238 238 238;
+  --popover: 57 62 70;
+  --popover-foreground: 238 238 238;
   --success: 74 222 128; /* Green 400 - Positive but gentle */
   --success-foreground: 255 255 255;
   --warning: 0 173 181; /* Cyan instead of yellow */

@@ -538,25 +538,29 @@ export default function AppShell({ children }: { children: ReactNode }) {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-card border-r border-border shadow-2xl z-50 lg:hidden flex flex-col"
             >
-              <header className="h-auto flex items-center justify-between p-4 border-b border-border">
+              <header className="h-auto flex items-center justify-between p-4 border-b border-border bg-card">
                 <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md block" />
                 <button onClick={() => setMobileNavOpen(false)} className="btn btn-ghost btn-sm">
                   <X className="w-4 h-4" />
                 </button>
               </header>
               
-              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto bg-card">
+              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
                 {routes.map(({ href, label, icon: Icon }) => {
                   const active = path === href || path.startsWith(href + "/");
                   return (
                     <Link
                       key={href}
                       href={href}
-                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all bg-card ${
+                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                         active
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          ? "bg-primary text-primary-foreground" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted bg-card"
                       }`}
+                      style={{ 
+                        backgroundColor: active ? 'rgb(0, 173, 181)' : 'rgb(var(--card))',
+                        fontFamily: 'Inter, "Open Sans", sans-serif'
+                      }}
                       onClick={() => setMobileNavOpen(false)}
                     >
                       <Icon className="h-5 w-5 shrink-0" />
