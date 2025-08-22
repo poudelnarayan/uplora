@@ -545,7 +545,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 </button>
               </header>
               
-              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto bg-card">
                 {routes.map(({ href, label, icon: Icon }) => {
                   const active = path === href || path.startsWith(href + "/");
                   return (
