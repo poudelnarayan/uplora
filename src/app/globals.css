@@ -261,7 +261,7 @@ body {
 
 /* Upload Page Specific Fixes */
 .upload-page-container {
-  min-height: calc(100vh - 8rem);
+  height: calc(100vh - 8rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -270,14 +270,17 @@ body {
 /* Prevent unwanted scrolling on upload page */
 @media (max-width: 768px) {
   .upload-page-container {
-    min-height: calc(100vh - 6rem);
+    height: calc(100vh - 6rem);
     padding: 1rem;
+    overflow: hidden;
   }
   
   /* Ensure upload zone doesn't cause overflow */
   .upload-zone {
     max-width: 100%;
     padding: 2rem 1rem;
+    max-height: 60vh;
+    overflow: hidden;
   }
   
   /* Fix any potential margin/padding issues */
@@ -285,6 +288,18 @@ body {
     margin: 0;
     padding: 0;
     max-width: 100%;
+  }
+  
+  /* Fix all main page containers */
+  .page-container {
+    height: calc(100vh - 8rem);
+    overflow: hidden;
+  }
+  
+  .page-content {
+    height: 100%;
+    overflow-y: auto;
+    padding: 1rem;
   }
 }
 

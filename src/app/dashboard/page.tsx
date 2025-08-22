@@ -336,7 +336,7 @@ export default function Dashboard() {
         <AppShell>
           <NextSeoNoSSR title="Dashboard" noindex nofollow />
           
-          <div className={styles.container}>
+          <div className="h-[calc(100vh-8rem)] overflow-hidden">
             {/* Email Verification Banner */}
             <EmailVerificationBanner
               show={Boolean(showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified")}
@@ -345,13 +345,13 @@ export default function Dashboard() {
               isResending={resendingEmail}
             />
 
-            <div className={styles.content}>
+            <div className="h-full overflow-y-auto px-4 lg:px-0">
               <DashboardHeader teamName={selectedTeam?.name} />
               <StatsOverview videos={videos} />
               
-              <div className={styles.videosSection}>
-                <div className={styles.videosSectionHeader}>
-                  <h2 className={styles.videosSectionTitle}>Recent Videos</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-foreground">Recent Videos</h2>
                 </div>
 
                 <VideosList

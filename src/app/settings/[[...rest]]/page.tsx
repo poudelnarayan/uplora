@@ -48,8 +48,8 @@ export default function SettingsPage() {
         <AppShell>
           <NextSeoNoSSR title="Settings" noindex nofollow />
           
-          <div className={styles.container}>
-            <div className={styles.content}>
+          <div className="h-[calc(100vh-8rem)] overflow-hidden">
+            <div className="h-full overflow-y-auto px-4 lg:px-0 space-y-6">
               <SettingsHeader />
 
               {/* Profile Section */}
@@ -57,7 +57,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className={styles.section}
+                className="space-y-4"
               >
                 <ProfileSection />
               </MotionSection>
@@ -67,7 +67,7 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className={styles.section}
+                className="space-y-4"
               >
                 <NotificationSection />
               </MotionSection>
@@ -77,18 +77,18 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className={styles.section}
+                className="space-y-4"
               >
-                <div className={styles.sectionHeader}>
+                <div className="flex items-center gap-3">
                   <Youtube className={styles.sectionIcon} />
                   <h2 className={styles.sectionTitle}>Social Integrations</h2>
                 </div>
                 
-                <div className={styles.card}>
-                  <div className={styles.integrationInfo}>
-                    <p className={styles.integrationDescription}>
+                <div className="card p-6">
+                  <div className="text-center">
+                    <p className="text-muted-foreground">
                       Manage your social media connections and publishing settings. 
-                      <Link href="/social" className={styles.link}>
+                      <Link href="/social" className="text-primary hover:underline ml-1">
                         Visit Social page
                       </Link> for full integration management.
                     </p>

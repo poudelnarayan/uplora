@@ -258,7 +258,7 @@ export default function VideosPage() {
         noindex
         nofollow
       />
-      <div className="h-full flex flex-col">
+      <div className="h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
         <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="text-center lg:text-left lg:flex lg:items-center lg:justify-between">
             <div>
@@ -284,18 +284,18 @@ export default function VideosPage() {
         </MotionDiv>
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center overflow-hidden">
             <div className="spinner-lg mx-auto mb-4" />
             <p className="text-muted-foreground">Loading videos...</p>
           </div>
         ) : videos.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center overflow-hidden">
             <div className="card p-8 lg:p-10 text-center max-w-md mx-auto">
             <p className="text-muted-foreground">No videos found. Upload your first video.</p>
             </div>
           </div>
         ) : (
-          <div className="flex-1 space-y-3 lg:space-y-4">
+          <div className="flex-1 overflow-y-auto space-y-3 lg:space-y-4 px-4 lg:px-0">
             {videos.map((video) => {
               const fullTitle = video.title || "Untitled";
               const title = fullTitle.length > 50 ? fullTitle.slice(0, 50) + "..." : fullTitle;
@@ -416,6 +416,7 @@ export default function VideosPage() {
             })}
           </div>
         )}
+        </div>
       </div>
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

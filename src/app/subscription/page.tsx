@@ -149,7 +149,8 @@ export default function SubscriptionPage() {
             nofollow 
           />
           
-          <div className={styles.container}>
+          <div className="h-[calc(100vh-8rem)] overflow-hidden">
+            <div className="h-full overflow-y-auto px-4 lg:px-0 space-y-6">
             <SubscriptionHeader
               title="Subscription & Billing"
               subtitle="Manage your plan, billing, and payment methods"
@@ -159,22 +160,26 @@ export default function SubscriptionPage() {
             <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={styles.tabNavigation}
+              className="mb-6"
             >
-              <div className={styles.tabBorder}>
-                <nav className={styles.tabNav}>
+              <div className="border-b border-border">
+                <nav className="flex gap-8">
                   <button
                     onClick={() => setActiveTab("billing")}
-                    className={`${styles.tabButton} ${
-                      activeTab === "billing" ? styles.tabActive : ""
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === "billing" 
+                        ? "border-primary text-primary" 
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Billing
                   </button>
                   <button
                     onClick={() => setActiveTab("plans")}
-                    className={`${styles.tabButton} ${
-                      activeTab === "plans" ? styles.tabActive : ""
+                    className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === "plans" 
+                        ? "border-primary text-primary" 
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Plans
@@ -212,6 +217,7 @@ export default function SubscriptionPage() {
                 />
               )}
             </MotionDiv>
+            </div>
           </div>
         </AppShell>
       </SignedIn>

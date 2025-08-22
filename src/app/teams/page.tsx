@@ -299,13 +299,12 @@ export default function TeamsPage() {
         <AppShell>
           <NextSeoNoSSR title="Teams" noindex nofollow />
           
-          <div className={styles.container}>
-            <div className={styles.content}>
+          <div className="h-[calc(100vh-8rem)] overflow-hidden">
+            <div className="h-full overflow-y-auto px-4 lg:px-0 space-y-6">
               {/* Header */}
               <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={styles.headerSection}
               >
                 <TeamsHeader 
                   hasTeams={actualTeams.length > 0}
@@ -322,7 +321,6 @@ export default function TeamsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className={styles.teamsSection}
               >
                 {actualTeams.length === 0 ? (
                   <EmptyTeamsState

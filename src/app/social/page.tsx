@@ -32,7 +32,7 @@ export default function SocialPage() {
           </div>
         </MotionDiv>
 
-        <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
+        <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
           {/* YouTube */}
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -43,9 +43,9 @@ export default function SocialPage() {
           </div>
 
           {/* Coming soon cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[{icon: Instagram, name: 'Instagram'}, {icon: Twitter, name: 'X / Twitter'}, {icon: Facebook, name: 'Facebook'}, {icon: Linkedin, name: 'LinkedIn'}].map(({icon: Icon, name}) => (
-              <div key={name} className="card p-6 flex items-center justify-between">
+              <div key={name} className="card p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Icon className="w-6 h-6" />
                   <div>
