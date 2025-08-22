@@ -659,6 +659,41 @@ textarea.field-control {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Mobile Navigation Opacity Fix */
+@media (max-width: 1023px) {
+  /* Make entire mobile sidebar completely opaque */
+  aside.lg\:hidden {
+    background-color: rgb(var(--card)) !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+  }
+  
+  /* Fix header and logo section transparency */
+  aside.lg\:hidden header {
+    background-color: rgb(var(--card)) !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+  }
+  
+  /* Ensure navigation area is opaque */
+  aside.lg\:hidden nav {
+    background-color: rgb(var(--card)) !important;
+    opacity: 1 !important;
+  }
+  
+  /* Force solid background on all navigation links */
+  aside.lg\:hidden nav a {
+    background-color: transparent;
+    backdrop-filter: none !important;
+  }
+  
+  /* Active navigation items should have solid background */
+  aside.lg\:hidden nav a[class*="bg-primary"] {
+    background-color: rgb(var(--primary)) !important;
+    opacity: 1 !important;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .btn {
