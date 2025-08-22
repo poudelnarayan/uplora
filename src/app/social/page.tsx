@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 const MotionDiv = motion.div as any;
 import AppShell from "@/components/layout/AppShell";
-import { Youtube, Instagram, Twitter, Facebook, Linkedin, Clock } from "lucide-react";
+import { Youtube, Instagram, Twitter, Facebook, Linkedin, Clock, Video } from "lucide-react";
 import YouTubeConnection from "@/components/settings/YouTubeConnection";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
