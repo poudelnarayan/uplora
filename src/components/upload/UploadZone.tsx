@@ -359,9 +359,9 @@ export default function UploadZone() {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-2xl mx-auto">
+    <div className="space-y-4 w-full max-w-xl mx-auto">
       {/* Upload Zone */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {!file ? (
           <MotionDiv
             initial={{ opacity: 0, scale: 0.95 }}
@@ -395,13 +395,13 @@ export default function UploadZone() {
             <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center animate-pulse-glow">
-                <FileVideo className="w-12 h-12 text-white" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center">
+                <FileVideo className="w-8 h-8 text-white" />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <h3 className="text-2xl font-bold text-foreground">
                   {isDragOver ? "Drop your video here!" : "Upload your video"}
                 </h3>
@@ -410,28 +410,28 @@ export default function UploadZone() {
                 </p>
               </div>
               
-              <div className="hidden sm:flex flex-wrap gap-2 justify-center">
+              <div className="flex flex-wrap gap-2 justify-center">
                 {['MP4', 'MOV', 'AVI', 'WebM', 'MKV'].map(format => (
                   <span
                     key={format}
-                    className="px-3 py-1 rounded-full bg-muted text-sm text-muted-foreground"
+                    className="px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground"
                   >
                     {format}
                   </span>
                 ))}
               </div>
 
-              <div className="hidden sm:flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
+                  <Zap className="w-3 h-3" />
                   <span>Fast upload</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
+                  <Shield className="w-3 h-3" />
                   <span>Secure</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4" />
+                  <Target className="w-3 h-3" />
                   <span>Direct to YouTube</span>
                 </div>
               </div>

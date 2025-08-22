@@ -24,16 +24,16 @@ export default function UploadPage() {
         <AppShell>
           <NextSeoNoSSR title="Upload" noindex nofollow />
           
-          <div className="min-h-[calc(100vh-8rem)] flex flex-col">
-            <div className="flex-1 flex flex-col justify-center max-w-4xl mx-auto w-full px-4">
+          <div className="h-[calc(100vh-8rem)] flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col justify-center items-center max-w-4xl mx-auto w-full px-4">
               {/* Main Upload Section */}
               <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center gap-6"
+                className="flex flex-col items-center gap-4 w-full"
               >
                 {/* Current Workspace Indicator */}
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center mb-2">
                   <WorkspaceIndicator
                     selectedTeam={selectedTeam}
                     selectedTeamId={selectedTeamId}
@@ -41,7 +41,7 @@ export default function UploadPage() {
                 </div>
 
                 {/* Upload Zone */}
-                <div className="w-full max-w-2xl">
+                <div className="w-full max-w-xl">
                   <UploadZone />
                 </div>
               </MotionDiv>
@@ -51,7 +51,7 @@ export default function UploadPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="w-full max-w-lg mx-auto mt-8"
+                className="w-full max-w-lg mx-auto mt-4"
               >
                 <UploadBenefits />
               </MotionDiv>

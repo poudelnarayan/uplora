@@ -510,12 +510,14 @@ textarea.field-control {
 .upload-zone {
   border: 2px dashed rgb(var(--border));
   border-radius: var(--radius);
-  padding: 3rem 2rem;
+  padding: 2rem 1.5rem;
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
   background: rgb(var(--card));
   color: rgb(var(--card-foreground));
+  max-height: 60vh;
+  overflow: hidden;
 }
 
 .upload-zone:hover {
@@ -528,6 +530,36 @@ textarea.field-control {
   border-color: rgb(var(--primary));
   background: rgba(59, 130, 246, 0.05);
   transform: scale(1.02);
+}
+
+/* Upload Page Specific Fixes */
+.upload-page-container {
+  height: calc(100vh - 8rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Prevent unwanted scrolling on upload page */
+@media (max-width: 768px) {
+  .upload-page-container {
+    height: calc(100vh - 6rem);
+    padding: 1rem;
+  }
+  
+  /* Ensure upload zone doesn't cause overflow */
+  .upload-zone {
+    max-width: 100%;
+    padding: 1.5rem 1rem;
+    max-height: 50vh;
+  }
+  
+  /* Fix any potential margin/padding issues */
+  .upload-content {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+  }
 }
 
 /* Badges - Modern Style */
