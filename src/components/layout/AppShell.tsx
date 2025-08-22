@@ -475,7 +475,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             {/* Left side - Icons and Mobile Menu */}
             <div className="flex items-center gap-3">
               {/* Perfect Circle Icons - Always Visible */}
-              <div className="flex items-center gap-2">
+              <div className="hidden lg:flex items-center gap-2">
                 <ThemeToggle />
                 <NotificationBell onClick={() => setShowNotificationCenter(true)} />
               </div>
