@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&display=swap");
 
 /* ===== DESIGN SYSTEM - EXTRACTED COLOR PALETTE ===== */
 :root {
@@ -18,12 +18,12 @@
   --color-info: var(--color-teal); /* Info states use teal */
   
   /* Semantic color mappings */
-  --background: var(--color-background);
-  --foreground: var(--color-brand-dark);
+  --background: #222831;
+  --foreground: #EEEEEE;
   --card: #FFFFFF;
-  --card-foreground: var(--color-brand-dark);
+  --card-foreground: #222831;
   --popover: #FFFFFF;
-  --popover-foreground: var(--color-brand-dark);
+  --popover-foreground: #222831;
   --primary: var(--color-teal);
   --primary-foreground: #FFFFFF;
   --secondary: var(--color-dark-secondary);
@@ -44,8 +44,8 @@
   /* Dark theme using the same palette philosophy */
   --color-background: var(--color-dark);
   --color-brand-dark: var(--color-light);
-  --background: var(--color-dark);
-  --foreground: var(--color-light);
+  --background: #222831;
+  --foreground: #EEEEEE;
   --card: var(--color-dark-secondary);
   --card-foreground: var(--color-light);
   --popover: var(--color-dark-secondary);
@@ -62,7 +62,7 @@
 }
 
 body {
-  font-family: "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--background);
   color: var(--foreground);
   font-weight: 400;
@@ -80,7 +80,7 @@ html {
 
 /* Typography Hierarchy - Google Sans with Strategic Weights */
 .typography-h1 {
-  font-family: "Google Sans", sans-serif;
+  font-family: "Inter", "Open Sans", sans-serif;
   font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 700; /* Bold for maximum impact */
   line-height: 1.1;
@@ -89,7 +89,7 @@ html {
 }
 
 .typography-h2 {
-  font-family: "Google Sans", sans-serif;
+  font-family: "Inter", "Open Sans", sans-serif;
   font-size: clamp(1.875rem, 4vw, 2.5rem);
   font-weight: 600; /* Semibold for strong hierarchy */
   line-height: 1.2;
@@ -163,7 +163,7 @@ html {
   justify-content: center;
   border-radius: var(--radius);
   padding: 0.75rem 1.5rem;
-  font-family: "Google Sans", sans-serif;
+  font-family: "Inter", "Open Sans", sans-serif;
   font-size: 0.875rem;
   font-weight: 600; /* Semibold for button text */
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -181,27 +181,27 @@ html {
 }
 
 .btn-primary {
-  background-color: var(--color-teal);
+  background: linear-gradient(135deg, #00ADB5, #00ADB5);
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #009AA1;
+  background: linear-gradient(135deg, #009AA1, #009AA1);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0, 173, 181, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 173, 181, 0.4);
 }
 
 .btn-secondary {
-  background-color: var(--color-dark-secondary);
+  background: linear-gradient(135deg, #393E46, #393E46);
   color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(57, 62, 70, 0.2);
+  box-shadow: 0 4px 12px rgba(57, 62, 70, 0.25);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #2F353D;
+  background: linear-gradient(135deg, #2F353D, #2F353D);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(57, 62, 70, 0.3);
+  box-shadow: 0 8px 20px rgba(57, 62, 70, 0.35);
 }
 
 .btn-outline {

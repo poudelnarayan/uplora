@@ -174,7 +174,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card">
         {/* Header */}
         <div className="flex items-center h-16 px-4">
-          <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md" />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center">
+              <Video className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-foreground" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>Uplora</span>
+          </div>
         </div>
 
         {/* Team Selector */}
@@ -186,8 +191,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
              <div className="flex items-center gap-3">
                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary to-secondary animate-pulse shadow-sm" />
                <div>
-                 <span className="font-semibold text-foreground block">Personal Workspace</span>
-                 <span className="text-xs text-muted-foreground">Your private video space</span>
+                 <span className="font-semibold text-foreground block" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>Personal Workspace</span>
+                 <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>Your private video space</span>
                </div>
              </div>
            </div>
@@ -195,8 +200,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
            /* Scenario 2 & 3: Users with teams - Show full switcher */
            <>
              <div className="text-xs font-medium text-muted-foreground mb-3 flex items-center justify-between">
-               <span>Workspace</span>
-               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
+               <span style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>Workspace</span>
+               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
                  {teams.length + 1} spaces
                </span>
              </div>

@@ -45,21 +45,21 @@ export function TextField(props: TextFieldProps) {
   return (
     <div className={containerClassName}>
       {label && (
-        <label className="block text-sm font-medium mb-2 text-foreground">
+        <label className="block text-sm font-medium mb-2 text-foreground" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
           {label}
         </label>
       )}
       <div className={`field ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
         {isMultiline ? (
-          <textarea {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} className={`field-control ${controlClassName ?? ""}`.trim()} />
+          <textarea {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} className={`field-control ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif' }} />
         ) : (
-          <input {...(rest as React.InputHTMLAttributes<HTMLInputElement>)} className={`field-control ${controlClassName ?? ""}`.trim()} />
+          <input {...(rest as React.InputHTMLAttributes<HTMLInputElement>)} className={`field-control ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif' }} />
         )}
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
       {error && (
-        <div className="flex items-center gap-1 mt-1 text-sm text-red-600 dark:text-red-400">
+        <div className="flex items-center gap-1 mt-1 text-sm text-red-600 dark:text-red-400" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{error}</span>
         </div>
