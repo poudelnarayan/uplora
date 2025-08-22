@@ -6,9 +6,9 @@ import AppShell from "@/components/layout/AppShell";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
-import DashboardHeader from "@/components/pages/Dashboard/DashboardHeader";
-import StatsOverview from "@/components/pages/Dashboard/StatsOverview";
-import VideosList from "@/components/pages/Dashboard/VideosList";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import StatsOverview from "@/components/dashboard/StatsOverview";
+import VideosList from "@/components/dashboard/VideosList";
 import EmailVerificationBanner from "@/components/pages/Dashboard/EmailVerificationBanner";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
@@ -339,7 +339,7 @@ export default function Dashboard() {
           <div className={styles.container}>
             {/* Email Verification Banner */}
             <EmailVerificationBanner
-              show={showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified"}
+              show={Boolean(showEmailBanner && user && user?.emailAddresses?.[0]?.verification?.status !== "verified")}
               onResend={handleResendVerification}
               onDismiss={() => setShowEmailBanner(false)}
               isResending={resendingEmail}

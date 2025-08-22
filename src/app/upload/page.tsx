@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Upload, Users, User, Video, Shield, Zap, CheckCircle } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
-import UploadZone from "@/components/pages/Upload/UploadZone";
+import UploadZone from "@/components/upload/UploadZone";
 import WorkspaceIndicator from "@/components/pages/Upload/WorkspaceIndicator";
 import UploadBenefits from "@/components/pages/Upload/UploadBenefits";
 import { useTeam } from "@/context/TeamContext";

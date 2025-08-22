@@ -8,16 +8,16 @@ import { broadcast } from "@/lib/realtime";
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { id } = context.params;
+    const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
     // Get video with team and user info
     const video = await prisma.video.findUnique({ 
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -61,7 +61,7 @@ export async function POST(
 
         if (team?.owner) {
           const videoTitle = video.filename.replace(/\.[^/.]+$/, '');
-          const videoUrl = `${process.env.NEXTAUTH_URL}/videos/${video.id}`;
+          const videoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/videos/${video.id}`;
           
           const emailTemplate = publishRequestTemplate({
             editorName: me.name || me.email,

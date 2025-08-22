@@ -6,7 +6,7 @@ import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/ap
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
@@ -48,11 +48,7 @@ export async function POST(request: NextRequest) {
     
     if (existingTeam) {
       return NextResponse.json(
-        createErrorResponse(
-          ErrorCodes.DUPLICATE_ENTRY,
-          "You already have a team with this name",
-          { name: "Team name already exists" }
-        ),
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "You already have a team with this name", { name: "Team name already exists" }),
         { status: 400 }
       );
     }
@@ -92,7 +88,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),

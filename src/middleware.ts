@@ -1,23 +1,7 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
-// Temporarily disable Clerk middleware until valid keys are configured
-export default function middleware(request: NextRequest) {
-  // Check if Clerk is properly configured
-  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  const hasValidClerkKey = clerkPublishableKey && 
-    clerkPublishableKey !== 'pk_test_your-publishable-key-here' && 
-    clerkPublishableKey.startsWith('pk_');
-
-  if (!hasValidClerkKey) {
-    // Allow all requests when Clerk is not configured
-    return NextResponse.next();
-  }
-
-  // When Clerk is configured, you can re-enable the middleware
-  // For now, allow all requests
-  return NextResponse.next();
-}
+// Enable Clerk middleware so server-side auth() works reliably across routes
+export default clerkMiddleware();
 
 export const config = {
   matcher: [

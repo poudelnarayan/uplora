@@ -11,7 +11,7 @@ const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }

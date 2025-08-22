@@ -4,11 +4,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string }> }
+  context: { params: { teamId: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { teamId } = context.params;
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -20,7 +20,7 @@ export async function GET(
     // Ensure user has access (owner or is member)
     const team = await prisma.team.findFirst({
       where: {
-        id: params.teamId,
+        id: teamId,
         OR: [
           { ownerId: user.id },
           { members: { some: { userId: user.id } } },
@@ -34,7 +34,7 @@ export async function GET(
     if (!team) return NextResponse.json({ error: "Team not found or no access" }, { status: 404 });
 
     const members = await prisma.teamMember.findMany({
-      where: { teamId: params.teamId },
+      where: { teamId },
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
       },
@@ -42,7 +42,7 @@ export async function GET(
     });
 
     const invites = await prisma.teamInvite.findMany({
-      where: { teamId: params.teamId },
+      where: { teamId },
       orderBy: { createdAt: "desc" },
     });
 

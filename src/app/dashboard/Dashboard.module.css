@@ -1,7 +1,7 @@
 /* ===== DASHBOARD PAGE STYLES ===== */
 
 .container {
-  font-family: 'Google Sans', sans-serif;
+  font-family: "Google Sans", sans-serif;
   background-color: var(--color-background);
   min-height: 100vh;
   color: var(--color-brand-dark);
@@ -34,7 +34,7 @@
 }
 
 .videosSectionTitle {
-  font-family: 'Google Sans', sans-serif;
+  font-family: "Google Sans", sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-brand-dark);
@@ -46,11 +46,11 @@
   .container {
     padding: 0 1rem;
   }
-  
+
   .videosSection {
     gap: 1rem;
   }
-  
+
   .videosSectionTitle {
     font-size: 1.125rem;
   }
@@ -58,7 +58,8 @@
 
 /* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .container,
+  .container * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

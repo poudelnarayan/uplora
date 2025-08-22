@@ -7,7 +7,7 @@ import { broadcast } from "@/lib/realtime";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Auth required" }, { status: 401 });
     }

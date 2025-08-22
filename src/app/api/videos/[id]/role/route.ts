@@ -5,17 +5,17 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
-    const params = await context.params;
+    const { id } = context.params;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const video = await prisma.video.findUnique({ where: { id: params.id } });
+    const video = await prisma.video.findUnique({ where: { id } });
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
     // If team video, resolve based on team ownership and membership

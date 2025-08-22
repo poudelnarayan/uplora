@@ -18,12 +18,13 @@ interface Team {
 }
 
 interface TeamInsightsProps {
-  teams: Team[];
+  teams?: Team[];
 }
 
 export default function TeamInsights({ teams }: TeamInsightsProps) {
-  const totalMembers = teams.reduce((sum, team) => sum + team.memberCount, 0);
-  const ownedTeams = teams.filter(team => team.role === "OWNER").length;
+  const list = Array.isArray(teams) ? teams : [];
+  const totalMembers = list.reduce((sum, team) => sum + team.memberCount, 0);
+  const ownedTeams = list.filter(team => team.role === "OWNER").length;
 
   return (
     <div className="card p-6 mt-6">
@@ -56,7 +57,7 @@ export default function TeamInsights({ teams }: TeamInsightsProps) {
             <span className="text-sm font-medium text-purple-600">Active Teams</span>
           </div>
           <p className="text-2xl font-bold text-purple-600">
-            {teams.length}
+            {list.length}
           </p>
         </div>
       </div>
@@ -68,7 +69,7 @@ export default function TeamInsights({ teams }: TeamInsightsProps) {
           <div>
             <h5 className="font-medium text-yellow-600 mb-1">Team Growth Tip</h5>
             <p className="text-sm text-muted-foreground">
-              {teams.length < 3 
+              {list.length < 3 
                 ? "Consider creating specialized teams for different content types to improve collaboration."
                 : "Great job! Your teams are well organized. Consider inviting more members to scale your content production."
               }

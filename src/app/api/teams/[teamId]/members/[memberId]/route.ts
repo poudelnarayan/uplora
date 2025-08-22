@@ -6,10 +6,10 @@ import { broadcast } from "@/lib/realtime";
 // Update member (pause/unpause)
 export async function PATCH(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string; memberId: string }> }
+  context: { params: { teamId: string; memberId: string } }
 ) {
   try {
-    const params = await context.params;
+    const params = context.params;
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -64,10 +64,10 @@ export async function PATCH(
 // Remove member
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string; memberId: string }> }
+  context: { params: { teamId: string; memberId: string } }
 ) {
   try {
-    const params = await context.params;
+    const params = context.params;
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });

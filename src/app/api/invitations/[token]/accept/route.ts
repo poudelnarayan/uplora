@@ -9,11 +9,11 @@ export const runtime = "nodejs";
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ token: string }> }
+  context: { params: { token: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { token } = context.params;
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json(
@@ -29,7 +29,7 @@ export async function POST(
     // Find the invitation
     const invitation = await prisma.teamInvite.findFirst({
       where: {
-        token: params.token,
+        token,
         status: "PENDING",
         expiresAt: { gt: new Date() },
       },

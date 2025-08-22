@@ -9,7 +9,7 @@ import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/ap
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
@@ -28,6 +28,7 @@ export async function DELETE(req: NextRequest) {
       where: { id: userId },
       update: {},
       create: { 
+        id: userId,
         email: userEmail || "", 
         name: userName, 
         image: userImage 

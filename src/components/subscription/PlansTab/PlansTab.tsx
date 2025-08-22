@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import BillingCycleToggle from "./BillingCycleToggle";
 import PricingGrid from "./PricingGrid";
-import EnterpriseCard from "./EnterpriseCard";
 import { subscriptionConfig } from "@/config/subscription";
 import styles from "./PlansTab.module.css";
 
@@ -46,7 +45,6 @@ export default function PlansTab({
         isTrialActive={isTrialActive}
       />
       
-      <EnterpriseCard />
     </MotionDiv>
   );
 }

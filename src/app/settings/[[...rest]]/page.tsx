@@ -10,7 +10,7 @@ import ProfileSection from "@/components/pages/Settings/ProfileSection";
 import NotificationSection from "@/components/pages/Settings/NotificationSection";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import styles from "./Settings.module.css";
+import styles from "../Settings.module.css";
 
 const MotionDiv = motion.div as any;
 const MotionSection = motion.section as any;

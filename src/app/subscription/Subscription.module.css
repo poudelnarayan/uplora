@@ -2,7 +2,7 @@
 /* Implementation of extracted color palette with Google Sans typography */
 
 .container {
-  font-family: 'Google Sans', sans-serif;
+  font-family: "Google Sans", sans-serif;
   background-color: var(--color-background);
   min-height: 100vh;
   color: var(--color-brand-dark);
@@ -40,7 +40,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   background: none;
-  font-family: 'Google Sans', sans-serif;
+  font-family: "Google Sans", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -69,11 +69,11 @@
   .container {
     padding: 0 1rem;
   }
-  
+
   .tabNav {
     gap: 1rem;
   }
-  
+
   .tabButton {
     font-size: 0.8125rem;
   }
@@ -81,7 +81,8 @@
 
 /* ===== ACCESSIBILITY ENHANCEMENTS ===== */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .container,
+  .container * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -99,7 +100,7 @@
     background: white;
     color: black;
   }
-  
+
   .tabNavigation {
     display: none;
   }

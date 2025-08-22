@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { addSubscriber, removeSubscriber } from "@/lib/realtime";
 import { createErrorResponse, ErrorCodes } from "@/lib/api-utils";
 
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const teamId = searchParams.get("teamId");
-    const userId = searchParams.get("userId");
+    const { userId } = await auth();
 
     // Validate required parameters
     if (!userId) {
@@ -23,51 +24,52 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const encoder = new TextEncoder();
+    const connectionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     const stream = new ReadableStream({
       start(controller) {
-        const encoder = new TextEncoder();
-        const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        let isClosed = false;
+        let heartbeat: ReturnType<typeof setInterval> | null = null;
+        let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const close = () => {
+          if (isClosed) return;
+          isClosed = true;
+          try { if (heartbeat) clearInterval(heartbeat); } catch {}
+          try { if (autoCloseTimer) clearTimeout(autoCloseTimer); } catch {}
+          try { removeSubscriber(connectionId); } catch {}
+          try { controller.close(); } catch {}
+        };
 
         const send = (event: any) => {
           try {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
           } catch (error) {
-            console.error("Error sending SSE event:", error);
             close();
           }
         };
 
-        addSubscriber({ id, teamId, userId, send });
+        addSubscriber({ id: connectionId, teamId, userId, send });
 
         // heartbeat every 30 seconds to prevent timeouts
-        const heartbeat = setInterval(() => {
+        heartbeat = setInterval(() => {
           try {
             controller.enqueue(encoder.encode(`: ping\n\n`));
           } catch (error) {
-            console.error("Error sending heartbeat:", error);
             close();
           }
         }, 30000);
-
-        const close = () => {
-          clearInterval(heartbeat);
-          removeSubscriber(id);
-          try {
-            controller.close();
-          } catch (error) {
-            console.error("Error closing SSE stream:", error);
-          }
-        };
 
         // Handle client disconnect
         req.signal?.addEventListener("abort", close);
         
         // Auto-close after 4.5 minutes to prevent Vercel timeout
-        setTimeout(close, 4.5 * 60 * 1000);
+        autoCloseTimer = setTimeout(close, 4.5 * 60 * 1000);
       },
       cancel() {
         // Cleanup on cancel
-        removeSubscriber(`${Date.now()}-${Math.random().toString(36).slice(2)}`);
+        try { removeSubscriber(connectionId); } catch {}
       },
     });
 

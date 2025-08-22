@@ -1,7 +1,7 @@
 /* ===== CONTACT PAGE STYLES ===== */
 
 .container {
-  font-family: 'Google Sans', sans-serif;
+  font-family: "Google Sans", sans-serif;
   background-color: var(--color-background);
   color: var(--color-brand-dark);
 }
@@ -21,7 +21,8 @@
 
 /* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .container,
+  .container * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

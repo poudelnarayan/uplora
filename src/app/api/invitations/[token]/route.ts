@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ token: string }> }
+  context: { params: { token: string } }
 ) {
   try {
-    const params = await context.params;
+    const { token } = context.params;
     const invitation = await prisma.teamInvite.findFirst({
       where: {
-        token: params.token,
+        token,
         status: "PENDING",
         expiresAt: { gt: new Date() },
       },

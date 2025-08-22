@@ -10,11 +10,11 @@ export const runtime = "nodejs";
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string }> }
+  context: { params: { teamId: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { teamId } = context.params;
+    const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function POST(
     // Check if user has permission to invite (owner, admin, or manager)
     const team = await prisma.team.findFirst({
       where: {
-        id: params.teamId,
+        id: teamId,
         OR: [
           { ownerId: currentUser.id },
           {
@@ -84,7 +84,7 @@ export async function POST(
     // Check if user is already a member
     const existingMember = await prisma.teamMember.findFirst({
       where: {
-        teamId: params.teamId,
+        teamId,
         user: { email },
       },
     });
@@ -98,7 +98,7 @@ export async function POST(
 
     // Find any existing invite for this email/team (any status)
     let invitation = await prisma.teamInvite.findFirst({
-      where: { teamId: params.teamId, email },
+      where: { teamId, email },
       include: {
         team: { select: { name: true } },
         inviter: { select: { name: true, email: true } },
@@ -138,7 +138,7 @@ export async function POST(
     } else {
       createdNew = true;
       invitation = await prisma.teamInvite.create({
-        data: { email, role, token, expiresAt, teamId: params.teamId, inviterId: currentUser.id },
+        data: { email, role, token, expiresAt, teamId, inviterId: currentUser.id },
         include: { team: { select: { name: true } }, inviter: { select: { name: true, email: true } } },
       });
     }
@@ -186,7 +186,7 @@ export async function POST(
       message: "Invitation sent successfully",
       reused: Boolean(previousSnapshot),
     };
-    broadcast({ type: "team.invite", teamId: params.teamId, payload: { email, role } });
+    broadcast({ type: "team.invite", teamId, payload: { email, role } });
     return NextResponse.json(resp);
   } catch (error) {
     console.error("Error creating invitation:", error);

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, DeleteObjectsCommand, type ListObjectsV2CommandOutput, type _Object } from "@aws-sdk/client-s3";
 import { broadcast } from "@/lib/realtime";
 
 // PATCH: update team (owner-only)
 export async function PATCH(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string }> }
+  context: { params: { teamId: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { teamId } = context.params;
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -26,7 +26,7 @@ export async function PATCH(
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const team = await prisma.team.findUnique({ where: { id: params.teamId } });
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
     if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
     if (team.ownerId !== user.id) return NextResponse.json({ error: "Only the owner can update this team" }, { status: 403 });
 
@@ -44,11 +44,11 @@ export async function PATCH(
 // DELETE: delete team (owner-only)
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string }> }
+  context: { params: { teamId: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { teamId } = context.params;
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -56,7 +56,7 @@ export async function DELETE(
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const team = await prisma.team.findUnique({ where: { id: params.teamId } });
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
     if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
     if (team.ownerId !== user.id) return NextResponse.json({ error: "Only the owner can delete this team" }, { status: 403 });
 
@@ -69,17 +69,17 @@ export async function DELETE(
         const prefix = `teams/${team.id}/`;
         let continuationToken: string | undefined = undefined;
         do {
-          const listResp = await s3.send(
+          const listResp: ListObjectsV2CommandOutput = await s3.send(
             new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken })
           );
           const keys = (listResp.Contents || [])
-            .map((o) => o.Key)
+            .map((o: _Object) => o.Key)
             .filter((k): k is string => Boolean(k));
           if (keys.length > 0) {
             await s3.send(
               new DeleteObjectsCommand({
                 Bucket: bucket,
-                Delete: { Objects: keys.map((Key) => ({ Key })) },
+                Delete: { Objects: keys.map((Key: string) => ({ Key })) },
               })
             );
           }

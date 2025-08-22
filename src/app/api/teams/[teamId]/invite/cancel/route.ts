@@ -8,11 +8,11 @@ export const runtime = "nodejs";
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ teamId: string }> }
+  context: { params: { teamId: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { teamId } = context.params;
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
@@ -26,16 +26,16 @@ export async function POST(
     if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // Ensure current user is team owner or admin/manager
-    const team = await prisma.team.findUnique({ where: { id: params.teamId } });
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
     if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
     if (team.ownerId !== currentUser.id) {
-      const isPrivileged = await prisma.teamMember.findFirst({ where: { teamId: params.teamId, userId: currentUser.id, role: { in: ["ADMIN","MANAGER"] } } });
+      const isPrivileged = await prisma.teamMember.findFirst({ where: { teamId, userId: currentUser.id, role: { in: ["ADMIN","MANAGER"] } } });
       if (!isPrivileged) return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
     const invite = await prisma.teamInvite.findFirst({
       where: {
-        teamId: params.teamId,
+        teamId,
         ...(id ? { id } : {}),
         ...(email ? { email } : {}),
         status: "PENDING",

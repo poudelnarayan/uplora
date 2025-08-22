@@ -13,11 +13,11 @@ const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
   try {
-    const params = await context.params;
-    const { userId } = auth();
+    const { id } = context.params;
+    const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
     // Get request body for YouTube upload metadata (optional)
@@ -26,7 +26,7 @@ export async function POST(
 
     // Get video with team and user info
     const video = await prisma.video.findUnique({ 
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {

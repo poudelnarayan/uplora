@@ -5,7 +5,7 @@ import { BillingInfo, SubscriptionStatus } from "@/types/subscription";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -49,7 +49,12 @@ export async function GET(request: NextRequest) {
         videoUploads: 0,
         storageUsed: 0,
         currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        limits: {
+          maxTeamMembers: 5,
+          maxVideoUploads: 100,
+          maxStorageBytes: 50 * 1024 * 1024 * 1024 // 50 GB
+        }
       }
     };
 
