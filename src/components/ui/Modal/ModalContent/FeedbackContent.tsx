@@ -53,7 +53,7 @@ export default function FeedbackContent({
     <div className="space-y-6">
       {/* Feedback Type Selector */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-[#112D4E]">
+        <label className="text-sm font-medium" style={{ color: 'hsl(210, 40%, 25%)' }}>
           What's on your mind?
         </label>
         <div className="grid grid-cols-3 gap-3">
@@ -65,17 +65,20 @@ export default function FeedbackContent({
               className={`
                 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
                 ${feedbackType === type
-                  ? `border-[#3F72AF] bg-[#DBE2EF] text-[#112D4E] shadow-sm`
-                  : "border-[#DBE2EF] bg-[#F9F7F7] text-[#3F72AF] hover:border-[#3F72AF] hover:bg-[#DBE2EF]"
+                  ? `border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-sm`
+                  : "border-slate-200 bg-slate-50/50 hover:border-emerald-300 hover:bg-emerald-50/30"
                 }
               `}
+              style={{ 
+                color: feedbackType === type ? 'hsl(210, 40%, 25%)' : 'hsl(176, 20%, 16%)'
+              }}
             >
               <div className="text-2xl">{icon}</div>
               <div className="text-xs font-semibold text-center">{label}</div>
             </button>
           ))}
         </div>
-        <p className="text-xs text-[#3F72AF]">
+        <p className="text-xs" style={{ color: 'hsl(176, 20%, 16%)' }}>
           {feedbackTypes.find(t => t.type === feedbackType)?.description}
         </p>
       </div>
@@ -83,7 +86,7 @@ export default function FeedbackContent({
       {/* Message Input */}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-[#112D4E]">
+          <label className="text-sm font-medium" style={{ color: 'hsl(210, 40%, 25%)' }}>
             Your message
           </label>
           <textarea
@@ -91,21 +94,23 @@ export default function FeedbackContent({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Tell us what you think..."
             className="
-              w-full min-h-[120px] p-3 rounded-lg border border-[#DBE2EF] 
-              bg-[#F9F7F7] text-[#112D4E] placeholder:text-[#3F72AF]
-              focus:border-[#3F72AF] focus:ring-2 focus:ring-[#3F72AF]/20
+              w-full min-h-[120px] p-3 rounded-lg border border-slate-200 
+              bg-slate-50/50 placeholder:opacity-60
+              focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50
               transition-all resize-vertical
             "
+            style={{ color: 'hsl(176, 20%, 16%)', '::placeholder': { color: 'hsl(176, 20%, 16%)' } }}
             required
           />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-[#DBE2EF]">
+        <div className="flex gap-3 pt-4 border-t border-slate-200/80">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-lg border border-[#DBE2EF] text-[#3F72AF] hover:bg-[#DBE2EF] transition-all"
+            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 transition-all"
+            style={{ color: 'hsl(176, 20%, 16%)' }}
             disabled={isLoading}
           >
             Cancel
@@ -113,7 +118,10 @@ export default function FeedbackContent({
           <button
             type="submit"
             disabled={isLoading || !message.trim()}
-            className="flex-1 px-4 py-2 rounded-lg bg-[#3F72AF] text-white hover:bg-[#112D4E] transition-all flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2 hover:shadow-lg"
+            style={{ backgroundColor: 'hsl(210, 55%, 45%)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(210, 40%, 25%)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(210, 55%, 45%)'}
           >
             {isLoading ? (
               <>

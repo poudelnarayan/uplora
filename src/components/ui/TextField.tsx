@@ -45,21 +45,21 @@ export function TextField(props: TextFieldProps) {
   return (
     <div className={containerClassName}>
       {label && (
-        <label className="block text-sm font-medium mb-2 text-[#112D4E]" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
+        <label className="block text-sm font-medium mb-2" style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(210, 40%, 25%)' }}>
           {label}
         </label>
       )}
       <div className={`relative ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
         {isMultiline ? (
-          <textarea {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} className={`w-full p-3 rounded-lg border border-[#DBE2EF] bg-[#F9F7F7] text-[#112D4E] placeholder:text-[#3F72AF] focus:border-[#3F72AF] focus:ring-2 focus:ring-[#3F72AF]/20 transition-all ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif' }} />
+          <textarea {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} className={`w-full p-3 rounded-lg border border-slate-200 bg-slate-50/50 placeholder:opacity-60 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 transition-all ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(176, 20%, 16%)', '::placeholder': { color: 'hsl(176, 20%, 16%)' } }} />
         ) : (
-          <input {...(rest as React.InputHTMLAttributes<HTMLInputElement>)} className={`w-full p-3 rounded-lg border border-[#DBE2EF] bg-[#F9F7F7] text-[#112D4E] placeholder:text-[#3F72AF] focus:border-[#3F72AF] focus:ring-2 focus:ring-[#3F72AF]/20 transition-all ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif' }} />
+          <input {...(rest as React.InputHTMLAttributes<HTMLInputElement>)} className={`w-full p-3 rounded-lg border border-slate-200 bg-slate-50/50 placeholder:opacity-60 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 transition-all ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(176, 20%, 16%)', '::placeholder': { color: 'hsl(176, 20%, 16%)' } }} />
         )}
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
       {error && (
-        <div className="flex items-center gap-1 mt-1 text-sm text-[#112D4E]" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>
+        <div className="flex items-center gap-1 mt-1 text-sm" style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(0, 65%, 45%)' }}>
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -75,17 +75,17 @@ export function SelectField({ label, icon, rightIcon, containerClassName, classN
   return (
     <div className={containerClassName}>
       {label && (
-        <label className="block text-sm font-medium mb-2 text-[#112D4E]">
+        <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(210, 40%, 25%)' }}>
           {label}
         </label>
       )}
       <div className={`relative ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
-        <select {...props} className={`w-full p-3 rounded-lg border border-[#DBE2EF] bg-[#F9F7F7] text-[#112D4E] focus:border-[#3F72AF] focus:ring-2 focus:ring-[#3F72AF]/20 transition-all appearance-none pr-10 ${controlClassName ?? ""}`.trim()}>{children}</select>
+        <select {...props} className={`w-full p-3 rounded-lg border border-slate-200 bg-slate-50/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 transition-all appearance-none pr-10 ${controlClassName ?? ""}`.trim()} style={{ color: 'hsl(176, 20%, 16%)' }}>{children}</select>
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
       {error && (
-        <div className="flex items-center gap-1 mt-1 text-sm text-[#112D4E]">
+        <div className="flex items-center gap-1 mt-1 text-sm" style={{ color: 'hsl(0, 65%, 45%)' }}>
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{error}</span>
         </div>
