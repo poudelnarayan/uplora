@@ -76,12 +76,12 @@ export default function MakeTextPostPage() {
             {/* Main Content */}
             <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 py-8">
               <div className="w-full max-w-2xl mx-auto space-y-8">
-                {/* Header Section */}
+                {/* Back Button - Top Left */}
                 <MotionDiv
-                  initial={{ opacity: 0, y: -30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="text-center space-y-4"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute top-4 left-4"
                 >
                   <button
                     onClick={() => router.back()}
@@ -95,7 +95,15 @@ export default function MakeTextPostPage() {
                     <ArrowLeft className="w-4 h-4" />
                     <span className="font-medium">Back to Post Types</span>
                   </button>
+                </MotionDiv>
 
+                {/* Header Section */}
+                <MotionDiv
+                  initial={{ opacity: 0, y: -30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="text-center space-y-4"
+                >
                   <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full border-2"
                     style={{ 
                       backgroundColor: 'rgba(0, 173, 181, 0.1)',
