@@ -1,21 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Upload, Users, User, Video, Shield, Zap, CheckCircle } from "lucide-react";
-import AppShell from "@/components/layout/AppShell";
-import UploadZone from "@/components/upload/UploadZone";
-import WorkspaceIndicator from "@/components/pages/Upload/WorkspaceIndicator";
-import UploadBenefits from "@/components/pages/Upload/UploadBenefits";
-import { useTeam } from "@/context/TeamContext";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import styles from "./Upload.module.css";
+import AppShell from "@/components/layout/AppShell";
+import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import MakePostInterface from "@/components/upload/MakePostInterface";
+import { useTeam } from "@/context/TeamContext";
 
 const MotionDiv = motion.div as any;
 
 export const dynamic = "force-dynamic";
 
-export default function UploadPage() {
+export default function MakePostPage() {
   const { selectedTeamId, selectedTeam } = useTeam();
   
   return (
@@ -24,37 +20,31 @@ export default function UploadPage() {
         <AppShell>
           <NextSeoNoSSR title="Make Post" noindex nofollow />
           
-          <div className="h-[calc(100vh-8rem)] flex flex-col overflow-hidden">
-            <div className="flex-1 flex flex-col justify-center items-center max-w-4xl mx-auto w-full px-4">
-              {/* Main Upload Section */}
+          <div className="min-h-[calc(100vh-8rem)] flex flex-col">
+            {/* Animated Background */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <MotionDiv
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center gap-4 w-full"
-              >
-                {/* Current Workspace Indicator */}
-                <div className="flex items-center justify-center mb-2">
-                  <WorkspaceIndicator
-                    selectedTeam={selectedTeam}
-                    selectedTeamId={selectedTeamId}
-                  />
-                </div>
-
-                {/* Content Creation Zone */}
-                <div className="w-full max-w-xl">
-                  <UploadZone />
-                </div>
-              </MotionDiv>
-
-              {/* Content Creation Benefits */}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 0.1, scale: 1 }}
+                transition={{ duration: 2, ease: "easeOut" }}
+                className="absolute -top-32 -right-32 w-96 h-96 rounded-full"
+                style={{ backgroundColor: 'rgb(0, 173, 181)' }}
+              />
               <MotionDiv
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="w-full max-w-lg mx-auto mt-4"
-              >
-                <UploadBenefits />
-              </MotionDiv>
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 0.05, scale: 1 }}
+                transition={{ duration: 2.5, ease: "easeOut", delay: 0.5 }}
+                className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full"
+                style={{ backgroundColor: 'rgb(57, 62, 70)' }}
+              />
+            </div>
+
+            {/* Main Content */}
+            <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 py-8">
+              <MakePostInterface 
+                selectedTeam={selectedTeam}
+                selectedTeamId={selectedTeamId}
+              />
             </div>
           </div>
         </AppShell>
