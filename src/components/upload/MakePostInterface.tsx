@@ -254,6 +254,9 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                           color: type.color
                         }}
                       >
+                        {feature}
+                      </MotionDiv>
+                    ))}
                   </div>
                 </div>
               </div>
