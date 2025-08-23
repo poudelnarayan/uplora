@@ -246,7 +246,19 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ 
                           duration: 0.2, 
-                />
+                          delay: 0.3 + featureIndex * 0.05
+                        }}
+                        className="px-3 py-1 rounded-full text-xs font-semibold"
+                        style={{ 
+                          backgroundColor: type.color + '20',
+                          color: type.color
+                        }}
+                      >
+                        {feature}
+                      </MotionDiv>
+                    ))}
+                  </div>
+                </div>
               </div>
             </MotionDiv>
           );
