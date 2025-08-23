@@ -246,35 +246,6 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ 
                           duration: 0.2, 
-                          delay: 0.3 + (index * 0.05) + (featureIndex * 0.02)
-                        }}
-                        className="px-4 py-2 rounded-full text-sm font-semibold border-2"
-                        style={{
-                          backgroundColor: type.color + '15',
-                          color: type.color,
-                          borderColor: type.color + '40'
-                        }}
-                      >
-                        {feature}
-                      </MotionDiv>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Pulse Effect on Hover */}
-                <MotionDiv
-                  initial={{ scale: 0, opacity: 0 }}
-                  whileHover={{ 
-                    scale: [1, 1.05, 1], 
-                    opacity: [0.2, 0.4, 0],
-                    transition: { 
-                      duration: 0.8,
-                      repeat: Infinity,
-                      repeatType: "loop"
-                    }
-                  }}
-                  className="absolute inset-0 rounded-3xl border-2"
-                  style={{ borderColor: type.color }}
                 />
               </div>
             </MotionDiv>
