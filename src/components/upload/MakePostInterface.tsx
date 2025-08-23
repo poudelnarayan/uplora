@@ -13,7 +13,11 @@ import {
   Target,
   Shield,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Play,
+  Camera,
+  Edit,
+  Rocket
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -31,46 +35,62 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
     {
       id: "text",
       title: "Text Post",
-      subtitle: "Share thoughts",
+      subtitle: "Quick thoughts",
       icon: FileText,
-      color: "rgb(0, 173, 181)",
-      bgColor: "rgba(0, 173, 181, 0.1)",
-      description: "Quick updates & announcements",
+      color: "#00ADB5",
+      bgGradient: "from-cyan-500/10 to-teal-500/10",
+      borderColor: "border-cyan-400/30",
+      hoverBg: "hover:bg-cyan-50/50",
+      description: "Share updates instantly",
       route: "/make-post/text",
-      features: ["280 characters", "Instant sharing", "Quick engagement"]
+      features: ["280 chars", "Instant", "Viral"],
+      emoji: "📝",
+      stats: "< 5s"
     },
     {
       id: "image",
       title: "Image Post", 
-      subtitle: "Visual content",
+      subtitle: "Visual stories",
       icon: ImageIcon,
-      color: "rgb(57, 62, 70)",
-      bgColor: "rgba(57, 62, 70, 0.1)",
-      description: "Photos & graphics",
+      color: "#393E46",
+      bgGradient: "from-slate-500/10 to-gray-500/10",
+      borderColor: "border-slate-400/30",
+      hoverBg: "hover:bg-slate-50/50",
+      description: "Share photos & graphics",
       route: "/make-post/image",
-      features: ["High quality", "Social ready", "Multi-platform"]
+      features: ["HD Quality", "Multi-format", "Social"],
+      emoji: "🖼️",
+      stats: "< 10s"
     },
     {
       id: "reel",
       title: "Short Reel",
-      subtitle: "Quick videos",
+      subtitle: "Viral content",
       icon: Sparkles,
-      color: "rgb(34, 40, 49)",
-      bgColor: "rgba(34, 40, 49, 0.1)",
-      description: "TikTok & Instagram content",
+      color: "#222831",
+      bgGradient: "from-purple-500/10 to-pink-500/10",
+      borderColor: "border-purple-400/30",
+      hoverBg: "hover:bg-purple-50/50",
+      description: "TikTok & Instagram ready",
       route: "/make-post/reel",
-      features: ["Viral potential", "Quick creation", "Trending format"]
+      features: ["Viral", "Trending", "Quick"],
+      emoji: "✨",
+      stats: "< 15s"
     },
     {
       id: "video",
-      title: "Long Video",
-      subtitle: "YouTube content",
+      title: "YouTube Video",
+      subtitle: "Professional",
       icon: Youtube,
-      color: "rgb(0, 173, 181)",
-      bgColor: "rgba(0, 173, 181, 0.1)",
-      description: "Professional YouTube videos",
+      color: "#FF0000",
+      bgGradient: "from-red-500/10 to-orange-500/10",
+      borderColor: "border-red-400/30",
+      hoverBg: "hover:bg-red-50/50",
+      description: "Long-form content",
       route: "/make-post/video",
-      features: ["Full length", "Professional", "Analytics"]
+      features: ["HD Upload", "Analytics", "Monetize"],
+      emoji: "🎬",
+      stats: "< 30s"
     }
   ];
 
@@ -79,21 +99,22 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8">
+    <div className="w-full max-w-7xl mx-auto space-y-12">
       {/* Header Section */}
       <MotionDiv
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="text-center space-y-4"
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="text-center space-y-6"
       >
+        {/* Workspace Badge */}
         <MotionDiv
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.2, delay: 0.1 }}
-          className="inline-flex items-center gap-3 px-6 py-3 rounded-full border-2"
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="inline-flex items-center gap-3 px-6 py-3 rounded-full border-2 shadow-lg backdrop-blur-sm"
           style={{ 
-            backgroundColor: 'rgba(0, 173, 181, 0.1)',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
             borderColor: 'rgb(0, 173, 181)',
             color: 'rgb(0, 173, 181)'
           }}
@@ -101,36 +122,41 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
           {selectedTeam ? (
             <>
               <Users className="w-5 h-5" />
-              <span className="font-semibold">Team: {selectedTeam.name}</span>
+              <span className="font-bold">Team: {selectedTeam.name}</span>
             </>
           ) : (
             <>
               <User className="w-5 h-5" />
-              <span className="font-semibold">Personal Workspace</span>
+              <span className="font-bold">Personal Workspace</span>
             </>
           )}
         </MotionDiv>
         
+        {/* Main Title */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.15 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="space-y-4"
         >
-          <h1 className="text-5xl font-bold mb-4" style={{ color: 'rgb(34, 40, 49)' }}>
-            Create Amazing Content
+          <h1 className="text-6xl font-black tracking-tight" style={{ color: 'rgb(34, 40, 49)' }}>
+            Create
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-teal-600">
+              Amazing Content
+            </span>
           </h1>
-          <p className="text-xl" style={{ color: 'rgb(57, 62, 70)' }}>
-            Choose your content type and start creating
+          <p className="text-xl font-medium max-w-2xl mx-auto" style={{ color: 'rgb(57, 62, 70)' }}>
+            Choose your content type and start creating engaging posts that captivate your audience
           </p>
         </MotionDiv>
       </MotionDiv>
 
-      {/* Content Type Selector Grid */}
+      {/* Content Type Grid */}
       <MotionDiv
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
       >
         {contentTypes.map((type, index) => {
           const IconComponent = type.icon;
@@ -138,88 +164,138 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
           return (
             <MotionDiv
               key={type.id}
-              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ 
-                duration: 0.2, 
-                delay: 0.05 * index,
+                duration: 0.3, 
+                delay: 0.1 * index,
                 ease: "easeOut"
               }}
               whileHover={{ 
                 scale: 1.05, 
-                y: -10,
-                transition: { duration: 0.15 }
+                y: -12,
+                transition: { duration: 0.2 }
               }}
               whileTap={{ 
                 scale: 0.98,
                 transition: { duration: 0.1 }
               }}
               onClick={() => handlePostTypeClick(type.route)}
-              className="group relative p-8 rounded-3xl border-2 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-2xl"
+              className={`
+                group relative p-8 rounded-3xl border-2 cursor-pointer 
+                transition-all duration-300 shadow-xl hover:shadow-2xl
+                bg-gradient-to-br ${type.bgGradient} ${type.borderColor} ${type.hoverBg}
+                backdrop-blur-sm
+              `}
               style={{
-                backgroundColor: 'rgb(238, 238, 238)',
-                borderColor: type.color
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                borderColor: type.color + '40'
               }}
             >
-              {/* Hover Background Effect */}
+              {/* Floating Emoji */}
               <MotionDiv
-                initial={{ opacity: 0 }}
-                whileHover={{ opacity: 0.1 }}
-                transition={{ duration: 0.15 }}
-                className="absolute inset-0 rounded-3xl"
-                style={{ backgroundColor: type.color }}
-              />
-              
-              <div className="relative text-center space-y-4">
-                {/* Icon with Fast Bounce Animation */}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: 0.2 + index * 0.1,
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25
+                }}
+                className="absolute -top-4 -right-4 w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-lg"
+                style={{ backgroundColor: 'white', border: `2px solid ${type.color}` }}
+              >
+                {type.emoji}
+              </MotionDiv>
+
+              {/* Hover Arrow */}
+              <MotionDiv
+                initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                whileHover={{ 
+                  opacity: 1, 
+                  x: 0, 
+                  scale: 1,
+                  transition: { duration: 0.2 }
+                }}
+                className="absolute top-6 right-6"
+              >
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
+                  style={{ backgroundColor: type.color }}
+                >
+                  <ArrowRight className="w-5 h-5 text-white" />
+                </div>
+              </MotionDiv>
+
+              {/* Main Content */}
+              <div className="relative text-center space-y-6">
+                {/* Icon */}
                 <MotionDiv
-                  initial={{ scale: 0, rotate: -180 }}
+                  initial={{ scale: 0, rotate: -90 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ 
-                    duration: 0.3, 
-                    delay: 0.1 * index,
-                    type: "spring", 
+                    duration: 0.4, 
+                    delay: 0.15 + index * 0.05,
+                    type: "spring",
                     stiffness: 300,
                     damping: 20
                   }}
                   whileHover={{ 
                     scale: 1.1, 
                     rotate: 5,
-                    transition: { duration: 0.15 }
+                    transition: { duration: 0.2 }
                   }}
-                  className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center transition-all duration-200"
+                  className="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center shadow-lg"
                   style={{ backgroundColor: type.color }}
                 >
-                  <IconComponent className="w-8 h-8 text-white" />
+                  <IconComponent className="w-10 h-10 text-white" />
                 </MotionDiv>
                 
-                {/* Content */}
-                <div>
-                  <h3 className="font-bold text-xl mb-2" style={{ color: 'rgb(34, 40, 49)' }}>
-                    {type.title}
-                  </h3>
-                  <p className="text-sm font-medium mb-3" style={{ color: type.color }}>
-                    {type.subtitle}
-                  </p>
-                  <p className="text-xs leading-relaxed mb-4" style={{ color: 'rgb(57, 62, 70)' }}>
+                {/* Text Content */}
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1" style={{ color: 'rgb(34, 40, 49)' }}>
+                      {type.title}
+                    </h3>
+                    <p className="text-sm font-semibold" style={{ color: type.color }}>
+                      {type.subtitle}
+                    </p>
+                  </div>
+                  
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgb(57, 62, 70)' }}>
                     {type.description}
                   </p>
                   
+                  {/* Stats Badge */}
+                  <div className="flex items-center justify-center gap-2">
+                    <span 
+                      className="text-xs font-bold px-3 py-1 rounded-full text-white"
+                      style={{ backgroundColor: type.color }}
+                    >
+                      {type.stats}
+                    </span>
+                    <span className="text-xs font-medium" style={{ color: 'rgb(57, 62, 70)' }}>
+                      to create
+                    </span>
+                  </div>
+                  
                   {/* Feature Tags */}
-                  <div className="flex flex-wrap gap-1 justify-center">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {type.features.map((feature, featureIndex) => (
                       <MotionDiv
                         key={featureIndex}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ 
-                          duration: 0.15, 
-                          delay: 0.2 + (index * 0.05) + (featureIndex * 0.03)
+                          duration: 0.2, 
+                          delay: 0.3 + (index * 0.05) + (featureIndex * 0.02)
                         }}
-                        className="px-2 py-1 rounded-full text-xs font-medium"
+                        className="px-3 py-1 rounded-full text-xs font-medium border"
                         style={{
-                          backgroundColor: type.bgColor,
-                          color: type.color
+                          backgroundColor: type.color + '15',
+                          color: type.color,
+                          borderColor: type.color + '30'
                         }}
                       >
                         {feature}
@@ -228,33 +304,14 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                   </div>
                 </div>
 
-                {/* Fast Hover Arrow */}
-                <MotionDiv
-                  initial={{ opacity: 0, x: -20, scale: 0.8 }}
-                  whileHover={{ 
-                    opacity: 1, 
-                    x: 0, 
-                    scale: 1,
-                    transition: { duration: 0.1 }
-                  }}
-                  className="absolute top-4 right-4"
-                >
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
-                    style={{ backgroundColor: type.color }}
-                  >
-                    <ArrowRight className="w-4 h-4 text-white" />
-                  </div>
-                </MotionDiv>
-
                 {/* Pulse Effect on Hover */}
                 <MotionDiv
                   initial={{ scale: 0, opacity: 0 }}
                   whileHover={{ 
-                    scale: [1, 1.2, 1], 
+                    scale: [1, 1.1, 1], 
                     opacity: [0.3, 0.6, 0],
                     transition: { 
-                      duration: 0.4,
+                      duration: 0.6,
                       repeat: Infinity,
                       repeatType: "loop"
                     }
@@ -268,33 +325,33 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
         })}
       </MotionDiv>
 
-      {/* Quick Stats Section */}
+      {/* Bottom Stats Section */}
       <MotionDiv
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.4 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        transition={{ duration: 0.4, delay: 0.6 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-8"
       >
         {[
           { 
             icon: Zap, 
             title: "Lightning Fast", 
             desc: "Create content in seconds",
-            color: "rgb(0, 173, 181)",
+            color: "#00ADB5",
             stat: "< 30s"
           },
           { 
             icon: Shield, 
             title: "Team Secure", 
             desc: "Protected collaboration",
-            color: "rgb(57, 62, 70)",
+            color: "#393E46",
             stat: "100%"
           },
           { 
             icon: TrendingUp, 
             title: "Multi-Platform", 
             desc: "YouTube, TikTok & more",
-            color: "rgb(34, 40, 49)",
+            color: "#222831",
             stat: "5+ platforms"
           }
         ].map((feature, index) => {
@@ -305,44 +362,41 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ 
-                duration: 0.2, 
-                delay: 0.45 + index * 0.05,
+                duration: 0.3, 
+                delay: 0.7 + index * 0.1,
                 ease: "easeOut"
               }}
               whileHover={{ 
                 y: -8, 
                 scale: 1.03,
-                transition: { duration: 0.15 }
+                transition: { duration: 0.2 }
               }}
-              className="text-center p-6 rounded-2xl border-2 transition-all duration-200 group"
+              className="text-center p-8 rounded-2xl border-2 transition-all duration-200 group shadow-lg hover:shadow-xl"
               style={{
-                backgroundColor: 'rgba(238, 238, 238, 0.9)',
-                borderColor: 'rgba(57, 62, 70, 0.2)'
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderColor: feature.color + '30'
               }}
             >
               <MotionDiv
                 whileHover={{ 
-                  scale: 1.15, 
+                  scale: 1.2, 
                   rotate: 10,
-                  transition: { duration: 0.15 }
+                  transition: { duration: 0.2 }
                 }}
-                className="w-12 h-12 rounded-xl mx-auto mb-4 flex items-center justify-center transition-all duration-200"
-                style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)' }}
+                className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: feature.color }}
               >
-                <IconComponent className="w-6 h-6" style={{ color: feature.color }} />
+                <IconComponent className="w-8 h-8 text-white" />
               </MotionDiv>
               
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <h3 className="font-bold" style={{ color: 'rgb(34, 40, 49)' }}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-3">
+                  <h3 className="font-bold text-lg" style={{ color: 'rgb(34, 40, 49)' }}>
                     {feature.title}
                   </h3>
                   <span 
-                    className="text-xs font-bold px-2 py-1 rounded-full"
-                    style={{ 
-                      backgroundColor: feature.color,
-                      color: 'white'
-                    }}
+                    className="text-xs font-bold px-3 py-1 rounded-full text-white"
+                    style={{ backgroundColor: feature.color }}
                   >
                     {feature.stat}
                   </span>
@@ -360,12 +414,12 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       <MotionDiv
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.6 }}
+        transition={{ duration: 0.4, delay: 0.9 }}
         whileHover={{ 
           scale: 1.02,
-          transition: { duration: 0.15 }
+          transition: { duration: 0.2 }
         }}
-        className="text-center p-8 rounded-3xl border-2 relative overflow-hidden"
+        className="text-center p-12 rounded-3xl border-2 relative overflow-hidden shadow-2xl"
         style={{
           backgroundColor: 'rgba(0, 173, 181, 0.05)',
           borderColor: 'rgba(0, 173, 181, 0.3)'
@@ -378,7 +432,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
             scale: [1, 1.1, 1]
           }}
           transition={{ 
-            duration: 8, 
+            duration: 12, 
             repeat: Infinity, 
             ease: "linear" 
           }}
@@ -386,44 +440,63 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
           style={{ backgroundColor: 'rgb(0, 173, 181)' }}
         />
         
-        <div className="relative z-10">
+        <div className="relative z-10 space-y-6">
           <MotionDiv
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 0.2, delay: 0.65 }}
-            className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            transition={{ duration: 0.3, delay: 1 }}
+            className="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-xl"
             style={{ backgroundColor: 'rgb(0, 173, 181)' }}
           >
-            <Sparkles className="w-8 h-8 text-white" />
+            <Rocket className="w-10 h-10 text-white" />
           </MotionDiv>
           
-          <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(34, 40, 49)' }}>
-            Ready to Create?
-          </h3>
-          <p className="text-lg" style={{ color: 'rgb(57, 62, 70)' }}>
-            Choose a content type above to start creating amazing posts
-          </p>
+          <div className="space-y-4">
+            <h3 className="text-3xl font-black" style={{ color: 'rgb(34, 40, 49)' }}>
+              Ready to Create Magic?
+            </h3>
+            <p className="text-lg font-medium max-w-2xl mx-auto" style={{ color: 'rgb(57, 62, 70)' }}>
+              Choose a content type above and start building content that engages, inspires, and converts
+            </p>
+          </div>
           
           {/* Floating Action Indicators */}
-          <div className="flex justify-center gap-4 mt-6">
+          <div className="flex justify-center gap-6 mt-8">
             {['📝', '🖼️', '✨', '🎬'].map((emoji, index) => (
               <MotionDiv
                 key={index}
                 animate={{ 
-                  y: [0, -10, 0],
-                  rotate: [0, 5, -5, 0]
+                  y: [0, -15, 0],
+                  rotate: [0, 10, -10, 0],
+                  scale: [1, 1.1, 1]
                 }}
                 transition={{ 
-                  duration: 2, 
-                  delay: index * 0.2,
+                  duration: 3, 
+                  delay: index * 0.5,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="text-2xl"
+                className="text-4xl filter drop-shadow-lg"
               >
                 {emoji}
               </MotionDiv>
             ))}
+          </div>
+
+          {/* Quick Stats */}
+          <div className="flex items-center justify-center gap-8 text-sm font-medium" style={{ color: 'rgb(57, 62, 70)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: 'rgb(0, 173, 181)' }} />
+              <span>4 Content Types</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: 'rgb(57, 62, 70)' }} />
+              <span>Instant Creation</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: 'rgb(34, 40, 49)' }} />
+              <span>Multi-Platform</span>
+            </div>
           </div>
         </div>
       </MotionDiv>
