@@ -80,14 +80,14 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       <MotionDiv
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
         className="text-center space-y-6"
       >
         {/* Workspace Badge */}
         <MotionDiv
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.2, delay: 0.1 }}
+          transition={{ duration: 0.1, delay: 0.05 }}
           className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl border-2 shadow-lg"
           style={{ 
             backgroundColor: 'white',
@@ -112,7 +112,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
+          transition={{ duration: 0.15, delay: 0.1 }}
           className="space-y-4"
         >
           <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -131,7 +131,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       <MotionDiv
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
+        transition={{ duration: 0.2, delay: 0.15 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"
       >
         {contentTypes.map((type, index) => {
@@ -143,21 +143,21 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ 
-                duration: 0.3, 
-                delay: 0.1 * index,
+                duration: 0.15, 
+                delay: 0.05 * index,
                 ease: "easeOut"
               }}
               whileHover={{ 
                 scale: 1.03, 
                 y: -8,
-                transition: { duration: 0.15 }
+                transition: { duration: 0.1 }
               }}
               whileTap={{ 
                 scale: 0.98,
-                transition: { duration: 0.1 }
+                transition: { duration: 0.05 }
               }}
               onClick={() => handlePostTypeClick(type.route)}
-              className="group relative p-8 rounded-3xl border-2 cursor-pointer transition-all duration-200 shadow-xl hover:shadow-2xl"
+              className="group relative p-8 rounded-3xl border-2 cursor-pointer transition-all duration-100 shadow-xl hover:shadow-2xl"
               style={{
                 backgroundColor: 'white',
                 borderColor: type.color + '40'
@@ -168,11 +168,11 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                 initial={{ scale: 0, rotate: -90 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ 
-                  duration: 0.3, 
-                  delay: 0.2 + index * 0.05,
+                  duration: 0.15, 
+                  delay: 0.1 + index * 0.02,
                   type: "spring",
-                  stiffness: 400,
-                  damping: 25
+                  stiffness: 500,
+                  damping: 20
                 }}
                 className="absolute -top-6 -right-6 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-xl border-4 border-white"
                 style={{ backgroundColor: type.color }}
@@ -187,7 +187,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                   opacity: 1, 
                   x: 0, 
                   scale: 1,
-                  transition: { duration: 0.15 }
+                  transition: { duration: 0.08 }
                 }}
                 className="absolute top-8 right-8"
               >
@@ -206,16 +206,16 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                   initial={{ scale: 0, rotate: -45 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ 
-                    duration: 0.3, 
-                    delay: 0.15 + index * 0.05,
+                    duration: 0.15, 
+                    delay: 0.08 + index * 0.02,
                     type: "spring",
-                    stiffness: 300,
+                    stiffness: 400,
                     damping: 20
                   }}
                   whileHover={{ 
                     scale: 1.1, 
                     rotate: 3,
-                    transition: { duration: 0.15 }
+                    transition: { duration: 0.08 }
                   }}
                   className="w-24 h-24 rounded-3xl mx-auto flex items-center justify-center shadow-xl"
                   style={{ backgroundColor: type.color }}
