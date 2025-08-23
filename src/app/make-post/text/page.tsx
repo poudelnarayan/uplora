@@ -165,6 +165,9 @@ export default function MakeReelPage() {
                     }}
                   >
                     <ArrowLeft className="w-4 h-4" />
+                  </button>
+                </MotionDiv>
+
                 {/* Header Section */}
                 <MotionDiv
                   initial={{ opacity: 0, y: -30 }}
