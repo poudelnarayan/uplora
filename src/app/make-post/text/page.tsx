@@ -80,7 +80,7 @@ export default function MakeTextPostPage() {
                 <MotionDiv
                   initial={{ opacity: 0, y: -30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                   className="text-center space-y-4"
                 >
                   <button
@@ -128,7 +128,7 @@ export default function MakeTextPostPage() {
                 <MotionDiv
                   initial={{ opacity: 0, y: 40, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                   className="rounded-3xl p-8 border-2 shadow-2xl"
                   style={{
                     backgroundColor: 'rgb(238, 238, 238)',
@@ -140,7 +140,7 @@ export default function MakeTextPostPage() {
                       <MotionDiv
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ duration: 0.5, type: "spring", bounce: 0.3 }}
+                        transition={{ duration: 0.25, type: "spring", stiffness: 400, damping: 25 }}
                         className="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center"
                         style={{ backgroundColor: 'rgb(0, 173, 181)' }}
                       >
@@ -188,7 +188,7 @@ export default function MakeTextPostPage() {
 
                     <MotionDiv
                       whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileTap={{ scale: 0.96 }}
                     >
                       <button
                         onClick={handleCreate}
@@ -219,7 +219,7 @@ export default function MakeTextPostPage() {
                 <MotionDiv
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
+                  transition={{ duration: 0.25, delay: 0.2 }}
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   {[
@@ -233,8 +233,8 @@ export default function MakeTextPostPage() {
                         key={index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-                        whileHover={{ y: -5 }}
+                        transition={{ duration: 0.2, delay: 0.25 + index * 0.05 }}
+                        whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.15 } }}
                         className="text-center p-6 rounded-2xl border"
                         style={{
                           backgroundColor: 'rgba(238, 238, 238, 0.8)',
