@@ -225,9 +225,11 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                 
                 {/* Text Content */}
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-bold text-center" style={{ color: 'rgb(34, 40, 49)' }}>
-                    {type.title}
-                  </h3>
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(34, 40, 49)' }}>
+                      {type.title}
+                    </h3>
+                    <p className="text-base font-semibold mb-3" style={{ color: type.color }}>
                       {type.subtitle}
                     </p>
                     <p className="text-sm leading-relaxed" style={{ color: 'rgb(57, 62, 70)' }}>
