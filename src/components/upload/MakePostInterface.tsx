@@ -27,34 +27,46 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
     {
       id: "text",
       title: "Text Post",
+      subtitle: "Quick thoughts & updates",
       icon: FileText,
       color: "#00ADB5",
+      description: "Share instant updates and thoughts",
       route: "/make-post/text",
-      emoji: "📝"
+      emoji: "📝",
+      features: ["280 chars", "Instant", "Viral"]
     },
     {
       id: "image",
       title: "Image Post", 
+      subtitle: "Visual stories & photos",
       icon: ImageIcon,
       color: "#393E46",
+      description: "Share photos and visual content",
       route: "/make-post/image",
-      emoji: "🖼️"
+      emoji: "🖼️",
+      features: ["HD Quality", "Multi-format", "Social"]
     },
     {
       id: "reel",
       title: "Short Reel",
+      subtitle: "Viral short-form content",
       icon: Sparkles,
       color: "#222831",
+      description: "Create engaging reels for TikTok & Instagram",
       route: "/make-post/reel",
-      emoji: "✨"
+      emoji: "✨",
+      features: ["Viral", "Trending", "Quick"]
     },
     {
       id: "video",
       title: "YouTube Video",
+      subtitle: "Professional long-form",
       icon: Youtube,
       color: "#FF0000",
+      description: "Upload professional content to YouTube",
       route: "/make-post/video",
-      emoji: "🎬"
+      emoji: "🎬",
+      features: ["HD Upload", "Analytics", "Monetize"]
     }
   ];
 
@@ -138,7 +150,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
               whileHover={{ 
                 scale: 1.03, 
                 y: -8,
-                transition: { duration: 0.08 }
+                transition: { duration: 0.1 }
               }}
               whileTap={{ 
                 scale: 0.98,
@@ -211,11 +223,39 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                   <IconComponent className="w-12 h-12 text-white" />
                 </MotionDiv>
                 
-                {/* Title Only */}
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold" style={{ color: 'rgb(34, 40, 49)' }}>
+                {/* Text Content */}
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-center" style={{ color: 'rgb(34, 40, 49)' }}>
                     {type.title}
                   </h3>
+                      {type.subtitle}
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgb(57, 62, 70)' }}>
+                      {type.description}
+                    </p>
+                  </div>
+                  
+                  {/* Feature Tags */}
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {type.features.map((feature, featureIndex) => (
+                      <MotionDiv
+                        key={featureIndex}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ 
+                          duration: 0.2, 
+                          delay: 0.3 + featureIndex * 0.05
+                        }}
+                        className="px-3 py-1 rounded-full text-xs font-semibold"
+                        style={{ 
+                          backgroundColor: type.color + '20',
+                          color: type.color
+                        }}
+                      >
+                        {feature}
+                      </MotionDiv>
+                    ))}
+                  </div>
                 </div>
               </div>
             </MotionDiv>
