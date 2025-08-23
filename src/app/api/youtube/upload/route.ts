@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     // Update our Video record if exists
     try {
-      await prisma.video.updateMany({ where: { key }, data: { status: "published" } });
+      await prisma.video.updateMany({ where: { key }, data: { status: "PUBLISHED" } });
     } catch {}
 
     return NextResponse.json({ id: videoId });

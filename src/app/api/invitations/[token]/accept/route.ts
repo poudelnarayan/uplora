@@ -25,7 +25,8 @@ export async function POST(
     }
 
     // Get user details from Clerk
-    const clerkUser = await clerkClient.users.getUser(userId);
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
     const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
 
     // Find the invitation

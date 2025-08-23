@@ -18,7 +18,8 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Get user details from Clerk
-    const clerkUser = await clerkClient.users.getUser(userId);
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
     const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
     const userName = clerkUser.fullName || clerkUser.firstName || "";
     const userImage = clerkUser.imageUrl || "";
@@ -48,8 +49,7 @@ export async function DELETE(req: NextRequest) {
       createErrorResponse(
         ErrorCodes.INTERNAL_ERROR,
         "Failed to release lock",
-        undefined,
-        err?.message
+        err?.message ? { detail: String(err.message) } : undefined
       ),
       { status: 500 }
     );

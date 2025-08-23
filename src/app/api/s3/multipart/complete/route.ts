@@ -13,7 +13,7 @@ import { spawn } from "child_process";
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { key, uploadId, parts, originalFilename, contentType, sizeBytes, teamId } = await req.json();
@@ -113,10 +113,10 @@ export async function POST(req: NextRequest) {
         // Download original
         const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
         const body = getObj.Body as NodeJS.ReadableStream;
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           const ws = createWriteStream(originalPath);
           body.pipe(ws);
-          ws.on("finish", resolve);
+          ws.on("finish", () => resolve());
           ws.on("error", reject);
         });
 

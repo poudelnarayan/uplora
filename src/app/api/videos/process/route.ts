@@ -32,14 +32,14 @@ export async function POST(req: NextRequest) {
     if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
     // Skip if already processed
-    if (video.status === "processing" || video.key.includes("-web-optimized")) {
+    if (video.status === "PROCESSING" || video.key.includes("-web-optimized")) {
       return NextResponse.json({ message: "Already processing or processed" });
     }
 
     // Mark as processing
     await prisma.video.update({
       where: { id: videoId },
-      data: { status: "processing" }
+      data: { status: "PROCESSING" }
     });
 
     // Download original from S3
@@ -51,10 +51,10 @@ export async function POST(req: NextRequest) {
     const response = await s3.send(getCmd);
     const stream = response.Body as NodeJS.ReadableStream;
     
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const writeStream = createWriteStream(originalPath);
       stream.pipe(writeStream);
-      writeStream.on('finish', resolve);
+      writeStream.on('finish', () => resolve());
       writeStream.on('error', reject);
     });
 
