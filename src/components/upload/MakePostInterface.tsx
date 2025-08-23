@@ -137,48 +137,14 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
 
   const handleCreate = async () => {
     if (selectedType === "text") {
-      if (!textContent.trim()) return;
-      
-      setIsCreating(true);
-      // Simulate text post creation
-      setTimeout(() => {
-        notifications.addNotification({
-          type: "success",
-          title: "Text post created!",
-          message: "Your post has been shared successfully"
-        });
-        setTextContent("");
-        setIsCreating(false);
-        router.push("/dashboard");
-      }, 1500);
+      router.push("/make-post/text");
     } else {
-      if (!file) return;
-      
-      setIsCreating(true);
-      try {
-        const uploadId = enqueueUpload(file, selectedTeamId);
-        notifications.addNotification({ 
-          type: "info", 
-          title: "Creating content...", 
-          message: "Your content is being processed",
-          sticky: true,
-          stickyConditions: {
-            dismissOnRouteChange: true,
-            dismissAfterSeconds: 25
-          }
-        });
-        
-        // Reset form
-        setFile(null);
-        router.push("/dashboard");
-      } catch (error) {
-        notifications.addNotification({
-          type: "error",
-          title: "Creation failed",
-          message: "Please try again"
-        });
-      } finally {
-        setIsCreating(false);
+      if (selectedType === "post") {
+        router.push("/make-post/image");
+      } else if (selectedType === "reel") {
+        router.push("/make-post/reel");
+      } else if (selectedType === "video") {
+        router.push("/make-post/video");
       }
     }
   };
