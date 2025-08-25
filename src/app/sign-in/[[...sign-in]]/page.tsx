@@ -18,9 +18,6 @@ export default function Page() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <img src="/text-logo.png" alt="Uplora" className="h-8" />
-        </div>
         {!isSignedIn ? (
         <SignIn 
           routing="path"
