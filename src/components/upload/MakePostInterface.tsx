@@ -30,10 +30,9 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       subtitle: "Quick thoughts & updates",
       icon: FileText,
       color: "#00ADB5",
-      description: "Share instant updates and thoughts",
       route: "/make-post/text",
       emoji: "📝",
-      features: ["280 chars", "Instant", "Viral"]
+     
     },
     {
       id: "image",
@@ -41,10 +40,8 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       subtitle: "Visual stories & photos",
       icon: ImageIcon,
       color: "#393E46",
-      description: "Share photos and visual content",
       route: "/make-post/image",
       emoji: "🖼️",
-      features: ["HD Quality", "Multi-format", "Social"]
     },
     {
       id: "reel",
@@ -52,10 +49,9 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       subtitle: "Viral short-form content",
       icon: Sparkles,
       color: "#222831",
-      description: "Create engaging reels for TikTok & Instagram",
       route: "/make-post/reel",
       emoji: "✨",
-      features: ["Viral", "Trending", "Quick"]
+     
     },
     {
       id: "video",
@@ -63,10 +59,9 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
       subtitle: "Professional long-form",
       icon: Youtube,
       color: "#FF0000",
-      description: "Upload professional content to YouTube",
       route: "/make-post/video",
       emoji: "🎬",
-      features: ["HD Upload", "Analytics", "Monetize"]
+     
     }
   ];
 
@@ -83,30 +78,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
         transition={{ duration: 0.15, ease: "easeOut" }}
         className="text-center space-y-6"
       >
-        {/* Workspace Badge */}
-        <MotionDiv
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.1, delay: 0.05 }}
-          className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl border-2 shadow-lg"
-          style={{ 
-            backgroundColor: 'white',
-            borderColor: 'rgb(0, 173, 181)',
-            color: 'rgb(0, 173, 181)'
-          }}
-        >
-          {selectedTeam ? (
-            <>
-              <Users className="w-6 h-6" />
-              <span className="font-bold text-lg">Team: {selectedTeam.name}</span>
-            </>
-          ) : (
-            <>
-              <User className="w-6 h-6" />
-              <span className="font-bold text-lg">Personal Workspace</span>
-            </>
-          )}
-        </MotionDiv>
+       
         
         {/* Main Title */}
         <MotionDiv
@@ -232,32 +204,10 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                     <p className="text-base font-semibold mb-3" style={{ color: type.color }}>
                       {type.subtitle}
                     </p>
-                    <p className="text-sm leading-relaxed" style={{ color: 'rgb(57, 62, 70)' }}>
-                      {type.description}
-                    </p>
+                    
                   </div>
                   
-                  {/* Feature Tags */}
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {type.features.map((feature, featureIndex) => (
-                      <MotionDiv
-                        key={featureIndex}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ 
-                          duration: 0.2, 
-                          delay: 0.3 + featureIndex * 0.05
-                        }}
-                        className="px-3 py-1 rounded-full text-xs font-semibold"
-                        style={{ 
-                          backgroundColor: type.color + '20',
-                          color: type.color
-                        }}
-                      >
-                        {feature}
-                      </MotionDiv>
-                    ))}
-                  </div>
+                 
                 </div>
               </div>
             </MotionDiv>

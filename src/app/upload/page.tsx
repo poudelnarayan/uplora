@@ -20,7 +20,7 @@ export default function MakePostPage() {
         <AppShell>
           <NextSeoNoSSR title="Create Content" noindex nofollow />
           
-          <div className="min-h-[calc(100vh-8rem)] flex flex-col justify-center items-center px-4 py-12">
+          <div className="min-h-[calc(100vh-8rem)] flex flex-col justify-center items-center px-4 py-0">
               <MakePostInterface 
                 selectedTeam={selectedTeam}
                 selectedTeamId={selectedTeamId}
