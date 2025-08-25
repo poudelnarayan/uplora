@@ -34,6 +34,7 @@ export default function Page() {
               formFieldLabel: 'text-foreground',
               formFieldErrorText: 'text-red-500',
               footerActionLink: 'link text-primary',
+              logoImage: 'w-16 h-16',
             },
           }}
           afterSignInUrl={redirectTarget}
