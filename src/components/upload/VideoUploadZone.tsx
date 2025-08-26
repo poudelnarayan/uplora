@@ -151,12 +151,30 @@ export default function VideoUploadZone({
       ...prev,
       status: item.status === 'queued' ? 'uploading' : (item.status as any),
       progress: typeof item.progress === 'number' ? item.progress : prev.progress,
+      fileName: item.fileName || prev.fileName,
+      fileSize: item.fileSize || prev.fileSize,
       videoId: item.videoId ?? prev.videoId,
     }));
     if (item.status === 'completed' && item.videoId && onUploadComplete) {
       onUploadComplete(item.videoId);
     }
   }, [uploads, currentUploadId, onUploadComplete]);
+
+  // If user navigates here mid-upload, bind to the active upload automatically
+  useEffect(() => {
+    if (currentUploadId) return;
+    const active = uploads.find(u => u.status === 'uploading' || u.status === 'queued');
+    if (active) {
+      setCurrentUploadId(active.id);
+      setUploadState(prev => ({
+        ...prev,
+        status: 'uploading',
+        progress: typeof active.progress === 'number' ? active.progress : 0,
+        fileName: active.fileName || prev.fileName,
+        fileSize: active.fileSize || prev.fileSize,
+      }));
+    }
+  }, [uploads, currentUploadId]);
 
   const startUpload = async (file: File) => {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
