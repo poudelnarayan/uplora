@@ -598,8 +598,7 @@ export default function VideoPreviewPage() {
 
   // Load thumbnail from S3
   const loadThumbnailUrl = async (thumbnailKey: string) => {
-    // If no key or key is not in team-based thumbnail path, don't ping the server
-    if (!thumbnailKey || !/^teams\/[\w-]+\/videos\/[\w-]+\/thumbnail\//.test(thumbnailKey)) {
+    if (!thumbnailKey) {
       setCurrentThumbnailUrl(null);
       setThumbnailLoading(false);
       return;

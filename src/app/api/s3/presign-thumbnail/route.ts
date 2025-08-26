@@ -19,23 +19,20 @@ export async function POST(req: NextRequest) {
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
     if (!videoId) return NextResponse.json({ error: "Missing videoId" }, { status: 400 });
 
-    // Validate it's a supported image format (YouTube requirements)
     const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
     if (!supportedTypes.includes(contentType)) {
       return NextResponse.json({ error: "Only JPG, PNG, GIF, or BMP files are allowed for thumbnails" }, { status: 400 });
     }
 
-    // Build safe S3 key for thumbnails
     const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
 
-    // Get user details from Clerk and sync with Supabase
+    // Sync user
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
     const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
     const userName = clerkUser.fullName || clerkUser.firstName || "";
     const userImage = clerkUser.imageUrl || "";
 
-    // Ensure user exists in Supabase
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .upsert({
@@ -50,54 +47,46 @@ export async function POST(req: NextRequest) {
       })
       .select()
       .single();
-
     if (userError) {
-      console.error("User sync error:", userError);
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    // Resolve video and enforce access based on team membership or personal ownership
+    // Resolve video and teamId
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
-      .select('*')
+      .select('id, teamId, userId')
       .eq('id', videoId)
       .single();
-
     if (videoError || !video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Access checks
-    let allowed = false;
-    if (video.teamId) {
-      // Team-based: owner or member
-      const { data: team } = await supabaseAdmin
-        .from('teams')
-        .select('ownerId')
-        .eq('id', video.teamId)
-        .single();
-      allowed = team?.ownerId === user.id;
-      if (!allowed) {
-        const { data: membership } = await supabaseAdmin
-          .from('team_members')
-          .select('id')
-          .eq('teamId', video.teamId)
-          .eq('userId', user.id)
-          .single();
-        allowed = !!membership;
-      }
-    } else {
-      // Personal video: only owner
-      allowed = video.userId === user.id;
+    const finalTeamId = video.teamId;
+    if (!finalTeamId) {
+      return NextResponse.json({ error: "Video must belong to a team (personal team included)" }, { status: 400 });
     }
 
-    if (!allowed) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    // Access check: owner or member
+    const { data: team } = await supabaseAdmin
+      .from('teams')
+      .select('ownerId')
+      .eq('id', finalTeamId)
+      .single();
+    let allowed = team?.ownerId === user.id;
+    if (!allowed) {
+      const { data: membership } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('teamId', finalTeamId)
+        .eq('userId', user.id)
+        .maybeSingle();
+      allowed = !!membership;
+    }
+    if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
 
-    // Owner is teamId if present, else userId
-    const owner = video.teamId || video.userId;
-    const key = `${owner}/videos/${videoId}/thumbnails/${safeName}`;
+    // Presign thumbnail under the same videoId folder
+    const key = `${finalTeamId}/videos/${videoId}/thumbnails/${safeName}`;
 
-    // Generate presigned PUT URL
     const command = new PutObjectCommand({ 
       Bucket: process.env.S3_BUCKET!, 
       Key: key, 
