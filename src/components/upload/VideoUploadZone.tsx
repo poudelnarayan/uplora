@@ -143,10 +143,13 @@ export default function VideoUploadZone({
       // Create abort controller for this upload
       abortControllerRef.current = new AbortController();
       
+      // Get the base URL for API calls
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
+      
       // Step 1: Initialize multipart upload
       setUploadState(prev => ({ ...prev, status: 'uploading', progress: 5 }));
       
-      const initResponse = await fetch("/api/s3/multipart/init", {
+      const initResponse = await fetch(`${baseUrl}/api/s3/multipart/init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -180,7 +183,7 @@ export default function VideoUploadZone({
         const chunk = file.slice(start, end);
 
         // Get presigned URL for this part
-        const signResponse = await fetch("/api/s3/multipart/sign", {
+        const signResponse = await fetch(`${baseUrl}/api/s3/multipart/sign`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key, uploadId, partNumber }),
@@ -261,7 +264,7 @@ export default function VideoUploadZone({
       // Step 3: Complete multipart upload
       setUploadState(prev => ({ ...prev, status: 'processing', progress: 95 }));
 
-      const completeResponse = await fetch("/api/s3/multipart/complete", {
+      const completeResponse = await fetch(`${baseUrl}/api/s3/multipart/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -292,30 +295,27 @@ export default function VideoUploadZone({
 
       notifications.addNotification({
         type: "success",
-        title: "Upload successful!",
-        message: `${file.name} has been uploaded successfully`
+        title: "Upload completed!",
+        message: `Successfully uploaded ${file.name}`
       });
 
-      // Call completion callback
       if (onUploadComplete && completeData.videoId) {
         onUploadComplete(completeData.videoId);
       }
 
     } catch (error) {
-      console.error('Upload error:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      console.error("Upload error:", error);
       
       setUploadState(prev => ({ 
         ...prev, 
         status: 'failed', 
-        error: errorMessage 
+        error: error instanceof Error ? error.message : 'Upload failed'
       }));
 
       notifications.addNotification({
         type: "error",
         title: "Upload failed",
-        message: errorMessage
+        message: error instanceof Error ? error.message : 'Upload failed'
       });
     }
   };
