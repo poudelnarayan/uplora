@@ -141,6 +141,7 @@ export default function VideoUploadZone({
   const startUpload = async (file: File) => {
     try {
       abortControllerRef.current = new AbortController();
+      const uploadSignal = abortControllerRef.current?.signal;
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
 
       setUploadState(prev => ({ ...prev, status: 'uploading', progress: 0 }));
@@ -153,7 +154,7 @@ export default function VideoUploadZone({
           contentType: file.type || "video/mp4",
           teamId 
         }),
-        signal: abortControllerRef.current.signal
+        signal: uploadSignal
       });
 
       if (!initResponse.ok) {
@@ -167,12 +168,18 @@ export default function VideoUploadZone({
       const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
 
       let completedBytes = 0;
+      const perPartLoaded = new Map<number, number>();
+      const sumPartialLoaded = () => {
+        let s = 0;
+        perPartLoaded.forEach(v => { s += v; });
+        return s;
+      };
       const concurrency = Math.min(4, totalParts);
       let nextPart = 1;
       let failed = false;
 
       const updateProgress = () => {
-        const percent = Math.max(0, Math.min(99, (completedBytes / file.size) * 100));
+        const percent = Math.max(0, Math.min(99, ((completedBytes + sumPartialLoaded()) / file.size) * 100));
         setUploadState(prev => ({ ...prev, progress: percent }));
       };
 
@@ -186,7 +193,7 @@ export default function VideoUploadZone({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key, uploadId, partNumber }),
-          signal: abortControllerRef.current.signal
+          signal: uploadSignal
         });
         if (!signResponse.ok) throw new Error(`Failed to sign part ${partNumber}`);
         const { url } = await signResponse.json();
@@ -194,19 +201,27 @@ export default function VideoUploadZone({
         const etag = await new Promise<string>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open('PUT', url);
+          if (uploadSignal) {
+            const onAbort = () => {
+              try { xhr.abort(); } catch {}
+              reject(new Error('Upload cancelled'));
+            };
+            // One-time abort listener
+            uploadSignal.addEventListener('abort', onAbort, { once: true });
+          }
           xhr.upload.onprogress = (evt) => {
             if (evt.lengthComputable) {
-              const delta = evt.loaded; // this is bytes sent for current progress event
-              // We don't know previous loaded for this part; compute part fraction via (start + loaded)
-              const currentCompletedBytes = completedBytes + (evt.loaded);
-              const percent = Math.max(0, Math.min(99, (currentCompletedBytes / file.size) * 100));
-              setUploadState(prev => ({ ...prev, progress: percent }));
+              perPartLoaded.set(partNumber, evt.loaded);
+              updateProgress();
             }
           };
           xhr.onerror = () => reject(new Error(`XHR failed for part ${partNumber}`));
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
               const hdr = xhr.getResponseHeader('ETag') || '';
+              perPartLoaded.delete(partNumber);
+              completedBytes += chunk.size;
+              updateProgress();
               resolve(hdr.replace(/\"/g, '').replace(/"/g, ''));
             } else {
               reject(new Error(`Upload part ${partNumber} failed: ${xhr.status}`));
@@ -217,8 +232,6 @@ export default function VideoUploadZone({
         });
 
         uploadedParts.push({ ETag: etag, PartNumber: partNumber });
-        completedBytes += chunk.size;
-        updateProgress();
       }
 
       async function worker() {
