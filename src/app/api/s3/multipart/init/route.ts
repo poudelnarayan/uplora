@@ -78,9 +78,9 @@ export async function POST(req: NextRequest) {
     const uploadId = crypto.randomUUID();
 
     // Compute final key using upload ID
-    const finalKey = teamId
-      ? `teams/${teamId}/videos/${uploadId}/original/${safeName}`
-      : `users/${user.id}/videos/${uploadId}/original/${safeName}`;
+    const finalKey = (teamId || user.id)
+      ? `${teamId || user.id}/videos/${uploadId}/original/${safeName}`
+      : `${user.id}/videos/${uploadId}/original/${safeName}`;
 
     // Start multipart upload (with robust error handling)
     let out;

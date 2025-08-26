@@ -98,9 +98,10 @@ export async function POST(req: NextRequest) {
     const title = String(originalFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
     // Derive teamId from key if not in metadata
-    const m = key.match(/(?:teams\/(.*?)|users\/(.*?))\/videos\/(.*?)\//);
-    const teamIdFromKey = m && m[1] ? m[1] : null;
-    const finalTeamId = lockTeamId ?? teamId ?? teamIdFromKey;
+    // Pattern: <ownerId>/videos/<uploadUuid>/...
+    const m = key.match(/([^/]+)\/videos\/(.*?)\//);
+    const ownerIdFromKey = m && m[1] ? m[1] : null;
+    const finalTeamId = lockTeamId ?? teamId ?? (ownerIdFromKey && ownerIdFromKey !== user.id ? ownerIdFromKey : null);
 
     // Validate team access if teamId is provided
     if (finalTeamId) {
@@ -176,6 +177,22 @@ export async function POST(req: NextRequest) {
       // Don't fail the request for cleanup errors
     }
 
+    // Move original to canonical location under video.id
+    try {
+      const baseOwner = finalTeamId || user.id;
+      const canonicalOriginalKey = `${baseOwner}/videos/${video.id}/source/original.mp4`;
+      // Download original and re-put to canonical path (S3 CopyObject requires extra perms; use get/put for portability)
+      const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+      await s3.send(new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET!,
+        Key: canonicalOriginalKey,
+        Body: getObj.Body as any,
+        ContentType: contentType || "application/octet-stream",
+      }));
+    } catch (e) {
+      console.error("Failed to move original to canonical location", e);
+    }
+
     // Fire-and-forget background optimization for fast web preview
     setTimeout(async () => {
       try {
@@ -213,9 +230,8 @@ export async function POST(req: NextRequest) {
         });
 
         // Upload optimized to a deterministic preview key
-        const previewKey = (finalTeamId
-          ? `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`
-          : `users/${user.id}/videos/${video.id}/preview/web.mp4`);
+        const baseOwner = finalTeamId || user.id;
+        const previewKey = `${baseOwner}/videos/${video.id}/preview/web.mp4`;
         await s3.send(new PutObjectCommand({
           Bucket: process.env.S3_BUCKET!,
           Key: previewKey,
@@ -232,7 +248,13 @@ export async function POST(req: NextRequest) {
       }
     }, 0);
 
-    return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id });
+    return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id, 
+      keys: {
+        baseOwner: finalTeamId || user.id,
+        original: `${(finalTeamId || user.id)}/videos/${video.id}/source/original.mp4`,
+        preview: `${(finalTeamId || user.id)}/videos/${video.id}/preview/web.mp4`
+      }
+    });
   } catch (e) {
     console.error("Multipart complete error:", e);
     try {
