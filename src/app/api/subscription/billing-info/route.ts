@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { clerkClient } from "@clerk/nextjs/server";
+import { supabaseAdmin } from "@/lib/supabase";
 import { BillingInfo, SubscriptionStatus } from "@/types/subscription";
 
 export async function GET(request: NextRequest) {
@@ -12,19 +13,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user with subscription data
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        // Add subscription-related fields when they exist
-      }
-    });
+    // Get user details from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
 
-    if (!user) {
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -39,9 +52,9 @@ export async function GET(request: NextRequest) {
         currentPeriodStart: new Date(),
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         cancelAtPeriodEnd: false,
-        trialStart: user.createdAt,
-        trialEnd: new Date(user.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        createdAt: user.createdAt,
+        trialStart: new Date(user.createdAt),
+        trialEnd: new Date(new Date(user.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        createdAt: new Date(user.createdAt),
         updatedAt: new Date()
       },
       paymentMethods: [],

@@ -5,7 +5,7 @@ import { google } from "googleapis";
 import { auth } from "@clerk/nextjs/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -17,12 +17,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's YouTube credentials from database
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { youtubeAccessToken: true, youtubeRefreshToken: true }
-    });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('youtubeAccessToken, youtubeRefreshToken')
+      .eq('clerkId', userId)
+      .single();
 
-    if (!user?.youtubeAccessToken) {
+    if (userError || !user?.youtubeAccessToken) {
       return NextResponse.json(
         { error: "YouTube not connected. Please connect your YouTube account in settings." },
         { status: 403 }
@@ -74,7 +75,10 @@ export async function POST(req: NextRequest) {
 
     // Update our Video record if exists
     try {
-      await prisma.video.updateMany({ where: { key }, data: { status: "PUBLISHED" } });
+      await supabaseAdmin
+        .from('videos')
+        .update({ status: "PUBLISHED" })
+        .eq('key', key);
     } catch {}
 
     return NextResponse.json({ id: videoId });

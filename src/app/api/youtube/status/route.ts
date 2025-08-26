@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { clerkClient } from "@clerk/nextjs/server";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
   const { userId } = await auth();
@@ -11,20 +12,38 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        youtubeAccessToken: true,
-        youtubeChannelId: true,
-        youtubeChannelTitle: true,
-        youtubeExpiresAt: true,
-      }
-    });
+    // Get user details from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select('youtubeAccessToken, youtubeChannelId, youtubeChannelTitle, youtubeExpiresAt')
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
 
     const isConnected = !!(user?.youtubeAccessToken && user?.youtubeChannelId);
     
     // Check if token is expired
-    const isExpired = user?.youtubeExpiresAt && new Date() > user.youtubeExpiresAt;
+    const isExpired = user?.youtubeExpiresAt && new Date() > new Date(user.youtubeExpiresAt);
 
     return NextResponse.json({
       isConnected: isConnected && !isExpired,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function GET(
   request: NextRequest,
@@ -7,40 +8,46 @@ export async function GET(
 ) {
   try {
     const { token } = context.params;
-    const invitation = await prisma.teamInvite.findFirst({
-      where: {
-        token,
-        status: "PENDING",
-        expiresAt: { gt: new Date() },
-      },
-      include: {
-        team: {
-          select: {
-            name: true,
-            description: true,
-          },
-        },
-        inviter: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    
+    const { data: invitation, error } = await supabaseAdmin
+      .from('team_invites')
+      .select(`
+        *,
+        teams (
+          name,
+          description
+        )
+      `)
+      .eq('token', token)
+      .eq('status', 'PENDING')
+      .gt('expiresAt', new Date().toISOString())
+      .single();
 
-    if (!invitation) {
+    if (error || !invitation) {
       return NextResponse.json(
-        { message: "Invitation not found or expired" },
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Invitation not found or expired"),
         { status: 404 }
       );
     }
 
-    return NextResponse.json(invitation);
+    return NextResponse.json(createSuccessResponse({
+      id: invitation.id,
+      email: invitation.email,
+      role: invitation.role,
+      team: {
+        name: invitation.teams?.name,
+        description: invitation.teams?.description || "",
+      },
+      inviter: {
+        name: "",
+        email: ""
+      },
+      expiresAt: invitation.expiresAt,
+    }));
   } catch (error) {
     console.error("Error fetching invitation:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
       { status: 500 }
     );
   }

@@ -2,8 +2,9 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { S3Client, CreateMultipartUploadCommand } from "@aws-sdk/client-s3";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 import crypto from "crypto";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
@@ -26,20 +27,49 @@ export async function POST(req: NextRequest) {
 
     const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
 
-    // Ensure user exists
-    const user = await prisma.user.upsert({
-      where: { id: userId },
-      update: {},
-      create: { id: userId, email: "", name: "" },
-    });
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        name: clerkUser.fullName || "",
+        image: clerkUser.imageUrl || "",
+        updatedAt: new Date().toISOString()
+      }, { onConflict: 'clerkId' })
+      .select()
+      .single();
+
+    if (userError) {
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
 
     // Validate team access if teamId provided
     if (teamId) {
-      const team = await prisma.team.findUnique({ where: { id: teamId } });
-      if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('id', teamId)
+        .single();
+        
+      if (teamError || !team) {
+        return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      }
+      
       if (team.ownerId !== user.id) {
-        const membership = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
-        if (!membership) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+        const { data: membership } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', teamId)
+          .eq('userId', user.id)
+          .single();
+          
+        if (!membership) {
+          return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+        }
       }
     }
 
@@ -67,8 +97,9 @@ export async function POST(req: NextRequest) {
 
     // Store upload lock with metadata for completion
     try {
-      await prisma.uploadLock.create({ 
-        data: { 
+      const { error: lockError } = await supabaseAdmin
+        .from('upload_locks')
+        .insert({
           userId: user.id, 
           key: finalKey,
           metadata: JSON.stringify({
@@ -77,8 +108,12 @@ export async function POST(req: NextRequest) {
             teamId,
             uploadId: out.UploadId
           })
-        } 
-      });
+        });
+        
+      if (lockError) {
+        console.error("Upload lock creation error:", lockError);
+        return NextResponse.json({ error: "Failed to create upload lock" }, { status: 500 });
+      }
     } catch {}
 
     return NextResponse.json({ 

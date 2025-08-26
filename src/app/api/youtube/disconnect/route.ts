@@ -2,8 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -14,16 +13,22 @@ export async function POST(request: NextRequest) {
 
   try {
     // Clear YouTube connection data
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
         youtubeAccessToken: null,
         youtubeRefreshToken: null,
         youtubeExpiresAt: null,
         youtubeChannelId: null,
         youtubeChannelTitle: null,
-      },
-    });
+        updatedAt: new Date().toISOString()
+      })
+      .eq('clerkId', userId);
+      
+    if (updateError) {
+      console.error("YouTube disconnect update error:", updateError);
+      return NextResponse.json({ error: "Failed to disconnect YouTube account" }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -36,7 +36,25 @@ export async function sendMail(opts: {
   html?: string;
   replyTo?: string;
 }) {
-  const from = process.env.SMTP_FROM || `Uplora <${process.env.SMTP_USER}>`;
+  // Ensure header From aligns with authenticated SMTP user to satisfy DMARC/SPF
+  const smtpUser = process.env.SMTP_USER!;
+  const configuredFrom = process.env.SMTP_FROM;
+
+  const extractDomain = (addr?: string) => {
+    if (!addr) return undefined;
+    const match = addr.match(/<([^>]+)>/); // handle "Name <email@domain>"
+    const email = (match ? match[1] : addr).trim();
+    const at = email.lastIndexOf("@");
+    return at > -1 ? email.slice(at + 1).toLowerCase() : undefined;
+  };
+
+  const fromDomain = extractDomain(configuredFrom);
+  const userDomain = extractDomain(smtpUser);
+
+  // If configured FROM domain matches SMTP user domain, use it; otherwise force alignment
+  const from = fromDomain && userDomain && fromDomain === userDomain
+    ? configuredFrom!
+    : `Uplora <${smtpUser}>`;
 
   // Attempt with configured settings first
   let lastError: unknown = null;
@@ -53,7 +71,9 @@ export async function sendMail(opts: {
         subject: opts.subject,
         text: opts.text,
         html: opts.html,
-        replyTo: opts.replyTo,
+        // Preserve reply-to preference; if not set and FROM was forced to SMTP user,
+        // use configuredFrom as reply-to so recipients can reply to a friendly address
+        replyTo: opts.replyTo || (from !== (configuredFrom || `Uplora <${smtpUser}>`) ? configuredFrom : undefined),
         headers: {
           'X-Priority': '1',
           'X-MSMail-Priority': 'High',

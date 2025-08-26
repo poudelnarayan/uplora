@@ -11,14 +11,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const teamId = searchParams.get("teamId");
-    const { userId } = await  auth();
+    const { userId } = await auth();
 
     // Validate required parameters
     if (!userId) {
       return new Response(
-        JSON.stringify(createErrorResponse(ErrorCodes.VALIDATION_ERROR, "User ID is required")),
+        JSON.stringify(createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required")),
         {
-          status: 400,
+          status: 401,
           headers: { "Content-Type": "application/json" },
         }
       );

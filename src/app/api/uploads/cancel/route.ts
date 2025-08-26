@@ -1,50 +1,90 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-
-import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/lib/clerk-supabase-utils";
+import { supabaseAdmin } from "@/lib/supabase";
 import { S3Client, AbortMultipartUploadCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    const result = await withAuth(async ({ supabaseUser }) => {
+      const { key, uploadId, videoId } = await req.json();
 
-    const { key, uploadId, videoId } = await req.json();
+      // Abort multipart upload if in progress
+      if (key && uploadId) {
+        try {
+          await s3.send(new AbortMultipartUploadCommand({ 
+            Bucket: process.env.S3_BUCKET!, 
+            Key: key, 
+            UploadId: uploadId 
+          }));
+        } catch (error) {
+          console.error("Failed to abort multipart upload:", error);
+        }
+      }
 
-    // Abort multipart upload if in progress
-    if (key && uploadId) {
+      // Best-effort delete S3 object if it exists and was partially uploaded
+      if (key && !uploadId) {
+        try {
+          await s3.send(new DeleteObjectCommand({ 
+            Bucket: process.env.S3_BUCKET!, 
+            Key: key 
+          }));
+        } catch (error) {
+          console.error("Failed to delete S3 object:", error);
+        }
+      }
+
+      // Remove provisional video row if present and still not associated with a full file
+      if (videoId) {
+        try {
+          const { error: deleteError } = await supabaseAdmin
+            .from('videos')
+            .delete()
+            .eq('id', videoId)
+            .eq('userId', supabaseUser.id);
+
+          if (deleteError) {
+            console.error("Failed to delete video:", deleteError);
+          }
+        } catch (error) {
+          console.error("Error deleting video:", error);
+        }
+      }
+
+      // Release any upload lock for this user
       try {
-        await s3.send(new AbortMultipartUploadCommand({ Bucket: process.env.S3_BUCKET!, Key: key, UploadId: uploadId }));
-      } catch {}
+        const { error: lockError } = await supabaseAdmin
+          .from('upload_locks')
+          .delete()
+          .eq('userId', supabaseUser.id);
+
+        if (lockError) {
+          console.error("Failed to delete upload lock:", lockError);
+        }
+      } catch (error) {
+        console.error("Error deleting upload lock:", error);
+      }
+
+      return createSuccessResponse({ 
+        message: "Upload cancelled successfully" 
+      });
+    });
+
+    if (!result.ok) {
+      return NextResponse.json(result, { status: 401 });
     }
 
-    // Best-effort delete S3 object if it exists and was partially uploaded (direct PUT scenario cannot be aborted, but object may exist)
-    if (key && !uploadId) {
-      try {
-        await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
-      } catch {}
-    }
-
-    // Remove provisional video row if present and still not associated with a full file
-    if (videoId) {
-      try {
-        await prisma.video.delete({ where: { id: videoId } });
-      } catch {}
-    }
-
-    // Release any upload lock for this user
-    try {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (user) await prisma.uploadLock.deleteMany({ where: { userId: user.id } });
-    } catch {}
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to cancel upload" }, { status: 500 });
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Upload cancel error:", error);
+    return NextResponse.json(
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to cancel upload"),
+      { status: 500 }
+    );
   }
 }
 

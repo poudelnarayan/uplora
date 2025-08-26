@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -18,24 +18,34 @@ export async function POST(req: NextRequest) {
 
   try {
     // For now, just mark as processed and create a mock web-optimized key
-    const video = await prisma.video.findFirst({
-      where: { id: videoId, userId: userId }
-    });
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select('*')
+      .eq('id', videoId)
+      .eq('userId', userId)
+      .single();
     
-    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    if (videoError || !video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
 
     // Create a web-optimized key (same as original for now, but marked)
     const webOptimizedKey = video.key.replace('uploads/', 'web-optimized/');
     
     // Update with processing complete
-    await prisma.video.update({
-      where: { id: videoId },
-      data: { 
+    const { error: updateError } = await supabaseAdmin
+      .from('videos')
+      .update({ 
         status: "PROCESSING",
         // Store web key in filename field temporarily
         filename: video.filename + ` [WEB:${webOptimizedKey}]`
-      }
-    });
+      })
+      .eq('id', videoId);
+    
+    if (updateError) {
+      console.error("Failed to update video:", updateError);
+      return NextResponse.json({ error: "Failed to update video" }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -1,11 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/lib/clerk-supabase-utils";
+import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
-
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export const runtime = "nodejs";
 
@@ -15,112 +14,100 @@ export async function POST(
 ) {
   try {
     const { token } = context.params;
-    const { userId } = await auth();
+    
+    const result = await withAuth(async ({ clerkUser, supabaseUser }) => {
+      const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
 
-    if (!userId) {
-      return NextResponse.json(
-        { message: "Authentication required" },
-        { status: 401 }
-      );
-    }
+      // Find the invitation
+      const { data: invitation, error: inviteError } = await supabaseAdmin
+        .from('team_invites')
+        .select(`
+          *,
+          teams (*)
+        `)
+        .eq('token', token)
+        .eq('status', 'PENDING')
+        .gt('expiresAt', new Date().toISOString())
+        .single();
 
-    // Get user details from Clerk
-    const client = await clerkClient();
-    const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+      if (inviteError || !invitation) {
+        return createErrorResponse(ErrorCodes.NOT_FOUND, "Invitation not found or expired");
+      }
 
-    // Find the invitation
-    const invitation = await prisma.teamInvite.findFirst({
-      where: {
-        token,
-        status: "PENDING",
-        expiresAt: { gt: new Date() },
-      },
-      include: {
-        team: true,
-      },
-    });
+      // Check if the email matches
+      if (invitation.email !== userEmail) {
+        return createErrorResponse(ErrorCodes.FORBIDDEN, "This invitation is not for your email address");
+      }
 
-    if (!invitation) {
-      return NextResponse.json(
-        { message: "Invitation not found or expired" },
-        { status: 404 }
-      );
-    }
+      // Check if user is already a member
+      const { data: existingMember, error: memberError } = await supabaseAdmin
+        .from('team_members')
+        .select('*')
+        .eq('userId', supabaseUser.id)
+        .eq('teamId', invitation.teamId)
+        .single();
 
-    // Check if the email matches
-    if (invitation.email !== userEmail) {
-      return NextResponse.json(
-        { message: "This invitation is not for your email address" },
-        { status: 403 }
-      );
-    }
+      if (memberError && memberError.code !== 'PGRST116') {
+        console.error("Error checking existing membership:", memberError);
+        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to check team membership");
+      }
 
-    // Get or create user
-    let user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+      if (existingMember) {
+        // Update invitation status
+        const { error: updateError } = await supabaseAdmin
+          .from('team_invites')
+          .update({ status: 'ACCEPTED' })
+          .eq('id', invitation.id);
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: userEmail || "",
-          name: clerkUser.fullName || clerkUser.firstName || "",
-          image: clerkUser.imageUrl || "",
-        },
-      });
-    }
+        if (updateError) {
+          console.error("Error updating invitation:", updateError);
+        }
 
-    // Check if user is already a member
-    const existingMember = await prisma.teamMember.findFirst({
-      where: {
-        userId: user.id,
+        return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "You are already a member of this team");
+      }
+
+      // Add user to team and update invitation in a transaction
+      const { error: transactionError } = await supabaseAdmin.rpc('accept_team_invitation', {
+        invitation_id: invitation.id,
+        userId: supabaseUser.id,
         teamId: invitation.teamId,
-      },
-    });
-
-    if (existingMember) {
-      // Update invitation status
-      await prisma.teamInvite.update({
-        where: { id: invitation.id },
-        data: { status: "ACCEPTED" },
+        role: invitation.role
       });
 
-      return NextResponse.json(
-        { message: "You are already a member of this team" },
-        { status: 400 }
-      );
+      if (transactionError) {
+        console.error("Transaction error:", transactionError);
+        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to accept invitation");
+      }
+
+      // Realtime notify team members
+      broadcast({
+        type: "team.member.joined",
+        payload: { 
+          teamId: invitation.teamId, 
+          userId: supabaseUser.id,
+          userName: clerkUser.fullName || clerkUser.firstName || "New Member"
+        },
+      });
+
+      return createSuccessResponse({
+        message: "Invitation accepted successfully",
+        team: {
+          id: invitation.teamId,
+          name: invitation.teams.name,
+          description: invitation.teams.description
+        }
+      });
+    });
+
+    if (!result.ok) {
+      return NextResponse.json(result, { status: 401 });
     }
 
-    // Add user to team and update invitation
-    await prisma.$transaction([
-      prisma.teamMember.create({
-        data: {
-          userId: user.id,
-          teamId: invitation.teamId,
-          role: invitation.role,
-        },
-      }),
-      prisma.teamInvite.update({
-        where: { id: invitation.id },
-        data: { 
-          status: "ACCEPTED",
-          inviteeId: user.id,
-        },
-      }),
-    ]);
-    broadcast({ type: "team.member.added", teamId: invitation.teamId, payload: { userId: user.id } });
-
-    return NextResponse.json({
-      message: "Successfully joined the team!",
-      team: invitation.team,
-      role: invitation.role,
-    });
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("Error accepting invitation:", error);
+    console.error("Invitation accept error:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to accept invitation"),
       { status: 500 }
     );
   }

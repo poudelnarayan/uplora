@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
@@ -24,22 +24,35 @@ export async function DELETE(req: NextRequest) {
     const userName = clerkUser.fullName || clerkUser.firstName || "";
     const userImage = clerkUser.imageUrl || "";
 
-    // Ensure user exists
-    const user = await prisma.user.upsert({
-      where: { id: userId },
-      update: {},
-      create: { 
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
         id: userId,
+        clerkId: userId,
         email: userEmail || "", 
         name: userName, 
-        image: userImage 
-      },
-    });
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to sync user"),
+        { status: 500 }
+      );
+    }
 
     // Release any upload lock for this user
-    await prisma.uploadLock.deleteMany({
-      where: { userId: user.id }
-    });
+    const { error: lockError } = await supabaseAdmin
+      .from('upload_locks')
+      .delete()
+      .eq('userId', user.id);
 
     return NextResponse.json(createSuccessResponse({ success: true }));
   } catch (e: unknown) {
@@ -54,7 +67,7 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+}    
 
 // Add POST method support for compatibility
 export async function POST(req: NextRequest) {

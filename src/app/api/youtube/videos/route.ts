@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,12 +13,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Get user's YouTube credentials from database
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { youtubeAccessToken: true, youtubeRefreshToken: true }
-    });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('youtubeAccessToken, youtubeRefreshToken')
+      .eq('clerkId', userId)
+      .single();
 
-    if (!user?.youtubeAccessToken) {
+    if (userError || !user?.youtubeAccessToken) {
       return NextResponse.json(
         { error: "YouTube not connected. Please connect your YouTube account in settings." },
         { status: 403 }

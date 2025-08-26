@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const MotionDiv = motion.div as any;
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { NextSeo } from "next-seo";
@@ -42,15 +42,24 @@ export default function InvitePage() {
 
   const fetchInvitation = async (token: string) => {
     try {
+      console.log("🔍 Fetching invitation with token:", token);
       const response = await fetch(`/api/invitations/${token}`);
+      console.log("📡 Response status:", response.status);
+      
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        console.log("✅ Invitation data received:", result);
+        
+        // Handle both wrapped and direct response formats
+        const data = result.ok ? result : result;
         setInvitation(data);
       } else {
         const error = await response.json();
+        console.error("❌ Invitation fetch error:", error);
         setError(error.message || "Invitation not found or expired");
       }
     } catch (error) {
+      console.error("❌ Invitation fetch failed:", error);
       setError("Failed to load invitation");
     } finally {
       setLoading(false);
@@ -58,7 +67,7 @@ export default function InvitePage() {
   };
 
   const acceptInvitation = async () => {
-    if (!invitation || !session) return;
+    if (!invitation || !user) return;
 
     setAccepting(true);
     try {
@@ -165,25 +174,18 @@ export default function InvitePage() {
             </div>
           </div>
 
-          {!session ? (
+          {!user ? (
             <div className="space-y-4">
               <p className="text-white/70 text-center text-sm">
                 Sign in or create an account to accept this invitation
               </p>
-              <button
-                onClick={() => signIn("google")}
-                className="btn btn-primary w-full"
-              >
-                Continue with Google
-              </button>
-              <button
-                onClick={() => signIn()}
-                className="btn btn-secondary w-full"
-              >
-                Sign In / Create Account
-              </button>
+              <SignInButton mode="modal">
+                <button className="btn btn-primary w-full">
+                  Sign In / Create Account
+                </button>
+              </SignInButton>
             </div>
-          ) : session.user?.email === invitation.email ? (
+          ) : user.emailAddresses?.[0]?.emailAddress === invitation.email ? (
             <button
               onClick={acceptInvitation}
               disabled={accepting}
@@ -204,14 +206,13 @@ export default function InvitePage() {
           ) : (
             <div className="text-center space-y-4">
               <p className="text-white/70 text-sm">
-                This invitation is for {invitation.email}, but you&apos;re signed in as {session.user?.email}.
+                This invitation is for {invitation.email}, but you&apos;re signed in as {user.emailAddresses?.[0]?.emailAddress}.
               </p>
-              <button
-                onClick={() => signIn()}
-                className="btn btn-secondary w-full"
-              >
-                Sign In with Correct Account
-              </button>
+              <SignInButton mode="modal">
+                <button className="btn btn-secondary w-full">
+                  Sign In with Correct Account
+                </button>
+              </SignInButton>
             </div>
           )}
         </div>

@@ -2,8 +2,9 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -34,18 +35,44 @@ export async function POST(req: NextRequest) {
       },
     }));
 
-    const user = await prisma.user.upsert({
-      where: { id: userId },
-      update: {},
-      create: { id: userId, email: "", name: "" },
-    });
+    // Get user details from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
 
     // Get upload lock to retrieve metadata
-    const uploadLock = await prisma.uploadLock.findFirst({
-      where: { userId: user.id, key }
-    });
+    const { data: uploadLock, error: lockError } = await supabaseAdmin
+      .from('upload_locks')
+      .select('*')
+      .eq('userId', user.id)
+      .eq('key', key)
+      .single();
 
-    if (!uploadLock) {
+    if (lockError || !uploadLock) {
+      console.error("Upload lock error:", lockError);
       return NextResponse.json({ error: "Upload lock not found" }, { status: 404 });
     }
 
@@ -63,15 +90,32 @@ export async function POST(req: NextRequest) {
     // Validate team access if teamId is provided
     if (finalTeamId) {
       // Check if user is the team owner
-      const team = await prisma.team.findFirst({
-        where: { id: finalTeamId, ownerId: user.id }
-      });
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('id', finalTeamId)
+        .eq('ownerId', user.id)
+        .single();
+      
+      if (teamError && teamError.code !== 'PGRST116') {
+        console.error("Team check error:", teamError);
+        return NextResponse.json({ error: "Team validation failed" }, { status: 500 });
+      }
       
       if (!team) {
         // If not owner, check if user is a team member
-        const membership = await prisma.teamMember.findFirst({
-          where: { teamId: finalTeamId, userId: user.id }
-        });
+        const { data: membership, error: memberError } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', finalTeamId)
+          .eq('userId', user.id)
+          .single();
+          
+        if (memberError && memberError.code !== 'PGRST116') {
+          console.error("Membership check error:", memberError);
+          return NextResponse.json({ error: "Membership validation failed" }, { status: 500 });
+        }
+        
         if (!membership) {
           return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
         }
@@ -79,8 +123,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the video record only after successful upload completion
-    const video = await prisma.video.create({
-      data: {
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .insert({
         key,
         filename: title,
         contentType: contentType || "application/octet-stream",
@@ -88,8 +133,14 @@ export async function POST(req: NextRequest) {
         teamId: finalTeamId,
         userId: user.id,
         status: "PROCESSING",
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (videoError) {
+      console.error("Video creation error:", videoError);
+      return NextResponse.json({ error: "Failed to create video record" }, { status: 500 });
+    }
 
     // Broadcast video creation event
     broadcast({ 
@@ -99,9 +150,16 @@ export async function POST(req: NextRequest) {
     });
 
     // Clean up upload lock
-    await prisma.uploadLock.deleteMany({
-      where: { userId: user.id, key }
-    });
+    const { error: cleanupError } = await supabaseAdmin
+      .from('upload_locks')
+      .delete()
+      .eq('userId', user.id)
+      .eq('key', key);
+
+    if (cleanupError) {
+      console.error("Upload lock cleanup error:", cleanupError);
+      // Don't fail the request for cleanup errors
+    }
 
     // Fire-and-forget background optimization for fast web preview
     setTimeout(async () => {
@@ -170,8 +228,11 @@ export async function POST(req: NextRequest) {
     } catch {}
     // Release lock on error too
     try {
-      const owner = await prisma.user.findUnique({ where: { id: userId } });
-      if (owner) await prisma.uploadLock.deleteMany({ where: { userId: owner.id, key } });
+      await supabaseAdmin
+        .from('upload_locks')
+        .delete()
+        .eq('userId', userId)
+        .eq('key', key);
     } catch {}
     return NextResponse.json({ error: "Complete failed" }, { status: 500 });
   }

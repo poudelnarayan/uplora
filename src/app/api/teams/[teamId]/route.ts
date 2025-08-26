@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 import { S3Client, ListObjectsV2Command, DeleteObjectsCommand, type ListObjectsV2CommandOutput, type _Object } from "@aws-sdk/client-s3";
 import { broadcast } from "@/lib/realtime";
 
@@ -25,18 +25,44 @@ export async function PATCH(
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('clerkId', userId)
+      .single();
+    
+    if (userError || !user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
-    if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
-    if (team.ownerId !== user.id) return NextResponse.json({ error: "Only the owner can update this team" }, { status: 403 });
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .single();
+    
+    if (teamError || !team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
+    
+    if (team.ownerId !== user.id) {
+      return NextResponse.json({ error: "Only the owner can update this team" }, { status: 403 });
+    }
 
-    const updated = await prisma.team.update({
-      where: { id: team.id },
-      data: { ...(name ? { name } : {}), ...(description !== undefined ? { description } : {}) },
-      select: { id: true, name: true, description: true, updatedAt: true },
-    });
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('teams')
+      .update(updateData)
+      .eq('id', team.id)
+      .select('id, name, description, updatedAt')
+      .single();
+    
+    if (updateError) {
+      return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
+    }
     return NextResponse.json(updated);
   } catch (e) {
     return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
@@ -55,12 +81,29 @@ export async function DELETE(
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('clerkId', userId)
+      .single();
+    
+    if (userError || !user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
-    if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
-    if (team.ownerId !== user.id) return NextResponse.json({ error: "Only the owner can delete this team" }, { status: 403 });
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .single();
+    
+    if (teamError || !team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
+    
+    if (team.ownerId !== user.id) {
+      return NextResponse.json({ error: "Only the owner can delete this team" }, { status: 403 });
+    }
 
     // Best-effort: delete all S3 objects under this team's prefix
     try {
@@ -90,7 +133,14 @@ export async function DELETE(
       }
     } catch {}
 
-    await prisma.team.delete({ where: { id: team.id } });
+    const { error: deleteError } = await supabaseAdmin
+      .from('teams')
+      .delete()
+      .eq('id', team.id);
+    
+    if (deleteError) {
+      return NextResponse.json({ error: "Failed to delete team" }, { status: 500 });
+    }
     // Broadcast deletion so clients refresh their team lists/dropdowns
     broadcast({ type: "team.deleted", payload: { id: team.id } });
     return NextResponse.json({ ok: true });

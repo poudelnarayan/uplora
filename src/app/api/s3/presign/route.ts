@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -18,14 +18,29 @@ export async function POST(req: NextRequest) {
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
 
     // Ensure user exists early
-    const user = await prisma.user.upsert({
-      where: { id: userId },
-      update: {},
-      create: { id: userId, email: "", name: "" },
-    });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: "",
+        name: "",
+        updatedAt: new Date().toISOString()
+      }, { onConflict: 'clerkId' })
+      .select()
+      .single();
+
+    if (userError) {
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
 
     // Enforce single active upload per user
-    const existingLock = await prisma.uploadLock.findUnique({ where: { userId: user.id } }).catch(() => null);
+    const { data: existingLock } = await supabaseAdmin
+      .from('upload_locks')
+      .select('*')
+      .eq('userId', user.id)
+      .single();
+    
     if (existingLock) {
       return NextResponse.json({ error: "Another upload is in progress" }, { status: 409 });
     }
@@ -34,15 +49,28 @@ export async function POST(req: NextRequest) {
     const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
 
     // Validate team access if teamId is provided
-    let teamForAccess: any = null;
     if (teamId) {
-      teamForAccess = await prisma.team.findFirst({ where: { id: teamId } });
-      if (!teamForAccess) {
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('id', teamId)
+        .single();
+      
+      if (teamError || !team) {
         return NextResponse.json({ error: "Team not found" }, { status: 404 });
       }
-      if (teamForAccess.ownerId !== user.id) {
-        const membership = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
-        if (!membership) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+      
+      if (team.ownerId !== user.id) {
+        const { data: membership, error: memberError } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', teamId)
+          .eq('userId', user.id)
+          .single();
+        
+        if (memberError || !membership) {
+          return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+        }
       }
     }
 
@@ -59,8 +87,9 @@ export async function POST(req: NextRequest) {
     const putUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
     // Create upload lock with metadata for completion
-    await prisma.uploadLock.create({ 
-      data: { 
+    const { error: lockError } = await supabaseAdmin
+      .from('upload_locks')
+      .insert({ 
         userId: user.id, 
         key: finalKey,
         metadata: JSON.stringify({
@@ -69,8 +98,12 @@ export async function POST(req: NextRequest) {
           sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
           teamId
         })
-      } 
-    });
+      });
+    
+    if (lockError) {
+      console.error("Failed to create upload lock:", lockError);
+      return NextResponse.json({ error: "Failed to create upload lock" }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       putUrl, 

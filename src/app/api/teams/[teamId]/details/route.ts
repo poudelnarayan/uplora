@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function GET(
   request: NextRequest,
@@ -13,60 +14,119 @@ export async function GET(
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"), 
+        { status: 401 }
+      );
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get user from Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('clerkId', userId)
+      .single();
 
-    // Ensure user has access (owner or is member)
-    const team = await prisma.team.findFirst({
-      where: {
-        id: teamId,
-        OR: [
-          { ownerId: user.id },
-          { members: { some: { userId: user.id } } },
-        ],
-      },
-      include: {
-        owner: { select: { id: true, name: true, email: true, image: true } },
-      },
-    });
+    if (userError || !user) {
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.NOT_FOUND, "User not found"), 
+        { status: 404 }
+      );
+    }
 
-    if (!team) return NextResponse.json({ error: "Team not found or no access" }, { status: 404 });
+    // Get team details
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .single();
 
-    const members = await prisma.teamMember.findMany({
-      where: { teamId },
-      include: {
-        user: { select: { id: true, name: true, email: true, image: true } },
-      },
-      orderBy: { joinedAt: "asc" },
-    });
+    if (teamError || !team) {
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found"), 
+        { status: 404 }
+      );
+    }
 
-    const invites = await prisma.teamInvite.findMany({
-      where: { teamId },
-      orderBy: { createdAt: "desc" },
-    });
+    // Check if user has access (owner or member)
+    let hasAccess = team.ownerId === user.id;
+    
+    if (!hasAccess) {
+      const { data: membership } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('teamId', teamId)
+        .eq('userId', user.id)
+        .eq('status', 'ACTIVE')
+        .single();
+      
+      hasAccess = !!membership;
+    }
 
-    return NextResponse.json({
+    if (!hasAccess) {
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.FORBIDDEN, "No access to this team"), 
+        { status: 403 }
+      );
+    }
+
+    // Get team owner details
+    const { data: owner, error: ownerError } = await supabaseAdmin
+      .from('users')
+      .select('id, name, email, image')
+      .eq('id', team.ownerId)
+      .single();
+
+    // Get team members
+    const { data: members, error: membersError } = await supabaseAdmin
+      .from('team_members')
+      .select(`
+        id,
+        role,
+        status,
+        joinedAt,
+        users (
+          id,
+          name,
+          email,
+          image
+        )
+      `)
+      .eq('teamId', teamId)
+      .order('joinedAt', { ascending: true });
+
+    // Get team invitations
+    const { data: invites, error: invitesError } = await supabaseAdmin
+      .from('team_invites')
+      .select('*')
+      .eq('teamId', teamId)
+      .order('createdAt', { ascending: false });
+
+    return NextResponse.json(createSuccessResponse({
       team: {
         id: team.id,
         name: team.name,
         description: team.description,
-        owner: team.owner,
+        owner: owner || null,
         createdAt: team.createdAt,
+        ownerId: team.ownerId,
+        isPersonal: team.isPersonal
       },
-      members: members.map(m => ({
+      members: (members || []).map(m => ({
         id: m.id,
         role: m.role,
         status: m.status,
         joinedAt: m.joinedAt,
-        user: m.user,
+        user: m.users
       })),
-      invites,
-    });
+      invites: invites || []
+    }));
+
   } catch (e) {
     console.error("Error fetching team details:", e);
-    return NextResponse.json({ error: "Failed to fetch team details" }, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch team details"), 
+      { status: 500 }
+    );
   }
 }

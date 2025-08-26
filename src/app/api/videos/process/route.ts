@@ -7,7 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 import { spawn } from "child_process";
 import { createWriteStream, createReadStream, unlinkSync } from "fs";
 import { join } from "path";
@@ -26,10 +26,16 @@ export async function POST(req: NextRequest) {
 
   try {
     // Get video record
-    const video = await prisma.video.findFirst({
-      where: { id: videoId, userId: userId }
-    });
-    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select('*')
+      .eq('id', videoId)
+      .eq('userId', userId)
+      .single();
+    
+    if (videoError || !video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
 
     // Skip if already processed
     if (video.status === "PROCESSING" || video.key.includes("-web-optimized")) {
@@ -37,10 +43,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Mark as processing
-    await prisma.video.update({
-      where: { id: videoId },
-      data: { status: "PROCESSING" }
-    });
+    const { error: updateError } = await supabaseAdmin
+      .from('videos')
+      .update({ status: "PROCESSING" })
+      .eq('id', videoId);
+    
+    if (updateError) {
+      console.error("Failed to update video status:", updateError);
+    }
 
     // Download original from S3
     const tempDir = tmpdir();
@@ -94,17 +104,18 @@ export async function POST(req: NextRequest) {
     }));
 
     // Update database with web-optimized key
-    await prisma.video.update({
-      where: { id: videoId },
-      data: { 
+    const { error: finalUpdateError } = await supabaseAdmin
+      .from('videos')
+      .update({ 
         status: "PROCESSING",
-        // Store both keys in a JSON field or add webOptimizedKey column
-        // For now, we'll add a comment field to store the web key
-      }
-    });
-
-    // Add web-optimized key to database (you might want to add a webOptimizedKey column)
-    await prisma.$executeRaw`UPDATE videos SET filename = filename || ' [WEB:' || ${optimizedKey} || ']' WHERE id = ${videoId}`;
+        // Store web-optimized key in filename for now (you might want to add webOptimizedKey column)
+        filename: `${video.filename} [WEB:${optimizedKey}]`
+      })
+      .eq('id', videoId);
+    
+    if (finalUpdateError) {
+      console.error("Failed to update video with web key:", finalUpdateError);
+    }
 
     // Cleanup temp files
     try {
@@ -122,10 +133,14 @@ export async function POST(req: NextRequest) {
     console.error("Video processing error:", error);
     
     // Reset status on error
-    await prisma.video.updateMany({
-      where: { id: videoId },
-      data: { status: "PROCESSING" }
-    });
+    const { error: resetError } = await supabaseAdmin
+      .from('videos')
+      .update({ status: "PROCESSING" })
+      .eq('id', videoId);
+    
+    if (resetError) {
+      console.error("Failed to reset video status:", resetError);
+    }
 
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }

@@ -75,18 +75,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Store YouTube connection in database
-    const { prisma } = await import("@/lib/prisma");
+    const { supabaseAdmin } = await import("@/lib/supabase");
     
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
         youtubeAccessToken: tokenData.access_token,
         youtubeRefreshToken: tokenData.refresh_token,
-        youtubeExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null,
+        youtubeExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null,
         youtubeChannelId: channelData.items?.[0]?.id,
         youtubeChannelTitle: channelData.items?.[0]?.snippet?.title,
-      },
-    });
+        updatedAt: new Date().toISOString()
+      })
+      .eq('clerkId', userId);
+      
+    if (updateError) {
+      console.error("YouTube connection update error:", updateError);
+      return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
+    }
 
     return NextResponse.redirect(new URL("/settings?success=youtube_connected", request.url));
   } catch (error) {
