@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useUser } from "@clerk/nextjs";
 
@@ -91,9 +91,9 @@ export default function VideosPage() {
           if (evt?.type?.startsWith('video.')) {
             if (evt.type === 'video.created') {
               // Add new video to list immediately
-              const newVideo = {
-                id: evt.payload.id,
-                title: evt.payload.title,
+              const newVideo: VideoItem = {
+                id: String(evt.payload.id),
+                title: String(evt.payload.title || ''),
                 status: 'PROCESSING',
                 uploadedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -346,7 +346,7 @@ export default function VideosPage() {
                         <h3
                           className="font-bold text-foreground text-sm lg:text-base pr-2"
                           title={fullTitle}
-                          style={{ display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, overflow: 'hidden' }}
                         >
                           {title}
                         </h3>
@@ -419,7 +419,6 @@ export default function VideosPage() {
           </div>
         )}
         </div>
-      </div>
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={deleteModalOpen}
