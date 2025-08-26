@@ -32,9 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/settings?error=youtube_no_code", request.url));
     }
 
-    // Use the correct base URL for redirect URI
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
-    const redirectUri = `${baseUrl}/api/youtube/connect`;
+    // Use the YT_REDIRECT_URI environment variable
+    const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
 
     console.log('YT_CONNECT_DIAGNOSTIC:', {
       client_id: process.env.GOOGLE_CLIENT_ID,

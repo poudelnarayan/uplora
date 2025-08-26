@@ -17,9 +17,8 @@ export async function GET(request: NextRequest) {
     // Define the scopes we need - ONLY youtube.upload as requested
     const scope = "https://www.googleapis.com/auth/youtube.upload";
     
-    // Use the correct base URL for redirect
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
-    const redirectUri = `${baseUrl}/api/youtube/connect`;
+    // Use the YT_REDIRECT_URI environment variable
+    const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
     
     // Build the Google OAuth URL
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -36,7 +35,7 @@ export async function GET(request: NextRequest) {
       client_id: process.env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       scope: scope,
-      baseUrl: baseUrl,
+      baseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io',
       state: state,
       environment: process.env.NODE_ENV,
       vercelEnv: process.env.VERCEL_ENV

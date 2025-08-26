@@ -12,7 +12,7 @@ Update your `.env.local` file with:
 # Google OAuth
 GOOGLE_CLIENT_ID=737123665376-0dt0gs4k9js6h477gajrp8orokm0ormg.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/youtube/connect
+YT_REDIRECT_URI=https://www.uplora.io/api/youtube/connect
 
 # Site URL
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -24,12 +24,14 @@ Go to [Vercel Dashboard](https://vercel.com/dashboard) → Your Project → Sett
 
 Update:
 - `GOOGLE_CLIENT_SECRET` = `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`
+- `YT_REDIRECT_URI` = `https://www.uplora.io/api/youtube/connect`
 
 ### 3. Key Changes Made
 
 ✅ **Simplified OAuth Scope**: Now only requests `youtube.upload` (removed `youtube.readonly`)
 ✅ **Added Diagnostic Logging**: Will help debug production issues
 ✅ **Updated Client Secret**: Using your new secret
+✅ **Using YT_REDIRECT_URI**: Consistent redirect URI across all environments
 
 ### 4. Test the Changes
 
