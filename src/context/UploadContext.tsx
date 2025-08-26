@@ -249,7 +249,9 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ key: init.key, uploadId: init.uploadId, parts, originalFilename: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size, teamId }),
       });
       if (!complete.ok) throw new Error("Complete failed");
-      update({ s3Key: init.key, progress: 100, status: "completed" });
+      let completeJson: any = {};
+      try { completeJson = await complete.json(); } catch {}
+      update({ s3Key: init.key, progress: 100, status: "completed", videoId: completeJson?.videoId });
     } catch (e) {
       const error = e as Error;
       if (cancelledUploads.current.has(itemId) || error.message === "Upload cancelled") {
