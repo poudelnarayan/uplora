@@ -9,8 +9,67 @@ export async function GET(req: NextRequest) {
   try {
     const result = await withAuth(async ({ supabaseUser }) => {
       const { searchParams } = new URL(req.url);
+      const scope = searchParams.get('scope');
       let teamId = searchParams.get('teamId');
 
+      if (scope === 'all') {
+        // Gather all teams the user has access to (owner or member), including personal
+        const personalTeamId = await ensurePersonalTeam(supabaseUser.id);
+
+        const ownerTeamsPromise = supabaseAdmin
+          .from('teams')
+          .select('id')
+          .eq('ownerId', supabaseUser.id);
+
+        const memberTeamsPromise = supabaseAdmin
+          .from('team_members')
+          .select('teamId')
+          .eq('userId', supabaseUser.id);
+
+        const [ownerTeamsRes, memberTeamsRes] = await Promise.all([ownerTeamsPromise, memberTeamsPromise]);
+
+        const ownerTeamIds = (ownerTeamsRes.data || []).map((t: any) => t.id);
+        const memberTeamIds = (memberTeamsRes.data || []).map((m: any) => m.teamId);
+        const allTeamIds: string[] = Array.from(new Set([personalTeamId, ...ownerTeamIds, ...memberTeamIds].filter(Boolean)));
+
+        if (allTeamIds.length === 0) {
+          return [] as any;
+        }
+
+        const { data: videos, error } = await supabaseAdmin
+          .from('videos')
+          .select(`
+            *,
+            users:users!videos_userId_fkey (
+              id,
+              name,
+              email,
+              image
+            )
+          `)
+          .in('teamId', allTeamIds)
+          .order('updatedAt', { ascending: false })
+          .limit(200);
+
+        if (error) {
+          console.error("Supabase error:", error);
+          return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch videos");
+        }
+
+        const formattedVideos = (videos || []).map((video: any) => ({
+          ...formatVideoResponse(video),
+          uploader: {
+            id: video.users?.id,
+            name: video.users?.name,
+            email: video.users?.email,
+            image: video.users?.image
+          }
+        }));
+
+        return formattedVideos as any;
+      }
+
+      // Default: single team (explicit or personal)
       if (!teamId) {
         teamId = await ensurePersonalTeam(supabaseUser.id);
       }
@@ -50,16 +109,13 @@ export async function GET(req: NextRequest) {
         }
       }));
 
-      // Return raw array for the dashboard consumer
       return formattedVideos as any;
     });
 
-    // If handler returned an error wrapper
     if ((result as any)?.ok === false) {
       return NextResponse.json(result, { status: 401 });
     }
 
-    // Otherwise return the array directly
     return NextResponse.json(result);
   } catch (error) {
     console.error("Videos API error", error);
