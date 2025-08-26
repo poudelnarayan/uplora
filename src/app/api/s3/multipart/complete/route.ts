@@ -154,11 +154,13 @@ export async function POST(req: NextRequest) {
         .eq('key', key);
     } catch {}
 
+    // Precompute canonical key for original
+    const canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
+
     // Start background tasks after responding fast
     setTimeout(async () => {
       try {
         // Move original to canonical location under video.id (synchronous so preview works immediately)
-        let canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
         try {
           const getObjForCopy = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
           await s3.send(new PutObjectCommand({
