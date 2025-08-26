@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       uploadId: out.UploadId, 
       key: finalKey, 
-      partSize: 8 * 1024 * 1024, 
+      partSize: 16 * 1024 * 1024, 
       tempId: uploadId,
       filename: safeName,
       contentType,

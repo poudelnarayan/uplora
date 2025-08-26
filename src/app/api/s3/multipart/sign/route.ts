@@ -7,7 +7,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3 = new S3Client({ 
   region: process.env.AWS_REGION, 
-  // Use accelerate endpoint if enabled for faster global uploads
   useAccelerateEndpoint: process.env.S3_ACCELERATE === 'true'
 } as any);
 
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
     { expiresIn: 60 * 10 }
   );
 
-  return NextResponse.json({ url });
+  return NextResponse.json({ url, accelerate: process.env.S3_ACCELERATE === 'true' });
 }
 
 

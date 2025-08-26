@@ -174,7 +174,8 @@ export default function VideoUploadZone({
         perPartLoaded.forEach(v => { s += v; });
         return s;
       };
-      const concurrency = Math.min(4, totalParts);
+      const envConcurrency = Number(process.env.NEXT_PUBLIC_UPLOAD_CONCURRENCY || 6);
+      const concurrency = Math.max(2, Math.min(envConcurrency, totalParts, 10));
       let nextPart = 1;
       let failed = false;
 
