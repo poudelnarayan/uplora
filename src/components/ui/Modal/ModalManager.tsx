@@ -9,24 +9,6 @@ import {
   IdeaLabContent 
 } from "./ModalContent";
 
-// Simple toast notification component
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
-  return (
-    <div className={`fixed top-4 right-4 z-[9999] p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
-      type === 'success' 
-        ? 'bg-green-500 text-white' 
-        : 'bg-red-500 text-white'
-    }`}>
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">{message}</span>
-        <button onClick={onClose} className="ml-2 text-white/80 hover:text-white">
-          ×
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // Modal context for global state management
 interface ModalContextType {
   openModal: (type: ModalType, props?: any) => void;
@@ -54,12 +36,6 @@ export function ModalProvider({ children }: ModalProviderProps) {
   const [currentType, setCurrentType] = useState<ModalType | null>(null);
   const [modalProps, setModalProps] = useState<any>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
 
   const openModal = (type: ModalType, props: any = {}) => {
     setCurrentType(type);
@@ -87,23 +63,22 @@ export function ModalProvider({ children }: ModalProviderProps) {
         // Handle different response types
         if (result && typeof result === 'object') {
           if (result.success) {
-            // Show success message
-            showToast(result.message || "Success!", 'success');
+            // Success - close modal and let the parent handle notifications
             closeModal();
+            return result;
           } else if (result.error) {
-            showToast(result.error, 'error');
             throw new Error(result.error);
           }
         } else {
           // If no result object returned, assume success and close modal
-          showToast("Success!", 'success');
           closeModal();
+          return { success: true };
         }
       }
     } catch (error) {
       console.error("Modal submission error:", error);
-      showToast(error instanceof Error ? error.message : "Something went wrong", 'error');
       // Don't close modal on error - let user try again
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -177,14 +152,6 @@ export function ModalProvider({ children }: ModalProviderProps) {
         >
           {renderModalContent()}
         </UniversalModal>
-      )}
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
       )}
     </ModalContext.Provider>
   );

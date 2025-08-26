@@ -126,6 +126,9 @@ export async function POST(req: NextRequest) {
         </body></html>`;
       }
 
+      let emailSent = false;
+      let emailError: Error | null = null;
+
       // Send email
       try {
         await sendMail({
@@ -135,41 +138,53 @@ export async function POST(req: NextRequest) {
           html,
           replyTo: includeEmail && userEmail ? userEmail : undefined,
         });
+        emailSent = true;
+      } catch (emailSendError) {
+        console.error("Email sending failed:", emailSendError);
+        emailError = emailSendError as Error;
+      }
 
-        // Store feedback in Supabase for analytics
-        const { error: dbError } = await supabaseAdmin
-          .from('feedback_submissions')
-          .insert({
-            userId: supabaseUser.id,
-            type: type || 'feedback',
-            category: category || 'general',
-            title: title || null,
-            message: message,
-            teamId: teamId || null,
-            teamName: teamName || null,
-            path: path || null,
-            priority: priority || null,
-            includeEmail: includeEmail || false
-          });
-
-        if (dbError) {
-          console.error("Failed to store feedback in database:", dbError);
-          // Don't fail the request if DB storage fails
-        }
-
-        return createSuccessResponse({
-          success: true,
-          message: type === "idea" ? "Idea submitted successfully!" : "Feedback submitted successfully!"
+      // Store feedback in Supabase for analytics
+      const { error: dbError } = await supabaseAdmin
+        .from('feedback_submissions')
+        .insert({
+          userId: supabaseUser.id,
+          type: type || 'feedback',
+          category: category || 'general',
+          title: title || null,
+          message: message,
+          teamId: teamId || null,
+          teamName: teamName || null,
+          path: path || null,
+          priority: priority || null,
+          includeEmail: includeEmail || false
         });
 
-      } catch (emailError) {
-        console.error("Email sending failed:", emailError);
-        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to send feedback");
+      if (dbError) {
+        console.error("Failed to store feedback in database:", dbError);
+      }
+
+      // Return success response with email status
+      if (emailSent) {
+        return createSuccessResponse({
+          success: true,
+          message: type === "idea" ? "Idea brainstormed successfully!" : "Feedback sent successfully!",
+          emailSent: true
+        });
+      } else {
+        return createSuccessResponse({
+          success: true,
+          message: type === "idea" 
+            ? "Idea submitted successfully, but email delivery failed. We've logged your idea for review." 
+            : "Feedback submitted successfully, but email delivery failed. We've logged your feedback for review.",
+          emailSent: false,
+          emailError: emailError?.message || "Email delivery failed"
+        });
       }
     });
 
     if (!result.ok) {
-      return NextResponse.json(result, { status: 401 });
+      return NextResponse.json(result, { status: result.status || 400 });
     }
 
     return NextResponse.json(result);
