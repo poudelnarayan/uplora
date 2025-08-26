@@ -66,17 +66,56 @@ export async function POST(
         return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "You are already a member of this team");
       }
 
-      // Add user to team and update invitation in a transaction
-      const { error: transactionError } = await supabaseAdmin.rpc('accept_team_invitation', {
-        invitation_id: invitation.id,
-        userId: supabaseUser.id,
-        teamId: invitation.teamId,
-        role: invitation.role
-      });
+      // If already member, mark invite accepted and return success
+      if (existingMember) {
+        const { error: updErr } = await supabaseAdmin
+          .from('team_invites')
+          .update({ status: 'ACCEPTED', inviteeId: supabaseUser.id, updatedAt: new Date().toISOString() })
+          .eq('id', invitation.id);
+        if (updErr) {
+          console.error("Error updating invitation for existing member:", updErr);
+        }
 
-      if (transactionError) {
-        console.error("Transaction error:", transactionError);
-        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to accept invitation");
+        return createSuccessResponse({
+          message: "Invitation already accepted",
+          team: {
+            id: invitation.teamId,
+            name: invitation.teams.name,
+            description: invitation.teams.description
+          }
+        });
+      }
+
+      // Create membership
+      const memberId = `tm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const nowIso = new Date().toISOString();
+
+      const { error: insertMemberErr } = await supabaseAdmin
+        .from('team_members')
+        .insert({
+          id: memberId,
+          role: invitation.role,
+          joinedAt: nowIso,
+          updatedAt: nowIso,
+          status: 'ACTIVE',
+          userId: supabaseUser.id,
+          teamId: invitation.teamId
+        });
+
+      if (insertMemberErr) {
+        console.error("Error inserting team member:", insertMemberErr);
+        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to add you to the team");
+      }
+
+      // Mark invite accepted
+      const { error: updateInviteErr } = await supabaseAdmin
+        .from('team_invites')
+        .update({ status: 'ACCEPTED', inviteeId: supabaseUser.id, updatedAt: nowIso })
+        .eq('id', invitation.id);
+
+      if (updateInviteErr) {
+        console.error("Error updating invitation status:", updateInviteErr);
+        // continue; membership already created
       }
 
       // Realtime notify team members
