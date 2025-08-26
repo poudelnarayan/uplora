@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import AppShell from "@/components/layout/AppShell";
@@ -25,10 +25,20 @@ const MotionDiv = motion.div as any;
 export const dynamic = "force-dynamic";
 
 export default function MakeLongVideoPage() {
-  const { selectedTeamId, selectedTeam } = useTeam();
+  const { selectedTeamId, selectedTeam, setSelectedTeamId, teams } = useTeam();
   const router = useRouter();
   const notifications = useNotifications();
   const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
+  const [personalTeam, setPersonalTeam] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('teams-cache') || 'null');
+      if (cached?.personal) {
+        setPersonalTeam({ id: cached.personal.id, name: cached.personal.name });
+      }
+    } catch {}
+  }, [teams]);
 
   const handleUploadComplete = (videoId: string) => {
     setUploadedVideoId(videoId);
@@ -44,6 +54,11 @@ export default function MakeLongVideoPage() {
       router.push(`/videos/${uploadedVideoId}`);
     }
   };
+
+  const teamOptions = [
+    ...(personalTeam ? [{ id: personalTeam.id, name: `${personalTeam.name} (Personal)` }] : []),
+    ...teams.map(t => ({ id: t.id, name: t.name }))
+  ];
 
   return (
     <>
@@ -120,6 +135,28 @@ export default function MakeLongVideoPage() {
                       </>
                     )}
                   </div>
+                  
+                  {/* Team Selector (shown if there is at least one team or personal) */}
+                  {teamOptions.length > 0 && (
+                    <div className="flex justify-center">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border" style={{ borderColor: 'rgb(238, 238, 238)', backgroundColor: 'white' }}>
+                        <span className="text-sm" style={{ color: 'rgb(57, 62, 70)' }}>Upload to:</span>
+                        <select
+                          value={selectedTeamId ?? personalTeam?.id ?? ''}
+                          onChange={(e) => setSelectedTeamId(e.target.value || null)}
+                          className="text-sm px-2 py-1 rounded-md outline-none"
+                          style={{ backgroundColor: 'white', color: 'rgb(34, 40, 49)' }}
+                        >
+                          {personalTeam && (
+                            <option value={personalTeam.id}>{personalTeam.name} (Personal)</option>
+                          )}
+                          {teams.map(t => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                   
                   <h1 className="text-4xl font-bold" style={{ color: 'rgb(34, 40, 49)' }}>
                     Create YouTube Video
