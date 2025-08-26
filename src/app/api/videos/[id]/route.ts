@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 
@@ -15,35 +15,71 @@ export async function GET(
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
     const { id } = context.params;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
 
-    const v = await prisma.video.findUnique({ 
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true
-          }
-        }
-      }
-    });
-    if (!v) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
+
+    const { data: v, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select(`
+        *,
+        users!videos_userId_fkey (
+          id,
+          name,
+          email,
+          image
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (videoError || !v) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
 
     // Check access: owner or team member/owner if team video
     let hasAccess = v.userId === user.id; // Video uploader access
     if (!hasAccess && v.teamId) {
       // If team video, allow team owner or any member
-      const team = await prisma.team.findUnique({ where: { id: v.teamId } });
-      if (team?.ownerId === user.id) {
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('id', v.teamId)
+        .single();
+
+      if (team && team.ownerId === user.id) {
         hasAccess = true;
       } else {
-        const membership = await prisma.teamMember.findFirst({
-          where: { teamId: v.teamId, userId: user.id }
-        });
+        const { data: membership, error: membershipError } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', v.teamId)
+          .eq('userId', user.id)
+          .single();
         hasAccess = !!membership;
       }
     }
@@ -56,8 +92,8 @@ export async function GET(
       filename: v.filename,
       contentType: v.contentType,
       status: v.status || "PROCESSING",
-      uploadedAt: v.uploadedAt.toISOString(),
-      updatedAt: v.updatedAt?.toISOString?.() || undefined,
+      uploadedAt: v.uploadedAt,
+      updatedAt: v.updatedAt,
       teamId: v.teamId || undefined,
       // Include metadata fields
       description: v.description || "",
@@ -65,10 +101,10 @@ export async function GET(
       madeForKids: v.madeForKids || false,
       thumbnailKey: v.thumbnailKey || null,
       uploader: {
-        id: v.user.id,
-        name: v.user.name,
-        email: v.user.email,
-        image: v.user.image
+        id: v.users.id,
+        name: v.users.name,
+        email: v.users.email,
+        image: v.users.image
       }
     });
   } catch (e) {
@@ -86,25 +122,66 @@ export async function PATCH(
     const { id } = context.params;
     const body = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
 
     // Check access: owner or team member (team owner included)
-    const video = await prisma.video.findUnique({ where: { id } });
-    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (videoError || !video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
 
     let hasAccess = video.userId === user.id; // Uploader (personal owner)
     let team: { ownerId: string } | null = null;
     if (!hasAccess && video.teamId) {
       // Team owner has access
-      team = await prisma.team.findUnique({ where: { id: video.teamId }, select: { ownerId: true } });
-      if (team?.ownerId === user.id) {
+      const { data: teamData, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('ownerId')
+        .eq('id', video.teamId)
+        .single();
+
+      if (teamData?.ownerId === user.id) {
         hasAccess = true;
+        team = teamData;
       } else {
         // Check if user is a member of the video's team
-        const membership = await prisma.teamMember.findFirst({
-          where: { teamId: video.teamId, userId: user.id }
-        });
+        const { data: membership, error: membershipError } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', video.teamId)
+          .eq('userId', user.id)
+          .single();
         hasAccess = !!membership;
       }
     }
@@ -116,8 +193,15 @@ export async function PATCH(
       let isOwner = video.userId === user.id;
       if (video.teamId && !isOwner) {
         // use previously fetched team when available
-        const t = team || (await prisma.team.findUnique({ where: { id: video.teamId }, select: { ownerId: true } }));
-        if (t?.ownerId === user.id) isOwner = true;
+        if (!team) {
+          const { data: teamData, error: teamError } = await supabaseAdmin
+            .from('teams')
+            .select('ownerId')
+            .eq('id', video.teamId)
+            .single();
+          team = teamData;
+        }
+        if (team?.ownerId === user.id) isOwner = true;
       }
       if (!isOwner) {
         return NextResponse.json({ error: "Awaiting publish. Only the owner can edit." }, { status: 403 });
@@ -139,8 +223,12 @@ export async function PATCH(
       // Determine if current user is the owner of this video/team
       let isOwnerOfVideo = video.userId === user.id;
       if (!isOwnerOfVideo && video.teamId) {
-        const team = await prisma.team.findUnique({ where: { id: video.teamId } });
-        if (team?.ownerId === user.id) isOwnerOfVideo = true;
+        const { data: teamData, error: teamError } = await supabaseAdmin
+          .from('teams')
+          .select('*')
+          .eq('id', video.teamId)
+          .single();
+        if (teamData?.ownerId === user.id) isOwnerOfVideo = true;
       }
       // Allow only reverting to PROCESSING by owner
       if (isOwnerOfVideo && status.toUpperCase() === 'PROCESSING') {
@@ -148,17 +236,30 @@ export async function PATCH(
       }
     }
 
-    const updated = await prisma.video.update({
-      where: { id },
-      data: {
-        filename: typeof title === 'string' && title.length ? title : undefined,
-        description: typeof description === 'string' ? description : undefined,
-        visibility: typeof visibility === 'string' ? visibility : undefined,
-        madeForKids: typeof madeForKids === 'boolean' ? madeForKids : undefined,
-        thumbnailKey: typeof thumbnailKey === 'string' ? thumbnailKey : thumbnailKey === null ? null : undefined,
-        ...statusData,
-      },
-    });
+    const updateData: any = {
+      updatedAt: new Date().toISOString()
+    };
+
+    if (typeof title === 'string' && title.length) updateData.filename = title;
+    if (typeof description === 'string') updateData.description = description;
+    if (typeof visibility === 'string') updateData.visibility = visibility;
+    if (typeof madeForKids === 'boolean') updateData.madeForKids = madeForKids;
+    if (typeof thumbnailKey === 'string' || thumbnailKey === null) updateData.thumbnailKey = thumbnailKey;
+    if (statusData.status) updateData.status = statusData.status;
+    if (statusData.requestedByUserId !== undefined) updateData.requestedByUserId = statusData.requestedByUserId;
+    if (statusData.approvedByUserId !== undefined) updateData.approvedByUserId = statusData.approvedByUserId;
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('videos')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Error updating video:", updateError);
+      return NextResponse.json({ error: "Failed to update video" }, { status: 500 });
+    }
 
     // Broadcast updates with status information
     if (statusData.status) {

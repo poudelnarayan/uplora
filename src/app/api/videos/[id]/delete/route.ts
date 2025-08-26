@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-
-import { supabaseAdmin } from "@/lib/supabase";
+import { clerkClient } from "@clerk/nextjs/server";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
@@ -15,96 +15,116 @@ export async function DELETE(
 ) {
   try {
     const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    const { id } = context.params;
+
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    const { id } = context.params;
-    
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get video and check access
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    // Find the video and check access
-    const video = await prisma.video.findFirst({
-      where: { id },
-      select: {
-        id: true,
-        key: true,
-        thumbnailKey: true,
-        userId: true,
-        teamId: true,
-      }
-    });
-
-    if (!video) {
+    if (videoError || !video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Check access: team OWNER or team ADMIN/MANAGER
-    // Editors and personal uploaders cannot delete (server-enforced)
-    let hasDeleteAccess = false;
-    if (video.teamId) {
-      // Team owner can delete
-      const team = await prisma.team.findUnique({ where: { id: video.teamId }, select: { ownerId: true } });
+    // Check access: owner or team member (team owner included)
+    let hasAccess = video.userId === user.id; // Uploader (personal owner)
+    if (!hasAccess && video.teamId) {
+      // Team owner has access
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('ownerId')
+        .eq('id', video.teamId)
+        .single();
+
       if (team?.ownerId === user.id) {
-        hasDeleteAccess = true;
+        hasAccess = true;
       } else {
-        // Admin/Manager can delete
-        const membership = await prisma.teamMember.findFirst({
-          where: { teamId: video.teamId, userId: user.id },
-          select: { role: true },
-        });
-        hasDeleteAccess = !!membership && ['ADMIN', 'MANAGER'].includes(membership.role as string);
+        // Check if user is a member of the video's team
+        const { data: membership, error: membershipError } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', video.teamId)
+          .eq('userId', user.id)
+          .single();
+        hasAccess = !!membership;
       }
-    } else {
-      // Personal workspace: only the account owner (uploader) can delete
-      hasDeleteAccess = video.userId === user.id;
     }
     
-    if (!hasDeleteAccess) {
+    if (!hasAccess) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Delete from S3 (both video and thumbnail)
+    // Delete video file from S3
     try {
-      // Delete the video file
-      console.log(`Deleting video from S3: ${video.key}`);
       await s3.send(new DeleteObjectCommand({
         Bucket: process.env.S3_BUCKET!,
         Key: video.key
       }));
+    } catch (s3Error) {
+      console.error("Failed to delete video from S3:", s3Error);
+      // Continue anyway - we'll still delete the database record
+    }
 
-      // Delete the thumbnail if it exists
-      if (video.thumbnailKey) {
-        console.log(`Deleting thumbnail from S3: ${video.thumbnailKey}`);
+    // Delete thumbnail if it exists
+    if (video.thumbnailKey) {
+      try {
         await s3.send(new DeleteObjectCommand({
           Bucket: process.env.S3_BUCKET!,
           Key: video.thumbnailKey
         }));
-        console.log(`Successfully deleted thumbnail: ${video.thumbnailKey}`);
-      } else {
-        console.log('No thumbnail to delete (thumbnailKey is null)');
+      } catch (s3Error) {
+        console.error("Failed to delete thumbnail from S3:", s3Error);
+        // Continue anyway
       }
-    } catch (s3Error) {
-      // Log but don't fail if S3 deletion fails
-      console.error("Failed to delete from S3:", s3Error);
     }
 
-    // Delete from database
-    await prisma.video.delete({
-      where: { id }
-    });
+    // Delete video record from database
+    await supabaseAdmin
+      .from('videos')
+      .delete()
+      .eq('id', id);
 
     // Broadcast deletion event
     broadcast({ 
       type: "video.deleted", 
       teamId: video.teamId || null, 
-      payload: { id: video.id, teamId: video.teamId }
+      payload: { id: video.id }
     });
 
-    return NextResponse.json({ success: true, message: "Video deleted successfully" });
-  } catch (error) {
-    console.error("Delete video error:", error);
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error("Error deleting video:", e);
     return NextResponse.json({ error: "Failed to delete video" }, { status: 500 });
   }
 }

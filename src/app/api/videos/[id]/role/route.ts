@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(
@@ -14,37 +14,69 @@ export async function GET(
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
     const { id } = context.params;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
 
-    const video = await prisma.video.findUnique({ where: { id } });
-    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
 
-    // If team video, resolve based on team ownership and membership
-    if (video.teamId) {
-      const team = await prisma.team.findUnique({ where: { id: video.teamId } });
-      if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
-
-      if (team.ownerId === user.id) {
-        return NextResponse.json({ role: "OWNER", isOwner: true });
-      }
-
-      const membership = await prisma.teamMember.findFirst({
-        where: { teamId: video.teamId, userId: user.id }
-      });
-      if (membership) {
-        return NextResponse.json({ role: membership.role, isOwner: false });
-      }
-
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    // Personal video: uploader is the OWNER
-    if (video.userId === user.id) {
-      return NextResponse.json({ role: "PERSONAL_OWNER", isOwner: true });
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (videoError || !video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    // Check if user is team owner
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', video.teamId)
+      .single();
+
+    if (teamError || !team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
+
+    // Check if user is a member of the team
+    const { data: membership, error: membershipError } = await supabaseAdmin
+      .from('team_members')
+      .select('*')
+      .eq('teamId', video.teamId)
+      .eq('userId', user.id)
+      .single();
+
+    if (membershipError || !membership) {
+      return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+    }
+
+    // Return the user's role in the team
+    return NextResponse.json({ role: membership.role });
   } catch (e) {
     return NextResponse.json({ error: "Failed to get role" }, { status: 500 });
   }

@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
@@ -27,25 +28,68 @@ export async function POST(req: NextRequest) {
     // Build safe S3 key for thumbnails
     const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
 
-    // Resolve video and enforce access based on team membership or personal ownership
-    const video = await prisma.video.findUnique({ where: { id: videoId } });
-    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
 
-    // Ensure user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
+
+    // Resolve video and enforce access based on team membership or personal ownership
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from('videos')
+      .select('*')
+      .eq('id', videoId)
+      .single();
+
+    if (videoError || !video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
 
     // Enforce thumbnails only under team videos
     if (!video.teamId) {
       return NextResponse.json({ error: "Video must belong to a team for thumbnail upload" }, { status: 400 });
     }
+
     // Team access: owner or any member
-    const team = await prisma.team.findUnique({ where: { id: video.teamId } });
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', video.teamId)
+      .single();
+
     let allowed = team?.ownerId === user.id;
     if (!allowed) {
-      const membership = await prisma.teamMember.findFirst({ where: { teamId: video.teamId, userId: user.id } });
+      const { data: membership, error: membershipError } = await supabaseAdmin
+        .from('team_members')
+        .select('*')
+        .eq('teamId', video.teamId)
+        .eq('userId', user.id)
+        .single();
       allowed = !!membership;
     }
+    
     if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
 
     // Only team-based path

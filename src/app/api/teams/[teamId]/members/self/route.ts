@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Current user leaves the team (cannot be owner)
@@ -16,20 +17,64 @@ export async function DELETE(
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Get user details from Clerk and sync with Supabase
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
 
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
-    if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
+
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .single();
+
+    if (teamError || !team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
 
     if (team.ownerId === user.id) {
       return NextResponse.json({ error: "Owner cannot leave their own team" }, { status: 403 });
     }
 
-    const member = await prisma.teamMember.findFirst({ where: { teamId, userId: user.id } });
-    if (!member) return NextResponse.json({ error: "You are not a member of this team" }, { status: 404 });
+    const { data: member, error: memberError } = await supabaseAdmin
+      .from('team_members')
+      .select('*')
+      .eq('teamId', teamId)
+      .eq('userId', user.id)
+      .single();
 
-    await prisma.teamMember.delete({ where: { id: member.id } });
+    if (memberError || !member) {
+      return NextResponse.json({ error: "You are not a member of this team" }, { status: 404 });
+    }
+
+    await supabaseAdmin
+      .from('team_members')
+      .delete()
+      .eq('id', member.id);
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: "Failed to leave team" }, { status: 500 });
