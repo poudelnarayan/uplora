@@ -491,11 +491,7 @@ export default function VideoPreviewPage() {
       setUrlError(null);
       try {
         console.log("Requesting signed URL for key:", video.key);
-        const res = await fetch("/api/s3/get-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: video.key, expiresIn: 600, contentType: video.contentType }),
-        });
+        const res = await fetch(`/api/video-url?key=${encodeURIComponent(video.key)}`);
         const json = await res.json();
         console.log("Signed URL response:", res.status, json);
         if (res.ok && json?.url) {
@@ -550,11 +546,7 @@ export default function VideoPreviewPage() {
         }
       }
       
-      const res = await fetch("/api/s3/get-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: webKey, expiresIn: 600 }),
-      });
+      const res = await fetch(`/api/video-url?key=${encodeURIComponent(webKey)}`);
       const json = await res.json();
       if (res.ok && json?.url) {
         setWebOptimizedUrl(json.url);
