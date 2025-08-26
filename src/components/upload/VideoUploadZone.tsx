@@ -212,10 +212,21 @@ export default function VideoUploadZone({
         const { url } = signData;
 
         // Upload the part
+        console.log(`Uploading part ${partNumber}/${totalParts}...`, {
+          chunkSize: chunk.size,
+          url: url.substring(0, 100) + "..." // Truncate for security
+        });
+
         const uploadResponse = await fetch(url, {
           method: "PUT",
           body: chunk,
           signal: abortControllerRef.current.signal
+        });
+
+        console.log(`Part ${partNumber} upload response:`, {
+          status: uploadResponse.status,
+          statusText: uploadResponse.statusText,
+          headers: Object.fromEntries(uploadResponse.headers.entries())
         });
 
         if (!uploadResponse.ok) {
@@ -229,6 +240,8 @@ export default function VideoUploadZone({
         }
 
         const etag = uploadResponse.headers.get('ETag')?.replace(/"/g, '');
+        console.log(`Part ${partNumber} ETag:`, etag);
+        
         if (!etag) {
           console.error(`No ETag in upload response:`, {
             headers: Object.fromEntries(uploadResponse.headers.entries()),
