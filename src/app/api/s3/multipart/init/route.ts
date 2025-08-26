@@ -109,7 +109,8 @@ export async function POST(req: NextRequest) {
             contentType,
             teamId,
             uploadId: out.UploadId
-          })
+          }),
+          updatedAt: new Date().toISOString()
         });
         
       if (lockError) {

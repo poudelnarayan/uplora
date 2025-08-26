@@ -65,6 +65,19 @@ BEGIN
     END IF;
 END $$;
 
+-- Ensure updatedAt column has proper default
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'upload_locks' 
+        AND column_name = 'updatedAt'
+        AND column_default LIKE '%NOW%'
+    ) THEN
+        ALTER TABLE public.upload_locks ALTER COLUMN "updatedAt" SET DEFAULT NOW();
+    END IF;
+END $$;
+
 -- Update indexes to use camelCase column names
 DROP INDEX IF EXISTS idx_upload_locks_user_id;
 CREATE INDEX IF NOT EXISTS idx_upload_locks_user_id ON public.upload_locks("userId");
