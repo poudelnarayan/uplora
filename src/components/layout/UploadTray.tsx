@@ -4,7 +4,7 @@ import { useUploads } from "@/context/UploadContext";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Upload } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const MotionDiv = motion.div as any;
 
@@ -12,6 +12,12 @@ export default function UploadTray() {
   const { uploads, dismiss, cancelUpload } = useUploads();
   const hasActive = uploads.length > 0;
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Hide tray on the upload page to avoid duplicate UI
+  if (pathname && pathname.startsWith('/make-post/video')) {
+    return null;
+  }
 
   // Auto-dismiss rules:
   // - completed: 3s
@@ -45,7 +51,6 @@ export default function UploadTray() {
               key={u.id} 
               className="card p-3 shadow-lg border bg-background cursor-pointer"
               onClick={() => {
-                // Navigate to the upload page where the user started the upload
                 router.push('/make-post/video');
               }}
             >
@@ -84,8 +89,11 @@ export default function UploadTray() {
                 ) : null}
               </div>
               {u.status === "uploading" && (
-                <div className="progress mt-2">
-                  <div className="progress-bar" style={{ width: `${u.progress}%` }} />
+                <div className="mt-2 w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#00ADB5] to-[#00ADB5]/80 transition-[width] duration-200"
+                    style={{ width: `${u.progress}%` }}
+                  />
                 </div>
               )}
               {u.status === "failed" && u.error && (
