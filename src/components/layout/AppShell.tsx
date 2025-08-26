@@ -32,6 +32,7 @@ import TrialBanner from "@/components/ui/TrialBanner/TrialBanner";
 import { usePathname as usePathnameForFeedback } from "next/navigation";
 import { useModalManager } from "@/components/ui/Modal";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useNotifications } from "@/components/ui/Notification";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
@@ -47,6 +48,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathForFeedback = usePathnameForFeedback();
   const { teams, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
   const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
+  const notifications = useNotifications();
 
   const [teamMenuOpen, setTeamMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -55,7 +57,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [showIdeaLab, setShowIdeaLab] = useState(false);
   const { openModal } = useModalManager();
 
-  // Feedback handlers
+  // Feedback handlers with proper notifications
   const submitFeedback = async (type: string, message: string) => {
     try {
       const response = await fetch("/api/feedback", {
@@ -76,10 +78,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
       
       if (response.ok) {
         if (result.emailSent) {
-          // Success with email sent
+          notifications.addNotification({
+            type: "success",
+            title: "Feedback Sent!",
+            message: "Your feedback has been sent successfully."
+          });
           return { success: true, message: "Feedback submitted and email sent successfully!" };
         } else {
-          // Success but email failed
+          notifications.addNotification({
+            type: "warning",
+            title: "Feedback Submitted",
+            message: "Your feedback was submitted, but email delivery failed. We've logged it for review."
+          });
           return { 
             success: true, 
             message: "Feedback submitted successfully, but email delivery failed. We've logged your feedback for review." 
@@ -90,6 +100,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Feedback submission error:", error);
+      notifications.addNotification({
+        type: "error",
+        title: "Submission Failed",
+        message: error instanceof Error ? error.message : "Failed to submit feedback"
+      });
       throw new Error(error instanceof Error ? error.message : "Failed to submit feedback");
     }
   };
@@ -116,10 +131,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
       
       if (response.ok) {
         if (result.emailSent) {
-          // Success with email sent
+          notifications.addNotification({
+            type: "success",
+            title: "Idea Submitted!",
+            message: "Your idea has been brainstormed successfully."
+          });
           return { success: true, message: "Idea submitted and email sent successfully!" };
         } else {
-          // Success but email failed
+          notifications.addNotification({
+            type: "warning",
+            title: "Idea Submitted",
+            message: "Your idea was submitted, but email delivery failed. We've logged it for review."
+          });
           return { 
             success: true, 
             message: "Idea submitted successfully, but email delivery failed. We've logged your idea for review." 
@@ -130,6 +153,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Idea submission error:", error);
+      notifications.addNotification({
+        type: "error",
+        title: "Submission Failed",
+        message: error instanceof Error ? error.message : "Failed to submit idea"
+      });
       throw new Error(error instanceof Error ? error.message : "Failed to submit idea");
     }
   };
