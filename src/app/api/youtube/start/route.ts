@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     // Generate a random state for security
     const state = Math.random().toString(36).substring(7);
     
-    // Define the scopes we need - ONLY youtube.upload as requested
-    const scope = "https://www.googleapis.com/auth/youtube.upload";
+    // Define the scopes we need - both upload and readonly for channel info
+    const scope = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
     
     // Use the YT_REDIRECT_URI environment variable
     const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
@@ -49,6 +49,6 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error("YouTube OAuth start error:", error);
-    return NextResponse.redirect(new URL("/settings?error=youtube_oauth_start_failed", request.url));
+    return NextResponse.redirect(new URL("/social?error=youtube_oauth_start_failed", request.url));
   }
 }

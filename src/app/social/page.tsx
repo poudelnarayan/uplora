@@ -15,15 +15,33 @@ function SocialContent() {
   const searchParams = useSearchParams();
   const notifications = useNotifications();
   const [youtubeData, setYouTubeData] = useState<{ isConnected: boolean; channelTitle?: string | null }>({ isConnected: false });
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch YouTube status
   useEffect(() => {
-    if (!isSignedIn) return;
-    (async () => {
+    if (!isSignedIn) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const fetchYouTubeStatus = async () => {
       try {
-        const r = await fetch("/api/youtube/status");
-        if (r.ok) setYouTubeData(await r.json());
-      } catch {}
-    })();
+        setIsLoading(true);
+        const response = await fetch("/api/youtube/status");
+        if (response.ok) {
+          const data = await response.json();
+          setYouTubeData(data);
+        } else {
+          console.error("Failed to fetch YouTube status:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching YouTube status:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchYouTubeStatus();
   }, [isSignedIn]);
 
   // Handle YouTube OAuth completion
@@ -33,6 +51,12 @@ function SocialContent() {
     if (youtubeCode && isSignedIn) {
       const completeYouTubeConnection = async () => {
         try {
+          notifications.addNotification({
+            type: "info",
+            title: "Connecting YouTube...",
+            message: "Please wait while we connect your YouTube account."
+          });
+
           const response = await fetch('/api/youtube/complete', {
             method: 'POST',
             headers: {
@@ -73,7 +97,7 @@ function SocialContent() {
           notifications.addNotification({
             type: "error",
             title: "Connection Failed",
-            message: "Failed to complete YouTube connection"
+            message: "Failed to complete YouTube connection. Please try again."
           });
         }
       };
@@ -81,6 +105,45 @@ function SocialContent() {
       completeYouTubeConnection();
     }
   }, [searchParams, isSignedIn, notifications]);
+
+  // Handle error parameters from URL
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      let errorMessage = "YouTube connection failed";
+      
+      switch (error) {
+        case 'youtube_connection_failed':
+          errorMessage = "Failed to connect YouTube account. Please try again.";
+          break;
+        case 'youtube_token_failed':
+          errorMessage = "Failed to authenticate with YouTube. Please try again.";
+          break;
+        case 'youtube_channel_failed':
+          errorMessage = "Failed to fetch YouTube channel information. Please try again.";
+          break;
+        case 'youtube_no_code':
+          errorMessage = "Authorization was cancelled or failed. Please try again.";
+          break;
+        case 'youtube_oauth_start_failed':
+          errorMessage = "Failed to start YouTube authorization. Please try again.";
+          break;
+        default:
+          errorMessage = "YouTube connection failed. Please try again.";
+      }
+
+      notifications.addNotification({
+        type: "error",
+        title: "YouTube Connection Failed",
+        message: errorMessage
+      });
+
+      // Clean up the URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams, notifications]);
 
   return (
     <div className="min-h-full space-y-8">
@@ -100,9 +163,10 @@ function SocialContent() {
             <div>
               <h3 className="text-lg font-semibold" style={{ color: '#222831' }}>YouTube</h3>
               <p className="text-sm" style={{ color: '#393E46' }}>
-                {youtubeData.isConnected 
-                  ? `Connected: ${youtubeData.channelTitle || 'Your Channel'}`
-                  : 'Connect your YouTube channel for direct uploads'
+                {isLoading ? 'Loading...' : 
+                  youtubeData.isConnected 
+                    ? `Connected: ${youtubeData.channelTitle || 'Your Channel'}`
+                    : 'Connect your YouTube channel for direct uploads'
                 }
               </p>
             </div>
