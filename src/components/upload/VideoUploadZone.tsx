@@ -139,10 +139,10 @@ export default function VideoUploadZone({
   }, [handleFileSelect]);
 
   const startUpload = async (file: File) => {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
     try {
       abortControllerRef.current = new AbortController();
       const uploadSignal = abortControllerRef.current?.signal;
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
 
       setUploadState(prev => ({ ...prev, status: 'uploading', progress: 0 }));
 
