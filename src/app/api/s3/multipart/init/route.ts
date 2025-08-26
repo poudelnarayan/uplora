@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { filename, contentType, teamId } = await req.json();
+    const body = await req.json();
+    let { filename, contentType, teamId } = body as { filename: string; contentType: string; teamId?: string | null };
     if (!filename || !contentType) {
       return NextResponse.json({ error: "filename and contentType required" }, { status: 400 });
     }
@@ -43,44 +44,60 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (userError) {
+    if (userError || !user) {
       console.error("User sync error:", userError);
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    // Validate team access if teamId provided
-    if (teamId) {
-      const { data: team, error: teamError } = await supabaseAdmin
-        .from('teams')
-        .select('*')
-        .eq('id', teamId)
-        .single();
-        
-      if (teamError || !team) {
-        return NextResponse.json({ error: "Team not found" }, { status: 404 });
-      }
-      
-      if (team.ownerId !== user.id) {
-        const { data: membership } = await supabaseAdmin
-          .from('team_members')
-          .select('*')
-          .eq('teamId', teamId)
-          .eq('userId', user.id)
+    // Resolve teamId: if not provided, use user's personal team
+    if (!teamId) {
+      // Try to use personalTeamId from users table
+      teamId = (user as any).personalTeamId || null;
+      if (!teamId) {
+        // Fallback: find personal team by ownerId
+        const { data: pTeam } = await supabaseAdmin
+          .from('teams')
+          .select('id')
+          .eq('ownerId', user.id)
+          .eq('isPersonal', true)
           .single();
-          
-        if (!membership) {
-          return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
-        }
+        teamId = pTeam?.id || null;
+      }
+    }
+
+    if (!teamId) {
+      // As per requirement, always upload under a team (personal team if solo)
+      return NextResponse.json({ error: "No team found for upload" }, { status: 400 });
+    }
+
+    // Validate team access for provided/resolved teamId
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('id, ownerId')
+      .eq('id', teamId)
+      .single();
+
+    if (teamError || !team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
+
+    if (team.ownerId !== user.id) {
+      const { data: membership } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('teamId', teamId)
+        .eq('userId', user.id)
+        .single();
+      if (!membership) {
+        return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
       }
     }
 
     // Generate a temporary upload ID (not a video ID)
     const uploadId = crypto.randomUUID();
 
-    // Compute final key using upload ID
-    const finalKey = (teamId || user.id)
-      ? `${teamId || user.id}/videos/${uploadId}/original/${safeName}`
-      : `${user.id}/videos/${uploadId}/original/${safeName}`;
+    // Compute final key using upload ID under team namespace
+    const finalKey = `${teamId}/videos/${uploadId}/original/${safeName}`;
 
     // Start multipart upload (with robust error handling)
     let out;

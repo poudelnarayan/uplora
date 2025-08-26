@@ -97,44 +97,35 @@ export async function POST(req: NextRequest) {
 
     const title = String(originalFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
-    // Derive teamId from key if not in metadata
-    // Pattern: <ownerId>/videos/<uploadUuid>/...
+    // Derive teamId from metadata or key
+    // key pattern: <teamId>/videos/<uploadUuid>/...
     const m = key.match(/([^/]+)\/videos\/(.*?)\//);
-    const ownerIdFromKey = m && m[1] ? m[1] : null;
-    const finalTeamId = lockTeamId ?? teamId ?? (ownerIdFromKey && ownerIdFromKey !== user.id ? ownerIdFromKey : null);
+    const teamIdFromKey = m && m[1] ? m[1] : null;
+    const finalTeamId = lockTeamId ?? teamId ?? teamIdFromKey;
 
-    // Validate team access if teamId is provided
-    if (finalTeamId) {
-      // Check if user is the team owner
-      const { data: team, error: teamError } = await supabaseAdmin
-        .from('teams')
-        .select('*')
-        .eq('id', finalTeamId)
-        .eq('ownerId', user.id)
+    if (!finalTeamId) {
+      return NextResponse.json({ error: "Could not resolve teamId for upload" }, { status: 400 });
+    }
+
+    // Validate team access
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('id, ownerId')
+      .eq('id', finalTeamId)
+      .single();
+    if (teamError || !team) {
+      console.error("Team check error:", teamError);
+      return NextResponse.json({ error: "Team validation failed" }, { status: 500 });
+    }
+    if (team.ownerId !== user.id) {
+      const { data: membership } = await supabaseAdmin
+        .from('team_members')
+        .select('id')
+        .eq('teamId', finalTeamId)
+        .eq('userId', user.id)
         .single();
-      
-      if (teamError && teamError.code !== 'PGRST116') {
-        console.error("Team check error:", teamError);
-        return NextResponse.json({ error: "Team validation failed" }, { status: 500 });
-      }
-      
-      if (!team) {
-        // If not owner, check if user is a team member
-        const { data: membership, error: memberError } = await supabaseAdmin
-          .from('team_members')
-          .select('*')
-          .eq('teamId', finalTeamId)
-          .eq('userId', user.id)
-          .single();
-          
-        if (memberError && memberError.code !== 'PGRST116') {
-          console.error("Membership check error:", memberError);
-          return NextResponse.json({ error: "Membership validation failed" }, { status: 500 });
-        }
-        
-        if (!membership) {
-          return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
-        }
+      if (!membership) {
+        return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
       }
     }
 
@@ -158,6 +149,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create video record" }, { status: 500 });
     }
 
+    // Move original to canonical location under video.id
+    try {
+      const canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
+      const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+      await s3.send(new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET!,
+        Key: canonicalOriginalKey,
+        Body: getObj.Body as any,
+        ContentType: contentType || "application/octet-stream",
+      }));
+    } catch (e) {
+      console.error("Failed to move original to canonical location", e);
+    }
+
     // Broadcast video creation event
     broadcast({ 
       type: "video.created", 
@@ -175,22 +180,6 @@ export async function POST(req: NextRequest) {
     if (cleanupError) {
       console.error("Upload lock cleanup error:", cleanupError);
       // Don't fail the request for cleanup errors
-    }
-
-    // Move original to canonical location under video.id
-    try {
-      const baseOwner = finalTeamId || user.id;
-      const canonicalOriginalKey = `${baseOwner}/videos/${video.id}/source/original.mp4`;
-      // Download original and re-put to canonical path (S3 CopyObject requires extra perms; use get/put for portability)
-      const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
-      await s3.send(new PutObjectCommand({
-        Bucket: process.env.S3_BUCKET!,
-        Key: canonicalOriginalKey,
-        Body: getObj.Body as any,
-        ContentType: contentType || "application/octet-stream",
-      }));
-    } catch (e) {
-      console.error("Failed to move original to canonical location", e);
     }
 
     // Fire-and-forget background optimization for fast web preview
@@ -230,8 +219,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Upload optimized to a deterministic preview key
-        const baseOwner = finalTeamId || user.id;
-        const previewKey = `${baseOwner}/videos/${video.id}/preview/web.mp4`;
+        const previewKey = `${finalTeamId}/videos/${video.id}/preview/web.mp4`;
         await s3.send(new PutObjectCommand({
           Bucket: process.env.S3_BUCKET!,
           Key: previewKey,
@@ -250,9 +238,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id, 
       keys: {
-        baseOwner: finalTeamId || user.id,
-        original: `${(finalTeamId || user.id)}/videos/${video.id}/source/original.mp4`,
-        preview: `${(finalTeamId || user.id)}/videos/${video.id}/preview/web.mp4`
+        baseOwner: finalTeamId,
+        original: `${finalTeamId}/videos/${video.id}/source/original.mp4`,
+        preview: `${finalTeamId}/videos/${video.id}/preview/web.mp4`
       }
     });
   } catch (e) {
