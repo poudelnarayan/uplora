@@ -15,6 +15,7 @@ import {
   Trash2
 } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
+import { useUploads } from "@/context/UploadContext";
 
 const MotionDiv = motion.div as any;
 
@@ -39,6 +40,7 @@ export default function VideoUploadZone({
   className = "" 
 }: VideoUploadZoneProps) {
   const notifications = useNotifications();
+  const { uploads, enqueueUpload, cancelUpload: cancelFromTray } = useUploads();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -48,6 +50,7 @@ export default function VideoUploadZone({
     progress: 0
   });
   const [isDragOver, setIsDragOver] = useState(false);
+  const [currentUploadId, setCurrentUploadId] = useState<string | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -97,8 +100,9 @@ export default function VideoUploadZone({
       fileName: file.name,
       fileSize: file.size
     });
-
-    startUpload(file);
+    // Hand off to global UploadProvider so upload persists across navigation
+    const id = enqueueUpload(file, teamId);
+    setCurrentUploadId(id);
   }, [notifications]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -137,6 +141,22 @@ export default function VideoUploadZone({
       handleFileSelect(file);
     }
   }, [handleFileSelect]);
+
+  // Mirror UploadTray progress into local UI
+  useEffect(() => {
+    if (!currentUploadId) return;
+    const item = uploads.find(u => u.id === currentUploadId);
+    if (!item) return;
+    setUploadState(prev => ({
+      ...prev,
+      status: item.status === 'queued' ? 'uploading' : (item.status as any),
+      progress: typeof item.progress === 'number' ? item.progress : prev.progress,
+      videoId: item.videoId ?? prev.videoId,
+    }));
+    if (item.status === 'completed' && item.videoId && onUploadComplete) {
+      onUploadComplete(item.videoId);
+    }
+  }, [uploads, currentUploadId, onUploadComplete]);
 
   const startUpload = async (file: File) => {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
@@ -323,11 +343,9 @@ export default function VideoUploadZone({
   };
 
   const cancelUpload = async () => {
-    const uploadSignal = abortControllerRef.current?.signal;
-    if (abortControllerRef.current) {
-      try { abortControllerRef.current.abort(); } catch {}
+    if (currentUploadId) {
+      cancelFromTray(currentUploadId);
     }
-    resetUpload();
   };
 
   const formatFileSize = (bytes: number) => {
