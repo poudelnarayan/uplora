@@ -162,7 +162,8 @@ export default function VideoUploadZone({
       }
 
       const initData = await initResponse.json();
-      const { key, uploadId, partSize = 8 * 1024 * 1024 } = initData;
+      const { key, uploadId, partSize = 16 * 1024 * 1024 } = initData;
+      try { (window as any).__lastInitUpload = { key, uploadId }; } catch {}
 
       const totalParts = Math.ceil(file.size / partSize);
       const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
@@ -295,6 +296,18 @@ export default function VideoUploadZone({
     } catch (error) {
       console.error("Upload error:", error);
       
+      // Best-effort abort on server to cleanup unfinished multipart upload
+      try {
+        const lastInit = (window as any).__lastInitUpload as { key: string; uploadId: string } | undefined;
+        if (lastInit?.key && lastInit?.uploadId) {
+          await fetch(`${baseUrl}/api/s3/multipart/cancel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: lastInit.key, uploadId: lastInit.uploadId })
+          });
+        }
+      } catch {}
+      
       setUploadState(prev => ({ 
         ...prev, 
         status: 'failed', 
@@ -309,9 +322,10 @@ export default function VideoUploadZone({
     }
   };
 
-  const cancelUpload = () => {
+  const cancelUpload = async () => {
+    const uploadSignal = abortControllerRef.current?.signal;
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      try { abortControllerRef.current.abort(); } catch {}
     }
     resetUpload();
   };
