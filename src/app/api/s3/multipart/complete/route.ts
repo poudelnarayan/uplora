@@ -10,6 +10,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { createWriteStream, createReadStream, unlinkSync } from "fs";
 import { spawn } from "child_process";
+import crypto from "crypto";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -123,7 +124,6 @@ export async function POST(req: NextRequest) {
 
     // Create the video record only after successful upload completion
     const newVideoId = crypto.randomUUID();
-    const nowIso = new Date().toISOString();
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
@@ -135,8 +135,6 @@ export async function POST(req: NextRequest) {
         teamId: finalTeamId,
         userId: user.id,
         status: "PROCESSING",
-        createdAt: nowIso,
-        updatedAt: nowIso,
       })
       .select()
       .single();
