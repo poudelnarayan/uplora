@@ -356,8 +356,8 @@ export default function Dashboard() {
                 <VideosList
                   videos={videos}
                   loading={loading}
-                  thumbnailUrls={Object.fromEntries(thumbnailUrls)}
-                  loadingThumbnails={Object.fromEntries([...loadingThumbnails].map(id => [id, true]))}
+                  thumbnailUrls={thumbnailUrls}
+                  loadingThumbnails={loadingThumbnails}
                   onChangeVideoStatus={changeVideoStatus}
                   onDeleteVideo={deleteVideo}
                   processingVideoId={processingVideoId}

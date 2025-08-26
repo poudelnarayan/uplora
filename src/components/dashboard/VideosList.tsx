@@ -28,8 +28,8 @@ interface VideoItem {
 interface VideosListProps {
   videos: VideoItem[];
   loading: boolean;
-  thumbnailUrls: Record<string, string>;
-  loadingThumbnails: Record<string, boolean>;
+  thumbnailUrls: Map<string, string>;
+  loadingThumbnails: Set<string>;
   onChangeVideoStatus: (videoId: string, newStatus: string) => void;
   onDeleteVideo?: (videoId: string, videoTitle: string) => void;
   processingVideoId?: string | null;
