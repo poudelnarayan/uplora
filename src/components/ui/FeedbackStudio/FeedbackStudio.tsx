@@ -17,14 +17,24 @@ interface FeedbackStudioProps {
 
 export default function FeedbackStudio({ isOpen, onClose, onSubmit }: FeedbackStudioProps) {
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (type: string, message: string) => {
-    await onSubmit(type, message);
-    setFeedbackSent(true);
-    setTimeout(() => {
-      onClose();
-      setFeedbackSent(false);
-    }, 2000);
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onSubmit(type, message);
+      setFeedbackSent(true);
+      setTimeout(() => {
+        onClose();
+        setFeedbackSent(false);
+      }, 1500);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send feedback");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -66,6 +76,11 @@ export default function FeedbackStudio({ isOpen, onClose, onSubmit }: FeedbackSt
 
                 {/* Content */}
                 <div className={styles.content}>
+                  {error && (
+                    <div className="mb-3 p-2 rounded text-sm" style={{ background: '#fee2e2', color: '#991b1b' }}>
+                      {error}
+                    </div>
+                  )}
                   <FeedbackForm onSubmit={handleSubmit} />
                 </div>
               </>

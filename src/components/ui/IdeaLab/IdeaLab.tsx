@@ -17,14 +17,24 @@ interface IdeaLabProps {
 
 export default function IdeaLab({ isOpen, onClose, onSubmit }: IdeaLabProps) {
   const [ideaSent, setIdeaSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (title: string, description: string, priority: string) => {
-    await onSubmit(title, description, priority);
-    setIdeaSent(true);
-    setTimeout(() => {
-      onClose();
-      setIdeaSent(false);
-    }, 2000);
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onSubmit(title, description, priority);
+      setIdeaSent(true);
+      setTimeout(() => {
+        onClose();
+        setIdeaSent(false);
+      }, 1500);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to submit idea");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -66,6 +76,11 @@ export default function IdeaLab({ isOpen, onClose, onSubmit }: IdeaLabProps) {
 
                 {/* Content */}
                 <div className={styles.content}>
+                  {error && (
+                    <div className="mb-3 p-2 rounded text-sm" style={{ background: '#fee2e2', color: '#991b1b' }}>
+                      {error}
+                    </div>
+                  )}
                   <IdeaForm onSubmit={handleSubmit} />
                 </div>
               </>
