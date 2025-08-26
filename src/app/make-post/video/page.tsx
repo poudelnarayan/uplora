@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import AppShell from "@/components/layout/AppShell";
@@ -8,16 +8,16 @@ import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { useTeam } from "@/context/TeamContext";
 import { useRouter } from "next/navigation";
 import { useNotifications } from "@/components/ui/Notification";
-import { useUploads } from "@/context/UploadContext";
+import VideoUploadZone from "@/components/upload/VideoUploadZone";
 import { 
   Youtube, 
-  Upload, 
   ArrowLeft, 
   User, 
   Users,
   Video,
   Target,
-  BarChart3
+  BarChart3,
+  CheckCircle
 } from "lucide-react";
 
 const MotionDiv = motion.div as any;
@@ -28,96 +28,21 @@ export default function MakeLongVideoPage() {
   const { selectedTeamId, selectedTeam } = useTeam();
   const router = useRouter();
   const notifications = useNotifications();
-  const { enqueueUpload, hasActive } = useUploads();
-  
-  const [file, setFile] = useState<File | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    if (hasActive || isCreating) return;
-    
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const validFile = droppedFiles.find(file => file.type.startsWith('video/'));
-    
-    if (validFile) {
-      setFile(validFile);
-      notifications.addNotification({ 
-        type: "success", 
-        title: "Video selected!", 
-        message: `${validFile.name} is ready to upload` 
-      });
-    } else {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Invalid file type", 
-        message: "Please drop a video file" 
-      });
-    }
-  }, [hasActive, isCreating, notifications]);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      notifications.addNotification({ 
-        type: "success", 
-        title: "Video selected!", 
-        message: `${selectedFile.name} is ready to upload` 
-      });
-    }
+  const handleUploadComplete = (videoId: string) => {
+    setUploadedVideoId(videoId);
+    notifications.addNotification({
+      type: "success",
+      title: "Video uploaded successfully!",
+      message: "Your video is now ready for YouTube upload"
+    });
   };
 
-  const handleCreate = async () => {
-    if (!file) return;
-    
-    setIsCreating(true);
-    try {
-      const uploadId = enqueueUpload(file, selectedTeamId);
-      notifications.addNotification({ 
-        type: "info", 
-        title: "Creating video...", 
-        message: "Your video is being processed for YouTube",
-        sticky: true,
-        stickyConditions: {
-          dismissOnRouteChange: true,
-          dismissAfterSeconds: 25
-        }
-      });
-      
-      // Reset form
-      setFile(null);
-      router.push("/dashboard");
-    } catch (error) {
-      notifications.addNotification({
-        type: "error",
-        title: "Creation failed",
-        message: "Please try again"
-      });
-    } finally {
-      setIsCreating(false);
+  const handleContinueToYouTube = () => {
+    if (uploadedVideoId) {
+      router.push(`/videos/${uploadedVideoId}`);
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -168,7 +93,7 @@ export default function MakeLongVideoPage() {
                 </button>
               </MotionDiv>
 
-              <div className="w-full max-w-2xl mx-auto space-y-8">
+              <div className="w-full max-w-4xl mx-auto space-y-8">
                 {/* Header Section */}
                 <MotionDiv
                   initial={{ opacity: 0, y: -30 }}
@@ -200,236 +125,111 @@ export default function MakeLongVideoPage() {
                     Create YouTube Video
                   </h1>
                   <p className="text-lg" style={{ color: 'rgb(57, 62, 70)' }}>
-                    Upload long-form content for YouTube
+                    Upload your video and get it ready for YouTube
                   </p>
                 </MotionDiv>
 
-                {/* Video Upload Interface */}
+                {/* Upload Zone */}
                 <MotionDiv
-                  initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="rounded-3xl p-8 border-2 shadow-2xl"
-                  style={{
-                    backgroundColor: 'rgb(238, 238, 238)',
-                    borderColor: 'rgba(0, 173, 181, 0.3)'
-                  }}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
                 >
-                  {!file ? (
-                    <div className="space-y-6">
-                      <div className="text-center space-y-4">
-                        <MotionDiv
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ duration: 0.25, type: "spring", stiffness: 400, damping: 25 }}
-                          className="w-20 h-20 rounded-2xl mx-auto flex items-center justify-center"
-                          style={{ backgroundColor: 'rgb(0, 173, 181)' }}
-                        >
-                          <Youtube className="w-10 h-10 text-white" />
-                        </MotionDiv>
-                        <div>
-                          <h2 className="text-2xl font-bold" style={{ color: 'rgb(34, 40, 49)' }}>
-                            Upload Long Video
-                          </h2>
-                          <p style={{ color: 'rgb(57, 62, 70)' }}>
-                            Create YouTube content
-                          </p>
-                        </div>
-                      </div>
-
-                      <MotionDiv
-                        animate={{
-                          scale: isDragOver ? 1.02 : 1,
-                          borderColor: isDragOver ? 'rgb(0, 173, 181)' : 'rgba(0, 173, 181, 0.3)'
-                        }}
-                        transition={{ duration: 0.2 }}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                        onClick={() => {
-                          if (hasActive || isCreating) return;
-                          document.getElementById('video-file-input')?.click();
-                        }}
-                        className={`
-                          relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer
-                          transition-all duration-300 hover:scale-[1.01]
-                          ${hasActive || isCreating ? 'opacity-50 cursor-not-allowed' : ''}
-                        `}
-                        style={{
-                          backgroundColor: isDragOver ? 'rgba(0, 173, 181, 0.05)' : 'white',
-                          borderColor: isDragOver ? 'rgb(0, 173, 181)' : 'rgba(0, 173, 181, 0.3)'
-                        }}
-                      >
-                        <input
-                          id="video-file-input"
-                          type="file"
-                          accept="video/*"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                          disabled={hasActive || isCreating}
-                        />
-                        
-                        <div className="space-y-4">
-                          <MotionDiv
-                            animate={{ y: isDragOver ? -5 : 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-                            style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)' }}
-                          >
-                            <Upload className="w-8 h-8" style={{ color: 'rgb(0, 173, 181)' }} />
-                          </MotionDiv>
-                          
-                          <div>
-                            <h3 className="text-xl font-bold mb-2" style={{ color: 'rgb(34, 40, 49)' }}>
-                              {isDragOver ? 'Drop your video here!' : 'Drag & drop or click to browse'}
-                            </h3>
-                            <p style={{ color: 'rgb(57, 62, 70)' }}>
-                              {hasActive 
-                                ? "Please wait for current upload to finish" 
-                                : "Select your video file for YouTube"
-                              }
-                            </p>
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 justify-center">
-                            {['MP4', 'MOV', 'AVI', 'WebM', 'MKV'].map(format => (
-                              <span
-                                key={format}
-                                className="px-3 py-1 rounded-full text-xs font-medium"
-                                style={{
-                                  backgroundColor: 'rgba(0, 173, 181, 0.1)',
-                                  color: 'rgb(0, 173, 181)'
-                                }}
-                              >
-                                {format}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </MotionDiv>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {/* File Preview */}
-                      <MotionDiv
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.4 }}
-                        className="p-6 rounded-2xl border-2"
-                        style={{
-                          backgroundColor: 'white',
-                          borderColor: 'rgb(0, 173, 181)'
-                        }}
-                      >
-                        <div className="flex items-center gap-4">
-                          <MotionDiv
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ duration: 0.3, delay: 0.1 }}
-                            className="w-16 h-16 rounded-xl flex items-center justify-center"
-                            style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)' }}
-                          >
-                            <Youtube className="w-8 h-8" style={{ color: 'rgb(0, 173, 181)' }} />
-                          </MotionDiv>
-                          
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-lg truncate" style={{ color: 'rgb(34, 40, 49)' }}>
-                              {file.name}
-                            </h3>
-                            <p style={{ color: 'rgb(57, 62, 70)' }}>
-                              {formatFileSize(file.size)} • {file.type.split('/')[1]?.toUpperCase()}
-                            </p>
-                          </div>
-                          
-                          {!isCreating && (
-                            <MotionDiv
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <button
-                                onClick={() => setFile(null)}
-                                className="p-2 rounded-full transition-all duration-200"
-                                style={{
-                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                  color: 'rgb(239, 68, 68)'
-                                }}
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </MotionDiv>
-                          )}
-                        </div>
-                      </MotionDiv>
-
-                      {/* Create Button */}
-                      <MotionDiv
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.96 }}
-                      >
-                        <button
-                          onClick={handleCreate}
-                          disabled={isCreating || hasActive}
-                          className="w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                          style={{
-                            backgroundColor: 'rgb(0, 173, 181)',
-                            color: 'white'
-                          }}
-                        >
-                          {isCreating || hasActive ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              Creating Video...
-                            </>
-                          ) : (
-                            <>
-                              <Youtube className="w-5 h-5" />
-                              Create YouTube Video
-                            </>
-                          )}
-                        </button>
-                      </MotionDiv>
-                    </div>
-                  )}
+                  <VideoUploadZone
+                    onUploadComplete={handleUploadComplete}
+                    teamId={selectedTeamId}
+                  />
                 </MotionDiv>
+
+                {/* Success State */}
+                {uploadedVideoId && (
+                  <MotionDiv
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center space-y-4"
+                  >
+                    <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full border-2"
+                      style={{ 
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        color: 'rgb(34, 197, 94)'
+                      }}
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-semibold">Video Uploaded Successfully!</span>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-xl font-semibold" style={{ color: 'rgb(34, 40, 49)' }}>
+                        What's Next?
+                      </h3>
+                      <p className="text-base" style={{ color: 'rgb(57, 62, 70)' }}>
+                        Your video is now ready for YouTube upload. You can add details, set privacy settings, and publish to YouTube.
+                      </p>
+                      
+                      <button
+                        onClick={handleContinueToYouTube}
+                        className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-medium transition-all hover:scale-105"
+                        style={{ 
+                          backgroundColor: 'rgb(0, 173, 181)',
+                          color: 'white'
+                        }}
+                      >
+                        <Youtube className="w-5 h-5" />
+                        Continue to YouTube Upload
+                      </button>
+                    </div>
+                  </MotionDiv>
+                )}
 
                 {/* Features Section */}
                 <MotionDiv
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: 0.2 }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"
                 >
                   {[
-                    { icon: Video, title: "Professional", desc: "High-quality YouTube content" },
-                    { icon: Target, title: "Optimized", desc: "Perfect for long-form videos" },
-                    { icon: BarChart3, title: "Analytics", desc: "Track performance & growth" }
+                    {
+                      icon: Video,
+                      title: "High Quality",
+                      description: "Supports all major video formats up to 500MB"
+                    },
+                    {
+                      icon: Target,
+                      title: "Fast Upload",
+                      description: "Multipart upload for reliable, fast transfers"
+                    },
+                    {
+                      icon: BarChart3,
+                      title: "Progress Tracking",
+                      description: "Real-time progress with cancel option"
+                    }
                   ].map((feature, index) => {
                     const IconComponent = feature.icon;
                     return (
                       <MotionDiv
-                        key={index}
+                        key={feature.title}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2, delay: 0.25 + index * 0.05 }}
-                        whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.15 } }}
-                        className="text-center p-6 rounded-2xl border"
-                        style={{
-                          backgroundColor: 'rgba(238, 238, 238, 0.8)',
-                          borderColor: 'rgba(0, 173, 181, 0.2)'
+                        transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+                        className="p-6 rounded-2xl border-2 text-center space-y-4"
+                        style={{ 
+                          backgroundColor: 'white',
+                          borderColor: 'rgb(238, 238, 238)'
                         }}
                       >
-                        <div className="w-12 h-12 rounded-xl mx-auto mb-4 flex items-center justify-center"
+                        <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center"
                           style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)' }}
                         >
-                          <IconComponent className="w-6 h-6" style={{ color: 'rgb(0, 173, 181)' }} />
+                          <IconComponent className="w-8 h-8" style={{ color: 'rgb(0, 173, 181)' }} />
                         </div>
-                        <h3 className="font-bold mb-2" style={{ color: 'rgb(34, 40, 49)' }}>
+                        <h3 className="text-lg font-semibold" style={{ color: 'rgb(34, 40, 49)' }}>
                           {feature.title}
                         </h3>
                         <p className="text-sm" style={{ color: 'rgb(57, 62, 70)' }}>
-                          {feature.desc}
+                          {feature.description}
                         </p>
                       </MotionDiv>
                     );
@@ -441,7 +241,7 @@ export default function MakeLongVideoPage() {
         </AppShell>
       </SignedIn>
       <SignedOut>
-        <RedirectToSignIn redirectUrl="/make-post/video" />
+        <RedirectToSignIn redirectUrl="/upload" />
       </SignedOut>
     </>
   );

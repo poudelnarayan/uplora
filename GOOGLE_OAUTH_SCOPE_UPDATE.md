@@ -19,11 +19,13 @@ https://www.googleapis.com/auth/youtube.readonly
 ### **Step 2: Update Scope Justification**
 
 **For `youtube.upload` (Sensitive scope):**
+
 ```
 We request https://www.googleapis.com/auth/youtube.upload to let signed-in Uplora users upload videos to their own YouTube channel on demand. We only use this scope to create video uploads initiated by the user through our Upload interface.
 ```
 
 **For `youtube.readonly` (Sensitive scope):**
+
 ```
 We request https://www.googleapis.com/auth/youtube.readonly to fetch the user's YouTube channel information (channel name, ID) after they connect their account. This is necessary to display the connected channel name in our interface and verify the connection is working properly.
 ```
@@ -31,12 +33,14 @@ We request https://www.googleapis.com/auth/youtube.readonly to fetch the user's 
 ### **Step 3: Verify OAuth Client Configuration**
 
 **Authorized JavaScript origins:**
+
 - `http://localhost:3000`
 - `https://uplora.vercel.app`
 - `https://uplora.io`
 - `https://www.uplora.io`
 
 **Authorized redirect URIs:**
+
 - `http://localhost:3000/api/youtube/connect`
 - `https://uplora.vercel.app/api/youtube/connect`
 - `https://www.uplora.io/api/youtube/connect`
@@ -61,6 +65,7 @@ After updating the scopes:
 ## ✅ **Expected Result**
 
 After this update:
+
 - ✅ **YouTube connection** will work properly
 - ✅ **Channel name** will be displayed
 - ✅ **Error notifications** will show if something fails
