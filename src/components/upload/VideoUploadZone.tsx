@@ -334,7 +334,6 @@ export default function VideoUploadZone({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => uploadState.status === 'idle' && fileInputRef.current?.click()}
         className={`
           relative border-2 border-dashed rounded-2xl cursor-pointer
           transition-all duration-200 ease-out p-8 min-h-[300px]
@@ -420,7 +419,10 @@ export default function VideoUploadZone({
           <div className="flex gap-3">
             {uploadState.status === 'idle' && (
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 className="px-6 py-3 rounded-lg font-medium transition-all hover:scale-105"
                 style={{ 
                   backgroundColor: 'rgb(0, 173, 181)',
@@ -433,7 +435,10 @@ export default function VideoUploadZone({
 
             {uploadState.status === 'uploading' && (
               <button
-                onClick={cancelUpload}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  cancelUpload();
+                }}
                 className="px-6 py-3 rounded-lg font-medium border-2 transition-all hover:scale-105"
                 style={{ 
                   borderColor: 'rgb(239, 68, 68)',
@@ -447,7 +452,10 @@ export default function VideoUploadZone({
 
             {(uploadState.status === 'completed' || uploadState.status === 'failed') && (
               <button
-                onClick={resetUpload}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resetUpload();
+                }}
                 className="px-6 py-3 rounded-lg font-medium transition-all hover:scale-105"
                 style={{ 
                   backgroundColor: 'rgb(0, 173, 181)',
