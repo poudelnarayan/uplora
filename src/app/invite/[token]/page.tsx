@@ -139,6 +139,8 @@ export default function InvitePage() {
     return null;
   }
 
+  const invitePath = `/invite/${params.token as string}`;
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <NextSeo title="Team Invitation" noindex nofollow />
@@ -179,7 +181,7 @@ export default function InvitePage() {
               <p className="text-white/70 text-center text-sm">
                 Sign in or create an account to accept this invitation
               </p>
-              <SignInButton mode="modal">
+              <SignInButton mode="redirect" afterSignInUrl={invitePath} afterSignUpUrl={invitePath}>
                 <button className="btn btn-primary w-full">
                   Sign In / Create Account
                 </button>
@@ -208,7 +210,7 @@ export default function InvitePage() {
               <p className="text-white/70 text-sm">
                 This invitation is for {invitation.email}, but you&apos;re signed in as {user.emailAddresses?.[0]?.emailAddress}.
               </p>
-              <SignInButton mode="modal">
+              <SignInButton mode="redirect" afterSignInUrl={invitePath} afterSignUpUrl={invitePath}>
                 <button className="btn btn-secondary w-full">
                   Sign In with Correct Account
                 </button>
