@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     // Generate a random state for security
     const state = Math.random().toString(36).substring(7);
     
-    // Define the scopes we need
-    const scope = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
+    // Define the scopes we need - ONLY youtube.upload as requested
+    const scope = "https://www.googleapis.com/auth/youtube.upload";
     
     // Use the correct base URL for redirect
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
@@ -31,12 +31,19 @@ export async function GET(request: NextRequest) {
       `prompt=consent&` +
       `state=${state}`;
 
-    console.log("Starting YouTube OAuth flow:", {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      redirectUri,
-      baseUrl,
-      state
+    // Diagnostic logging for production debugging
+    console.log('YT_AUTH_DIAGNOSTIC:', {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      scope: scope,
+      baseUrl: baseUrl,
+      state: state,
+      environment: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
     });
+
+    // Log the full auth URL for debugging
+    console.log('YT_AUTH_URL:', authUrl);
 
     // Redirect to Google OAuth
     return NextResponse.redirect(authUrl);
