@@ -25,24 +25,54 @@ export function useSubscription(): UseSubscriptionReturn {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const CACHE_KEY = "billing-info-cache";
+  const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+  // shared cache to prevent duplicate requests across renders
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g: any = globalThis as any;
+  if (!g.__billingShared) {
+    g.__billingShared = { data: null as BillingInfo | null, t: 0, inflight: null as Promise<BillingInfo> | null };
+  }
+  const shared = g.__billingShared as { data: BillingInfo | null; t: number; inflight: Promise<BillingInfo> | null };
 
   const fetchBillingInfo = async () => {
     if (!user?.id) return;
     
     try {
-      setLoading(true);
+      // Serve fresh cache if available
+      if (shared.data && Date.now() - shared.t < CACHE_TTL_MS) {
+        setBillingInfo(shared.data);
+        setLoading(false);
+        return;
+      }
+
+      // If a request is in-flight, await it
+      if (shared.inflight) {
+        const data = await shared.inflight;
+        setBillingInfo(data);
+        setLoading(false);
+        return;
+      }
+
+      if (!billingInfo) setLoading(true);
       setError(null);
       
-      const response = await fetch("/api/subscription/billing-info");
-      if (!response.ok) {
-        throw new Error("Failed to fetch billing information");
-      }
-      
-      const data = await response.json();
+      shared.inflight = (async () => {
+        const response = await fetch("/api/subscription/billing-info", { cache: 'no-store' });
+        if (!response.ok) throw new Error("Failed to fetch billing information");
+        const data = (await response.json()) as BillingInfo;
+        shared.data = data;
+        shared.t = Date.now();
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, t: shared.t })); } catch {}
+        return data;
+      })();
+
+      const data = await shared.inflight;
       setBillingInfo(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
+      shared.inflight = null;
       setLoading(false);
     }
   };
@@ -170,7 +200,33 @@ export function useSubscription(): UseSubscriptionReturn {
   const subscriptionStatus = billingInfo?.subscription?.status || null;
 
   useEffect(() => {
-    fetchBillingInfo();
+    // Hydrate from cache immediately for instant UI
+    try {
+      if (shared.data && Date.now() - shared.t < CACHE_TTL_MS) {
+        setBillingInfo(shared.data);
+        setLoading(false);
+      } else {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        if (cached && Date.now() - cached.t < CACHE_TTL_MS) {
+          setBillingInfo(cached.data);
+          setLoading(false);
+          shared.data = cached.data;
+          shared.t = cached.t;
+        }
+      }
+    } catch {}
+
+    if (!(shared.data && Date.now() - shared.t < CACHE_TTL_MS)) {
+      void fetchBillingInfo();
+    }
+
+    const onFocusOrVisible = () => { if (!document.hidden) void fetchBillingInfo(); };
+    window.addEventListener('focus', onFocusOrVisible);
+    document.addEventListener('visibilitychange', onFocusOrVisible);
+    return () => {
+      window.removeEventListener('focus', onFocusOrVisible);
+      document.removeEventListener('visibilitychange', onFocusOrVisible);
+    };
   }, [user?.id]);
 
   return {

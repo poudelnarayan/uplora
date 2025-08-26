@@ -15,6 +15,8 @@ import { useTeam } from "@/context/TeamContext";
 import TeamsStats from "@/components/teams/TeamsStats";
 import EmptyTeamsState from "@/components/teams/EmptyTeamsState";
 import LoadingSpinner from "@/components/teams/LoadingSpinner";
+import { motion } from "framer-motion";
+const MotionDiv = motion.div as any;
 
 export const dynamic = "force-dynamic";
 
@@ -39,31 +41,17 @@ export default function TeamsPage() {
   const actualTeams = teams.filter(team => !team.isPersonal);
   const currentUserEmail = user?.emailAddresses?.[0]?.emailAddress || "";
 
-  // Load teams from server
+  // Load teams from server (uses TeamContext refresh to leverage shared cache)
   const loadTeams = async () => {
     try {
-      setLoading(true);
-      const res = await fetch("/api/teams", { cache: "no-store" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to load teams", 
-          message: err.error || "Try again" 
-        });
-        setLoading(false);
-        return;
-      }
-      const result = await res.json();
-      // Handle wrapped response format from API
-      const list = Array.isArray(result) ? result : (result.data || []);
-
-      // Filter to only include non-personal teams for the teams page
-      const nonPersonalTeams = list.filter((t: any) => !t.isPersonal);
-
-      // Fetch detailed team information
+      // No spinner if we already have cached teams
+      if (ctxTeams.length === 0) setLoading(true);
+      // Ask context to refresh; it uses shared cache and SSE-aware logic
+      await refreshTeams(false);
+      // Build detailed teams from context list
+      const baseTeams = (ctxTeams || []).filter((t: any) => !t.isPersonal);
       const detailed: Team[] = await Promise.all(
-        nonPersonalTeams.map(async (t: any) => {
+        baseTeams.map(async (t: any) => {
           try {
             const dRes = await fetch(`/api/teams/${t.id}/details`, { cache: "no-store" });
             if (dRes.ok) {
@@ -77,57 +65,19 @@ export default function TeamsPage() {
                 joinedAt: new Date(m.joinedAt),
                 status: (m.status || "ACTIVE") as any,
               }));
-              
               const ownerUser = details.team?.owner;
               if (ownerUser) {
-                const ownerExists = mappedMembers.some(mm => 
-                  mm.email.toLowerCase() === (ownerUser.email || "").toLowerCase()
-                );
+                const ownerExists = mappedMembers.some(mm => mm.email.toLowerCase() === (ownerUser.email || "").toLowerCase());
                 if (!ownerExists) {
-                  mappedMembers.unshift({
-                    id: ownerUser.id,
-                    name: ownerUser.name || ownerUser.email?.split("@")[0] || "Owner",
-                    email: ownerUser.email || "",
-                    role: "OWNER",
-                    joinedAt: new Date(details.team.createdAt || Date.now()),
-                  } as TeamMember);
+                  mappedMembers.unshift({ id: ownerUser.id, name: ownerUser.name || ownerUser.email?.split("@")[0] || "Owner", email: ownerUser.email || "", role: "OWNER", joinedAt: new Date(details.team.createdAt || Date.now()) } as TeamMember);
                 }
               }
-              
-              return {
-                id: details.team.id,
-                name: details.team.name,
-                description: details.team.description || "",
-                members: mappedMembers,
-                invitations: (details.invites || []).map((inv: any) => ({
-                  id: inv.id || inv.token,
-                  email: inv.email,
-                  role: inv.role,
-                  status: (inv.status || "PENDING").toLowerCase(),
-                  invitedAt: new Date(inv.createdAt || inv.invitedAt || Date.now()),
-                  invitedBy: user?.fullName || user?.firstName || "",
-                })),
-                createdAt: details.team.createdAt ? new Date(details.team.createdAt) : new Date(),
-                ownerEmail: ownerUser?.email || "",
-                isOwner: t.isOwner || false,
-                role: t.role || "MEMBER"
-              } as Team;
+              return { id: details.team.id, name: details.team.name, description: details.team.description || "", members: mappedMembers, invitations: (details.invites || []).map((inv: any) => ({ id: inv.id || inv.token, email: inv.email, role: inv.role, status: (inv.status || "PENDING").toLowerCase(), invitedAt: new Date(inv.createdAt || inv.invitedAt || Date.now()), invitedBy: user?.fullName || user?.firstName || "" })), createdAt: details.team.createdAt ? new Date(details.team.createdAt) : new Date(), ownerEmail: ownerUser?.email || "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
             }
           } catch {}
-          return {
-            id: t.id,
-            name: t.name,
-            description: t.description || "",
-            members: [],
-            invitations: [],
-            createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
-            ownerEmail: "",
-            isOwner: t.isOwner || false,
-            role: t.role || "MEMBER"
-          } as Team;
+          return { id: t.id, name: t.name, description: t.description || "", members: [], invitations: [], createdAt: t.createdAt ? new Date(t.createdAt) : new Date(), ownerEmail: "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
         })
       );
-
       setTeams(detailed);
     } catch (e) {
       notifications.addNotification({ 
@@ -140,11 +90,22 @@ export default function TeamsPage() {
     }
   };
 
+  // Hydrate instantly from TeamContext cache, then background refresh
   useEffect(() => {
-    if (user) {
-      loadTeams();
+    if (!user) return;
+    // Seed from context cache for instant render
+    if (ctxTeams.length > 0) {
+      const baseTeams = ctxTeams.filter((t: any) => !t.isPersonal);
+      setTeams(baseTeams as any);
+      setLoading(false);
+      // kick background detail fetch
+      void loadTeams();
+    } else {
+      void loadTeams();
     }
-  }, [user?.fullName, user?.emailAddresses?.[0]?.emailAddress]);
+    // keep synced when context teams change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, ctxTeams.length]);
 
   // Live updates: refresh list on team.* events (created, member joins, invite accepted/canceled)
   useEffect(() => {
@@ -156,7 +117,7 @@ export default function TeamsPage() {
           const evt = JSON.parse(ev.data || '{}');
           if (!evt?.type?.startsWith('team.')) return;
           // Soft refresh teams; avoids full page reload
-          loadTeams();
+          void loadTeams();
         } catch {}
       };
       es.onerror = () => { try { es?.close(); } catch {}; es = null; };
@@ -486,50 +447,14 @@ export default function TeamsPage() {
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
             <div className="h-full overflow-y-auto px-4 lg:px-0">
               <div className="space-y-4 py-4">
-                {/* Beautiful Workspace Switcher card (Personal + Teams) */}
-                <div className="card p-4 rounded-lg border border-border bg-card">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Current workspace</div>
-                      <div className="font-semibold text-foreground">
-                        {selectedTeamId === personalTeam?.id || !selectedTeamId ? "Personal Workspace" : (ctxTeams.find(t => t.id === selectedTeamId)?.name || "Team")}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Personal workspace button */}
-                      <button
-                        onClick={() => setSelectedTeamId(personalTeam?.id || null)}
-                        className={`px-3 py-2 rounded-md text-sm border ${(!selectedTeamId || selectedTeamId === personalTeam?.id) ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/50"}`}
-                      >
-                        Personal Workspace
-                      </button>
-                      {/* Team pills */}
-                      {ctxTeams.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => setSelectedTeamId(t.id)}
-                          className={`px-3 py-2 rounded-md text-sm border ${selectedTeamId === t.id ? "bg-blue-600 text-white border-blue-600" : "bg-card border-border hover:border-blue-400/60"}`}
-                          title={t.name}
-                        >
-                          {t.name}
-                        </button>
-                      ))}
-                      <button
-                        onClick={openCreateTeamModal}
-                        className="px-3 py-2 rounded-md text-sm border bg-gradient-to-r from-green-500/10 to-emerald-500/10 text-foreground hover:from-green-500/20 hover:to-emerald-500/20 border-green-500/40"
-                      >
-                        Create Team
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* Workspace switcher card removed per request */}
 
                 {loading ? (
                   <LoadingSpinner />
                 ) : actualTeams.length === 0 ? (
                   <EmptyTeamsState onCreateTeam={openCreateTeamModal} />
                 ) : (
-                  <div className="space-y-6">
+                  <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
                     <TeamsStats 
                       teams={actualTeams} 
                       currentUserEmail={currentUserEmail}
@@ -537,24 +462,23 @@ export default function TeamsPage() {
 
                     {/* Teams Grid */}
                     <div className="grid gap-4">
-                      {actualTeams.map((team) => (
-                        <TeamCard
-                          key={team.id}
-                          team={team}
-                          currentUserEmail={currentUserEmail}
-                          onInviteMember={openInviteMemberModal}
-                          onDeleteTeam={handleDeleteTeam}
-                          onLeaveTeam={handleLeaveTeam}
-                          onResendInvitation={handleResendInvitation}
-                          onCancelInvitation={handleCancelInvitation}
-                          resendingId={resendingId}
-                          onRemoveMember={handleRemoveMember}
-                        />
+                      {actualTeams.map((team, index) => (
+                        <MotionDiv key={team.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}>
+                          <TeamCard
+                            team={team}
+                            currentUserEmail={currentUserEmail}
+                            onInviteMember={openInviteMemberModal}
+                            onDeleteTeam={handleDeleteTeam}
+                            onLeaveTeam={handleLeaveTeam}
+                            onResendInvitation={handleResendInvitation}
+                            onCancelInvitation={handleCancelInvitation}
+                            resendingId={resendingId}
+                            onRemoveMember={handleRemoveMember}
+                          />
+                        </MotionDiv>
                       ))}
                     </div>
-
-
-                  </div>
+                  </MotionDiv>
                 )}
               </div>
             </div>

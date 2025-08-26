@@ -49,7 +49,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Settings Grid */}
-              <div className="grid gap-4">
+              <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid gap-4">
                 {/* Profile Card */}
                 <div className="rounded-lg p-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
                   <div className="flex items-center gap-3 mb-4">
@@ -112,7 +112,7 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </MotionDiv>
             </div>
           </div>
         </AppShell>

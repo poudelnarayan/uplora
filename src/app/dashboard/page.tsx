@@ -9,6 +9,8 @@ import { useTeam } from "@/context/TeamContext";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsOverview from "@/components/dashboard/StatsOverview";
 import VideosList from "@/components/dashboard/VideosList";
+import { motion } from "framer-motion";
+const MotionDiv = motion.div as any;
 import EmailVerificationBanner from "@/components/pages/Dashboard/EmailVerificationBanner";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
@@ -367,7 +369,7 @@ export default function Dashboard() {
               </div>
               
               {/* Videos Grid */}
-              <div>
+              <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <VideosList
                   videos={videos}
                   loading={loading}
@@ -378,7 +380,7 @@ export default function Dashboard() {
                   processingVideoId={processingVideoId}
                   deletingVideoId={deletingVideoId}
                 />
-              </div>
+              </MotionDiv>
             </div>
           </div>
           
