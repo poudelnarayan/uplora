@@ -4,12 +4,14 @@ import { useUploads } from "@/context/UploadContext";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const MotionDiv = motion.div as any;
 
 export default function UploadTray() {
   const { uploads, dismiss, cancelUpload } = useUploads();
   const hasActive = uploads.length > 0;
+  const router = useRouter();
 
   // Auto-dismiss rules:
   // - completed: 3s
@@ -39,7 +41,14 @@ export default function UploadTray() {
             className="fixed bottom-4 right-4 z-50 w-80 space-y-2"
           >
           {uploads.map((u) => (
-            <div key={u.id} className="card p-3 shadow-lg border bg-background">
+            <div 
+              key={u.id} 
+              className="card p-3 shadow-lg border bg-background cursor-pointer"
+              onClick={() => {
+                // Navigate to the upload page where the user started the upload
+                router.push('/make-post/video');
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   {u.status === "completed" ? (
@@ -60,7 +69,7 @@ export default function UploadTray() {
                   <button
                     aria-label="Dismiss upload"
                     className="p-1 rounded-full hover:bg-muted transition-colors"
-                    onClick={() => dismiss(u.id)}
+                    onClick={(e) => { e.stopPropagation(); dismiss(u.id); }}
                   >
                     <X className="w-4 h-4 text-foreground" strokeWidth={2.5} />
                   </button>
@@ -68,7 +77,7 @@ export default function UploadTray() {
                   <button
                     aria-label="Cancel upload"
                     className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
-                    onClick={() => cancelUpload(u.id)}
+                    onClick={(e) => { e.stopPropagation(); cancelUpload(u.id); }}
                   >
                     <X className="w-4 h-4 text-red-500" strokeWidth={2.5} />
                   </button>
