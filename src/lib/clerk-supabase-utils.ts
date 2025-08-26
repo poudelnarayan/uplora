@@ -65,8 +65,8 @@ export async function checkTeamAccess(teamId: string, userId: string) {
   const { data: membership, error: memberError } = await supabaseAdmin
     .from('team_members')
     .select('*')
-    .eq('teamId', teamId)
-    .eq('userId', userId)
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
     .eq('status', 'ACTIVE')
     .single();
 
@@ -87,7 +87,7 @@ export async function ensurePersonalTeam(userId: string) {
     .from('teams')
     .select('id')
     .eq('ownerId', userId)
-    .eq('isPersonal', true)
+    .eq('is_personal', true)
     .single();
 
   if (checkError && checkError.code !== 'PGRST116') {
@@ -104,10 +104,8 @@ export async function ensurePersonalTeam(userId: string) {
     .insert({
       name: 'Personal',
       description: 'Your personal workspace',
-      isPersonal: true,
+      is_personal: true,
       ownerId: userId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
     })
     .select('id')
     .single();
@@ -126,25 +124,25 @@ export function formatVideoResponse(video: any) {
     title: (video.filename || "").replace(/\.[^/.]+$/, ''),
     thumbnail: "",
     status: video.status || "PROCESSING",
-    uploadedAt: video.uploadedAt,
-    updatedAt: video.updatedAt,
-    approvalRequestedAt: video.status === "PENDING" ? video.updatedAt : undefined,
-    publishedAt: video.status === "PUBLISHED" ? video.updatedAt : undefined,
+    uploadedAt: video.uploaded_at,
+    updatedAt: video.updated_at,
+    approvalRequestedAt: video.status === "PENDING" ? video.updated_at : undefined,
+    publishedAt: video.status === "PUBLISHED" ? video.updated_at : undefined,
     duration: undefined,
     views: undefined,
     likes: undefined,
     s3Key: video.key,
-    thumbnailKey: video.thumbnailKey,
-    contentType: video.contentType,
-    sizeBytes: video.sizeBytes,
+    thumbnailKey: video.thumbnail_key,
+    contentType: video.content_type,
+    sizeBytes: video.size_bytes,
     description: video.description,
     visibility: video.visibility,
-    madeForKids: video.madeForKids,
+    madeForKids: video.made_for_kids,
     uploader: {
-      id: video.userId,
-      name: video.uploaderName,
-      email: video.uploaderEmail,
-      image: video.uploaderImage
+      id: video.user_id,
+      name: video.uploader_name,
+      email: video.uploader_email,
+      image: video.uploader_image
     }
   };
 }
