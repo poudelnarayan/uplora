@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 
 const MotionDiv = motion.div as any;
 import AppShell from "@/components/layout/AppShell";
@@ -28,6 +29,7 @@ interface VideoItem {
 }
 
 export default function VideosPage() {
+  const { user } = useUser();
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingVideoId, setProcessingVideoId] = useState<string | null>(null);
@@ -97,8 +99,8 @@ export default function VideosPage() {
                 updatedAt: new Date().toISOString(),
                 thumbnail: '',
                 thumbnailKey: null,
-                userRole: 'OWNER', // New videos are owned by the uploader
-                uploader: { name: session?.user?.name || '', email: session?.user?.email || '' }
+                userRole: 'OWNER',
+                uploader: user ? { name: user.fullName || '', email: user.primaryEmailAddress?.emailAddress || '' } : undefined
               };
               setVideos(prev => [newVideo, ...prev]);
               
@@ -150,7 +152,7 @@ export default function VideosPage() {
       es.onerror = () => { try { es?.close(); } catch {}; es = null; };
     } catch {}
     return () => { try { es?.close(); } catch {} };
-  }, [selectedTeamId, session?.user?.name, session?.user?.email, notifications]);
+  }, [selectedTeamId, user?.fullName, user?.primaryEmailAddress?.emailAddress, notifications]);
 
   const deleteVideo = async (videoId: string, videoTitle: string) => {
     // Set the video to delete and open modal
@@ -272,10 +274,10 @@ export default function VideosPage() {
                 }
               </p>
             </div>
-            <button className="mt-4 lg:mt-0"
+            <button
+              className="mt-4 lg:mt-0 p-2 rounded-full hover:bg-muted transition-colors"
               onClick={() => router.push("/dashboard")}
               title="Close and go back"
-              className="p-2 rounded-full hover:bg-muted transition-colors"
               aria-label="Close"
             >
               <X className="w-6 h-6" />

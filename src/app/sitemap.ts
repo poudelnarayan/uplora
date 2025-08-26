@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -15,13 +15,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let videoRoutes: MetadataRoute.Sitemap = [];
   try {
-    const videos = await prisma.video.findMany({
-      where: { status: "PUBLISHED", OR: [{ visibility: null }, { visibility: "public" }] },
-      select: { id: true, updatedAt: true },
-      orderBy: { updatedAt: "desc" },
-      take: 1000,
-    });
-    videoRoutes = videos.map((v) => ({ url: `${siteUrl}/videos/${v.id}`, lastModified: v.updatedAt }));
+    const { data: videos } = await supabaseAdmin
+      .from('videos')
+      .select('id, updatedAt, visibility, status')
+      .eq('status', 'PUBLISHED')
+      .order('updatedAt', { ascending: false })
+      .limit(1000);
+
+    if (videos && Array.isArray(videos)) {
+      videoRoutes = videos
+        .filter((v: any) => !v.visibility || v.visibility === 'public')
+        .map((v: any) => ({ url: `${siteUrl}/videos/${v.id}`, lastModified: new Date(v.updatedAt) }));
+    }
   } catch {
     // ignore db issues for sitemap
   }
