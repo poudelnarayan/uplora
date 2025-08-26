@@ -1,9 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { withAuth, checkTeamAccess } from "@/lib/clerk-supabase-utils";
+import { sendMail } from "@/lib/email";
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 // Update member (pause/unpause)
 export async function PATCH(
@@ -11,55 +13,67 @@ export async function PATCH(
   context: { params: { teamId: string; memberId: string } }
 ) {
   try {
-    const params = context.params;
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    const { teamId, memberId } = context.params;
+    const body = await request.json();
+    const requestedStatus = body?.status;
+
+    if (!requestedStatus || !["ACTIVE", "PAUSED"].includes(requestedStatus)) {
+      return NextResponse.json(createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Invalid status"), { status: 400 });
     }
 
-    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
-    if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const result = await withAuth(async ({ supabaseUser }) => {
+      // Check access
+      const access = await checkTeamAccess(teamId, supabaseUser.id);
+      if (!access.hasAccess || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
+        return createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions");
+      }
 
-    const team = await prisma.team.findUnique({ where: { id: params.teamId } });
-    if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      // Load team
+      const { data: team, error: teamErr } = await supabaseAdmin
+        .from('teams')
+        .select('id, ownerId')
+        .eq('id', teamId)
+        .single();
+      if (teamErr || !team) {
+        return createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found");
+      }
 
-    // Only owner can pause/unpause for now
-    if (team.ownerId !== currentUser.id) {
-      return NextResponse.json({ error: "Only owner can update members" }, { status: 403 });
-    }
+      // Load member
+      const { data: member, error: memErr } = await supabaseAdmin
+        .from('team_members')
+        .select('id, userId, teamId')
+        .eq('id', memberId)
+        .single();
+      if (memErr || !member || member.teamId !== teamId) {
+        return createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found");
+      }
 
-    const member = await prisma.teamMember.findUnique({ where: { id: params.memberId } });
-    if (!member || member.teamId !== params.teamId) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
-    }
+      // Prevent modifying owner
+      if (member.userId === team.ownerId) {
+        return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Cannot modify the owner");
+      }
 
-    // Prevent acting on owner
-    if (member.userId === team.ownerId) {
-      return NextResponse.json({ error: "Cannot modify the owner" }, { status: 400 });
-    }
+      const { error: updErr } = await supabaseAdmin
+        .from('team_members')
+        .update({ status: requestedStatus, updatedAt: new Date().toISOString() })
+        .eq('id', memberId);
+      if (updErr) {
+        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to update member status");
+      }
 
-    const { status } = await request.json();
-    if (!status || !["ACTIVE", "PAUSED"].includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-    }
+      broadcast({
+        type: "team.member.updated",
+        payload: { memberId, status: requestedStatus, teamId }
+      });
 
-    const updated = await prisma.teamMember.update({
-      where: { id: params.memberId },
-      data: { status },
-      select: { id: true, status: true },
+      return createSuccessResponse({ id: memberId, status: requestedStatus });
     });
 
-    // Broadcast member status change
-    broadcast({ 
-      type: "team.member.updated", 
-      teamId: params.teamId, 
-      payload: { memberId: params.memberId, status }
-    });
-
-    return NextResponse.json(updated);
+    const httpStatus = result.ok ? 200 : 403;
+    return NextResponse.json(result, { status: httpStatus });
   } catch (e) {
     console.error("Error updating member:", e);
-    return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
+    return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to update member"), { status: 500 });
   }
 }
 
@@ -69,45 +83,91 @@ export async function DELETE(
   context: { params: { teamId: string; memberId: string } }
 ) {
   try {
-    const params = context.params;
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-    }
+    const { teamId, memberId } = context.params;
+    const result = await withAuth(async ({ supabaseUser }) => {
+      // Check access for current user
+      const access = await checkTeamAccess(teamId, supabaseUser.id);
+      if (!access.hasAccess || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
+        return createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions");
+      }
 
-    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
-    if (!currentUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+      // Load team to check owner and name
+      const { data: team, error: teamErr } = await supabaseAdmin
+        .from('teams')
+        .select('id, ownerId, name')
+        .eq('id', teamId)
+        .single();
+      if (teamErr || !team) {
+        return createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found");
+      }
 
-    const team = await prisma.team.findUnique({ where: { id: params.teamId } });
-    if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      // Load member
+      const { data: member, error: memErr } = await supabaseAdmin
+        .from('team_members')
+        .select('id, userId, teamId')
+        .eq('id', memberId)
+        .single();
+      if (memErr || !member || member.teamId !== teamId) {
+        return createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found");
+      }
 
-    // Only owner can remove
-    if (team.ownerId !== currentUser.id) {
-      return NextResponse.json({ error: "Only owner can remove members" }, { status: 403 });
-    }
+      // Prevent removing owner
+      if (member.userId === team.ownerId) {
+        return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Cannot remove the owner");
+      }
 
-    const member = await prisma.teamMember.findUnique({ where: { id: params.memberId } });
-    if (!member || member.teamId !== params.teamId) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
-    }
+      // Fetch removed user's email
+      const { data: removedUser, error: userErr } = await supabaseAdmin
+        .from('users')
+        .select('email, name')
+        .eq('id', member.userId)
+        .single();
 
-    // Prevent removing owner
-    if (member.userId === team.ownerId) {
-      return NextResponse.json({ error: "Cannot remove the owner" }, { status: 400 });
-    }
+      // Delete membership
+      const { error: delErr } = await supabaseAdmin
+        .from('team_members')
+        .delete()
+        .eq('id', memberId);
+      if (delErr) {
+        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to remove member");
+      }
 
-    await prisma.teamMember.delete({ where: { id: params.memberId } });
+      // Send notification email (best-effort)
+      try {
+        if (removedUser?.email) {
+          const subject = `Removed from ${team.name} on Uplora`;
+          const text = [
+            `You've been removed from the team "${team.name}" on Uplora.`,
+            '',
+            `If you believe this was a mistake, please contact the team administrator.`,
+          ].join("\n");
+          const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.6;">
+            <div style="max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;">
+              <h2 style="margin:0 0 12px;color:#111827;">Team Membership Update</h2>
+              <p style="margin:0 0 8px;color:#334155;">You have been removed from <strong>${team.name}</strong>.</p>
+              <p style="margin:0 0 12px;color:#64748b;font-size:14px;">If you believe this was a mistake, please contact the team administrator.</p>
+            </div>
+          </body></html>`;
+          await sendMail({ to: removedUser.email, subject, text, html });
+        }
+      } catch (e) {
+        // Log and continue
+        console.error('Member removal email failed:', e);
+      }
 
-    // Broadcast member removal
-    broadcast({ 
-      type: "team.member.removed", 
-      teamId: params.teamId, 
-      payload: { memberId: params.memberId }
+      // Broadcast member removal
+      broadcast({
+        type: "team.member.removed",
+        payload: { memberId, teamId }
+      });
+
+      return createSuccessResponse({ ok: true });
     });
 
-    return NextResponse.json({ ok: true });
+    const httpStatus = result.ok ? 200 : 403;
+    return NextResponse.json(result, { status: httpStatus });
   } catch (e) {
     console.error("Error removing member:", e);
-    return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
+    return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to remove member"), { status: 500 });
   }
 }
