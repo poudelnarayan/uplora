@@ -1,12 +1,20 @@
 import crypto from "crypto";
 export function buildInviteUrl(token: string): string {
-  const base =
-    process.env.APP_URL ||
+  // Prefer canonical domain configured in env
+  const canonical =
     process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-    (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : undefined) ||
-    "http://localhost:3000";
+    "";
+
+  let base = canonical;
+
+  if (!base) {
+    // Fallback to Vercel preview URL only if no canonical is configured
+    const vercel = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL;
+    base = vercel ? `https://${vercel}` : "http://localhost:3000";
+  }
+
   return `${base.replace(/\/$/, "")}/invite/${token}`;
 }
 
