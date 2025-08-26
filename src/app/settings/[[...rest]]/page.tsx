@@ -8,7 +8,6 @@ import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import SettingsHeader from "@/components/pages/Settings/SettingsHeader";
 import ProfileSection from "@/components/pages/Settings/ProfileSection";
 import NotificationSection from "@/components/pages/Settings/NotificationSection";
-import YouTubeConnection from "@/components/settings/YouTubeConnection";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -24,84 +23,16 @@ export default function SettingsPage() {
   const { user } = useUser();
   const searchParams = useSearchParams();
   const notifications = useNotifications();
-  const [youtubeData, setYouTubeData] = useState<{
-    isConnected: boolean;
-    channelTitle?: string | null;
-  }>({ isConnected: false });
 
-  useEffect(() => {
-    const fetchYouTubeStatus = async () => {
-      try {
-        const response = await fetch("/api/youtube/status");
-        if (response.ok) {
-          const data = await response.json();
-          setYouTubeData(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch YouTube status:", error);
-      }
-    };
-
-    if (user?.id) {
-      fetchYouTubeStatus();
-    }
-  }, [user?.id]);
-
-  // Handle YouTube OAuth completion
+  // Handle YouTube OAuth completion (redirect to social page)
   useEffect(() => {
     const youtubeCode = searchParams.get('youtube_code');
     
     if (youtubeCode && user?.id) {
-      const completeYouTubeConnection = async () => {
-        try {
-          const response = await fetch('/api/youtube/complete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code: youtubeCode }),
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            notifications.addNotification({
-              type: "success",
-              title: "YouTube Connected!",
-              message: `Successfully connected to ${result.channelTitle || 'your YouTube channel'}`
-            });
-            
-            // Refresh YouTube status
-            const statusResponse = await fetch("/api/youtube/status");
-            if (statusResponse.ok) {
-              const statusData = await statusResponse.json();
-              setYouTubeData(statusData);
-            }
-            
-            // Clean up URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('youtube_code');
-            window.history.replaceState({}, '', newUrl.toString());
-          } else {
-            notifications.addNotification({
-              type: "error",
-              title: "Connection Failed",
-              message: result.error || "Failed to complete YouTube connection"
-            });
-          }
-        } catch (error) {
-          console.error("YouTube completion error:", error);
-          notifications.addNotification({
-            type: "error",
-            title: "Connection Failed",
-            message: "Failed to complete YouTube connection"
-          });
-        }
-      };
-
-      completeYouTubeConnection();
+      // Redirect to social page with the code
+      window.location.href = `/social?youtube_code=${youtubeCode}`;
     }
-  }, [searchParams, user?.id, notifications]);
+  }, [searchParams, user?.id]);
 
   return (
     <>
@@ -142,38 +73,6 @@ export default function SettingsPage() {
                         formFieldInput: "border-[#393E46] focus:border-[#00ADB5]",
                         formFieldLabel: "text-[#222831]"
                       }
-                    }} 
-                  />
-                </div>
-
-                {/* YouTube Connection */}
-                <div className="rounded-lg p-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
-                      <Youtube className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold" style={{ color: '#222831' }}>YouTube Integration</h3>
-                      <p className="text-sm" style={{ color: '#393E46' }}>Connect your YouTube channel for direct uploads</p>
-                    </div>
-                  </div>
-                  <YouTubeConnection 
-                    isConnected={youtubeData.isConnected} 
-                    channelTitle={youtubeData.channelTitle} 
-                    onConnect={() => {
-                      // Refresh YouTube status after connection
-                      const fetchYouTubeStatus = async () => {
-                        try {
-                          const response = await fetch("/api/youtube/status");
-                          if (response.ok) {
-                            const data = await response.json();
-                            setYouTubeData(data);
-                          }
-                        } catch (error) {
-                          console.error("Failed to fetch YouTube status:", error);
-                        }
-                      };
-                      fetchYouTubeStatus();
                     }} 
                   />
                 </div>

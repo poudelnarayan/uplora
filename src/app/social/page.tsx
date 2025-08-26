@@ -7,9 +7,13 @@ import { Youtube, Instagram, Twitter, Facebook, Linkedin, Clock, Video } from "l
 import YouTubeConnection from "@/components/settings/YouTubeConnection";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
+import { useNotifications } from "@/components/ui/Notification";
 
 export default function SocialPage() {
   const { isSignedIn } = useUser();
+  const searchParams = useSearchParams();
+  const notifications = useNotifications();
   const [youtubeData, setYouTubeData] = useState<{ isConnected: boolean; channelTitle?: string | null }>({ isConnected: false });
 
   useEffect(() => {
@@ -21,6 +25,62 @@ export default function SocialPage() {
       } catch {}
     })();
   }, [isSignedIn]);
+
+  // Handle YouTube OAuth completion
+  useEffect(() => {
+    const youtubeCode = searchParams.get('youtube_code');
+    
+    if (youtubeCode && isSignedIn) {
+      const completeYouTubeConnection = async () => {
+        try {
+          const response = await fetch('/api/youtube/complete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: youtubeCode }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            notifications.addNotification({
+              type: "success",
+              title: "YouTube Connected!",
+              message: `Successfully connected to ${result.channelTitle || 'your YouTube channel'}`
+            });
+            
+            // Refresh YouTube status
+            const statusResponse = await fetch("/api/youtube/status");
+            if (statusResponse.ok) {
+              const statusData = await statusResponse.json();
+              setYouTubeData(statusData);
+            }
+            
+            // Clean up URL
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('youtube_code');
+            window.history.replaceState({}, '', newUrl.toString());
+          } else {
+            notifications.addNotification({
+              type: "error",
+              title: "Connection Failed",
+              message: result.error || "Failed to complete YouTube connection"
+            });
+          }
+        } catch (error) {
+          console.error("YouTube completion error:", error);
+          notifications.addNotification({
+            type: "error",
+            title: "Connection Failed",
+            message: "Failed to complete YouTube connection"
+          });
+        }
+      };
+
+      completeYouTubeConnection();
+    }
+  }, [searchParams, isSignedIn, notifications]);
 
   return (
     <AppShell>
@@ -48,7 +108,25 @@ export default function SocialPage() {
                 </p>
               </div>
             </div>
-            <YouTubeConnection isConnected={youtubeData.isConnected} channelTitle={youtubeData.channelTitle} onConnect={() => {}} />
+            <YouTubeConnection 
+              isConnected={youtubeData.isConnected} 
+              channelTitle={youtubeData.channelTitle} 
+              onConnect={() => {
+                // Refresh YouTube status after connection
+                const fetchYouTubeStatus = async () => {
+                  try {
+                    const response = await fetch("/api/youtube/status");
+                    if (response.ok) {
+                      const data = await response.json();
+                      setYouTubeData(data);
+                    }
+                  } catch (error) {
+                    console.error("Failed to fetch YouTube status:", error);
+                  }
+                };
+                fetchYouTubeStatus();
+              }} 
+            />
           </div>
         </div>
 
