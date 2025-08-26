@@ -566,6 +566,23 @@ export default function AppShell({ children }: { children: ReactNode }) {
                     </Link>
                   );
                 })}
+
+                {/* Mobile: Feedback Studio & Idea Lab */}
+                <div className="my-4 border-t border-border pt-3" />
+                <button
+                  onClick={() => { setMobileNavOpen(false); openModal("feedback-studio", { onSubmit: submitFeedback }); }}
+                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
+                >
+                  <MessageCircle className="h-5 w-5 shrink-0" />
+                  <span className="truncate">Feedback Studio</span>
+                </button>
+                <button
+                  onClick={() => { setMobileNavOpen(false); openModal("idea-lab", { onSubmit: submitIdea }); }}
+                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
+                >
+                  <Lightbulb className="h-5 w-5 shrink-0" />
+                  <span className="truncate">Idea Lab</span>
+                </button>
               </nav>
               {/* Mobile Footer Links */}
               <div className="border-t border-border px-4 py-4 bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
