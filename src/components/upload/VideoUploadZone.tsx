@@ -52,6 +52,30 @@ export default function VideoUploadZone({
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentUploadId, setCurrentUploadId] = useState<string | null>(null);
   const startedRef = useRef(false);
+  const targetProgressRef = useRef(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startProgressTicker = () => {
+    if (progressIntervalRef.current) return;
+    progressIntervalRef.current = setInterval(() => {
+      setUploadState(prev => {
+        const current = prev.progress || 0;
+        const target = Math.min(99, Math.max(targetProgressRef.current, 1));
+        if (current >= target) {
+          return prev;
+        }
+        // step by 1%
+        return { ...prev, progress: Math.min(target, current + 1) };
+      });
+    }, 120);
+  };
+
+  const stopProgressTicker = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -101,6 +125,8 @@ export default function VideoUploadZone({
       fileName: file.name,
       fileSize: file.size
     });
+    targetProgressRef.current = Math.max(targetProgressRef.current, 1);
+    startProgressTicker();
     // Hand off to global UploadProvider so upload persists across navigation
     const id = enqueueUpload(file, teamId);
     setCurrentUploadId(id);
@@ -174,8 +200,18 @@ export default function VideoUploadZone({
         fileName: active.fileName || prev.fileName,
         fileSize: active.fileSize || prev.fileSize,
       }));
+      // resume ticker toward current active progress
+      targetProgressRef.current = Math.max(targetProgressRef.current, active.progress || 1);
+      startProgressTicker();
     }
   }, [uploads, currentUploadId]);
+
+  // Cleanup ticker on unmount
+  useEffect(() => {
+    return () => {
+      stopProgressTicker();
+    };
+  }, []);
 
   const startUpload = async (file: File) => {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
@@ -205,6 +241,8 @@ export default function VideoUploadZone({
       try { (window as any).__lastInitUpload = { key, uploadId }; } catch {}
       // Ensure UI shows early progress
       setUploadState(prev => ({ ...prev, progress: Math.max(prev.progress, 1) }));
+      targetProgressRef.current = Math.max(targetProgressRef.current, 1);
+      startProgressTicker();
 
       const totalParts = Math.ceil(file.size / partSize);
       const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
@@ -224,7 +262,9 @@ export default function VideoUploadZone({
       const updateProgress = () => {
         let percent = Math.max(0, Math.min(99, ((completedBytes + sumPartialLoaded()) / file.size) * 100));
         if (startedRef.current && percent < 1) percent = 1;
-        setUploadState(prev => ({ ...prev, progress: percent }));
+        // set the target; the ticker will animate toward it 1% at a time
+        targetProgressRef.current = Math.max(targetProgressRef.current, percent);
+        startProgressTicker();
       };
 
       async function uploadOnePart(partNumber: number) {
@@ -296,7 +336,8 @@ export default function VideoUploadZone({
       startedRef.current = true;
       await Promise.all(workers);
 
-      setUploadState(prev => ({ ...prev, status: 'processing', progress: 99 }));
+      targetProgressRef.current = Math.max(targetProgressRef.current, 99);
+      setUploadState(prev => ({ ...prev, status: 'processing', progress: Math.max(prev.progress, 99) }));
 
       const completeResponse = await fetch(`${baseUrl}/api/s3/multipart/complete`, {
         method: "POST",
@@ -319,11 +360,12 @@ export default function VideoUploadZone({
 
       const completeData = await completeResponse.json();
       
-      setUploadState(prev => ({ 
-        ...prev, 
-        status: 'completed', 
+      stopProgressTicker();
+      setUploadState(prev => ({
+        ...prev,
+        status: 'completed',
         progress: 100,
-        videoId: completeData.videoId 
+        videoId: completeData.videoId
       }));
 
       notifications.addNotification({
@@ -351,6 +393,7 @@ export default function VideoUploadZone({
         }
       } catch {}
       
+      stopProgressTicker();
       setUploadState(prev => ({ 
         ...prev, 
         status: 'failed', 
