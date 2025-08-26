@@ -159,17 +159,18 @@ export async function POST(req: NextRequest) {
 
         return createSuccessResponse({
           success: true,
-          message: type === "idea" ? "Idea submitted successfully!" : "Feedback submitted successfully!"
+          message: type === "idea" ? "Idea brainstormed successfully!" : "Feedback sent successfully!",
+          emailSent: true
         });
 
       } catch (emailError) {
         console.error("Email sending failed:", emailError);
-        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to send feedback");
+        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to send email");
       }
     });
 
     if (!result.ok) {
-      return NextResponse.json(result, { status: 401 });
+      return NextResponse.json(result, { status: result.status || 400 });
     }
 
     return NextResponse.json(result);
