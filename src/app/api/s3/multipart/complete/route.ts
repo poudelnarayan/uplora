@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
         teamId: finalTeamId,
         userId: user.id,
         status: "PROCESSING",
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
