@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (userError) {
+      console.error("User sync error:", userError);
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
       });
       out = await s3.send(cmd);
     } catch (err: any) {
+      console.error("S3 CreateMultipartUpload error:", err);
       const message = err?.name ? `${err.name}: ${err.message || 'S3 error'}` : 'S3 CreateMultipartUpload failed';
       return NextResponse.json({ error: message }, { status: 500 });
     }
@@ -114,7 +116,10 @@ export async function POST(req: NextRequest) {
         console.error("Upload lock creation error:", lockError);
         return NextResponse.json({ error: "Failed to create upload lock" }, { status: 500 });
       }
-    } catch {}
+    } catch (error) {
+      console.error("Upload lock creation exception:", error);
+      return NextResponse.json({ error: "Failed to create upload lock" }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       uploadId: out.UploadId, 
@@ -126,6 +131,7 @@ export async function POST(req: NextRequest) {
       teamId
     });
   } catch (e: any) {
+    console.error("Multipart init error:", e);
     const message = e?.message || 'Init failed';
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -219,13 +219,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id });
   } catch (e) {
+    console.error("Multipart complete error:", e);
     try {
       await s3.send(new AbortMultipartUploadCommand({
         Bucket: process.env.S3_BUCKET!,
         Key: key,
         UploadId: uploadId,
       }));
-    } catch {}
+    } catch (abortError) {
+      console.error("Failed to abort multipart upload:", abortError);
+    }
     // Release lock on error too
     try {
       await supabaseAdmin
@@ -233,7 +236,9 @@ export async function POST(req: NextRequest) {
         .delete()
         .eq('userId', userId)
         .eq('key', key);
-    } catch {}
+    } catch (cleanupError) {
+      console.error("Failed to cleanup upload lock:", cleanupError);
+    }
     return NextResponse.json({ error: "Complete failed" }, { status: 500 });
   }
 }
