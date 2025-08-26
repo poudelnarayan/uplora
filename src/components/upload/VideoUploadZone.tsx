@@ -275,12 +275,12 @@ export default function VideoUploadZone({
           contentType: file.type || "video/mp4",
           sizeBytes: file.size,
           teamId
-        }),
-        signal: abortControllerRef.current.signal
+        })
       });
 
       if (!completeResponse.ok) {
-        throw new Error(`Failed to complete upload: ${completeResponse.statusText}`);
+        const txt = await completeResponse.text().catch(() => completeResponse.statusText);
+        throw new Error(`Failed to complete upload: ${completeResponse.status} ${txt}`);
       }
 
       const completeData = await completeResponse.json();

@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const userImage = clerkUser.imageUrl || "";
 
     // Ensure user exists in Supabase
-    const { data: user, error: userError } = await supabaseAdmin
+    const { data: user } = await supabaseAdmin
       .from('users')
       .upsert({
         id: userId,
@@ -73,35 +73,27 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (userError) {
-      console.error("User sync error:", userError);
-      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
-    }
-
-    // Get upload lock to retrieve metadata
-    const { data: uploadLock, error: lockError } = await supabaseAdmin
+    // Get upload lock to retrieve metadata (tolerate missing lock)
+    const { data: uploadLock } = await supabaseAdmin
       .from('upload_locks')
       .select('*')
       .eq('userId', user.id)
       .eq('key', key)
-      .single();
+      .maybeSingle();
 
-    if (lockError || !uploadLock) {
-      console.error("Upload lock error:", lockError);
-      return NextResponse.json({ error: "Upload lock not found" }, { status: 404 });
-    }
+    // Parse metadata from upload lock if present; otherwise fallback to request body
+    const lockMeta = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
+    const inferredFilename = lockMeta.filename ?? originalFilename ?? key.split('/').pop() ?? 'video.mp4';
+    const inferredContentType = lockMeta.contentType ?? contentType ?? 'application/octet-stream';
+    const lockTeamId = lockMeta.teamId ?? teamId ?? null;
 
-    // Parse metadata from upload lock
-    const metadata = uploadLock.metadata ? JSON.parse(uploadLock.metadata) : {};
-    const { filename: originalFilename, contentType, teamId: lockTeamId } = metadata;
-
-    const title = String(originalFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
+    const title = String(inferredFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
     // Derive teamId from metadata or key
     // key pattern: <teamId>/videos/<uploadUuid>/...
     const m = key.match(/([^/]+)\/videos\/(.*?)\//);
     const teamIdFromKey = m && m[1] ? m[1] : null;
-    const finalTeamId = lockTeamId ?? teamId ?? teamIdFromKey;
+    const finalTeamId = lockTeamId ?? teamIdFromKey;
 
     if (!finalTeamId) {
       return NextResponse.json({ error: "Could not resolve teamId for upload" }, { status: 400 });
@@ -135,7 +127,7 @@ export async function POST(req: NextRequest) {
       .insert({
         key,
         filename: title,
-        contentType: contentType || "application/octet-stream",
+        contentType: inferredContentType,
         sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
         teamId: finalTeamId,
         userId: user.id,
@@ -149,90 +141,89 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create video record" }, { status: 500 });
     }
 
-    // Move original to canonical location under video.id
+    // Clean up upload lock (best-effort)
     try {
-      const canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
-      const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
-      await s3.send(new PutObjectCommand({
-        Bucket: process.env.S3_BUCKET!,
-        Key: canonicalOriginalKey,
-        Body: getObj.Body as any,
-        ContentType: contentType || "application/octet-stream",
-      }));
-    } catch (e) {
-      console.error("Failed to move original to canonical location", e);
-    }
+      await supabaseAdmin
+        .from('upload_locks')
+        .delete()
+        .eq('userId', user.id)
+        .eq('key', key);
+    } catch {}
 
-    // Broadcast video creation event
-    broadcast({ 
-      type: "video.created", 
-      teamId: video.teamId || null, 
-      payload: { id: video.id, title: video.filename }
-    });
-
-    // Clean up upload lock
-    const { error: cleanupError } = await supabaseAdmin
-      .from('upload_locks')
-      .delete()
-      .eq('userId', user.id)
-      .eq('key', key);
-
-    if (cleanupError) {
-      console.error("Upload lock cleanup error:", cleanupError);
-      // Don't fail the request for cleanup errors
-    }
-
-    // Fire-and-forget background optimization for fast web preview
+    // Start background tasks after responding fast
     setTimeout(async () => {
       try {
-        const tempDir = tmpdir();
-        const originalPath = join(tempDir, `original-${key.replace(/\W+/g, '-')}.mp4`);
-        const optimizedPath = join(tempDir, `optimized-${key.replace(/\W+/g, '-')}.mp4`);
-
-        // Download original
-        const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
-        const body = getObj.Body as NodeJS.ReadableStream;
-        await new Promise<void>((resolve, reject) => {
-          const ws = createWriteStream(originalPath);
-          body.pipe(ws);
-          ws.on("finish", () => resolve());
-          ws.on("error", reject);
-        });
+        // Move original to canonical location under video.id
+        try {
+          const canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
+          const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+          await s3.send(new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET!,
+            Key: canonicalOriginalKey,
+            Body: getObj.Body as any,
+            ContentType: inferredContentType,
+          }));
+        } catch (e) {
+          console.error("Failed to move original to canonical location", e);
+        }
 
         // Transcode with faststart for progressive streaming
-        await new Promise<void>((resolve, reject) => {
-          const ff = spawn("ffmpeg", [
-            "-y",
-            "-i", originalPath,
-            "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "23",
-            "-maxrate", "3500k",
-            "-bufsize", "7000k",
-            "-c:a", "aac",
-            "-b:a", "128k",
-            "-movflags", "+faststart",
-            optimizedPath,
-          ]);
-          ff.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)));
-          ff.on("error", reject);
+        try {
+          const tempDir = tmpdir();
+          const originalPath = join(tempDir, `original-${key.replace(/\W+/g, '-')}.mp4`);
+          const optimizedPath = join(tempDir, `optimized-${key.replace(/\W+/g, '-')}.mp4`);
+
+          // Download original
+          const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+          const body = getObj.Body as NodeJS.ReadableStream;
+          await new Promise<void>((resolve, reject) => {
+            const ws = createWriteStream(originalPath);
+            body.pipe(ws);
+            ws.on("finish", () => resolve());
+            ws.on("error", reject);
+          });
+
+          await new Promise<void>((resolve, reject) => {
+            const ff = spawn("ffmpeg", [
+              "-y",
+              "-i", originalPath,
+              "-c:v", "libx264",
+              "-preset", "fast",
+              "-crf", "23",
+              "-maxrate", "3500k",
+              "-bufsize", "7000k",
+              "-c:a", "aac",
+              "-b:a", "128k",
+              "-movflags", "+faststart",
+              optimizedPath,
+            ]);
+            ff.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)));
+            ff.on("error", reject);
+          });
+
+          // Upload optimized to a deterministic preview key
+          const previewKey = `${finalTeamId}/videos/${video.id}/preview/web.mp4`;
+          await s3.send(new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET!,
+            Key: previewKey,
+            Body: createReadStream(optimizedPath),
+            ContentType: "video/mp4",
+            CacheControl: "max-age=31536000",
+          }));
+
+          try { unlinkSync(originalPath); unlinkSync(optimizedPath); } catch {}
+        } catch (e) {
+          console.error("Preview optimization failed", e);
+        }
+
+        // Broadcast after background work starts
+        broadcast({ 
+          type: "video.created", 
+          teamId: finalTeamId, 
+          payload: { id: video.id, title: video.filename }
         });
-
-        // Upload optimized to a deterministic preview key
-        const previewKey = `${finalTeamId}/videos/${video.id}/preview/web.mp4`;
-        await s3.send(new PutObjectCommand({
-          Bucket: process.env.S3_BUCKET!,
-          Key: previewKey,
-          Body: createReadStream(optimizedPath),
-          ContentType: "video/mp4",
-          CacheControl: "max-age=31536000",
-        }));
-
-        // Cleanup temp files
-        try { unlinkSync(originalPath); unlinkSync(optimizedPath); } catch {}
       } catch (e) {
-        // Silent fail; preview will fall back
-        console.error("Preview optimization failed", e);
+        console.error("Background tasks error", e);
       }
     }, 0);
 
@@ -251,19 +242,14 @@ export async function POST(req: NextRequest) {
         Key: key,
         UploadId: uploadId,
       }));
-    } catch (abortError) {
-      console.error("Failed to abort multipart upload:", abortError);
-    }
-    // Release lock on error too
+    } catch {}
     try {
       await supabaseAdmin
         .from('upload_locks')
         .delete()
         .eq('userId', userId)
         .eq('key', key);
-    } catch (cleanupError) {
-      console.error("Failed to cleanup upload lock:", cleanupError);
-    }
+    } catch {}
     return NextResponse.json({ error: "Complete failed" }, { status: 500 });
   }
 }
