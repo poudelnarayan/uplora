@@ -225,7 +225,7 @@ export default function VideoPreviewPage() {
       }
     };
     if (id) fetchData();
-  }, [id, session?.user?.email]);
+  }, [id, user?.id]);
 
   // Realtime: refresh on video.* events for this id, but avoid overwriting local edits
   useEffect(() => {
