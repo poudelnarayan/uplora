@@ -3,42 +3,24 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const code = searchParams.get("code");
-    const error = searchParams.get("error");
-    const state = searchParams.get("state");
-
-    console.log("YouTube OAuth callback received:", {
-      hasCode: !!code,
-      error,
-      state
-    });
-
-    if (error) {
-      console.error("YouTube OAuth error:", error);
-      return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
-    }
-
-    if (!code) {
-      console.error("No authorization code received");
-      return NextResponse.redirect(new URL("/settings?error=youtube_no_code", request.url));
-    }
-
-    // For OAuth callbacks, we need to handle the code exchange without requiring authentication
-    // We'll store the code temporarily and redirect to a completion page
     const { userId } = await auth();
     
     if (!userId) {
-      // If no user is authenticated, redirect to sign in with the code
-      return NextResponse.redirect(new URL(`/sign-in?redirect_url=${encodeURIComponent(`/settings?youtube_code=${code}`)}`, request.url));
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { code } = await request.json();
+
+    if (!code) {
+      return NextResponse.json({ error: "No authorization code provided" }, { status: 400 });
     }
 
     // Use the YT_REDIRECT_URI environment variable
     const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
 
-    console.log('YT_CONNECT_DIAGNOSTIC:', {
+    console.log('YT_COMPLETE_DIAGNOSTIC:', {
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret_set: !!process.env.GOOGLE_CLIENT_SECRET,
       redirect_uri: redirectUri,
@@ -67,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokenResponse.ok) {
       console.error("Token exchange failed:", tokenData);
-      return NextResponse.redirect(new URL("/settings?error=youtube_token_failed", request.url));
+      return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
     }
 
     console.log("Token exchange successful, fetching channel info...");
@@ -83,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     if (!channelResponse.ok) {
       console.error("Channel fetch failed:", channelData);
-      return NextResponse.redirect(new URL("/settings?error=youtube_channel_failed", request.url));
+      return NextResponse.json({ error: "Channel fetch failed" }, { status: 400 });
     }
 
     console.log("Channel info retrieved:", {
@@ -108,14 +90,17 @@ export async function GET(request: NextRequest) {
       
     if (updateError) {
       console.error("YouTube connection update error:", updateError);
-      return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
+      return NextResponse.json({ error: "Database update failed" }, { status: 500 });
     }
 
     console.log("YouTube connection successful!");
-    return NextResponse.redirect(new URL("/settings?success=youtube_connected", request.url));
+    return NextResponse.json({ 
+      success: true, 
+      channelTitle: channelData.items?.[0]?.snippet?.title 
+    });
     
   } catch (error) {
-    console.error("YouTube connection error:", error);
-    return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
+    console.error("YouTube completion error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
