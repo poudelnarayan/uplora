@@ -37,7 +37,7 @@ export default function SocialPage() {
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
                 <Youtube className="w-6 h-6 text-white" />
-              </div>
+              </div> 
               <div>
                 <h3 className="text-lg font-semibold" style={{ color: '#222831' }}>YouTube</h3>
                 <p className="text-sm" style={{ color: '#393E46' }}>
