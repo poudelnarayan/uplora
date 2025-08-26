@@ -122,9 +122,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the video record only after successful upload completion
+    const newVideoId = crypto.randomUUID();
+    const nowIso = new Date().toISOString();
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
+        id: newVideoId,
         key,
         filename: title,
         contentType: inferredContentType,
@@ -132,6 +135,8 @@ export async function POST(req: NextRequest) {
         teamId: finalTeamId,
         userId: user.id,
         status: "PROCESSING",
+        createdAt: nowIso,
+        updatedAt: nowIso,
       })
       .select()
       .single();
