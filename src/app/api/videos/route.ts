@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, checkTeamAccess, ensurePersonalTeam, formatVideoResponse } from "@/lib/clerk-supabase-utils";
 import { supabaseAdmin } from "@/lib/supabase";
-import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
+import { createErrorResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,11 +12,9 @@ export async function GET(req: NextRequest) {
       let teamId = searchParams.get('teamId');
 
       if (!teamId) {
-        // Resolve personal team
         teamId = await ensurePersonalTeam(supabaseUser.id);
       }
 
-      // Check access
       const access = await checkTeamAccess(teamId!, supabaseUser.id);
       if (!access.hasAccess) {
         return createErrorResponse(ErrorCodes.FORBIDDEN, "Not a member of this team");
@@ -52,16 +50,19 @@ export async function GET(req: NextRequest) {
         }
       }));
 
-      return createSuccessResponse(formattedVideos);
+      // Return raw array for the dashboard consumer
+      return formattedVideos as any;
     });
 
-    if (!result.ok) {
+    // If handler returned an error wrapper
+    if ((result as any)?.ok === false) {
       return NextResponse.json(result, { status: 401 });
     }
 
+    // Otherwise return the array directly
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Videos API error:", error);
+    console.error("Videos API error", error);
     return NextResponse.json(
       createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch videos"),
       { status: 500 }
@@ -138,19 +139,16 @@ export async function POST(req: NextRequest) {
         }
       };
 
-      return createSuccessResponse(formattedVideo);
+      return formattedVideo as any;
     });
 
-    if (!result.ok) {
+    if ((result as any)?.ok === false) {
       return NextResponse.json(result, { status: 401 });
     }
 
     return NextResponse.json(result);
   } catch (error) {
     console.error("Video creation error:", error);
-    return NextResponse.json(
-      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create video"),
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create video" }, { status: 500 });
   }
 }
