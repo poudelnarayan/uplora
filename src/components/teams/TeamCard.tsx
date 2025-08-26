@@ -61,6 +61,8 @@ interface TeamCardProps {
   onResendInvitation: (invitationId: string) => void;
   onCancelInvitation: (invitationId: string) => void;
   resendingId?: string | null;
+  onToggleMemberStatus: (teamId: string, memberId: string, memberName: string, currentStatus: string, teamName: string) => void;
+  onRemoveMember: (teamId: string, memberId: string, teamName: string) => void;
 }
 
 export default function TeamCard({
@@ -71,11 +73,16 @@ export default function TeamCard({
   onLeaveTeam,
   onResendInvitation,
   onCancelInvitation,
-  resendingId
+  resendingId,
+  onToggleMemberStatus,
+  onRemoveMember
 }: TeamCardProps) {
   const [showActions, setShowActions] = useState(false);
   
   const isOwner = currentUserEmail?.toLowerCase() === team.ownerEmail?.toLowerCase();
+  const isAdmin = (team.role || "").toUpperCase() === "ADMIN";
+  const canManageMembers = isOwner || isAdmin;
+  const canInvite = isOwner || isAdmin || (team.role || "").toUpperCase() === "MANAGER";
   const activeMembers = team.members.filter(m => m.status !== "PAUSED");
   const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
 
@@ -134,7 +141,7 @@ export default function TeamCard({
         </div>
         
         <div className="flex items-center gap-3">
-          {isOwner && (
+          {canInvite && (
             <button
               onClick={() => onInviteMember(team)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:scale-110 shadow-md"
@@ -226,6 +233,24 @@ export default function TeamCard({
                     </span>
                   </div>
                 </div>
+                {canManageMembers && member.role !== "OWNER" && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onToggleMemberStatus(team.id, member.id, member.name, member.status || "ACTIVE", team.name)}
+                      className="btn btn-ghost btn-xs"
+                      title={member.status === "PAUSED" ? "Activate member" : "Pause member"}
+                    >
+                      {member.status === "PAUSED" ? "Activate" : "Pause"}
+                    </button>
+                    <button
+                      onClick={() => onRemoveMember(team.id, member.id, team.name)}
+                      className="btn btn-outline btn-xs text-red-600"
+                      title="Remove member"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             
