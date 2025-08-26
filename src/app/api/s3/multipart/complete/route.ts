@@ -23,15 +23,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "key, uploadId, parts required" }, { status: 400 });
   }
 
+  // Normalize parts shape and ensure ETag is quoted
+  const normalizedParts = (parts as any[])
+    .map((p: any) => {
+      const partNumber = Number(p.PartNumber ?? p.partNumber);
+      let etag: string | undefined = p.ETag ?? p.etag;
+      if (etag && !/^".*"$/.test(etag)) {
+        etag = `"${etag}"`;
+      }
+      return { PartNumber: partNumber, ETag: etag };
+    })
+    .filter((p) => Number.isFinite(p.PartNumber) && !!p.ETag)
+    .sort((a, b) => a.PartNumber - b.PartNumber);
+
+  if (normalizedParts.length === 0) {
+    return NextResponse.json({ error: "No valid parts provided" }, { status: 400 });
+  }
+
   try {
     const completed = await s3.send(new CompleteMultipartUploadCommand({
       Bucket: process.env.S3_BUCKET!,
       Key: key,
       UploadId: uploadId,
       MultipartUpload: {
-        Parts: parts
-          .sort((a: any, b: any) => a.partNumber - b.partNumber)
-          .map((p: any) => ({ PartNumber: Number(p.partNumber), ETag: p.etag })),
+        Parts: normalizedParts,
       },
     }));
 
