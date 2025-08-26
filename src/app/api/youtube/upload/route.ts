@@ -51,42 +51,27 @@ export async function POST(req: NextRequest) {
     const insertRes = await youtube.videos.insert({
       part: ["snippet", "status"],
       requestBody: {
-        snippet: { title, description },
+        snippet: {
+          title: title || "Untitled",
+          description: description || "",
+        },
         status: {
-          privacyStatus: privacyStatus ?? "private",
-          madeForKids: Boolean(madeForKids),
+          privacyStatus: privacyStatus || "private",
+          madeForKids: madeForKids || false,
         },
       },
-      media: { body },
+      media: {
+        body: body,
+      },
     });
 
-    const videoId = insertRes.data.id;
-
-    // If thumbnail provided, set it
-    if (thumbnailKey && videoId) {
-      try {
-        const thumbObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: thumbnailKey }));
-        const thumbBody = thumbObj.Body as Readable;
-        await youtube.thumbnails.set({ videoId, media: { body: thumbBody } });
-      } catch (e) {
-        // Ignore thumbnail errors but continue
-      }
-    }
-
-    // Update our Video record if exists
-    try {
-      await supabaseAdmin
-        .from('videos')
-        .update({ status: "PUBLISHED" })
-        .eq('key', key);
-    } catch {}
-
-    return NextResponse.json({ id: videoId });
-  } catch (error: unknown) {
-    type GoogleErrorResponse = { response?: { status?: number; data?: { error?: { message?: string } } }; message?: string };
-    const err = error as GoogleErrorResponse;
-    const status = err.response?.status ?? 500;
-    const message = err.response?.data?.error?.message || err.message || "Upload failed";
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({
+      success: true,
+      videoId: insertRes.data.id,
+      title: insertRes.data.snippet?.title,
+    });
+  } catch (error) {
+    console.error("YouTube upload error:", error);
+    return NextResponse.json({ error: "Failed to upload to YouTube" }, { status: 500 });
   }
 }

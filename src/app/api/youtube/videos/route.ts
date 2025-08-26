@@ -48,19 +48,17 @@ export async function GET(req: NextRequest) {
     const items = pl.data.items ?? [];
 
     const videos = items.map((it) => ({
-      id: it.contentDetails?.videoId || it.id!,
-      title: it.snippet?.title || "Untitled",
-      thumbnail: it.snippet?.thumbnails?.medium?.url || it.snippet?.thumbnails?.default?.url || "",
-      status: "published" as const,
-      uploadedAt: it.contentDetails?.videoPublishedAt || it.snippet?.publishedAt || new Date().toISOString(),
-      duration: undefined,
-      views: undefined,
-      likes: undefined,
-      youtubeId: it.contentDetails?.videoId || undefined,
+      id: it.contentDetails?.videoId,
+      title: it.snippet?.title,
+      description: it.snippet?.description,
+      thumbnail: it.snippet?.thumbnails?.medium?.url,
+      publishedAt: it.snippet?.publishedAt,
+      channelTitle: it.snippet?.channelTitle,
     }));
 
     return NextResponse.json(videos);
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to fetch videos" }, { status: 500 });
+  } catch (error) {
+    console.error("YouTube videos error:", error);
+    return NextResponse.json({ error: "Failed to fetch YouTube videos" }, { status: 500 });
   }
 }
