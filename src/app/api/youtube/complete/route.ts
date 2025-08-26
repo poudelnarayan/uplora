@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,6 +95,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("YouTube connection successful!");
+    // Realtime notify this user so clients can refresh cached status
+    try {
+      broadcast({ type: "youtube.connected", userId });
+    } catch {}
     return NextResponse.json({ 
       success: true, 
       channelTitle: channelData.items?.[0]?.snippet?.title 

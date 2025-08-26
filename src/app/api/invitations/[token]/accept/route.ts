@@ -63,7 +63,9 @@ export async function POST(
           console.error("Error updating invitation:", updateError);
         }
 
-        return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "You are already a member of this team");
+        // Notify team to refresh invitation/member lists
+        try { broadcast({ type: "team.invitation.accepted", teamId: invitation.teamId, payload: { email: invitation.email } }); } catch {}
+        return createSuccessResponse({ message: "Already a member; invitation marked accepted" });
       }
 
       // If already member, mark invite accepted and return success
@@ -118,7 +120,7 @@ export async function POST(
         // continue; membership already created
       }
 
-      // Realtime notify team members
+      // Realtime notify team members and invalidate caches client-side
       broadcast({
         type: "team.member.joined",
         payload: { 
@@ -127,6 +129,7 @@ export async function POST(
           userName: clerkUser.fullName || clerkUser.firstName || "New Member"
         },
       });
+      try { broadcast({ type: "team.invitation.accepted", teamId: invitation.teamId, payload: { email: invitation.email } }); } catch {}
 
       return createSuccessResponse({
         message: "Invitation accepted successfully",

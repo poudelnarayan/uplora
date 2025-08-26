@@ -74,12 +74,7 @@ export default function InviteMemberContent({
             })}
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Make sure this email address is correct
-          </p>
-          <p className="text-xs" style={{ color: 'hsl(176, 20%, 16%)' }}>
-            Make sure this email address is correct
-          </p>
+         
         </div>
 
         <div className="space-y-3">
@@ -122,8 +117,7 @@ export default function InviteMemberContent({
           <button
             type="submit"
             disabled={isLoading || !formData.email.trim()}
-            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2"
-            style={{ backgroundColor: 'hsl(210, 55%, 45%)', ':hover': { backgroundColor: 'hsl(210, 40%, 25%)' } }}
+            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2 bg-[hsl(210,55%,45%)] hover:bg-[hsl(210,40%,25%)]"
           >
             {isLoading ? (
               <>

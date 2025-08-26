@@ -8,6 +8,7 @@ type TeamContextType = {
   teams: TeamBasic[];
   selectedTeamId: string | null;
   selectedTeam: TeamBasic | null;
+  personalTeam: TeamBasic | null;
   setSelectedTeamId: (id: string | null) => void;
   refreshTeams: () => Promise<void>;
 };
@@ -18,6 +19,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
   const [teams, setTeams] = useState<TeamBasic[]>([]);
   const [selectedTeamId, setSelectedTeamIdState] = useState<string | null>(null);
   const [etag, setEtag] = useState<string | null>(null);
+  const [personalTeam, setPersonalTeam] = useState<TeamBasic | null>(null);
 
   const setSelectedTeamId = (id: string | null) => {
     setSelectedTeamIdState(id);
@@ -25,19 +27,28 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     else localStorage.removeItem("currentTeamId");
   };
 
+  const extractTeamsPayload = (json: any): TeamBasic[] => {
+    if (Array.isArray(json)) return json as TeamBasic[];
+    if (Array.isArray(json?.data)) return json.data as TeamBasic[];
+    if (json?.ok && Array.isArray(json?.data)) return json.data as TeamBasic[];
+    if (json?.ok && Array.isArray(json?.data?.data)) return json.data.data as TeamBasic[];
+    return [];
+  };
+
   const refreshTeams = async () => {
     try {
       const res = await fetch("/api/teams", { cache: "no-store", headers: etag ? { "If-None-Match": etag } : {} });
       if (res.status === 304) return;
       if (!res.ok) return;
-      const data = await res.json();
-      const allTeams: TeamBasic[] = Array.isArray(data) ? data : [];
+      const json = await res.json();
+      const allTeams: TeamBasic[] = extractTeamsPayload(json);
       
       // Separate personal workspace from regular teams
-      const personalWorkspace = allTeams.find(t => (t as any).isPersonal);
+      const personalWorkspace = allTeams.find(t => (t as any).isPersonal) || null;
       const regularTeams = allTeams.filter(t => !(t as any).isPersonal);
       
       setTeams(regularTeams);
+      setPersonalTeam(personalWorkspace);
       
       // Store personal workspace separately for context
       if (personalWorkspace) {
@@ -67,7 +78,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         setSelectedTeamIdState(existing);
       } else if (personalWorkspace) {
-        // Default to personal workspace
+        // Default to personal workspace (use its ID)
         setSelectedTeamIdState(personalWorkspace.id);
       } else if (regularTeams.length > 0) {
         setSelectedTeamIdState(regularTeams[0].id);
@@ -83,6 +94,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       const cached = JSON.parse(localStorage.getItem('teams-cache') || 'null');
       if (cached?.data) setTeams(cached.data);
       if (cached?.etag) setEtag(cached.etag);
+      if (cached?.personal) setPersonalTeam(cached.personal);
     } catch {}
 
     refreshTeams();
@@ -121,6 +133,9 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     const regularTeam = teams.find(t => t.id === selectedTeamId);
     if (regularTeam) return regularTeam;
     
+    // Check personal workspace from state
+    if (personalTeam && personalTeam.id === selectedTeamId) return personalTeam;
+    
     // Check personal workspace from cache
     try {
       const cached = JSON.parse(localStorage.getItem('teams-cache') || 'null');
@@ -130,12 +145,13 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     } catch {}
     
     return null;
-  }, [teams, selectedTeamId]);
+  }, [teams, personalTeam, selectedTeamId]);
 
   const value: TeamContextType = {
     teams,
     selectedTeamId,
     selectedTeam,
+    personalTeam,
     setSelectedTeamId,
     refreshTeams,
   };
@@ -151,6 +167,7 @@ export function useTeam(): TeamContextType {
     teams: [],
     selectedTeamId: null,
     selectedTeam: null,
+    personalTeam: null,
     setSelectedTeamId: () => {},
     refreshTeams: async () => {},
   };

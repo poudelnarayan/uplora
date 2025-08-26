@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { broadcast } from "@/lib/realtime";
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to disconnect YouTube account" }, { status: 500 });
     }
 
+    try { broadcast({ type: "youtube.disconnected", userId }); } catch {}
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("YouTube disconnect error:", error);

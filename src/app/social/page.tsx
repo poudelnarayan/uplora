@@ -16,6 +16,7 @@ function SocialContent() {
   const notifications = useNotifications();
   const [youtubeData, setYouTubeData] = useState<{ isConnected: boolean; channelTitle?: string | null }>({ isConnected: false });
   const [isLoading, setIsLoading] = useState(true);
+  const [ytCacheAt, setYtCacheAt] = useState<number | null>(null);
 
   // Fetch YouTube status
   useEffect(() => {
@@ -27,10 +28,21 @@ function SocialContent() {
     const fetchYouTubeStatus = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/youtube/status");
+        // Cache: 5 minutes in-memory via localStorage
+        try {
+          const cached = JSON.parse(localStorage.getItem('yt-status-cache') || 'null');
+          if (cached && Date.now() - cached.t < 5 * 60 * 1000) {
+            setYouTubeData(cached.data);
+            setYtCacheAt(cached.t);
+            setIsLoading(false);
+            return;
+          }
+        } catch {}
+        const response = await fetch("/api/youtube/status", { cache: 'no-store' });
         if (response.ok) {
           const data = await response.json();
           setYouTubeData(data);
+          try { localStorage.setItem('yt-status-cache', JSON.stringify({ data, t: Date.now() })); } catch {}
         } else {
           console.error("Failed to fetch YouTube status:", response.status);
         }
@@ -43,6 +55,30 @@ function SocialContent() {
 
     fetchYouTubeStatus();
   }, [isSignedIn]);
+
+  // Realtime: invalidate cache on youtube.* events
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource('/api/events');
+      es.onmessage = async (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || '{}');
+          if (!evt?.type?.startsWith('youtube.')) return;
+          // Invalidate cache and refetch
+          try { localStorage.removeItem('yt-status-cache'); } catch {}
+          const response = await fetch('/api/youtube/status', { cache: 'no-store' });
+          if (response.ok) {
+            const data = await response.json();
+            setYouTubeData(data);
+            try { localStorage.setItem('yt-status-cache', JSON.stringify({ data, t: Date.now() })); } catch {}
+          }
+        } catch {}
+      };
+      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+    } catch {}
+    return () => { try { es?.close(); } catch {} };
+  }, []);
 
   // Handle YouTube OAuth completion
   useEffect(() => {

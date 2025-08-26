@@ -11,6 +11,7 @@ import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 // Import our new components
 import TeamCard, { Team, TeamMember, TeamInvitation } from "@/components/teams/TeamCard";
 import TeamsHeader from "@/components/teams/TeamsHeader";
+import { useTeam } from "@/context/TeamContext";
 import TeamsStats from "@/components/teams/TeamsStats";
 import EmptyTeamsState from "@/components/teams/EmptyTeamsState";
 import LoadingSpinner from "@/components/teams/LoadingSpinner";
@@ -20,6 +21,7 @@ export const dynamic = "force-dynamic";
 export default function TeamsPage() {
   const { user } = useUser();
   const notifications = useNotifications();
+  const { teams: ctxTeams, selectedTeamId, setSelectedTeamId, personalTeam } = useTeam();
   
   // State management
   const [teams, setTeams] = useState<Team[]>([]);
@@ -143,6 +145,24 @@ export default function TeamsPage() {
       loadTeams();
     }
   }, [user?.fullName, user?.emailAddresses?.[0]?.emailAddress]);
+
+  // Live updates: refresh list on team.* events (created, member joins, invite accepted/canceled)
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource('/api/events');
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || '{}');
+          if (!evt?.type?.startsWith('team.')) return;
+          // Soft refresh teams; avoids full page reload
+          loadTeams();
+        } catch {}
+      };
+      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+    } catch {}
+    return () => { try { es?.close(); } catch {} };
+  }, []);
 
   // Team management handlers
   const handleCreateTeam = async (name: string, description: string) => {
@@ -466,11 +486,43 @@ export default function TeamsPage() {
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
             <div className="h-full overflow-y-auto px-4 lg:px-0">
               <div className="space-y-4 py-4">
-                
-                <TeamsHeader 
-                  teams={actualTeams} 
-                  onCreateTeam={openCreateTeamModal}
-                />
+                {/* Beautiful Workspace Switcher card (Personal + Teams) */}
+                <div className="card p-4 rounded-lg border border-border bg-card">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Current workspace</div>
+                      <div className="font-semibold text-foreground">
+                        {selectedTeamId === personalTeam?.id || !selectedTeamId ? "Personal Workspace" : (ctxTeams.find(t => t.id === selectedTeamId)?.name || "Team")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Personal workspace button */}
+                      <button
+                        onClick={() => setSelectedTeamId(personalTeam?.id || null)}
+                        className={`px-3 py-2 rounded-md text-sm border ${(!selectedTeamId || selectedTeamId === personalTeam?.id) ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/50"}`}
+                      >
+                        Personal Workspace
+                      </button>
+                      {/* Team pills */}
+                      {ctxTeams.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setSelectedTeamId(t.id)}
+                          className={`px-3 py-2 rounded-md text-sm border ${selectedTeamId === t.id ? "bg-blue-600 text-white border-blue-600" : "bg-card border-border hover:border-blue-400/60"}`}
+                          title={t.name}
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                      <button
+                        onClick={openCreateTeamModal}
+                        className="px-3 py-2 rounded-md text-sm border bg-gradient-to-r from-green-500/10 to-emerald-500/10 text-foreground hover:from-green-500/20 hover:to-emerald-500/20 border-green-500/40"
+                      >
+                        Create Team
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
                 {loading ? (
                   <LoadingSpinner />

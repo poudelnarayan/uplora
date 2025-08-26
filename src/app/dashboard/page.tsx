@@ -110,7 +110,19 @@ export default function Dashboard() {
   const fetchVideos = useCallback(async () => {
     try {
       const apiUrl = selectedTeamId ? `/api/videos?teamId=${selectedTeamId}` : "/api/videos";
-      const res = await fetch(apiUrl);
+      const cacheKey = `videos-cache:${selectedTeamId || 'personal'}`;
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+        if (cached && Date.now() - cached.t < 2 * 60 * 1000) {
+          const cachedList: VideoItem[] = cached.data || [];
+          setVideos(cachedList);
+          // Ensure thumbnails resolve
+          cachedList.forEach(video => { if (video.thumbnailKey) { loadThumbnailUrl(video.id, video.thumbnailKey); } });
+          setLoading(false);
+          return;
+        }
+      } catch {}
+      const res = await fetch(apiUrl, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         const list: VideoItem[] = Array.isArray(data) ? data : [];
@@ -129,6 +141,7 @@ export default function Dashboard() {
           })
         );
         setVideos(videosWithRoles);
+        try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: videosWithRoles, t: Date.now() })); } catch {}
         videosWithRoles.forEach(video => {
           if (video.thumbnailKey) {
             loadThumbnailUrl(video.id, video.thumbnailKey);
@@ -224,6 +237,8 @@ export default function Dashboard() {
                 const data = await res.json();
                 if (Array.isArray(data)) {
                   setVideos(data);
+                  const cacheKey = `videos-cache:${selectedTeamId || 'personal'}`;
+                  try { sessionStorage.setItem(cacheKey, JSON.stringify({ data, t: Date.now() })); } catch {}
                 }
               })();
             }

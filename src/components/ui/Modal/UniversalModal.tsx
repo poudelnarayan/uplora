@@ -4,7 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MotionDiv = motion.div as any;
 import { X, Users, MessageCircle, Lightbulb, Plus } from "lucide-react";
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useRef, ReactNode, MouseEvent as ReactMouseEvent } from "react";
+
+// Typed motion button alias
+const MotionButton = motion.button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & any>;
 
 // Modal content type definitions
 export type ModalType = "invite-member" | "create-team" | "feedback-studio" | "idea-lab";
@@ -146,7 +149,7 @@ export default function UniversalModal({
               background: "rgba(0, 0, 0, 0.4)",
               backdropFilter: "blur(4px)"
             }}
-            onClick={(e) => {
+            onClick={(e: ReactMouseEvent<HTMLDivElement>) => {
               // Only close if clicking the backdrop, not the modal content
               if (e.target === e.currentTarget) {
                 onClose();
@@ -220,7 +223,7 @@ export default function UniversalModal({
                     </div>
 
                     {/* Close button */}
-                    <motion.button
+                    <MotionButton
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
@@ -232,7 +235,7 @@ export default function UniversalModal({
                       aria-label="Close modal"
                     >
                       <X className="w-5 h-5" style={{ color: 'hsl(176, 20%, 16%)' }} />
-                    </motion.button>
+                    </MotionButton>
                   </div>
                 </div>
               )}
