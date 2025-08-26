@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const MotionDiv = motion.div as any;
-import { useUser, SignInButton } from "@clerk/nextjs";
+import { useUser, SignInButton, useClerk } from "@clerk/nextjs";
 import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { NextSeo } from "next-seo";
@@ -29,6 +29,7 @@ export default function InvitePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useUser();
+  const { signOut, openSignIn } = useClerk();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -141,6 +142,16 @@ export default function InvitePage() {
 
   const invitePath = `/invite/${params.token as string}`;
 
+  const handleSwitchAccount = async () => {
+    // Make sure we actually switch accounts instead of looping back
+    try {
+      await signOut({ redirectUrl: `/sign-in?redirect_url=${encodeURIComponent(invitePath)}` });
+    } catch {
+      // Fallback: open the sign-in modal
+      openSignIn({ redirectUrl: invitePath });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <NextSeo title="Team Invitation" noindex nofollow />
@@ -210,11 +221,9 @@ export default function InvitePage() {
               <p className="text-white/70 text-sm">
                 This invitation is for {invitation.email}, but you&apos;re signed in as {user.emailAddresses?.[0]?.emailAddress}.
               </p>
-              <SignInButton mode="redirect" forceRedirectUrl={invitePath} fallbackRedirectUrl={invitePath}>
-                <button className="btn btn-secondary w-full">
-                  Sign In with Correct Account
-                </button>
-              </SignInButton>
+              <button className="btn btn-secondary w-full" onClick={handleSwitchAccount}>
+                Sign In with Correct Account
+              </button>
             </div>
           )}
         </div>
