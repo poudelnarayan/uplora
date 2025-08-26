@@ -567,6 +567,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   );
                 })}
               </nav>
+              {/* Mobile Footer Links */}
+              <div className="border-t border-border px-4 py-4 bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
+                <div className="text-[11px] text-muted-foreground space-y-2">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    <Link href="/about" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>About</Link>
+                    <Link href="/copyright" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Copyright</Link>
+                    <Link href="/contact" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Contact</Link>
+                    <Link href="/terms" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Terms</Link>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Privacy</Link>
+                  </div>
+                  <div>© {new Date().getFullYear()} Uplora</div>
+                </div>
+              </div>
             </MotionAside>
           </>
         )}

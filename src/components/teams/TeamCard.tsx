@@ -61,7 +61,6 @@ interface TeamCardProps {
   onResendInvitation: (invitationId: string) => void;
   onCancelInvitation: (invitationId: string) => void;
   resendingId?: string | null;
-  onToggleMemberStatus: (teamId: string, memberId: string, memberName: string, currentStatus: string, teamName: string) => void;
   onRemoveMember: (teamId: string, memberId: string, teamName: string) => void;
 }
 
@@ -74,7 +73,6 @@ export default function TeamCard({
   onResendInvitation,
   onCancelInvitation,
   resendingId,
-  onToggleMemberStatus,
   onRemoveMember
 }: TeamCardProps) {
   const [showActions, setShowActions] = useState(false);
@@ -235,13 +233,6 @@ export default function TeamCard({
                 </div>
                 {canManageMembers && member.role !== "OWNER" && (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onToggleMemberStatus(team.id, member.id, member.name, member.status || "ACTIVE", team.name)}
-                      className="btn btn-ghost btn-xs"
-                      title={member.status === "PAUSED" ? "Activate member" : "Pause member"}
-                    >
-                      {member.status === "PAUSED" ? "Activate" : "Pause"}
-                    </button>
                     <button
                       onClick={() => onRemoveMember(team.id, member.id, team.name)}
                       className="btn btn-outline btn-xs text-red-600"

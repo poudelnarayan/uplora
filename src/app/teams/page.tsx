@@ -417,6 +417,33 @@ export default function TeamsPage() {
     }
   };
 
+  const handleRemoveMember = async (teamId: string, memberId: string, teamName: string) => {
+    try {
+      const res = await fetch(`/api/teams/${teamId}/members/${memberId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notifications.addNotification({
+          type: "error",
+          title: "Failed to remove member",
+          message: err.error || "Try again"
+        });
+        return;
+      }
+      notifications.addNotification({
+        type: "success",
+        title: "Member removed",
+        message: `The user has been removed from ${teamName}`
+      });
+      await loadTeams();
+    } catch (e) {
+      notifications.addNotification({
+        type: "error",
+        title: "Failed to remove member",
+        message: "Network error"
+      });
+    }
+  };
+
   const openCreateTeamModal = () => {
     openModal("create-team", {
       onSubmit: handleCreateTeam
@@ -469,6 +496,7 @@ export default function TeamsPage() {
                           onResendInvitation={handleResendInvitation}
                           onCancelInvitation={handleCancelInvitation}
                           resendingId={resendingId}
+                          onRemoveMember={handleRemoveMember}
                         />
                       ))}
                     </div>
