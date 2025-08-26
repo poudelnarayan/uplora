@@ -51,6 +51,7 @@ export default function VideoUploadZone({
   });
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentUploadId, setCurrentUploadId] = useState<string | null>(null);
+  const startedRef = useRef(false);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -96,7 +97,7 @@ export default function VideoUploadZone({
 
     setUploadState({
       status: 'uploading',
-      progress: 0,
+      progress: 1,
       fileName: file.name,
       fileSize: file.size
     });
@@ -202,6 +203,8 @@ export default function VideoUploadZone({
       const initData = await initResponse.json();
       const { key, uploadId, partSize = 16 * 1024 * 1024 } = initData;
       try { (window as any).__lastInitUpload = { key, uploadId }; } catch {}
+      // Ensure UI shows early progress
+      setUploadState(prev => ({ ...prev, progress: Math.max(prev.progress, 1) }));
 
       const totalParts = Math.ceil(file.size / partSize);
       const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
@@ -219,7 +222,8 @@ export default function VideoUploadZone({
       let failed = false;
 
       const updateProgress = () => {
-        const percent = Math.max(0, Math.min(99, ((completedBytes + sumPartialLoaded()) / file.size) * 100));
+        let percent = Math.max(0, Math.min(99, ((completedBytes + sumPartialLoaded()) / file.size) * 100));
+        if (startedRef.current && percent < 1) percent = 1;
         setUploadState(prev => ({ ...prev, progress: percent }));
       };
 
@@ -289,6 +293,7 @@ export default function VideoUploadZone({
       }
 
       const workers = Array.from({ length: concurrency }, () => worker());
+      startedRef.current = true;
       await Promise.all(workers);
 
       setUploadState(prev => ({ ...prev, status: 'processing', progress: 99 }));
