@@ -43,7 +43,7 @@ export async function withAuth<T>(
   }
 }
 
-// Check if user has access to a team
+// Check if user has access to a team (camelCase columns)
 export async function checkTeamAccess(teamId: string, userId: string) {
   // Check if user is team owner
   const { data: team, error: teamError } = await supabaseAdmin
@@ -51,7 +51,7 @@ export async function checkTeamAccess(teamId: string, userId: string) {
     .select('*')
     .eq('id', teamId)
     .eq('ownerId', userId)
-    .single();
+    .maybeSingle();
 
   if (teamError && teamError.code !== 'PGRST116') {
     throw teamError;
@@ -64,11 +64,10 @@ export async function checkTeamAccess(teamId: string, userId: string) {
   // Check if user is team member
   const { data: membership, error: memberError } = await supabaseAdmin
     .from('team_members')
-    .select('*')
-    .eq('team_id', teamId)
-    .eq('user_id', userId)
-    .eq('status', 'ACTIVE')
-    .single();
+    .select('role')
+    .eq('teamId', teamId)
+    .eq('userId', userId)
+    .maybeSingle();
 
   if (memberError && memberError.code !== 'PGRST116') {
     throw memberError;
@@ -81,14 +80,14 @@ export async function checkTeamAccess(teamId: string, userId: string) {
   return { hasAccess: false, role: null };
 }
 
-// Create personal team for user if it doesn't exist
+// Create personal team for user if it doesn't exist (camelCase)
 export async function ensurePersonalTeam(userId: string) {
   const { data: existingTeam, error: checkError } = await supabaseAdmin
     .from('teams')
     .select('id')
     .eq('ownerId', userId)
-    .eq('is_personal', true)
-    .single();
+    .eq('isPersonal', true)
+    .maybeSingle();
 
   if (checkError && checkError.code !== 'PGRST116') {
     throw checkError;
@@ -102,10 +101,12 @@ export async function ensurePersonalTeam(userId: string) {
   const { data: newTeam, error: createError } = await supabaseAdmin
     .from('teams')
     .insert({
+      id: `personal-${userId}`,
       name: 'Personal',
       description: 'Your personal workspace',
-      is_personal: true,
+      isPersonal: true,
       ownerId: userId,
+      updatedAt: new Date().toISOString()
     })
     .select('id')
     .single();
@@ -117,32 +118,32 @@ export async function ensurePersonalTeam(userId: string) {
   return newTeam.id;
 }
 
-// Helper to format API responses
+// Helper to format API responses (camelCase)
 export function formatVideoResponse(video: any) {
   return {
     id: video.id,
     title: (video.filename || "").replace(/\.[^/.]+$/, ''),
     thumbnail: "",
     status: video.status || "PROCESSING",
-    uploadedAt: video.uploaded_at,
-    updatedAt: video.updated_at,
-    approvalRequestedAt: video.status === "PENDING" ? video.updated_at : undefined,
-    publishedAt: video.status === "PUBLISHED" ? video.updated_at : undefined,
+    uploadedAt: video.uploadedAt,
+    updatedAt: video.updatedAt,
+    approvalRequestedAt: video.status === "PENDING" ? video.updatedAt : undefined,
+    publishedAt: video.status === "PUBLISHED" ? video.updatedAt : undefined,
     duration: undefined,
     views: undefined,
     likes: undefined,
     s3Key: video.key,
-    thumbnailKey: video.thumbnail_key,
-    contentType: video.content_type,
-    sizeBytes: video.size_bytes,
+    thumbnailKey: video.thumbnailKey,
+    contentType: video.contentType,
+    sizeBytes: video.sizeBytes,
     description: video.description,
     visibility: video.visibility,
-    madeForKids: video.made_for_kids,
+    madeForKids: video.madeForKids,
     uploader: {
-      id: video.user_id,
-      name: video.uploader_name,
-      email: video.uploader_email,
-      image: video.uploader_image
+      id: video.userId,
+      name: video.uploaderName,
+      email: video.uploaderEmail,
+      image: video.uploaderImage
     }
   };
 }

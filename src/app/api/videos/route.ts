@@ -1,48 +1,40 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, checkTeamAccess, formatVideoResponse } from "@/lib/clerk-supabase-utils";
+import { withAuth, checkTeamAccess, ensurePersonalTeam, formatVideoResponse } from "@/lib/clerk-supabase-utils";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function GET(req: NextRequest) {
   try {
     const result = await withAuth(async ({ supabaseUser }) => {
-      // Get teamId from query params
       const { searchParams } = new URL(req.url);
-      const teamId = searchParams.get('teamId');
+      let teamId = searchParams.get('teamId');
 
-      let whereClause: any = {};
-
-      if (teamId) {
-        // Check if user has access to this team
-        const access = await checkTeamAccess(teamId, supabaseUser.id);
-        
-        if (!access.hasAccess) {
-          return createErrorResponse(ErrorCodes.FORBIDDEN, "Not a member of this team");
-        }
-        
-        // Show all videos that belong to this team
-        whereClause = { teamId: teamId };
-      } else {
-        // Show videos that belong to the user and have no team (legacy behavior)
-        whereClause = { userId: supabaseUser.id, teamId: null };
+      if (!teamId) {
+        // Resolve personal team
+        teamId = await ensurePersonalTeam(supabaseUser.id);
       }
 
-      // Get videos with user information
+      // Check access
+      const access = await checkTeamAccess(teamId!, supabaseUser.id);
+      if (!access.hasAccess) {
+        return createErrorResponse(ErrorCodes.FORBIDDEN, "Not a member of this team");
+      }
+
       const { data: videos, error } = await supabaseAdmin
         .from('videos')
         .select(`
           *,
-          users (
+          users:users!videos_userId_fkey (
             id,
             name,
             email,
             image
           )
         `)
-        .match(whereClause)
-        .order('uploadedAt', { ascending: false })
+        .eq('teamId', teamId)
+        .order('updatedAt', { ascending: false })
         .limit(50);
 
       if (error) {
@@ -50,13 +42,13 @@ export async function GET(req: NextRequest) {
         return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch videos");
       }
 
-      const formattedVideos = videos.map(video => ({
+      const formattedVideos = (videos || []).map((video: any) => ({
         ...formatVideoResponse(video),
         uploader: {
-          id: video.users.id,
-          name: video.users.name,
-          email: video.users.email,
-          image: video.users.image
+          id: video.users?.id,
+          name: video.users?.name,
+          email: video.users?.email,
+          image: video.users?.image
         }
       }));
 
@@ -92,7 +84,6 @@ export async function POST(req: NextRequest) {
         madeForKids 
       } = body;
 
-      // Basic validation
       if (!key || !filename || !contentType || !sizeBytes) {
         return createErrorResponse(
           ErrorCodes.VALIDATION_ERROR, 
@@ -100,15 +91,12 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // If teamId is provided, verify access
-      if (teamId) {
-        const access = await checkTeamAccess(teamId, supabaseUser.id);
-        if (!access.hasAccess) {
-          return createErrorResponse(ErrorCodes.FORBIDDEN, "Not a member of this team");
-        }
+      const resolvedTeamId = teamId || await ensurePersonalTeam(supabaseUser.id);
+      const access = await checkTeamAccess(resolvedTeamId, supabaseUser.id);
+      if (!access.hasAccess) {
+        return createErrorResponse(ErrorCodes.FORBIDDEN, "Not a member of this team");
       }
 
-      // Create video record
       const { data: video, error } = await supabaseAdmin
         .from('videos')
         .insert({
@@ -117,15 +105,16 @@ export async function POST(req: NextRequest) {
           contentType: contentType,
           sizeBytes: sizeBytes,
           userId: supabaseUser.id,
-          teamId: teamId || null,
+          teamId: resolvedTeamId,
           description: description || null,
           visibility: visibility || null,
           madeForKids: madeForKids || false,
-          status: 'PROCESSING'
+          status: 'PROCESSING',
+          updatedAt: new Date().toISOString(),
         })
         .select(`
           *,
-          users (
+          users:users!videos_userId_fkey (
             id,
             name,
             email,
@@ -142,10 +131,10 @@ export async function POST(req: NextRequest) {
       const formattedVideo = {
         ...formatVideoResponse(video),
         uploader: {
-          id: video.users.id,
-          name: video.users.name,
-          email: video.users.email,
-          image: video.users.image
+          id: video.users?.id,
+          name: video.users?.name,
+          email: video.users?.email,
+          image: video.users?.image
         }
       };
 
