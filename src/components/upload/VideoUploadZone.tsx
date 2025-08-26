@@ -140,15 +140,11 @@ export default function VideoUploadZone({
 
   const startUpload = async (file: File) => {
     try {
-      // Create abort controller for this upload
       abortControllerRef.current = new AbortController();
-      
-      // Get the base URL for API calls
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
-      
-      // Step 1: Initialize multipart upload
-      setUploadState(prev => ({ ...prev, status: 'uploading', progress: 5 }));
-      
+
+      setUploadState(prev => ({ ...prev, status: 'uploading', progress: 0 }));
+
       const initResponse = await fetch(`${baseUrl}/api/s3/multipart/init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,102 +163,82 @@ export default function VideoUploadZone({
       const initData = await initResponse.json();
       const { key, uploadId, partSize = 8 * 1024 * 1024 } = initData;
 
-      // Step 2: Upload parts
       const totalParts = Math.ceil(file.size / partSize);
       const uploadedParts: Array<{ ETag: string; PartNumber: number }> = [];
+
       let completedBytes = 0;
+      const concurrency = Math.min(4, totalParts);
+      let nextPart = 1;
+      let failed = false;
 
-      for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-        // Check if upload was cancelled
-        if (abortControllerRef.current.signal.aborted) {
-          throw new Error('Upload cancelled');
-        }
+      const updateProgress = () => {
+        const percent = Math.max(0, Math.min(99, (completedBytes / file.size) * 100));
+        setUploadState(prev => ({ ...prev, progress: percent }));
+      };
 
+      async function uploadOnePart(partNumber: number) {
+        if (failed) return;
         const start = (partNumber - 1) * partSize;
         const end = Math.min(start + partSize, file.size);
         const chunk = file.slice(start, end);
 
-        // Get presigned URL for this part
         const signResponse = await fetch(`${baseUrl}/api/s3/multipart/sign`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key, uploadId, partNumber }),
           signal: abortControllerRef.current.signal
         });
+        if (!signResponse.ok) throw new Error(`Failed to sign part ${partNumber}`);
+        const { url } = await signResponse.json();
 
-        if (!signResponse.ok) {
-          console.error(`Sign response not ok:`, {
-            status: signResponse.status,
-            statusText: signResponse.statusText,
-            url: signResponse.url
-          });
-          throw new Error(`Failed to get upload URL for part ${partNumber}: ${signResponse.status} ${signResponse.statusText}`);
-        }
-
-        let signData;
-        try {
-          signData = await signResponse.json();
-        } catch (error) {
-          console.error(`Failed to parse sign response:`, error);
-          throw new Error(`Failed to parse sign response for part ${partNumber}`);
-        }
-
-        if (!signData.url) {
-          console.error(`No URL in sign response:`, signData);
-          throw new Error(`No URL received for part ${partNumber}`);
-        }
-
-        const { url } = signData;
-
-        // Upload the part
-        console.log(`Uploading part ${partNumber}/${totalParts}...`, {
-          chunkSize: chunk.size,
-          url: url.substring(0, 100) + "..." // Truncate for security
+        const etag = await new Promise<string>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', url);
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const delta = evt.loaded; // this is bytes sent for current progress event
+              // We don't know previous loaded for this part; compute part fraction via (start + loaded)
+              const currentCompletedBytes = completedBytes + (evt.loaded);
+              const percent = Math.max(0, Math.min(99, (currentCompletedBytes / file.size) * 100));
+              setUploadState(prev => ({ ...prev, progress: percent }));
+            }
+          };
+          xhr.onerror = () => reject(new Error(`XHR failed for part ${partNumber}`));
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const hdr = xhr.getResponseHeader('ETag') || '';
+              resolve(hdr.replace(/\"/g, '').replace(/"/g, ''));
+            } else {
+              reject(new Error(`Upload part ${partNumber} failed: ${xhr.status}`));
+            }
+          };
+          xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+          xhr.send(chunk);
         });
-
-        const uploadResponse = await fetch(url, {
-          method: "PUT",
-          body: chunk,
-          signal: abortControllerRef.current.signal
-        });
-
-        console.log(`Part ${partNumber} upload response:`, {
-          status: uploadResponse.status,
-          statusText: uploadResponse.statusText,
-          headers: Object.fromEntries(uploadResponse.headers.entries())
-        });
-
-        if (!uploadResponse.ok) {
-          console.error(`Upload part response not ok:`, {
-            status: uploadResponse.status,
-            statusText: uploadResponse.statusText,
-            partNumber,
-            url: url.substring(0, 100) + "..." // Truncate for security
-          });
-          throw new Error(`Failed to upload part ${partNumber}: ${uploadResponse.status} ${uploadResponse.statusText}`);
-        }
-
-        const etag = uploadResponse.headers.get('ETag')?.replace(/"/g, '');
-        console.log(`Part ${partNumber} ETag:`, etag);
-        
-        if (!etag) {
-          console.error(`No ETag in upload response:`, {
-            headers: Object.fromEntries(uploadResponse.headers.entries()),
-            partNumber
-          });
-          throw new Error(`No ETag received for part ${partNumber}`);
-        }
 
         uploadedParts.push({ ETag: etag, PartNumber: partNumber });
         completedBytes += chunk.size;
-
-        // Update progress
-        const progress = Math.min(90, (completedBytes / file.size) * 90);
-        setUploadState(prev => ({ ...prev, progress }));
+        updateProgress();
       }
 
-      // Step 3: Complete multipart upload
-      setUploadState(prev => ({ ...prev, status: 'processing', progress: 95 }));
+      async function worker() {
+        while (!failed) {
+          const current = nextPart;
+          nextPart += 1;
+          if (current > totalParts) break;
+          try {
+            await uploadOnePart(current);
+          } catch (e) {
+            failed = true;
+            throw e;
+          }
+        }
+      }
+
+      const workers = Array.from({ length: concurrency }, () => worker());
+      await Promise.all(workers);
+
+      setUploadState(prev => ({ ...prev, status: 'processing', progress: 99 }));
 
       const completeResponse = await fetch(`${baseUrl}/api/s3/multipart/complete`, {
         method: "POST",
@@ -285,7 +261,6 @@ export default function VideoUploadZone({
 
       const completeData = await completeResponse.json();
       
-      // Step 4: Upload completed
       setUploadState(prev => ({ 
         ...prev, 
         status: 'completed', 

@@ -5,7 +5,11 @@ import { auth } from "@clerk/nextjs/server";
 import { S3Client, UploadPartCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ 
+  region: process.env.AWS_REGION, 
+  // Use accelerate endpoint if enabled for faster global uploads
+  useAccelerateEndpoint: process.env.S3_ACCELERATE === 'true'
+} as any);
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
