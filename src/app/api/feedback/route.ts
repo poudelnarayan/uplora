@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
           subject,
           text,
           html,
+          replyTo: includeEmail && userEmail ? userEmail : undefined,
         });
 
         // Store feedback in Supabase for analytics
@@ -144,11 +145,11 @@ export async function POST(req: NextRequest) {
             category: category || 'general',
             title: title || null,
             message: message,
-            team_id: teamId || null,
-            team_name: teamName || null,
+            teamId: teamId || null,
+            teamName: teamName || null,
             path: path || null,
             priority: priority || null,
-            include_email: includeEmail || false
+            includeEmail: includeEmail || false
           });
 
         if (dbError) {
@@ -182,7 +183,10 @@ export async function POST(req: NextRequest) {
 }
 
 function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
