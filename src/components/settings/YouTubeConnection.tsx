@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-const MotionDiv = motion.div as any;
-import { Youtube, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, ExternalLink, Youtube } from "lucide-react";
 import { useNotifications } from "@/components/ui/Notification";
+
+const MotionDiv = motion.div as any;
 
 interface YouTubeConnectionProps {
   isConnected: boolean;
@@ -16,13 +17,70 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
   const notifications = useNotifications();
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Check for error parameters in URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ytError = urlParams.get('error');
+    
+    if (ytError) {
+      let errorMessage = "YouTube connection failed";
+      
+      switch (ytError) {
+        case 'youtube_connection_failed':
+          errorMessage = "Failed to connect YouTube account. Please try again.";
+          break;
+        case 'youtube_token_failed':
+          errorMessage = "Failed to authenticate with YouTube. Please try again.";
+          break;
+        case 'youtube_channel_failed':
+          errorMessage = "Failed to fetch YouTube channel information. Please try again.";
+          break;
+        case 'youtube_no_code':
+          errorMessage = "Authorization was cancelled or failed. Please try again.";
+          break;
+        case 'youtube_oauth_start_failed':
+          errorMessage = "Failed to start YouTube authorization. Please try again.";
+          break;
+        default:
+          errorMessage = "YouTube connection failed. Please try again.";
+      }
+      
+      notifications.addNotification({
+        type: "error",
+        title: "YouTube Connection Failed",
+        message: errorMessage
+      });
+      
+      // Clean up the URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+    
+    // Check for success
+    const success = urlParams.get('success');
+    if (success === 'youtube_connected') {
+      notifications.addNotification({
+        type: "success",
+        title: "YouTube Connected!",
+        message: "Your YouTube account has been successfully connected."
+      });
+      
+      // Clean up the URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('success');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [notifications]);
+
   const handleConnect = async () => {
-    if (isConnecting) return;
+    if (isConnecting) return; // Prevent double-clicks
+    
     setIsConnecting(true);
     try {
       // ✅ Start at the start route, NOT the callback
       window.location.href = "/api/youtube/start";
-    } catch {
+    } catch (error) {
       notifications.addNotification({
         type: "error",
         title: "Connection Failed",
@@ -45,7 +103,7 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
       } else {
         throw new Error("Failed to disconnect");
       }
-    } catch {
+    } catch (error) {
       notifications.addNotification({
         type: "error",
         title: "Disconnect Failed",
@@ -55,72 +113,62 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
   };
 
   return (
-    <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-            <Youtube className="w-5 h-5 text-red-600 dark:text-red-400" />
+    <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <div className="space-y-4">
+        {isConnected ? (
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)', borderColor: 'rgba(0, 173, 181, 0.3)' }}>
+              <div className="flex items-center gap-2" style={{ color: 'rgb(0, 173, 181)' }}>
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Connected to YouTube</span>
+              </div>
+              <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
+                Channel: {channelTitle || "(no title)"}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={handleDisconnect} 
+                className="btn btn-secondary flex-1"
+                disabled={isConnecting}
+              >
+                Disconnect YouTube
+              </button>
+              <a 
+                href="https://studio.youtube.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn btn-outline flex items-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                YouTube Studio
+              </a>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">YouTube Connection</h3>
-            <p className="text-sm text-muted-foreground">Connect your YouTube channel to upload videos</p>
-          </div>
-        </div>
-        {isConnected && (
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">Connected</span>
+        ) : (
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)', borderColor: 'rgba(255, 193, 7, 0.3)' }}>
+              <div className="flex items-center gap-2" style={{ color: 'rgb(255, 193, 7)' }}>
+                <Youtube className="w-4 h-4" />
+                <span className="text-sm font-medium">YouTube Not Connected</span>
+              </div>
+              <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
+                Connect your YouTube account to upload videos directly
+              </p>
+            </div>
+
+            <button 
+              onClick={handleConnect} 
+              className="btn btn-primary w-full flex items-center gap-2"
+              disabled={isConnecting}
+            >
+              <Youtube className="w-4 h-4" />
+              {isConnecting ? "Connecting..." : "Connect YouTube"}
+            </button>
           </div>
         )}
       </div>
-
-      {isConnected ? (
-        <div className="space-y-4">
-          <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)', borderColor: 'rgba(0, 173, 181, 0.3)' }}>
-            <div className="flex items-center gap-2" style={{ color: 'rgb(0, 173, 181)' }}>
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">Connected to YouTube</span>
-            </div>
-            <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
-              Channel: {channelTitle || "Your Channel"}
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <button onClick={handleDisconnect} className="btn btn-secondary flex-1">Disconnect YouTube</button>
-            <a href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer" className="btn btn-outline flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" />
-              YouTube Studio
-            </a>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(57, 62, 70, 0.1)', borderColor: 'rgba(57, 62, 70, 0.3)' }}>
-            <div className="flex items-center gap-2" style={{ color: 'rgb(57, 62, 70)' }}>
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">Not Connected</span>
-            </div>
-            <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
-              Connect your YouTube channel to start uploading videos
-            </p>
-          </div>
-
-          <button onClick={handleConnect} disabled={isConnecting} className="btn btn-primary w-full flex items-center justify-center gap-2">
-            {isConnecting ? (
-              <>
-                <div className="spinner w-4 h-4" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <Youtube className="w-4 h-4" />
-                Connect YouTube Channel
-              </>
-            )}
-          </button>
-        </div>
-      )}
     </MotionDiv>
   );
 }

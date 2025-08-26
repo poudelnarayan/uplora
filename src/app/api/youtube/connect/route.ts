@@ -3,41 +3,39 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
-
 export async function GET(request: NextRequest) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
-  const error = searchParams.get("error");
-
-  if (error) {
-    return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
-  }
-
-  if (!code) {
-    // Start OAuth flow
-    const state = Math.random().toString(36).substring(7);
-    const scope = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/youtube/connect`;
-    
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=code&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `access_type=offline&` +
-      `prompt=consent&` +
-      `state=${state}`;
-
-    return NextResponse.redirect(authUrl);
-  }
-
   try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get("code");
+    const error = searchParams.get("error");
+    const state = searchParams.get("state");
+
+    console.log("YouTube OAuth callback received:", {
+      hasCode: !!code,
+      error,
+      state
+    });
+
+    if (error) {
+      console.error("YouTube OAuth error:", error);
+      return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
+    }
+
+    if (!code) {
+      console.error("No authorization code received");
+      return NextResponse.redirect(new URL("/settings?error=youtube_no_code", request.url));
+    }
+
+    // Use the correct base URL for redirect URI
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
+    const redirectUri = `${baseUrl}/api/youtube/connect`;
+
     // Exchange code for tokens
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -49,7 +47,7 @@ export async function GET(request: NextRequest) {
         client_secret: process.env.GOOGLE_CLIENT_SECRET!,
         code: code,
         grant_type: "authorization_code",
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/youtube/connect`,
+        redirect_uri: redirectUri,
       }),
     });
 
@@ -59,6 +57,8 @@ export async function GET(request: NextRequest) {
       console.error("Token exchange failed:", tokenData);
       return NextResponse.redirect(new URL("/settings?error=youtube_token_failed", request.url));
     }
+
+    console.log("Token exchange successful, fetching channel info...");
 
     // Get YouTube channel info
     const channelResponse = await fetch("https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true", {
@@ -73,6 +73,11 @@ export async function GET(request: NextRequest) {
       console.error("Channel fetch failed:", channelData);
       return NextResponse.redirect(new URL("/settings?error=youtube_channel_failed", request.url));
     }
+
+    console.log("Channel info retrieved:", {
+      channelId: channelData.items?.[0]?.id,
+      channelTitle: channelData.items?.[0]?.snippet?.title
+    });
 
     // Store YouTube connection in database
     const { supabaseAdmin } = await import("@/lib/supabase");
@@ -94,7 +99,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
     }
 
+    console.log("YouTube connection successful!");
     return NextResponse.redirect(new URL("/settings?success=youtube_connected", request.url));
+    
   } catch (error) {
     console.error("YouTube connection error:", error);
     return NextResponse.redirect(new URL("/settings?error=youtube_connection_failed", request.url));
