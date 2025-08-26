@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    const { filename, contentType, sizeBytes, teamId, videoId } = await req.json();
+    const { filename, contentType, videoId } = await req.json();
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
     if (!videoId) return NextResponse.json({ error: "Missing videoId" }, { status: 400 });
 
@@ -67,33 +67,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Enforce thumbnails only under team videos
-    if (!video.teamId) {
-      return NextResponse.json({ error: "Video must belong to a team for thumbnail upload" }, { status: 400 });
-    }
-
-    // Team access: owner or any member
-    const { data: team, error: teamError } = await supabaseAdmin
-      .from('teams')
-      .select('*')
-      .eq('id', video.teamId)
-      .single();
-
-    let allowed = team?.ownerId === user.id;
-    if (!allowed) {
-      const { data: membership, error: membershipError } = await supabaseAdmin
-        .from('team_members')
-        .select('*')
-        .eq('teamId', video.teamId)
-        .eq('userId', user.id)
+    // Access checks
+    let allowed = false;
+    if (video.teamId) {
+      // Team-based: owner or member
+      const { data: team } = await supabaseAdmin
+        .from('teams')
+        .select('ownerId')
+        .eq('id', video.teamId)
         .single();
-      allowed = !!membership;
+      allowed = team?.ownerId === user.id;
+      if (!allowed) {
+        const { data: membership } = await supabaseAdmin
+          .from('team_members')
+          .select('id')
+          .eq('teamId', video.teamId)
+          .eq('userId', user.id)
+          .single();
+        allowed = !!membership;
+      }
+    } else {
+      // Personal video: only owner
+      allowed = video.userId === user.id;
     }
-    
-    if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
 
-    // Only team-based path
-    const key = `teams/${video.teamId}/videos/${videoId}/thumbnail/${safeName}`;
+    if (!allowed) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+
+    // Owner is teamId if present, else userId
+    const owner = video.teamId || video.userId;
+    const key = `${owner}/videos/${videoId}/thumbnails/${safeName}`;
 
     // Generate presigned PUT URL
     const command = new PutObjectCommand({ 
@@ -102,9 +104,6 @@ export async function POST(req: NextRequest) {
       ContentType: contentType 
     });
     const putUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
-
-    // NOTE: We don't create a Video record for thumbnails - they're just files in S3
-    // The thumbnailKey will be stored in the Video record when the video metadata is saved
 
     return NextResponse.json({ putUrl, key });
   } catch (e: unknown) {
