@@ -188,10 +188,28 @@ export default function VideoUploadZone({
         });
 
         if (!signResponse.ok) {
-          throw new Error(`Failed to get upload URL for part ${partNumber}`);
+          console.error(`Sign response not ok:`, {
+            status: signResponse.status,
+            statusText: signResponse.statusText,
+            url: signResponse.url
+          });
+          throw new Error(`Failed to get upload URL for part ${partNumber}: ${signResponse.status} ${signResponse.statusText}`);
         }
 
-        const { url } = await signResponse.json();
+        let signData;
+        try {
+          signData = await signResponse.json();
+        } catch (error) {
+          console.error(`Failed to parse sign response:`, error);
+          throw new Error(`Failed to parse sign response for part ${partNumber}`);
+        }
+
+        if (!signData.url) {
+          console.error(`No URL in sign response:`, signData);
+          throw new Error(`No URL received for part ${partNumber}`);
+        }
+
+        const { url } = signData;
 
         // Upload the part
         const uploadResponse = await fetch(url, {
@@ -201,11 +219,21 @@ export default function VideoUploadZone({
         });
 
         if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload part ${partNumber}`);
+          console.error(`Upload part response not ok:`, {
+            status: uploadResponse.status,
+            statusText: uploadResponse.statusText,
+            partNumber,
+            url: url.substring(0, 100) + "..." // Truncate for security
+          });
+          throw new Error(`Failed to upload part ${partNumber}: ${uploadResponse.status} ${uploadResponse.statusText}`);
         }
 
         const etag = uploadResponse.headers.get('ETag')?.replace(/"/g, '');
         if (!etag) {
+          console.error(`No ETag in upload response:`, {
+            headers: Object.fromEntries(uploadResponse.headers.entries()),
+            partNumber
+          });
           throw new Error(`No ETag received for part ${partNumber}`);
         }
 
