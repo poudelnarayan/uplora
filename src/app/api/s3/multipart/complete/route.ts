@@ -157,16 +157,22 @@ export async function POST(req: NextRequest) {
     // Start background tasks after responding fast
     setTimeout(async () => {
       try {
-        // Move original to canonical location under video.id
+        // Move original to canonical location under video.id (synchronous so preview works immediately)
+        let canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
         try {
-          const canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
-          const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+          const getObjForCopy = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
           await s3.send(new PutObjectCommand({
             Bucket: process.env.S3_BUCKET!,
             Key: canonicalOriginalKey,
-            Body: getObj.Body as any,
+            Body: getObjForCopy.Body as any,
             ContentType: inferredContentType,
           }));
+
+          // Update video.key to canonical path
+          await supabaseAdmin
+            .from('videos')
+            .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
+            .eq('id', video.id);
         } catch (e) {
           console.error("Failed to move original to canonical location", e);
         }
@@ -234,7 +240,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id, 
       keys: {
         baseOwner: finalTeamId,
-        original: `${finalTeamId}/videos/${video.id}/source/original.mp4`,
+        original: canonicalOriginalKey,
         preview: `${finalTeamId}/videos/${video.id}/preview/web.mp4`
       }
     });
