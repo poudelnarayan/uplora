@@ -181,7 +181,7 @@ export default function InvitePage() {
               <p className="text-white/70 text-center text-sm">
                 Sign in or create an account to accept this invitation
               </p>
-              <SignInButton mode="redirect" afterSignInUrl={invitePath} afterSignUpUrl={invitePath}>
+              <SignInButton mode="redirect" forceRedirectUrl={invitePath} fallbackRedirectUrl={invitePath}>
                 <button className="btn btn-primary w-full">
                   Sign In / Create Account
                 </button>
@@ -210,7 +210,7 @@ export default function InvitePage() {
               <p className="text-white/70 text-sm">
                 This invitation is for {invitation.email}, but you&apos;re signed in as {user.emailAddresses?.[0]?.emailAddress}.
               </p>
-              <SignInButton mode="redirect" afterSignInUrl={invitePath} afterSignUpUrl={invitePath}>
+              <SignInButton mode="redirect" forceRedirectUrl={invitePath} fallbackRedirectUrl={invitePath}>
                 <button className="btn btn-secondary w-full">
                   Sign In with Correct Account
                 </button>
