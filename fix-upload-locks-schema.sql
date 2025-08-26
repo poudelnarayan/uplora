@@ -1,6 +1,16 @@
 -- Fix upload_locks table schema
 -- Add missing metadata column and ensure all columns are camelCase
 
+-- First, let's check if the table exists and create it if needed
+CREATE TABLE IF NOT EXISTS public.upload_locks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" TEXT NOT NULL,
+    key TEXT NOT NULL,
+    metadata TEXT,
+    "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Add metadata column if it doesn't exist
 DO $$ 
 BEGIN
@@ -39,6 +49,19 @@ BEGIN
         AND column_name = 'updated_at'
     ) THEN
         ALTER TABLE public.upload_locks RENAME COLUMN updated_at TO "updatedAt";
+    END IF;
+END $$;
+
+-- Ensure id column has proper default
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'upload_locks' 
+        AND column_name = 'id'
+        AND column_default LIKE '%gen_random_uuid%'
+    ) THEN
+        ALTER TABLE public.upload_locks ALTER COLUMN id SET DEFAULT gen_random_uuid();
     END IF;
 END $$;
 
