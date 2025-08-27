@@ -9,25 +9,45 @@ interface InviteMemberContentProps {
   onSubmit: (email: string, role: string) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  currentUserEmail?: string;
 }
 
 export default function InviteMemberContent({ 
   teamName, 
   onSubmit, 
   onCancel, 
-  isLoading = false 
+  isLoading = false,
+  currentUserEmail
 }: InviteMemberContentProps) {
   const [formData, setFormData] = useState({
     email: "",
     role: "EDITOR" as "ADMIN" | "MANAGER" | "EDITOR"
   });
+  const [error, setError] = useState<string>("");
+
+  const isSelf = currentUserEmail
+    ? formData.email.trim().toLowerCase() === currentUserEmail.toLowerCase()
+    : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email.trim()) return;
+    setError("");
+
+    const email = formData.email.trim();
+    if (!email) return;
+
+    if (isSelf) {
+      setError("You cannot invite yourself");
+      return;
+    }
     
-    await onSubmit(formData.email.trim(), formData.role);
-    setFormData({ email: "", role: "EDITOR" });
+    try {
+      await onSubmit(email, formData.role);
+      setFormData({ email: "", role: "EDITOR" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to send invitation";
+      setError(message);
+    }
   };
 
   const getRoleDescription = (role: string) => {
@@ -68,13 +88,22 @@ export default function InviteMemberContent({
             type="email"
             placeholder="colleague@example.com"
             value={formData.email}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              email: (e.target as HTMLInputElement).value 
-            })}
+            onChange={(e) => {
+              setFormData({ 
+                ...formData, 
+                email: (e.target as HTMLInputElement).value 
+              });
+              if (currentUserEmail && (e.target as HTMLInputElement).value.trim().toLowerCase() === currentUserEmail.toLowerCase()) {
+                setError("You cannot invite yourself");
+              } else if (error) {
+                setError("");
+              }
+            }}
             required
           />
-         
+          {error && (
+            <p className="text-sm" style={{ color: '#ef4444' }} aria-live="polite">{error}</p>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -116,8 +145,8 @@ export default function InviteMemberContent({
           </button>
           <button
             type="submit"
-            disabled={isLoading || !formData.email.trim()}
-            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2 bg-[hsl(210,55%,45%)] hover:bg-[hsl(210,40%,25%)]"
+            disabled={isLoading || !formData.email.trim() || isSelf}
+            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2 bg-[hsl(210,55%,45%)] hover:bg-[hsl(210,40%,25%)] disabled:opacity-60"
           >
             {isLoading ? (
               <>
