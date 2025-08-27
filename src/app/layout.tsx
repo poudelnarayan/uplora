@@ -1,4 +1,4 @@
-import "./globals.css";
+import "./index.css";
 import Providers from "./providers";
 import { Analytics } from "@vercel/analytics/react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";

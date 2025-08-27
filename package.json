@@ -12,6 +12,9 @@
     "@aws-sdk/client-s3": "^3.864.0",
     "@aws-sdk/s3-request-presigner": "^3.864.0",
     "@clerk/nextjs": "^6.31.3",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.56.0",
     "@types/bcryptjs": "^2.4.6",
@@ -19,6 +22,8 @@
     "@types/nodemailer": "^6.4.17",
     "@vercel/analytics": "1.5.0",
     "bcryptjs": "^3.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "fluent-ffmpeg": "^2.1.3",
     "framer-motion": "11.0.22",
     "googleapis": "^155.0.1",
@@ -33,6 +38,8 @@
     "react-hot-toast": "^2.5.2",
     "react-intersection-observer": "^9.16.0",
     "sonner": "^2.0.7",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
     "zod": "^4.0.17"
   },
   "devDependencies": {
