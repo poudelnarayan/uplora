@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 export default function TeamsPage() {
   const { user } = useUser();
   const notifications = useNotifications();
-  const { teams: ctxTeams, selectedTeamId, setSelectedTeamId, personalTeam } = useTeam();
+  const { teams: ctxTeams, selectedTeamId, setSelectedTeamId, personalTeam, refreshTeams } = useTeam();
   
   // State management
   const [teams, setTeams] = useState<Team[]>([]);
@@ -47,7 +47,7 @@ export default function TeamsPage() {
       // No spinner if we already have cached teams
       if (ctxTeams.length === 0) setLoading(true);
       // Ask context to refresh; it uses shared cache and SSE-aware logic
-      await refreshTeams(false);
+      await refreshTeams();
       // Build detailed teams from context list
       const baseTeams = (ctxTeams || []).filter((t: any) => !t.isPersonal);
       const detailed: Team[] = await Promise.all(
@@ -510,7 +510,7 @@ export default function TeamsPage() {
             confirmText={leavingTeamId ? "Leaving..." : "Leave Team"}
             cancelText="Cancel"
             variant="warning"
-            icon="logout"
+            icon="info"
             isLoading={!!leavingTeamId}
           />
         </AppShell>
