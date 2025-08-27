@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { useNotifications } from "@/components/ui/Notification";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useModalManager } from "@/components/ui/Modal";

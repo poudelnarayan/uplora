@@ -1,7 +1,7 @@
 /** @type {import('next-sitemap').IConfig} */
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-module.exports = {
+export default {
   siteUrl,
   generateRobotsTxt: true,
   exclude: ["/api/*"],

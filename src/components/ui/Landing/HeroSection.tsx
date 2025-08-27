@@ -2,8 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Play, ArrowRight } from "lucide-react";
 import dashboardHero from "@/assets/dashboard-hero.jpg";
 import InteractiveSocialIcons from "./InteractiveSocialIcons";
-import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
-import Link from "next/link";
 
 const HeroSection = () => {
   return (
@@ -53,28 +51,13 @@ const HeroSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <SignedOut>
-                <SignUpButton>
-                  <Button 
-                    size="lg" 
-                    className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
-                  >
-                    Get Started Free
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <Link href="/dashboard">
-                  <Button 
-                    size="lg" 
-                    className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
-                  >
-                    Go to Dashboard
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </SignedIn>
+              <Button 
+                size="lg" 
+                className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
               
               <Button 
                 variant="outline" 

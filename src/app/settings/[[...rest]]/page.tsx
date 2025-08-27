@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Settings, User, Bell, Shield, Palette, Key, Mail, Smartphone, Monitor, Sun, Moon, Languages, CreditCard, Youtube, Crown, CheckCircle, ExternalLink, Upload, Users } from "lucide-react";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { useUser, UserProfile, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import SettingsHeader from "@/components/pages/Settings/SettingsHeader";

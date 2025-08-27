@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { useSubscription } from "@/hooks/useSubscription";
 import { subscriptionConfig, formatPrice } from "@/config/subscription";

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 const MotionDiv = motion.div as any;
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { Youtube, Instagram, Twitter, Facebook, Linkedin, Clock, Video } from "lucide-react";
 import YouTubeConnection from "@/components/settings/YouTubeConnection";
 import { useEffect, useState, Suspense } from "react";

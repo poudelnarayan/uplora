@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";

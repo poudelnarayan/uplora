@@ -3,8 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Star, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
-import Link from "next/link";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -97,46 +95,20 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <SignedOut>
-                <SignInButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium px-6"
-                  >
-                    Sign In
-                  </Button>
-                </SignInButton>
-                <SignUpButton>
-                  <Button
-                    size="sm"
-                    className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
-                  >
-                    Get Started Free
-                    <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <Link href="/dashboard">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium px-6"
-                  >
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button
-                    size="sm"
-                    className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
-                  >
-                    Go to Dashboard
-                    <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </Button>
-                </Link>
-              </SignedIn>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium px-6"
+              >
+                Sign In
+              </Button>
+              <Button
+                size="sm"
+                className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
+              >
+                Get Started Free
+                <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Button>
             </div>
           </div>
 
@@ -181,46 +153,20 @@ const Navbar = () => {
               </button>
 
               <div className="pt-4 space-y-3">
-                <SignedOut>
-                  <SignInButton>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium"
-                    >
-                      Sign In
-                    </Button>
-                  </SignInButton>
-                  <SignUpButton>
-                    <Button
-                      size="sm"
-                      className="w-full gradient-primary text-primary-foreground font-medium group"
-                    >
-                      Get Started Free
-                      <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </SignUpButton>
-                </SignedOut>
-                <SignedIn>
-                  <Link href="/dashboard">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium"
-                    >
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard">
-                    <Button
-                      size="sm"
-                      className="w-full gradient-primary text-primary-foreground font-medium group"
-                    >
-                      Go to Dashboard
-                      <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </Link>
-                </SignedIn>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  size="sm"
+                  className="w-full gradient-primary text-primary-foreground font-medium group"
+                >
+                  Get Started Free
+                  <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Button>
               </div>
             </div>
           </div>

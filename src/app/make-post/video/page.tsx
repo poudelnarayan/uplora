@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { useTeam } from "@/context/TeamContext";
 import { useRouter } from "next/navigation";

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/AppLayout";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import MakePostInterface from "@/components/upload/MakePostInterface";
 import { useTeam } from "@/context/TeamContext";
