@@ -4,38 +4,38 @@
 /* Modern Design System - Professional Blue-Slate */
 :root {
   /* Light theme colors - Modern Professional Palette */
-  --primary: 217 91 60; /* Blue - Professional, trustworthy */
+  --primary: 0 173 181; /* Accent Cyan - Professional, trustworthy */
   --primary-foreground: 255 255 255;
-  --secondary: 210 40 98; /* Light Gray - Fresh, clean */
+  --secondary: 57 62 70; /* Secondary Dark - Fresh, positive */
   --secondary-foreground: 255 255 255;
-  --accent: 217 91 60; /* Blue - Creative, distinctive */
+  --accent: 34 40 49; /* Primary Dark - Creative, distinctive */
   --accent-foreground: 255 255 255;
   --destructive: 239 68 68; /* Red 500 - Clear danger indication */
   --destructive-foreground: 255 255 255;
   --success: 34 197 94; /* Green 500 - Positive feedback */
   --success-foreground: 255 255 255;
-  --warning: 217 91 60; /* Blue instead of yellow - easier on eyes */
+  --warning: 0 173 181; /* Cyan instead of yellow - easier on eyes */
   --warning-foreground: 255 255 255;
-  --muted: 210 40 98; /* Light Gray - Subtle backgrounds */
-  --muted-foreground: 224 20 50; /* Gray - Readable secondary text */
+  --muted: 238 238 238; /* Light Gray - Subtle backgrounds */
+  --muted-foreground: 57 62 70; /* Secondary Dark - Readable secondary text */
   --background: 255 255 255; /* Pure white - clean, modern */
-  --foreground: 0 0 9; /* Dark - High contrast text */
+  --foreground: 34 40 49; /* Primary Dark - High contrast text */
   --card: 255 255 255; /* White cards - clean separation */
-  --card-foreground: 0 0 9;
+  --card-foreground: 34 40 49;
   --popover: 255 255 255;
-  --popover-foreground: 0 0 9;
-  --border: 214 32 91; /* Light Gray - Subtle borders */
+  --popover-foreground: 34 40 49;
+  --border: 238 238 238; /* Light Gray - Subtle borders */
   --input: 255 255 255;
-  --ring: 217 91 60; /* Blue - Focus states */
+  --ring: 0 173 181; /* Accent Cyan - Focus states */
   --radius: 12px;
 
   /* Subscription Page Color Palette */
-  --color-dark: 0 0 9; /* Primary dark */
-  --color-dark-secondary: 224 20 50; /* Secondary dark */
-  --color-teal: 217 91 60; /* Blue */
-  --color-light: 210 40 98; /* Light gray */
-  --color-background: #f9fafb; /* Soft background */
-  --color-brand-dark: 0 0 9; /* Dark text */
+  --color-dark: 34 40 49; /* Primary dark */
+  --color-dark-secondary: 57 62 70; /* Secondary dark */
+  --color-teal: 0 173 181; /* Accent cyan */
+  --color-light: 238 238 238; /* Light gray */
+  --color-background: #fefefb; /* Soft background */
+  --color-brand-dark: 34 40 49; /* Dark text */
   --color-success: #4caf50; /* Success green */
   --color-warning: #ff9800; /* Warning orange */
   --color-error: #f44336; /* Error red */
@@ -43,29 +43,29 @@
 
 [data-theme="dark"] {
   /* Dark theme colors - Sophisticated Dark Palette */
-  --primary: 217 91 60; /* Blue - Softer for dark backgrounds */
+  --primary: 0 173 181; /* Accent Cyan - Softer for dark backgrounds */
   --primary-foreground: 255 255 255;
-  --background: 222 84 5;
-  --foreground: 0 0 95;
-  --card: 217 33 17;
-  --card-foreground: 0 0 95;
-  --popover: 217 33 17;
-  --popover-foreground: 0 0 95;
+  --background: 34 40 49;
+  --foreground: 238 238 238;
+  --card: 57 62 70;
+  --card-foreground: 238 238 238;
+  --popover: 57 62 70;
+  --popover-foreground: 238 238 238;
   --success: 74 222 128; /* Green 400 - Positive but gentle */
   --success-foreground: 255 255 255;
-  --warning: 217 91 60; /* Blue instead of yellow */
+  --warning: 0 173 181; /* Cyan instead of yellow */
   --warning-foreground: 255 255 255;
-  --muted: 217 33 17; /* Secondary Dark - Rich dark background */
-  --muted-foreground: 215 20 65; /* Light Gray - Readable on dark */
-  --background: 222 84 5; /* Primary Dark - Deep, professional */
-  --foreground: 0 0 95; /* Light Gray - High contrast on dark */
-  --card: 217 33 17; /* Secondary Dark - Elevated surfaces */
-  --card-foreground: 0 0 95;
-  --popover: 217 33 17;
-  --popover-foreground: 0 0 95;
-  --border: 217 33 17; /* Secondary Dark - Visible but subtle */
-  --input: 217 33 17;
-  --ring: 217 91 60; /* Blue - Focus states */
+  --muted: 57 62 70; /* Secondary Dark - Rich dark background */
+  --muted-foreground: 238 238 238; /* Light Gray - Readable on dark */
+  --background: 34 40 49; /* Primary Dark - Deep, professional */
+  --foreground: 238 238 238; /* Light Gray - High contrast on dark */
+  --card: 57 62 70; /* Secondary Dark - Elevated surfaces */
+  --card-foreground: 238 238 238;
+  --popover: 57 62 70;
+  --popover-foreground: 238 238 238;
+  --border: 57 62 70; /* Secondary Dark - Visible but subtle */
+  --input: 57 62 70;
+  --ring: 0 173 181; /* Accent Cyan - Focus states */
 
   /* Dark theme overrides for subscription colors */
   --color-background: rgb(var(--background));

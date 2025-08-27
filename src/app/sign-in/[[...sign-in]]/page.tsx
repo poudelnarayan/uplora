@@ -16,7 +16,7 @@ export default function Page() {
   }, [isSignedIn, router, redirectTarget]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         {!isSignedIn ? (
         <SignIn 
@@ -26,14 +26,14 @@ export default function Page() {
             layout: { socialButtonsVariant: 'blockButton' },
             elements: {
               formButtonPrimary: 'btn btn-primary w-full',
-              card: 'bg-white border border-gray-200 shadow-lg rounded-lg',
-              headerTitle: 'text-gray-900',
-              headerSubtitle: 'text-gray-600',
+              card: 'bg-card border border-border shadow-lg',
+              headerTitle: 'text-foreground',
+              headerSubtitle: 'text-muted-foreground',
               socialButtonsBlockButton: 'btn btn-outline w-full',
-              formFieldInput: 'bg-white border border-gray-300 rounded-lg px-3 py-2 w-full',
-              formFieldLabel: 'text-gray-700',
+              formFieldInput: 'input input-bordered w-full',
+              formFieldLabel: 'text-foreground',
               formFieldErrorText: 'text-red-500',
-              footerActionLink: 'text-blue-600 hover:text-blue-700',
+              footerActionLink: 'link text-primary',
               logoImage: 'w-16 h-16',
             },
           }}
@@ -41,7 +41,7 @@ export default function Page() {
           signUpUrl="/sign-up"
         />
         ) : (
-          <div className="text-center text-sm text-gray-600">Redirecting…</div>
+          <div className="text-center text-sm text-muted-foreground">Redirecting…</div>
         )}
       </div>
     </div>
