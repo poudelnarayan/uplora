@@ -7,8 +7,6 @@ import { useNotifications } from "@/components/ui/Notification";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useModalManager } from "@/components/ui/Modal";
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-
-// Import our new components
 import TeamCard, { Team, TeamMember, TeamInvitation } from "@/components/teams/TeamCard";
 import TeamsHeader from "@/components/teams/TeamsHeader";
 import { useTeam } from "@/context/TeamContext";
@@ -16,6 +14,7 @@ import TeamsStats from "@/components/teams/TeamsStats";
 import EmptyTeamsState from "@/components/teams/EmptyTeamsState";
 import LoadingSpinner from "@/components/teams/LoadingSpinner";
 import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 const MotionDiv = motion.div as any;
 
 export const dynamic = "force-dynamic";
@@ -24,6 +23,8 @@ export default function TeamsPage() {
   const { user } = useUser();
   const notifications = useNotifications();
   const { teams: ctxTeams, selectedTeamId, setSelectedTeamId, personalTeam, refreshTeams } = useTeam();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
   // State management
   const [teams, setTeams] = useState<Team[]>([]);
@@ -109,6 +110,22 @@ export default function TeamsPage() {
     // keep synced when context teams change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, ctxTeams.length]);
+
+  // Force refresh when coming from invite acceptance
+  useEffect(() => {
+    const shouldRefresh = searchParams?.get("refresh") === "1";
+    if (shouldRefresh) {
+      (async () => {
+        try {
+          await refreshTeams();
+        } finally {
+          // Clean URL
+          router.replace("/teams");
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Live updates: refresh list on team.* events (created, member joins, invite accepted/canceled)
   useEffect(() => {

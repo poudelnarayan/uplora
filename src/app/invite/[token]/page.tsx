@@ -78,7 +78,7 @@ export default function InvitePage() {
 
       if (response.ok) {
         toast.success("Welcome to the team!");
-        router.push("/teams");
+        router.push("/teams?refresh=1");
       } else {
         const error = await response.json();
         toast.error(error.message || "Failed to accept invitation");
