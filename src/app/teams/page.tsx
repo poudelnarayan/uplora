@@ -204,7 +204,7 @@ export default function TeamsPage() {
         await loadTeams();
         return { success: true, message: "Invitation sent successfully" };
       } else {
-        const errorMessage = result.error || "Please try again";
+        const errorMessage = result?.message || result?.error || "Please try again";
         notifications.addNotification({ 
           type: "error", 
           title: "Failed to send invitation", 
@@ -452,7 +452,8 @@ export default function TeamsPage() {
   const openInviteMemberModal = (team: Team) => {
     openModal("invite-member", {
       teamName: team.name,
-      onSubmit: createInviteHandler(team)
+      onSubmit: createInviteHandler(team),
+      currentUserEmail
     });
   };
 
