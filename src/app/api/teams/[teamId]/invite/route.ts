@@ -35,6 +35,11 @@ export async function POST(
         return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Valid role is required");
       }
 
+      // Prevent inviting oneself
+      if ((supabaseUser.email || "").toLowerCase() === email.toLowerCase()) {
+        return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "You cannot invite yourself");
+      }
+
       // Check if user has permission to invite (owner, admin, or manager)
       const access = await checkTeamAccess(teamId, supabaseUser.id);
       if (!access.hasAccess || (access.role !== 'OWNER' && access.role !== 'ADMIN' && access.role !== 'MANAGER')) {
