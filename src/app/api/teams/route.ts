@@ -105,7 +105,26 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       console.error("Supabase error:", createError);
-      return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create team");
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create team"),
+        { status: 500 }
+      );
+    }
+
+    // Add the owner as a team member with OWNER role
+    const { error: memberError } = await supabaseAdmin
+      .from('team_members')
+      .insert({
+        teamId: team.id,
+        userId: user.id,
+        role: 'OWNER',
+        status: 'ACTIVE',
+        joinedAt: now
+      });
+
+    if (memberError) {
+      console.error("Failed to add owner as team member:", memberError);
+      // Don't fail the request, but log the error
     }
 
     // Realtime notify all connected clients to refresh team lists
@@ -119,7 +138,10 @@ export async function POST(request: NextRequest) {
         id: team.id,
         name: team.name,
         description: team.description,
-        createdAt: team.createdAt
+        createdAt: team.createdAt,
+        isPersonal: false,
+        isOwner: true,
+        role: 'OWNER'
       }
     }));
   } catch (error) {

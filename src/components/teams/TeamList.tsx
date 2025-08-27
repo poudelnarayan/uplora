@@ -120,8 +120,8 @@ export default function TeamList({
     <div className="space-y-6">
       {teams.map((team) => {
         const isOwner = currentUserEmail.toLowerCase() === (team.ownerEmail || "").toLowerCase();
-        const activeMembers = team.members.filter(m => m.status !== "PAUSED");
-        const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
+        const activeMembers = (team.members || []).filter(m => m.status !== "PAUSED");
+        const pendingInvites = (team.invitations || []).filter(inv => inv.status === "pending");
 
         return (
           <MotionDiv

@@ -74,17 +74,20 @@ export default function TeamsPage() {
               }
               return { id: details.team.id, name: details.team.name, description: details.team.description || "", members: mappedMembers, invitations: (details.invites || []).map((inv: any) => ({ id: inv.id || inv.token, email: inv.email, role: inv.role, status: (inv.status || "PENDING").toLowerCase(), invitedAt: new Date(inv.createdAt || inv.invitedAt || Date.now()), invitedBy: user?.fullName || user?.firstName || "" })), createdAt: details.team.createdAt ? new Date(details.team.createdAt) : new Date(), ownerEmail: ownerUser?.email || "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
             }
-          } catch {}
-          return { id: t.id, name: t.name, description: t.description || "", members: [], invitations: [], createdAt: t.createdAt ? new Date(t.createdAt) : new Date(), ownerEmail: "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
-        })
-      );
-      setTeams(detailed);
-    } catch (e) {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to load teams", 
-        message: "Network error" 
-      });
+                      } catch (error) {
+              console.error(`Error loading team details for ${t.id}:`, error);
+            }
+            return { id: t.id, name: t.name, description: t.description || "", members: [], invitations: [], createdAt: t.createdAt ? new Date(t.createdAt) : new Date(), ownerEmail: "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
+          })
+        );
+        setTeams(detailed);
+      } catch (e) {
+        console.error("Error loading teams:", e);
+        notifications.addNotification({ 
+          type: "error", 
+          title: "Failed to load teams", 
+          message: "Please refresh the page to try again" 
+        });
     } finally {
       setLoading(false);
     }
@@ -133,23 +136,38 @@ export default function TeamsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), description })
       });
+      
+      const result = await res.json();
+      
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const errorMessage = result.error || result.message || "Failed to create team";
         notifications.addNotification({ 
           type: "error", 
           title: "Failed to create team", 
-          message: err.error || "Try again" 
+          message: errorMessage
         });
-        return;
+        return { success: false, error: errorMessage };
       }
-      notifications.addNotification({ type: "success", title: "Team created!" });
+      
+      notifications.addNotification({ 
+        type: "success", 
+        title: "Team created successfully!", 
+        message: `${name} has been created and you've been added as the owner.`
+      });
+      
+      // Refresh teams list
       await loadTeams();
+      
+      return { success: true };
     } catch (e) {
+      console.error("Team creation error:", e);
+      const errorMessage = e instanceof Error ? e.message : "Network error - please check your connection";
       notifications.addNotification({ 
         type: "error", 
         title: "Failed to create team", 
-        message: "Network error" 
+        message: errorMessage
       });
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -455,6 +473,11 @@ export default function TeamsPage() {
                   <EmptyTeamsState onCreateTeam={openCreateTeamModal} />
                 ) : (
                   <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+                    <TeamsHeader 
+                      teams={actualTeams} 
+                      onCreateTeam={openCreateTeamModal}
+                    />
+                    
                     <TeamsStats 
                       teams={actualTeams} 
                       currentUserEmail={currentUserEmail}

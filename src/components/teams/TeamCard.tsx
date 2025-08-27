@@ -77,12 +77,16 @@ export default function TeamCard({
 }: TeamCardProps) {
   const [showActions, setShowActions] = useState(false);
   
+  // Add null checks and default values to prevent filter errors
+  const safeMembers = team.members || [];
+  const safeInvitations = team.invitations || [];
+  
   const isOwner = currentUserEmail?.toLowerCase() === team.ownerEmail?.toLowerCase();
   const isAdmin = (team.role || "").toUpperCase() === "ADMIN";
   const canManageMembers = isOwner || isAdmin;
   const canInvite = isOwner || isAdmin || (team.role || "").toUpperCase() === "MANAGER";
-  const activeMembers = team.members.filter(m => m.status !== "PAUSED");
-  const pendingInvites = team.invitations.filter(inv => inv.status === "pending");
+  const activeMembers = safeMembers.filter(m => m.status !== "PAUSED");
+  const pendingInvites = safeInvitations.filter(inv => inv.status === "pending");
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -132,7 +136,7 @@ export default function TeamCard({
                 </span>
               )}
               <span className="text-sm" style={{ color: '#393E46' }}>
-                Created {team.createdAt.toLocaleDateString()}
+                Created {new Date(team.createdAt).toLocaleDateString()}
               </span>
             </div>
           </div>

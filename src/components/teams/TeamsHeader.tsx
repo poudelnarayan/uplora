@@ -9,7 +9,8 @@ interface TeamsHeaderProps {
 }
 
 export default function TeamsHeader({ teams, onCreateTeam }: TeamsHeaderProps) {
-  const totalMembers = teams.reduce((sum, team) => sum + team.members.length, 0);
+  const list = Array.isArray(teams) ? teams : [];
+  const totalMembers = list.reduce((sum, team) => sum + ((team.members || []).length), 0);
 
   return (
     <div className="flex items-center justify-between mb-6">
@@ -22,7 +23,7 @@ export default function TeamsHeader({ teams, onCreateTeam }: TeamsHeaderProps) {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4" style={{ color: '#00ADB5' }} />
             <span className="text-sm font-medium" style={{ color: '#393E46' }}>
-              {teams.length} Teams
+              {list.length} Teams
             </span>
           </div>
           <div className="flex items-center gap-2">

@@ -10,7 +10,7 @@ interface TeamsStatsProps {
 
 export default function TeamsStats({ teams, currentUserEmail }: TeamsStatsProps) {
   const totalActiveMembers = teams.reduce(
-    (sum, team) => sum + team.members.filter(m => m.status !== "PAUSED").length, 
+    (sum, team) => sum + (team.members || []).filter(m => m.status !== "PAUSED").length, 
     0
   );
   
@@ -19,7 +19,7 @@ export default function TeamsStats({ teams, currentUserEmail }: TeamsStatsProps)
   ).length;
   
   const pendingInvitesCount = teams.reduce(
-    (sum, team) => sum + team.invitations.filter(inv => inv.status === "pending").length, 
+    (sum, team) => sum + (team.invitations || []).filter(inv => inv.status === "pending").length, 
     0
   );
 

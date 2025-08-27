@@ -11,8 +11,13 @@ export async function GET(
 ) {
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    if (!userId) {
+      console.log("Role API: No userId found");
+      return NextResponse.json({ error: "Auth required" }, { status: 401 });
+    }
+    
     const { id } = context.params;
+    console.log(`Role API: Checking role for video ${id} by user ${userId}`);
 
     // Get user details from Clerk and sync with Supabase
     const client = await clerkClient();
@@ -38,7 +43,7 @@ export async function GET(
       .single();
 
     if (userError) {
-      console.error("User sync error:", userError);
+      console.error("Role API: User sync error:", userError);
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
@@ -49,8 +54,11 @@ export async function GET(
       .single();
 
     if (videoError || !video) {
+      console.log(`Role API: Video not found - ${id}`, videoError);
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
+
+    console.log(`Role API: Video found, teamId: ${video.teamId}`);
 
     // Check if user is team owner
     const { data: team, error: teamError } = await supabaseAdmin
@@ -60,8 +68,11 @@ export async function GET(
       .single();
 
     if (teamError || !team) {
+      console.log(`Role API: Team not found - ${video.teamId}`, teamError);
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
+
+    console.log(`Role API: Team found, checking membership for user ${user.id}`);
 
     // Check if user is a member of the team
     const { data: membership, error: membershipError } = await supabaseAdmin
@@ -72,12 +83,15 @@ export async function GET(
       .single();
 
     if (membershipError || !membership) {
+      console.log(`Role API: User ${user.id} not a member of team ${video.teamId}`, membershipError);
       return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
     }
 
+    console.log(`Role API: User role is ${membership.role}`);
     // Return the user's role in the team
     return NextResponse.json({ role: membership.role });
   } catch (e) {
+    console.error("Role API: Unexpected error:", e);
     return NextResponse.json({ error: "Failed to get role" }, { status: 500 });
   }
 }
