@@ -8,9 +8,9 @@ const HeroSection = () => {
   const router = useRouter();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-50">
       {/* Background Gradient */}
-      <div className="absolute inset-0 gradient-hero opacity-5"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-blue-50 opacity-50"></div>
       
       <div className="container mx-auto px-4 lg:px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -18,37 +18,37 @@ const HeroSection = () => {
           <div className="text-center lg:text-left">
             {/* Differentiator Badge - Industry Standard */}
             <div className="mb-8">
-              <div className="inline-block bg-secondary/50 border border-border rounded-lg px-4 py-2">
-                <span className="text-muted-foreground font-medium text-sm tracking-wide">
-                  Not another social media scheduling platform, <span className="font-bold text-primary">IT'S MORE</span>
+              <div className="inline-block bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+                <span className="text-gray-600 font-medium text-sm tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  Not another social media scheduling platform, <span className="font-bold text-blue-600">IT'S MORE</span>
                 </span>
               </div>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-poppins mb-6 leading-tight tracking-tight text-center lg:text-left">
-              <div className="font-bold gradient-text text-4xl md:text-5xl lg:text-6xl mb-1">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight tracking-tight text-center lg:text-left" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <div className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-4xl md:text-5xl lg:text-6xl mb-1">
                 Collaborative
               </div>
-              <div className="font-medium text-2xl md:text-3xl lg:text-4xl text-foreground flex items-center justify-center lg:justify-start gap-4">
+              <div className="font-medium text-2xl md:text-3xl lg:text-4xl text-gray-900 flex items-center justify-center lg:justify-start gap-4">
                 <span>Scheduling</span>
-                <span className="hidden lg:block w-16 h-0.5 bg-primary"></span>
+                <span className="hidden lg:block w-16 h-0.5 bg-blue-600"></span>
               </div>
-              <div className="font-extralight text-xl md:text-2xl lg:text-3xl text-muted-foreground mt-2 tracking-widest">
+              <div className="font-light text-xl md:text-2xl lg:text-3xl text-blue-400 mt-2 tracking-widest">
                 FOR EVERY PLATFORM
               </div>
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl">
+            <p className="text-xl mb-8 leading-relaxed max-w-2xl" style={{ color: 'hsl(224, 20%, 50%)', fontFamily: 'Inter, sans-serif' }}>
               Uplora helps creators and teams draft, approve, and publish across 
-              <span className="text-primary font-medium"> YouTube, TikTok, Instagram, LinkedIn, X, and Facebook</span>{" "}
+              <span className="text-red-500 font-medium">YouTube</span>, <span className="text-black font-medium">TikTok</span>, <span className="text-pink-500 font-medium">Instagram</span>, <span className="text-blue-600 font-medium">LinkedIn</span>, <span className="text-gray-800 font-medium">X</span>, and <span className="text-blue-500 font-medium">Facebook</span>{" "}
               with seamless team workflow collaboration.
             </p>
             
-            <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-8 max-w-2xl">
-              <p className="text-foreground font-medium text-lg">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8 max-w-2xl shadow-sm">
+              <p className="text-gray-900 font-medium text-lg" style={{ fontFamily: 'Inter, sans-serif' }}>
                 🎯 Built for teams who need approval workflows
               </p>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-gray-600 mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                 Editors create • Admins review • System publishes automatically
               </p>
             </div>
@@ -58,7 +58,8 @@ const HeroSection = () => {
                 <Button 
                   size="lg" 
                   onClick={() => router.push('/sign-up')}
-                  className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg text-lg px-8 py-4 rounded-full"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -68,7 +69,8 @@ const HeroSection = () => {
                 <Button 
                   size="lg" 
                   onClick={() => router.push('/dashboard')}
-                  className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg text-lg px-8 py-4 rounded-full"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Go to Dashboard
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -79,7 +81,8 @@ const HeroSection = () => {
                 variant="outline" 
                 size="lg" 
                 onClick={() => router.push('/about')}
-                className="text-lg px-8 py-4 hover-lift"
+                className="text-lg px-8 py-4 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full"
+                style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <Play className="mr-2 h-5 w-5" />
                 See How It Works
@@ -88,14 +91,14 @@ const HeroSection = () => {
 
             {/* Platform Logos */}
             <div className="mt-12">
-              <p className="text-sm text-muted-foreground mb-4">Publish to all major platforms</p>
-              <div className="flex flex-wrap gap-6 justify-center lg:justify-start items-center opacity-60">
-                <div className="text-red-500 font-bold">YouTube</div>
-                <div className="text-pink-500 font-bold">TikTok</div>
-                <div className="text-purple-500 font-bold">Instagram</div>
-                <div className="text-blue-600 font-bold">LinkedIn</div>
-                <div className="text-gray-800 font-bold">X</div>
-                <div className="text-blue-500 font-bold">Facebook</div>
+              <p className="text-sm text-gray-600 mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>Publish to all major platforms</p>
+              <div className="flex flex-wrap gap-6 justify-center lg:justify-start items-center">
+                <div className="text-red-500 font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>YouTube</div>
+                <div className="text-black font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>TikTok</div>
+                <div className="text-pink-500 font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>Instagram</div>
+                <div className="text-blue-600 font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>LinkedIn</div>
+                <div className="text-gray-800 font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>X</div>
+                <div className="text-blue-500 font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>Facebook</div>
               </div>
             </div>
           </div>

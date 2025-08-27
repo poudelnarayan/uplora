@@ -12,41 +12,41 @@ All colors MUST be HSL. Beautiful gradients and semantic tokens.
 @layer base {
   :root {
     /* Core Background & Text */
-    --background: 45 15% 98%;
-    --foreground: 224 33% 15%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
 
     /* Card System */
     --card: 0 0% 100%;
-    --card-foreground: 224 33% 15%;
+    --card-foreground: 0 0% 9%;
 
     /* Popover System */
     --popover: 0 0% 100%;
-    --popover-foreground: 224 33% 15%;
+    --popover-foreground: 0 0% 9%;
 
     /* Primary Brand - Blue Purple Gradient */
-    --primary: 250 75% 60%;
-    --primary-glow: 260 65% 70%;
+    --primary: 217 91% 60%;
+    --primary-glow: 250 75% 60%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Soft Neutral */
-    --secondary: 220 15% 96%;
-    --secondary-foreground: 224 33% 15%;
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 0 0% 9%;
 
     /* Muted Elements */
-    --muted: 220 15% 96%;
+    --muted: 210 40% 98%;
     --muted-foreground: 224 20% 50%;
 
     /* Accent - Teal Touch */
-    --accent: 175 60% 55%;
-    --accent-glow: 180 55% 65%;
+    --accent: 217 91% 60%;
+    --accent-glow: 250 75% 60%;
     --accent-foreground: 0 0% 100%;
 
     /* System Colors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 250 75% 60%;
+    --border: 214 32% 91%;
+    --input: 0 0% 100%;
+    --ring: 217 91% 60%;
 
     /* Design System Values */
     --radius: 0.75rem;
@@ -70,60 +70,60 @@ All colors MUST be HSL. Beautiful gradients and semantic tokens.
     --gradient-subtle: linear-gradient(
       180deg,
       hsl(var(--background)),
-      hsl(220 15% 98%)
+      hsl(210 40% 98%)
     );
 
     /* Shadows */
-    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
-    --shadow-medium: 0 8px 25px -8px hsl(var(--primary) / 0.15);
-    --shadow-strong: 0 16px 40px -12px hsl(var(--primary) / 0.25);
-    --shadow-glow: 0 8px 32px -8px hsl(var(--primary) / 0.3);
+    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-medium: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-strong: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
     /* Animation Variables */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-accent: 210 40% 98%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
     /* Dark Mode - Premium Dark Uplora Theme */
-    --background: 224 35% 8%;
+    --background: 222 84% 5%;
     --foreground: 0 0% 95%;
 
-    --card: 224 30% 10%;
+    --card: 222 84% 5%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 224 30% 10%;
+    --popover: 222 84% 5%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 250 75% 65%;
-    --primary-glow: 260 70% 75%;
+    --primary: 217 91% 60%;
+    --primary-glow: 250 75% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 224 25% 15%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 224 25% 15%;
-    --muted-foreground: 224 15% 60%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 175 60% 60%;
-    --accent-glow: 180 55% 70%;
+    --accent: 217 91% 60%;
+    --accent-glow: 250 75% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 80% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 224 25% 20%;
-    --input: 224 25% 20%;
-    --ring: 250 75% 65%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 217 91% 60%;
 
     /* Dark Mode Gradients */
     --gradient-primary: linear-gradient(
@@ -144,16 +144,16 @@ All colors MUST be HSL. Beautiful gradients and semantic tokens.
     --gradient-subtle: linear-gradient(
       180deg,
       hsl(var(--background)),
-      hsl(224 30% 10%)
+      hsl(217 33% 17%)
     );
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: 222 84% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 217 33% 17%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
