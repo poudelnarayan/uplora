@@ -8,7 +8,9 @@ const HeroSection = () => {
   const router = useRouter();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-50">
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-blue-50 opacity-50"></div>
       
       <div className="container mx-auto px-4 lg:px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
