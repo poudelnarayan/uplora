@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -80,9 +81,11 @@ export async function POST(req: NextRequest) {
     const title = String(filename || "").replace(/\.[^/.]+$/, "") || "Untitled";
     const now = new Date().toISOString();
     
+    const newVideoId = crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
+        id: newVideoId,
         key,
         filename: title,
         contentType: contentType || "application/octet-stream",
