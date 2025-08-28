@@ -20,18 +20,18 @@ export default function UploadTray() {
   }
 
   // Auto-dismiss rules:
-  // - completed: 3s
-  // - cancelled: 3s
-  // - failed: 5s
+  // - completed: 1.5s (faster to reduce UI residue)
+  // - cancelled: 1.5s
+  // - failed: 4s
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
     uploads.forEach((u) => {
       if (u.status === "completed") {
-        timers.push(setTimeout(() => dismiss(u.id), 3000));
+        timers.push(setTimeout(() => dismiss(u.id), 1500));
       } else if (u.status === "cancelled") {
-        timers.push(setTimeout(() => dismiss(u.id), 3000));
+        timers.push(setTimeout(() => dismiss(u.id), 1500));
       } else if (u.status === "failed") {
-        timers.push(setTimeout(() => dismiss(u.id), 5000));
+        timers.push(setTimeout(() => dismiss(u.id), 4000));
       }
     });
     return () => timers.forEach(clearTimeout);
@@ -44,7 +44,7 @@ export default function UploadTray() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-4 right-4 z-50 w-80 space-y-2 pointer-events-none"
+            className="fixed bottom-4 right-4 z-50 w-80 space-y-2"
           >
           {uploads.map((u) => {
             const isActive = u.status === "uploading" || u.status === "queued";
