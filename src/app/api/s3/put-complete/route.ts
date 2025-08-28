@@ -47,9 +47,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    // Derive teamId from key (teams/<teamId>/videos/<tempId>/...)
-    const m = key.match(/teams\/(.*?)\/videos\/(.*?)\//);
-    const teamIdFromKey = m && m[1] ? m[1] : null;
+    // Derive teamId and videoId from key (teams/<teamId>/videos/<videoId>/...)
+    const m = key.match(/teams\/([^/]+)\/videos\/([^/]+)\//);
+    const teamIdFromKey = m?.[1] || null;
+    const videoIdFromKey = m?.[2] || null;
     const finalTeamId = teamId ?? teamIdFromKey;
 
     // Validate team access if teamId is provided
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
     const title = String(filename || "").replace(/\.[^/.]+$/, "") || "Untitled";
     const now = new Date().toISOString();
     
-    const newVideoId = crypto.randomUUID();
+    const newVideoId = videoIdFromKey || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
