@@ -1,11 +1,17 @@
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { google } from "googleapis";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { sendMail } from "@/lib/email";
 import { broadcast } from "@/lib/realtime";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import type { Readable } from "stream";
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export async function POST(
   req: NextRequest,
@@ -62,39 +68,94 @@ export async function POST(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Personal videos don't need approval workflow
-    if (!video.teamId) {
-      return NextResponse.json({ error: "Personal videos don't require approval" }, { status: 400 });
+    // Authorization: allow team owner for team videos, and owner for personal videos
+    let team: any = null;
+    if (video.teamId) {
+      const { data: t, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .eq('id', video.teamId)
+        .single();
+      if (teamError || !t) {
+        return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      }
+      team = t;
+      if (team.ownerId !== me.id) {
+        return NextResponse.json({ error: "Only team owner can approve videos" }, { status: 403 });
+      }
+    } else {
+      // personal video: only the owner/uploader can publish
+      if (video.userId !== me.id) {
+        return NextResponse.json({ error: "Not allowed to publish this video" }, { status: 403 });
+      }
     }
 
-    // Check if user is team owner
-    const { data: team, error: teamError } = await supabaseAdmin
-      .from('teams')
-      .select('*')
-      .eq('id', video.teamId)
-      .single();
+    // Parse YouTube metadata from request
+    const { title, description, privacyStatus, madeForKids } = await req.json().catch(() => ({ }));
 
-    if (teamError || !team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
-    }
-
-    if (team.ownerId !== me.id) {
-      return NextResponse.json({ error: "Only team owner can approve videos" }, { status: 403 });
-    }
-
-    // Get the user who requested approval
-    const { data: user, error: userFetchError } = await supabaseAdmin
+    // Ensure YouTube connection exists
+    const { data: ytUser, error: ytUserError } = await supabaseAdmin
       .from('users')
-      .select('*')
-      .eq('id', video.requestedByUserId)
+      .select('youtubeAccessToken, youtubeRefreshToken')
+      .eq('clerkId', userId)
       .single();
 
-    if (userFetchError || !user) {
-      console.error("User who requested approval not found:", userFetchError);
-      // Continue anyway - we'll still approve the video
+    if (ytUserError || !ytUser?.youtubeAccessToken) {
+      return NextResponse.json(
+        { error: "YouTube not connected. Please connect your YouTube account in settings." },
+        { status: 403 }
+      );
     }
 
-    // Update video status to PUBLISHED
+    // Prepare YouTube client
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`
+    );
+    oauth2Client.setCredentials({ 
+      access_token: ytUser.youtubeAccessToken,
+      refresh_token: ytUser.youtubeRefreshToken 
+    });
+    const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+
+    // Get video stream from S3
+    if (!video.key) {
+      return NextResponse.json({ error: "Video storage key missing" }, { status: 400 });
+    }
+    const s3Obj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.key }));
+    const mediaBody = s3Obj.Body as Readable;
+
+    // Upload to YouTube
+    const insertRes = await youtube.videos.insert({
+      part: ["snippet", "status"],
+      requestBody: {
+        snippet: {
+          title: title || (video.filename ? video.filename.replace(/\.[^/.]+$/, '') : 'Untitled'),
+          description: description || "",
+        },
+        status: {
+          privacyStatus: privacyStatus || "private",
+          madeForKids: madeForKids || false,
+        },
+      },
+      media: { body: mediaBody },
+    });
+
+    const youtubeVideoId = insertRes.data.id || null;
+
+    // If thumbnail exists, set it
+    try {
+      if (video.thumbnailKey && youtubeVideoId) {
+        const thumbObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.thumbnailKey }));
+        const thumbBody = thumbObj.Body as Readable;
+        await youtube.thumbnails.set({ videoId: youtubeVideoId, media: { body: thumbBody } });
+      }
+    } catch (thumbErr) {
+      console.warn('YouTube thumbnail set failed:', thumbErr);
+    }
+
+    // Update video status to PUBLISHED after successful upload
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('videos')
       .update({ 
@@ -108,10 +169,26 @@ export async function POST(
 
     if (updateError) {
       console.error("Error updating video:", updateError);
-      return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to approve video after upload" }, { status: 500 });
     }
 
     // Send email notification to the user who requested approval
+    // Get the user who requested approval (team videos)
+    const shouldNotifyRequester = !!video.teamId && !!video.requestedByUserId;
+    let user: any = null;
+    if (shouldNotifyRequester) {
+      const { data: requester, error: userFetchError } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('id', video.requestedByUserId)
+        .single();
+      if (userFetchError || !requester) {
+        console.error("User who requested approval not found:", userFetchError);
+      } else {
+        user = requester;
+      }
+    }
+
     if (user) {
       try {
         const videoTitle = video.filename.replace(/\.[^/.]+$/, '');
@@ -123,7 +200,7 @@ export async function POST(
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2>✅ Video Approved!</h2>
               <p><strong>Video:</strong> ${videoTitle}</p>
-              <p><strong>Team:</strong> ${team.name}</p>
+              ${team ? `<p><strong>Team:</strong> ${team.name}</p>` : ''}
               <p><strong>Approved by:</strong> ${me.name || me.email}</p>
               <p><strong>Video URL:</strong> <a href="${videoUrl}">${videoUrl}</a></p>
               <p>Your video has been approved and is now published!</p>
@@ -133,7 +210,7 @@ export async function POST(
             Video Approved!
             
             Video: ${videoTitle}
-            Team: ${team.name}
+            ${team ? `Team: ${team.name}` : ''}
             Approved by: ${me.name || me.email}
             Video URL: ${videoUrl}
             
@@ -160,7 +237,7 @@ export async function POST(
       payload: { id: video.id, status: "PUBLISHED" }
     });
 
-    return NextResponse.json({ ok: true, video: updated });
+    return NextResponse.json({ ok: true, video: updated, youtubeVideoId });
   } catch (e) {
     console.error("Error approving video:", e);
     return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
