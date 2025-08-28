@@ -96,9 +96,9 @@ export async function POST(req: NextRequest) {
     // Generate the video ID up front so the S3 layout is stable and shared with thumbnail keys
     const videoId = crypto.randomUUID();
 
-    // Upload directly to the canonical final location
-    // teams/<teamId>/videos/<videoId>/real
-    const finalKey = `teams/${teamId}/videos/${videoId}/real`;
+    // Upload directly to the canonical final location using the original filename
+    // teams/<teamId>/videos/<videoId>/<filename>
+    const finalKey = `teams/${teamId}/videos/${videoId}/${safeName}`;
 
     // Start multipart upload (with robust error handling)
     let out;

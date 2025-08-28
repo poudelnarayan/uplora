@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { key, uploadId, parts, originalFilename, contentType, sizeBytes, teamId } = await req.json();
+  const { key, uploadId, parts, originalFilename: originalFilenameFromReq, contentType, sizeBytes, teamId } = await req.json();
 
   if (!key || !uploadId || !Array.isArray(parts) || parts.length === 0) {
     return NextResponse.json({ error: "key, uploadId, parts required" }, { status: 400 });
@@ -83,10 +83,10 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     // Parse metadata from upload lock if present; otherwise fallback to request body
-    const lockMeta = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
-    const inferredFilename = lockMeta.filename ?? originalFilename ?? key.split('/').pop() ?? 'video.mp4';
+    const lockMeta: { filename?: string; contentType?: string; teamId?: string | null; videoId?: string } = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
+    const inferredFilename: string = (lockMeta.filename || originalFilenameFromReq || key.split('/').pop() || 'video.mp4') as string;
     const inferredContentType = lockMeta.contentType ?? contentType ?? 'application/octet-stream';
-    const lockTeamId = lockMeta.teamId ?? teamId ?? null;
+    const lockTeamId = (lockMeta.teamId !== undefined ? lockMeta.teamId : teamId) ?? null;
 
     const title = String(inferredFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
 
     // Create the video record only after successful upload completion
     // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
-    const newVideoId = lockMeta.videoId || crypto.randomUUID();
+    const newVideoId = (lockMeta.videoId as string | undefined) || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
@@ -155,9 +155,9 @@ export async function POST(req: NextRequest) {
         .eq('key', key);
     } catch {}
 
-    // Precompute canonical key to match required structure
-    // Video object must live at: teams/<teamId>/videos/<videoId>/real
-    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/real`;
+    // Precompute canonical key: teams/<teamId>/videos/<videoId>/<originalFilename>
+    const fileNameForStorage: string = inferredFilename || "video.mp4";
+    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/${fileNameForStorage}`;
 
     // Start background tasks after responding fast
     setTimeout(async () => {

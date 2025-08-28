@@ -145,12 +145,18 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
           xhr.send(file);
         });
         
-        // Call completion endpoint to release lock
+        // Call completion endpoint to release lock and create DB record with filename
         try {
           await fetch("/api/s3/put-complete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ key: presign.key })
+            body: JSON.stringify({ 
+              key: presign.key,
+              filename: file.name,
+              contentType: file.type || "application/octet-stream",
+              sizeBytes: file.size,
+              teamId
+            })
           });
         } catch (error) {
           console.warn("Failed to complete upload:", error);
@@ -210,7 +216,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         const { url } = await signPart(partNumber);
         const res = await fetch(url, { method: "PUT", body: blob });
         if (!res.ok) throw new Error(`Part ${partNumber} failed`);
-        const etag = (res.headers.get("ETag") || "").replaceAll('"', "");
+        const etag = (res.headers.get("ETag") || "").replace(/"/g, "");
         if (!etag) throw new Error("Missing ETag");
         uploaded[partNumber] = etag;
         completedBytes += blob.size;

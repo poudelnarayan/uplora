@@ -93,7 +93,8 @@ export async function POST(req: NextRequest) {
 
     // Ensure we have a stable videoId for the canonical key structure
     videoId = videoId || crypto.randomUUID();
-    const finalKey = `teams/${teamId}/videos/${videoId}/real`;
+    // Use original filename as the object name
+    const finalKey = `teams/${teamId}/videos/${videoId}/${safeName}`;
 
     // Generate presigned PUT URL for final key
     const command = new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: finalKey, ContentType: contentType });
