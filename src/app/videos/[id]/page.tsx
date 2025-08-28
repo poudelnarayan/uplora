@@ -262,13 +262,13 @@ export default function VideoPreviewPage() {
               'PROCESSING': 'Video is back in editing mode',
               'PENDING': 'Video is awaiting approval',
               'PUBLISHED': 'Video has been published'
-            };
-            
-            if (statusMessages[evt.payload.status]) {
+            } as const;
+            const key = evt?.payload?.status as keyof typeof statusMessages | undefined;
+            if (key) {
               notifications.addNotification({
                 type: "success",
                 title: "Status updated",
-                message: statusMessages[evt.payload.status]
+                message: statusMessages[key]
               });
             }
             return;
@@ -1403,8 +1403,8 @@ export default function VideoPreviewPage() {
                       </button>
                     )}
                     
-                    {/* Personal workspace: direct publish */}
-                    {!video.teamId && (role === "PERSONAL_OWNER" || role === "OWNER") && (video.status === "PROCESSING" || !video.status) && (
+                    {/* Personal workspace: direct publish (treat OWNER as personal owner) */}
+                    {!video.teamId && role === "OWNER" && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-success" disabled={submitting} onClick={() => approveVideo()}>
                         {submitting ? "Publishing..." : "🚀 Publish to YouTube"}
                       </button>
@@ -1453,7 +1453,7 @@ export default function VideoPreviewPage() {
                     )}
                     
                     {/* Delete button for owners/admins/managers */}
-                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER" || role === "PERSONAL_OWNER") && (
+                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
                       <button
                         className="btn btn-outline btn-error ml-auto"
                         onClick={() => setDeleteModalOpen(true)}
