@@ -214,7 +214,7 @@ export default function VideoUploadZone({
   }, []);
 
   const startUpload = async (file: File) => {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io';
+    const baseUrl = '';
     try {
       abortControllerRef.current = new AbortController();
       const uploadSignal = abortControllerRef.current?.signal;
@@ -267,7 +267,7 @@ export default function VideoUploadZone({
         startProgressTicker();
       };
 
-      async function uploadOnePart(partNumber: number) {
+      const uploadOnePart = async (partNumber: number) => {
         if (failed) return;
         const start = (partNumber - 1) * partSize;
         const end = Math.min(start + partSize, file.size);
@@ -316,9 +316,9 @@ export default function VideoUploadZone({
         });
 
         uploadedParts.push({ ETag: etag, PartNumber: partNumber });
-      }
+      };
 
-      async function worker() {
+      const worker = async () => {
         while (!failed) {
           const current = nextPart;
           nextPart += 1;
@@ -330,7 +330,7 @@ export default function VideoUploadZone({
             throw e;
           }
         }
-      }
+      };
 
       const workers = Array.from({ length: concurrency }, () => worker());
       startedRef.current = true;
