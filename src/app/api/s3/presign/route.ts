@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    let { filename, contentType, sizeBytes, teamId } = await req.json();
+    // Read full body once
+    const body = await req.json();
+    let { filename, contentType, sizeBytes, teamId, videoId } = body as { filename: string; contentType: string; sizeBytes?: number; teamId?: string | null; videoId?: string };
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
 
     // Ensure user exists early
@@ -89,17 +91,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate a temporary upload ID (not a video ID)
-    const uploadId = crypto.randomUUID();
-
-    // Prefer canonical final location when client passes a known videoId
-    let finalKey: string;
-    if (body?.videoId) {
-      finalKey = `teams/${teamId}/videos/${body.videoId}/real`;
-    } else {
-      // Fallback legacy path (should be migrated to multipart init)
-      finalKey = `teams/${teamId}/videos/${uploadId}/original/${safeName}`;
-    }
+    // Ensure we have a stable videoId for the canonical key structure
+    videoId = videoId || crypto.randomUUID();
+    const finalKey = `teams/${teamId}/videos/${videoId}/real`;
 
     // Generate presigned PUT URL for final key
     const command = new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: finalKey, ContentType: contentType });
@@ -115,7 +109,8 @@ export async function POST(req: NextRequest) {
           filename: safeName,
           contentType,
           sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
-          teamId
+          teamId,
+          videoId
         })
       });
     
@@ -127,7 +122,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       putUrl, 
       key: finalKey, 
-      tempId: uploadId,
+      videoId,
       filename: safeName,
       contentType,
       sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
