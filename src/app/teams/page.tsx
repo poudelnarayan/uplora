@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import AppShell from "@/components/layout/AppLayout";
 import { useNotifications } from "@/components/ui/Notification";
@@ -477,84 +477,86 @@ export default function TeamsPage() {
   return (
     <>
       <SignedIn>
-        <AppShell>
-          <NextSeoNoSSR title="Teams" noindex nofollow />
-          
-          <div className="h-[calc(100vh-8rem)] overflow-hidden">
-            <div className="h-full overflow-y-auto px-4 lg:px-0">
-              <div className="space-y-4 py-4">
-                {/* Workspace switcher card removed per request */}
+        <Suspense fallback={null}>
+          <AppShell>
+            <NextSeoNoSSR title="Teams" noindex nofollow />
+            
+            <div className="h-[calc(100vh-8rem)] overflow-hidden">
+              <div className="h-full overflow-y-auto px-4 lg:px-0">
+                <div className="space-y-4 py-4">
+                  {/* Workspace switcher card removed per request */}
 
-                {loading ? (
-                  <LoadingSpinner />
-                ) : actualTeams.length === 0 ? (
-                  <EmptyTeamsState onCreateTeam={openCreateTeamModal} />
-                ) : (
-                  <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
-                    <TeamsHeader 
-                      teams={actualTeams} 
-                      onCreateTeam={openCreateTeamModal}
-                    />
-                    
-                    <TeamsStats 
-                      teams={actualTeams} 
-                      currentUserEmail={currentUserEmail}
-                    />
+                  {loading ? (
+                    <LoadingSpinner />
+                  ) : actualTeams.length === 0 ? (
+                    <EmptyTeamsState onCreateTeam={openCreateTeamModal} />
+                  ) : (
+                    <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+                      <TeamsHeader 
+                        teams={actualTeams} 
+                        onCreateTeam={openCreateTeamModal}
+                      />
+                      
+                      <TeamsStats 
+                        teams={actualTeams} 
+                        currentUserEmail={currentUserEmail}
+                      />
 
-                    {/* Teams Grid */}
-                    <div className="grid gap-4">
-                      {actualTeams.map((team, index) => (
-                        <MotionDiv key={team.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}>
-                          <TeamCard
-                            team={team}
-                            currentUserEmail={currentUserEmail}
-                            onInviteMember={openInviteMemberModal}
-                            onDeleteTeam={handleDeleteTeam}
-                            onLeaveTeam={handleLeaveTeam}
-                            onResendInvitation={handleResendInvitation}
-                            onCancelInvitation={handleCancelInvitation}
-                            resendingId={resendingId}
-                            onRemoveMember={handleRemoveMember}
-                          />
-                        </MotionDiv>
-                      ))}
-                    </div>
-                  </MotionDiv>
-                )}
+                      {/* Teams Grid */}
+                      <div className="grid gap-4">
+                        {actualTeams.map((team, index) => (
+                          <MotionDiv key={team.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}>
+                            <TeamCard
+                              team={team}
+                              currentUserEmail={currentUserEmail}
+                              onInviteMember={openInviteMemberModal}
+                              onDeleteTeam={handleDeleteTeam}
+                              onLeaveTeam={handleLeaveTeam}
+                              onResendInvitation={handleResendInvitation}
+                              onCancelInvitation={handleCancelInvitation}
+                              resendingId={resendingId}
+                              onRemoveMember={handleRemoveMember}
+                            />
+                          </MotionDiv>
+                        ))}
+                      </div>
+                    </MotionDiv>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Delete Team Confirmation Modal */}
-          <ConfirmationModal
-            isOpen={deleteModalOpen}
-            onClose={() => setDeleteModalOpen(false)}
-            onConfirm={confirmDeleteTeam}
-            title="Delete Team?"
-            message="This action cannot be undone. The team and all its data will be permanently deleted. All team members will be removed."
-            itemName={teamToDelete?.name}
-            confirmText={deletingTeamId ? "Deleting..." : "Delete Permanently"}
-            cancelText="Cancel"
-            variant="danger"
-            icon="trash"
-            isLoading={!!deletingTeamId}
-          />
+            {/* Delete Team Confirmation Modal */}
+            <ConfirmationModal
+              isOpen={deleteModalOpen}
+              onClose={() => setDeleteModalOpen(false)}
+              onConfirm={confirmDeleteTeam}
+              title="Delete Team?"
+              message="This action cannot be undone. The team and all its data will be permanently deleted. All team members will be removed."
+              itemName={teamToDelete?.name}
+              confirmText={deletingTeamId ? "Deleting..." : "Delete Permanently"}
+              cancelText="Cancel"
+              variant="danger"
+              icon="trash"
+              isLoading={!!deletingTeamId}
+            />
 
-          {/* Leave Team Confirmation Modal */}
-          <ConfirmationModal
-            isOpen={leaveModalOpen}
-            onClose={() => setLeaveModalOpen(false)}
-            onConfirm={confirmLeaveTeam}
-            title="Leave Team?"
-            message="You will no longer have access to this team's content and will need to be re-invited to rejoin."
-            itemName={teamToLeave?.name}
-            confirmText={leavingTeamId ? "Leaving..." : "Leave Team"}
-            cancelText="Cancel"
-            variant="warning"
-            icon="info"
-            isLoading={!!leavingTeamId}
-          />
-        </AppShell>
+            {/* Leave Team Confirmation Modal */}
+            <ConfirmationModal
+              isOpen={leaveModalOpen}
+              onClose={() => setLeaveModalOpen(false)}
+              onConfirm={confirmLeaveTeam}
+              title="Leave Team?"
+              message="You will no longer have access to this team's content and will need to be re-invited to rejoin."
+              itemName={teamToLeave?.name}
+              confirmText={leavingTeamId ? "Leaving..." : "Leave Team"}
+              cancelText="Cancel"
+              variant="warning"
+              icon="info"
+              isLoading={!!leavingTeamId}
+            />
+          </AppShell>
+        </Suspense>
       </SignedIn>
       <SignedOut>
         <RedirectToSignIn redirectUrl="/teams" />
