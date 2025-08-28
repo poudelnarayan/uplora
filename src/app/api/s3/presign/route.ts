@@ -92,8 +92,14 @@ export async function POST(req: NextRequest) {
     // Generate a temporary upload ID (not a video ID)
     const uploadId = crypto.randomUUID();
 
-    // Compute final S3 key using upload ID under team namespace (personal included)
-    const finalKey = `teams/${teamId}/videos/${uploadId}/original/${safeName}`;
+    // Prefer canonical final location when client passes a known videoId
+    let finalKey: string;
+    if (body?.videoId) {
+      finalKey = `teams/${teamId}/videos/${body.videoId}/real`;
+    } else {
+      // Fallback legacy path (should be migrated to multipart init)
+      finalKey = `teams/${teamId}/videos/${uploadId}/original/${safeName}`;
+    }
 
     // Generate presigned PUT URL for final key
     const command = new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: finalKey, ContentType: contentType });

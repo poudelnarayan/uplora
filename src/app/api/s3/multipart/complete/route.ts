@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import { tmpdir } from "os";
@@ -123,7 +123,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the video record only after successful upload completion
-    const newVideoId = crypto.randomUUID();
+    // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
+    const newVideoId = lockMeta.videoId || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
@@ -163,20 +164,38 @@ export async function POST(req: NextRequest) {
       try {
         // Move original to canonical location using S3 CopyObject to avoid streaming header issues
         try {
-          const copySource = `${process.env.S3_BUCKET!}/${encodeURI(key)}`;
-          await s3.send(new CopyObjectCommand({
-            Bucket: process.env.S3_BUCKET!,
-            Key: canonicalOriginalKey,
-            CopySource: copySource,
-            MetadataDirective: "REPLACE",
-            ContentType: inferredContentType,
-          }));
+          if (key !== canonicalOriginalKey) {
+            const copySource = `${process.env.S3_BUCKET!}/${encodeURI(key)}`;
+            await s3.send(new CopyObjectCommand({
+              Bucket: process.env.S3_BUCKET!,
+              Key: canonicalOriginalKey,
+              CopySource: copySource,
+              MetadataDirective: "REPLACE",
+              ContentType: inferredContentType,
+            }));
 
-          // Update video.key to canonical path
-          await supabaseAdmin
-            .from('videos')
-            .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
-            .eq('id', video.id);
+            // Delete the temporary upload object to avoid directory mismatch
+            try {
+              await s3.send(new DeleteObjectCommand({
+                Bucket: process.env.S3_BUCKET!,
+                Key: key,
+              }));
+            } catch (delErr) {
+              console.warn("Failed to delete temp upload object:", delErr);
+            }
+
+            // Update video.key to canonical path
+            await supabaseAdmin
+              .from('videos')
+              .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
+              .eq('id', video.id);
+          } else {
+            // Key is already canonical; ensure DB reflects it
+            await supabaseAdmin
+              .from('videos')
+              .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
+              .eq('id', video.id);
+          }
         } catch (e) {
           console.error("Failed to move original to canonical location", e);
         }
@@ -187,8 +206,8 @@ export async function POST(req: NextRequest) {
           const originalPath = join(tempDir, `original-${key.replace(/\W+/g, '-')}.mp4`);
           const optimizedPath = join(tempDir, `optimized-${key.replace(/\W+/g, '-')}.mp4`);
 
-          // Download original
-          const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+          // Download original from canonical location
+          const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: canonicalOriginalKey }));
           const body = getObj.Body as NodeJS.ReadableStream;
           await new Promise<void>((resolve, reject) => {
             const ws = createWriteStream(originalPath);

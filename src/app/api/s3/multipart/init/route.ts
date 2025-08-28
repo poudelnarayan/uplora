@@ -93,11 +93,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate a temporary upload ID (not a video ID)
-    const uploadId = crypto.randomUUID();
+    // Generate the video ID up front so the S3 layout is stable and shared with thumbnail keys
+    const videoId = crypto.randomUUID();
 
-    // Compute final key using upload ID under team namespace (bucket/uplora/teams/<teamId>/...)
-    const finalKey = `teams/${teamId}/videos/${uploadId}/original/${safeName}`;
+    // Upload directly to the canonical final location
+    // teams/<teamId>/videos/<videoId>/real
+    const finalKey = `teams/${teamId}/videos/${videoId}/real`;
 
     // Start multipart upload (with robust error handling)
     let out;
@@ -125,7 +126,8 @@ export async function POST(req: NextRequest) {
             filename: safeName,
             contentType,
             teamId,
-            uploadId: out.UploadId
+            uploadId: out.UploadId,
+            videoId
           }),
           updatedAt: new Date().toISOString()
         });
@@ -143,7 +145,7 @@ export async function POST(req: NextRequest) {
       uploadId: out.UploadId, 
       key: finalKey, 
       partSize: 16 * 1024 * 1024, 
-      tempId: uploadId,
+      videoId,
       filename: safeName,
       contentType,
       teamId
