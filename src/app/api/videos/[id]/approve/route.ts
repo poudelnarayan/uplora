@@ -119,6 +119,25 @@ export async function POST(
     });
     const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
+    // Ensure we have a fresh access token before uploading
+    try {
+      // Newer libs refresh lazily; proactively refresh to avoid 401s when expiry_date is missing
+      // @ts-ignore - method exists at runtime
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      if (credentials?.access_token) {
+        try {
+          await supabaseAdmin
+            .from('users')
+            .update({
+              youtubeAccessToken: credentials.access_token,
+              youtubeExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+              updatedAt: new Date().toISOString(),
+            })
+            .eq('clerkId', userId);
+        } catch {}
+      }
+    } catch {}
+
     // Get video stream from S3
     if (!video.key) {
       return NextResponse.json({ error: "Video storage key missing" }, { status: 400 });
@@ -126,21 +145,52 @@ export async function POST(
     const s3Obj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.key }));
     const mediaBody = s3Obj.Body as Readable;
 
-    // Upload to YouTube
-    const insertRes = await youtube.videos.insert({
-      part: ["snippet", "status"],
-      requestBody: {
-        snippet: {
-          title: title || (video.filename ? video.filename.replace(/\.[^/.]+$/, '') : 'Untitled'),
-          description: description || "",
+    // Upload to YouTube with one retry on 401
+    const performUpload = async () => {
+      return youtube.videos.insert({
+        part: ["snippet", "status"],
+        requestBody: {
+          snippet: {
+            title: title || (video.filename ? video.filename.replace(/\.[^/.]+$/, '') : 'Untitled'),
+            description: description || "",
+          },
+          status: {
+            privacyStatus: privacyStatus || "private",
+            madeForKids: madeForKids || false,
+          },
         },
-        status: {
-          privacyStatus: privacyStatus || "private",
-          madeForKids: madeForKids || false,
-        },
-      },
-      media: { body: mediaBody },
-    });
+        media: { body: mediaBody },
+      });
+    };
+
+    let insertRes;
+    try {
+      insertRes = await performUpload();
+    } catch (err: any) {
+      const status = err?.code || err?.status || err?.response?.status;
+      if (status === 401) {
+        try {
+          // @ts-ignore - method exists at runtime
+          const { credentials } = await oauth2Client.refreshAccessToken();
+          if (credentials?.access_token) {
+            try {
+              await supabaseAdmin
+                .from('users')
+                .update({
+                  youtubeAccessToken: credentials.access_token,
+                  youtubeExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+                  updatedAt: new Date().toISOString(),
+                })
+                .eq('clerkId', userId);
+            } catch {}
+          }
+        } catch {}
+        // retry once
+        insertRes = await performUpload();
+      } else {
+        throw err;
+      }
+    }
 
     const youtubeVideoId = insertRes.data.id || null;
 
