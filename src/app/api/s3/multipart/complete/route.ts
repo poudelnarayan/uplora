@@ -155,8 +155,8 @@ export async function POST(req: NextRequest) {
     } catch {}
 
     // Precompute canonical key to match required structure
-    // Video object must live at: teams/<teamId>/videos/<videoId>/video
-    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/video`;
+    // Video object must live at: teams/<teamId>/videos/<videoId>/real
+    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/real`;
 
     // Start background tasks after responding fast
     setTimeout(async () => {
