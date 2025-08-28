@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
     // Generate a temporary upload ID (not a video ID)
     const uploadId = crypto.randomUUID();
 
-    // Compute final key using upload ID under team namespace
-    const finalKey = `${teamId}/videos/${uploadId}/original/${safeName}`;
+    // Compute final key using upload ID under team namespace (bucket/uplora/teams/<teamId>/...)
+    const finalKey = `teams/${teamId}/videos/${uploadId}/original/${safeName}`;
 
     // Start multipart upload (with robust error handling)
     let out;

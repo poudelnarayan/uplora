@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
     }
     if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
 
-    // Presign thumbnail under the same videoId folder
-    const key = `${finalTeamId}/videos/${videoId}/thumbnails/${safeName}`;
+    // Presign thumbnail under teams/<teamId>/videos/<videoId>/thumbnails/
+    const key = `teams/${finalTeamId}/videos/${videoId}/thumbnails/${safeName}`;
 
     const command = new PutObjectCommand({ 
       Bucket: process.env.S3_BUCKET!, 

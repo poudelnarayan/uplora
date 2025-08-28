@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
-    const { filename, contentType, sizeBytes, teamId } = await req.json();
+    let { filename, contentType, sizeBytes, teamId } = await req.json();
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
 
     // Ensure user exists early
@@ -48,7 +48,22 @@ export async function POST(req: NextRequest) {
     // Build safe file name
     const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
 
-    // Validate team access if teamId is provided
+    // Resolve/validate teamId: fallback to personal team when not provided
+    if (!teamId) {
+      // Try user.personalTeamId or find personal team owned by user
+      const { data: pTeam } = await supabaseAdmin
+        .from('teams')
+        .select('id')
+        .eq('ownerId', user.id)
+        .eq('isPersonal', true)
+        .single();
+      teamId = pTeam?.id || null;
+      if (!teamId) {
+        return NextResponse.json({ error: "No team found for upload" }, { status: 400 });
+      }
+    }
+
+    // Validate team access for provided/resolved teamId
     if (teamId) {
       const { data: team, error: teamError } = await supabaseAdmin
         .from('teams')
@@ -77,10 +92,8 @@ export async function POST(req: NextRequest) {
     // Generate a temporary upload ID (not a video ID)
     const uploadId = crypto.randomUUID();
 
-    // Compute final S3 key using upload ID
-    const finalKey = teamId
-      ? `teams/${teamId}/videos/${uploadId}/original/${safeName}`
-      : `users/${user.id}/videos/${uploadId}/original/${safeName}`;
+    // Compute final S3 key using upload ID under team namespace (personal included)
+    const finalKey = `teams/${teamId}/videos/${uploadId}/original/${safeName}`;
 
     // Generate presigned PUT URL for final key
     const command = new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: finalKey, ContentType: contentType });

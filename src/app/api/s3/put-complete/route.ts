@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    // Derive teamId from key if not provided
-    const m = key.match(/(?:teams\/(.*?)|users\/(.*?))\/videos\/(.*?)\//);
+    // Derive teamId from key (teams/<teamId>/videos/<tempId>/...)
+    const m = key.match(/teams\/(.*?)\/videos\/(.*?)\//);
     const teamIdFromKey = m && m[1] ? m[1] : null;
     const finalTeamId = teamId ?? teamIdFromKey;
 

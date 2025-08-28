@@ -154,8 +154,9 @@ export async function POST(req: NextRequest) {
         .eq('key', key);
     } catch {}
 
-    // Precompute canonical key for original
-    const canonicalOriginalKey = `${finalTeamId}/videos/${video.id}/source/original.mp4`;
+    // Precompute canonical key for original under team structure
+    const originalFilename = inferredFilename || "original.mp4";
+    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/original/${originalFilename}`;
 
     // Start background tasks after responding fast
     setTimeout(async () => {
@@ -215,7 +216,7 @@ export async function POST(req: NextRequest) {
           });
 
           // Upload optimized to a deterministic preview key
-          const previewKey = `${finalTeamId}/videos/${video.id}/preview/web.mp4`;
+          const previewKey = `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`;
           await s3.send(new PutObjectCommand({
             Bucket: process.env.S3_BUCKET!,
             Key: previewKey,
@@ -244,7 +245,7 @@ export async function POST(req: NextRequest) {
       keys: {
         baseOwner: finalTeamId,
         original: canonicalOriginalKey,
-        preview: `${finalTeamId}/videos/${video.id}/preview/web.mp4`
+        preview: `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`
       }
     });
   } catch (e) {
