@@ -14,7 +14,7 @@ import TeamsStats from "@/components/teams/TeamsStats";
 import EmptyTeamsState from "@/components/teams/EmptyTeamsState";
 import LoadingSpinner from "@/components/teams/LoadingSpinner";
 import { motion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 const MotionDiv = motion.div as any;
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,6 @@ export default function TeamsPage() {
   const notifications = useNotifications();
   const { teams: ctxTeams, selectedTeamId, setSelectedTeamId, personalTeam, refreshTeams } = useTeam();
   const router = useRouter();
-  const searchParams = useSearchParams();
   
   // State management
   const [teams, setTeams] = useState<Team[]>([]);
@@ -45,11 +44,8 @@ export default function TeamsPage() {
   // Load teams from server (uses TeamContext refresh to leverage shared cache)
   const loadTeams = async () => {
     try {
-      // No spinner if we already have cached teams
       if (ctxTeams.length === 0) setLoading(true);
-      // Ask context to refresh; it uses shared cache and SSE-aware logic
       await refreshTeams();
-      // Build detailed teams from context list
       const baseTeams = (ctxTeams || []).filter((t: any) => !t.isPersonal);
       const detailed: Team[] = await Promise.all(
         baseTeams.map(async (t: any) => {
@@ -75,20 +71,20 @@ export default function TeamsPage() {
               }
               return { id: details.team.id, name: details.team.name, description: details.team.description || "", members: mappedMembers, invitations: (details.invites || []).map((inv: any) => ({ id: inv.id || inv.token, email: inv.email, role: inv.role, status: (inv.status || "PENDING").toLowerCase(), invitedAt: new Date(inv.createdAt || inv.invitedAt || Date.now()), invitedBy: user?.fullName || user?.firstName || "" })), createdAt: details.team.createdAt ? new Date(details.team.createdAt) : new Date(), ownerEmail: ownerUser?.email || "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
             }
-                      } catch (error) {
-              console.error(`Error loading team details for ${t.id}:`, error);
-            }
-            return { id: t.id, name: t.name, description: t.description || "", members: [], invitations: [], createdAt: t.createdAt ? new Date(t.createdAt) : new Date(), ownerEmail: "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
-          })
-        );
-        setTeams(detailed);
-      } catch (e) {
-        console.error("Error loading teams:", e);
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to load teams", 
-          message: "Please refresh the page to try again" 
-        });
+          } catch (error) {
+            console.error(`Error loading team details for ${t.id}:`, error);
+          }
+          return { id: t.id, name: t.name, description: t.description || "", members: [], invitations: [], createdAt: t.createdAt ? new Date(t.createdAt) : new Date(), ownerEmail: "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
+        })
+      );
+      setTeams(detailed);
+    } catch (e) {
+      console.error("Error loading teams:", e);
+      notifications.addNotification({ 
+        type: "error", 
+        title: "Failed to load teams", 
+        message: "Please refresh the page to try again" 
+      });
     } finally {
       setLoading(false);
     }
@@ -97,35 +93,33 @@ export default function TeamsPage() {
   // Hydrate instantly from TeamContext cache, then background refresh
   useEffect(() => {
     if (!user) return;
-    // Seed from context cache for instant render
     if (ctxTeams.length > 0) {
       const baseTeams = ctxTeams.filter((t: any) => !t.isPersonal);
       setTeams(baseTeams as any);
       setLoading(false);
-      // kick background detail fetch
       void loadTeams();
     } else {
       void loadTeams();
     }
-    // keep synced when context teams change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, ctxTeams.length]);
 
-  // Force refresh when coming from invite acceptance
+  // Force refresh when coming from invite acceptance (read from window)
   useEffect(() => {
-    const shouldRefresh = searchParams?.get("refresh") === "1";
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const shouldRefresh = params.get("refresh") === "1";
     if (shouldRefresh) {
       (async () => {
         try {
           await refreshTeams();
         } finally {
-          // Clean URL
           router.replace("/teams");
         }
       })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
   // Live updates: refresh list on team.* events (created, member joins, invite accepted/canceled)
   useEffect(() => {
