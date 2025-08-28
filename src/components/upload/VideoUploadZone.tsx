@@ -182,6 +182,11 @@ export default function VideoUploadZone({
       fileSize: item.fileSize || prev.fileSize,
       videoId: item.videoId ?? prev.videoId,
     }));
+    // Stop progress ticker when upload finishes (completed/failed/cancelled)
+    if (item.status === 'completed' || item.status === 'failed' || item.status === 'cancelled') {
+      targetProgressRef.current = 100;
+      stopProgressTicker();
+    }
     if (item.status === 'completed' && item.videoId && onUploadComplete) {
       onUploadComplete(item.videoId);
     }
