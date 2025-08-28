@@ -1409,6 +1409,12 @@ export default function VideoPreviewPage() {
                         {submitting ? "Publishing..." : "🚀 Publish to YouTube"}
                       </button>
                     )}
+                    {/* Team video: allow Owner/Admin/Manager to publish directly while PROCESSING */}
+                    {video.teamId && (role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (video.status === "PROCESSING" || !video.status) && (
+                      <button className="btn btn-success" disabled={submitting} onClick={() => approveVideo()}>
+                        {submitting ? "Publishing..." : "🚀 Publish to YouTube"}
+                      </button>
+                    )}
                     
                     {/* Owner/Admin/Manager actions for team videos while pending */}
                     {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && video.teamId && video.status === "PENDING" && (

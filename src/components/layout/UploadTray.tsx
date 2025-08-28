@@ -46,12 +46,14 @@ export default function UploadTray() {
             exit={{ y: 100, opacity: 0 }}
             className="fixed bottom-4 right-4 z-50 w-80 space-y-2 pointer-events-none"
           >
-          {uploads.map((u) => (
+          {uploads.map((u) => {
+            const isActive = u.status === "uploading" || u.status === "queued";
+            return (
             <div 
               key={u.id} 
-              className="card p-3 shadow-lg border bg-background cursor-pointer pointer-events-auto"
+              className={`card p-3 shadow-lg border bg-background ${isActive ? 'cursor-pointer pointer-events-auto' : 'cursor-default pointer-events-none'}`}
               onClick={() => {
-                if (u.status === "uploading" || u.status === "queued") {
+                if (isActive) {
                   router.push('/make-post/video');
                 }
               }}
@@ -75,7 +77,7 @@ export default function UploadTray() {
                 {u.status === "completed" || u.status === "failed" || u.status === "cancelled" ? (
                   <button
                     aria-label="Dismiss upload"
-                    className="p-1 rounded-full hover:bg-muted transition-colors"
+                    className="p-1 rounded-full hover:bg-muted transition-colors pointer-events-auto"
                     onClick={(e) => { e.stopPropagation(); dismiss(u.id); }}
                   >
                     <X className="w-4 h-4 text-foreground" strokeWidth={2.5} />
@@ -83,7 +85,7 @@ export default function UploadTray() {
                 ) : u.status === "uploading" || u.status === "queued" ? (
                   <button
                     aria-label="Cancel upload"
-                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors pointer-events-auto"
                     onClick={(e) => { e.stopPropagation(); cancelUpload(u.id); }}
                   >
                     <X className="w-4 h-4 text-red-500" strokeWidth={2.5} />
@@ -102,7 +104,7 @@ export default function UploadTray() {
                 <div className="text-xs text-red-500 mt-1">{u.error}</div>
               )}
             </div>
-          ))}
+          )})}
         </MotionDiv>
       )}
     </AnimatePresence>

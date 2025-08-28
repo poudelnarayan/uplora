@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import { tmpdir } from "os";
@@ -160,13 +160,14 @@ export async function POST(req: NextRequest) {
     // Start background tasks after responding fast
     setTimeout(async () => {
       try {
-        // Move original to canonical location under video.id (synchronous so preview works immediately)
+        // Move original to canonical location using S3 CopyObject to avoid streaming header issues
         try {
-          const getObjForCopy = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
-          await s3.send(new PutObjectCommand({
+          const copySource = `${process.env.S3_BUCKET!}/${encodeURI(key)}`;
+          await s3.send(new CopyObjectCommand({
             Bucket: process.env.S3_BUCKET!,
             Key: canonicalOriginalKey,
-            Body: getObjForCopy.Body as any,
+            CopySource: copySource,
+            MetadataDirective: "REPLACE",
             ContentType: inferredContentType,
           }));
 

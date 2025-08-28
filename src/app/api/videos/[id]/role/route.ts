@@ -60,7 +60,14 @@ export async function GET(
 
     console.log(`Role API: Video found, teamId: ${video.teamId}`);
 
-    // Check if user is team owner
+    // Personal workspace video (no team)
+    if (!video.teamId) {
+      const role = video.userId === user.id ? "PERSONAL_OWNER" : null;
+      if (!role) return NextResponse.json({ error: "No access" }, { status: 403 });
+      return NextResponse.json({ role });
+    }
+
+    // Team video. First check if user is the team owner (may not exist in team_members)
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
       .select('*')
@@ -72,12 +79,16 @@ export async function GET(
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
+    if (team.ownerId === user.id) {
+      return NextResponse.json({ role: "OWNER" });
+    }
+
     console.log(`Role API: Team found, checking membership for user ${user.id}`);
 
-    // Check if user is a member of the team
+    // Otherwise, check team membership
     const { data: membership, error: membershipError } = await supabaseAdmin
       .from('team_members')
-      .select('*')
+      .select('role')
       .eq('teamId', video.teamId)
       .eq('userId', user.id)
       .single();
@@ -88,7 +99,6 @@ export async function GET(
     }
 
     console.log(`Role API: User role is ${membership.role}`);
-    // Return the user's role in the team
     return NextResponse.json({ role: membership.role });
   } catch (e) {
     console.error("Role API: Unexpected error:", e);
