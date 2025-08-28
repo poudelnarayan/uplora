@@ -44,14 +44,16 @@ export default function UploadTray() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-4 right-4 z-50 w-80 space-y-2"
+            className="fixed bottom-4 right-4 z-50 w-80 space-y-2 pointer-events-none"
           >
           {uploads.map((u) => (
             <div 
               key={u.id} 
-              className="card p-3 shadow-lg border bg-background cursor-pointer"
+              className="card p-3 shadow-lg border bg-background cursor-pointer pointer-events-auto"
               onClick={() => {
-                router.push('/make-post/video');
+                if (u.status === "uploading" || u.status === "queued") {
+                  router.push('/make-post/video');
+                }
               }}
             >
               <div className="flex items-center justify-between">
