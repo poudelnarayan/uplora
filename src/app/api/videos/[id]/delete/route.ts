@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 
@@ -85,14 +85,35 @@ export async function DELETE(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Delete video file from S3
+    // Delete all objects under this video's prefix (video file, preview, etc.)
     try {
-      await s3.send(new DeleteObjectCommand({
-        Bucket: process.env.S3_BUCKET!,
-        Key: video.key
-      }));
+      // Derive prefix: teams/<teamId>/videos/<videoId>/
+      const m = String(video.key || '').match(/^(teams\/[^/]+\/videos\/[^/]+)\//);
+      const prefix = m?.[1] ? `${m[1]}/` : null;
+
+      if (prefix) {
+        let continuationToken: string | undefined = undefined;
+        do {
+          const listed = await s3.send(new ListObjectsV2Command({
+            Bucket: process.env.S3_BUCKET!,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          }));
+          const objects = (listed.Contents || []).map((o) => ({ Key: o.Key! }));
+          if (objects.length > 0) {
+            await s3.send(new DeleteObjectsCommand({
+              Bucket: process.env.S3_BUCKET!,
+              Delete: { Objects: objects }
+            }));
+          }
+          continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+        } while (continuationToken);
+      } else if (video.key) {
+        // Fallback: delete the single key
+        await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.key }));
+      }
     } catch (s3Error) {
-      console.error("Failed to delete video from S3:", s3Error);
+      console.error("Failed to delete video objects from S3:", s3Error);
       // Continue anyway - we'll still delete the database record
     }
 
