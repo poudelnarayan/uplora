@@ -1,61 +1,88 @@
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { broadcast } from "@/lib/realtime";
 
-export async function GET(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+async function refreshAccessToken(refreshToken: string, redirectUri: string) {
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID || "",
+    client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+    redirect_uri: redirectUri,
+  });
+
+  const resp = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`Refresh failed: ${err.error || resp.statusText}`);
   }
 
-  try {
-    // Get user details from Clerk
-    const client = await clerkClient();
-    const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
+  return resp.json();
+}
 
-    // Ensure user exists in Supabase
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .upsert({
-        id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
-        image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
-      .select('youtubeAccessToken, youtubeChannelId, youtubeChannelTitle, youtubeExpiresAt')
+export async function GET(_req: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ isConnected: false });
+
+    const { data: user, error } = await supabaseAdmin
+      .from("users")
+      .select(
+        "youtubeAccessToken, youtubeRefreshToken, youtubeExpiresAt, youtubeChannelTitle"
+      )
+      .eq("clerkId", userId)
       .single();
 
-    if (userError) {
-      console.error("User sync error:", userError);
-      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    if (error) return NextResponse.json({ isConnected: false });
+
+    const hasTokens = !!user?.youtubeAccessToken && !!user?.youtubeRefreshToken;
+    if (!hasTokens) return NextResponse.json({ isConnected: false });
+
+    // If token close to expiry, try refreshing silently
+    const expiresAt = user.youtubeExpiresAt ? Date.parse(user.youtubeExpiresAt) : 0;
+    const now = Date.now();
+    const needsRefresh = !expiresAt || expiresAt - now < 60_000; // less than 60s remaining
+
+    if (needsRefresh) {
+      try {
+        const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
+        const tokenData = await refreshAccessToken(user.youtubeRefreshToken, redirectUri);
+        const newExpiresAt = tokenData.expires_in
+          ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+          : null;
+
+        await supabaseAdmin
+          .from("users")
+          .update({
+            youtubeAccessToken: tokenData.access_token || user.youtubeAccessToken,
+            youtubeRefreshToken: tokenData.refresh_token || user.youtubeRefreshToken,
+            youtubeExpiresAt: newExpiresAt,
+            updatedAt: new Date().toISOString(),
+          })
+          .eq("clerkId", userId);
+
+        try { broadcast({ type: "youtube.refreshed", userId }); } catch {}
+      } catch (e) {
+        // Do not disconnect; just report connected with existing channel title
+        // Logging only
+        console.error("YouTube token refresh failed:", e);
+      }
     }
 
-    const isConnected = !!(user?.youtubeAccessToken && user?.youtubeChannelId);
-    
-    // Check if token is expired
-    const isExpired = user?.youtubeExpiresAt && new Date() > new Date(user.youtubeExpiresAt);
-
     return NextResponse.json({
-      isConnected: isConnected && !isExpired,
-      channelTitle: user?.youtubeChannelTitle,
-      channelId: user?.youtubeChannelId,
-      isExpired,
+      isConnected: true,
+      channelTitle: user.youtubeChannelTitle || null,
     });
-  } catch (error) {
-    console.error("YouTube status error:", error);
-    return NextResponse.json(
-      { error: "Failed to get YouTube status" },
-      { status: 500 }
-    );
+  } catch (e) {
+    return NextResponse.json({ isConnected: false });
   }
 }

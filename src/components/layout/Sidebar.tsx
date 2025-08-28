@@ -18,14 +18,9 @@ import {
   ChevronDown,
   Video,
   Crown,
-  Share2,
-  Shield,
   Target,
-  Edit,
   Plus,
   Mail,
-  Bell,
-  Search,
   Menu,
   X,
   ShieldCheck
@@ -84,12 +79,6 @@ const navItems: NavItem[] = [
     label: 'Social',
     icon: <Target className="w-5 h-5" />,
     href: '/social'
-  },
-  {
-    id: 'subscription',
-    label: 'Subscription',
-    icon: <Crown className="w-5 h-5" />,
-    href: '/subscription'
   },
   {
     id: 'settings',

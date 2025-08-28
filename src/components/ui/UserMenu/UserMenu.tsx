@@ -93,6 +93,14 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
                 <Settings className="w-4 h-4" />
                 <span>Account Settings</span>
               </Link>
+              <Link
+                href="/subscription"
+                className={styles.menuItem}
+                onClick={() => setIsOpen(false)}
+              >
+                <span className="w-4 h-4 inline-block" />
+                <span>Subscription</span>
+              </Link>
               
               <button
                 onClick={() => {

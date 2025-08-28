@@ -13,7 +13,6 @@ import {
   Upload,
   Users,
   Settings,
-  CreditCard,
   ChevronDown,
   Menu,
   X,
@@ -39,7 +38,6 @@ const routes = [
   { href: "/upload", label: "Make Post", icon: Upload },
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/subscription", label: "Subscription", icon: CreditCard },
   { href: "/social", label: "Social", icon: Plus },
 ];
 
