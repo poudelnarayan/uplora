@@ -460,7 +460,6 @@ const MakePostReels = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="max-w-7xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Main Content */}
@@ -707,7 +706,7 @@ const MakePostReels = () => {
           </div>
         </div>
       </div>
-      </div>
+    </div>
     </AppShell>
   );
 };
