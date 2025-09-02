@@ -5,6 +5,7 @@ import { Menu, X, Star, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import AuthButtons from "./AuthButtons";
+import Image from "next/image";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,13 +40,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
           <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-sm"></div>
-              </div>
-              <div className="text-2xl font-bold gradient-text tracking-tight">
-                Uplora
-              </div>
+            <div className="flex items-center">
+              <Image src="/text-logo.png" alt="Uplora" width={220} height={50} className="h-12 w-auto" />
             </div>
 
             {/* Enhanced Review Indicator */}

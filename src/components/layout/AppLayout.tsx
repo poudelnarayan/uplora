@@ -199,11 +199,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
         {/* Header */}
         <div className="flex items-center h-16 px-4 bg-card border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center">
-              <Video className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-foreground" style={{ fontFamily: 'Inter, Open Sans, sans-serif' }}>Uplora</span>
+          <div className="flex items-center">
+            <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-12 w-auto" />
           </div>
         </div>
 
@@ -289,7 +286,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
               {/* Mobile logo */}
               <div className="lg:hidden">
-                <Image src="/text-logo.png" alt="Uplora" width={96} height={24} className="h-6 w-auto" />
+                <Image src="/text-logo.png" alt="Uplora" width={140} height={35} className="h-10 w-auto" />
               </div>
             </div>
 
@@ -339,7 +336,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               style={{ backgroundColor: 'rgb(var(--card))' }}
             >
               <header className="h-auto flex items-center justify-between p-4 border-b border-border bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
-                <Image src="/text-logo.png" alt="Uplora" width={120} height={30} className="rounded-md block" />
+                <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-10 w-auto rounded-md block" />
                 <button onClick={() => setMobileNavOpen(false)} className="btn btn-ghost btn-sm">
                   <X className="w-4 h-4" />
                 </button>

@@ -1,8 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 import { broadcast } from "@/lib/realtime";
@@ -17,12 +16,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user details from Clerk
-    const client = await clerkClient();
-    const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
+    // Get user details from Clerk (no server API key required)
+    const userInfo = await currentUser();
+    if (!userInfo) {
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
+        { status: 401 }
+      );
+    }
+    const userEmail = userInfo.emailAddresses?.[0]?.emailAddress || "";
+    const userName = userInfo.fullName || userInfo.firstName || "";
+    const userImage = userInfo.imageUrl || "";
+
+    // Environment validation to avoid silent failures in production
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Team creation misconfiguration: Missing Supabase env vars.", {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      });
+      return NextResponse.json(
+        createErrorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          "Server configuration error. Please set Supabase URL and Service Role key."
+        ),
+        { status: 500 }
+      );
+    }
 
     // Ensure user exists in database
     const { data: user, error: userError } = await supabaseAdmin
@@ -163,12 +182,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user details from Clerk
-    const client = await clerkClient();
-    const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
+    // Get user details from Clerk (no server API key required)
+    const userInfo = await currentUser();
+    if (!userInfo) {
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
+        { status: 401 }
+      );
+    }
+    const userEmail = userInfo.emailAddresses?.[0]?.emailAddress || "";
+    const userName = userInfo.fullName || userInfo.firstName || "";
+    const userImage = userInfo.imageUrl || "";
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Teams GET misconfiguration: Missing Supabase env vars.", {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      });
+      return NextResponse.json(
+        createErrorResponse(
+          ErrorCodes.INTERNAL_ERROR,
+          "Server configuration error. Please set Supabase URL and Service Role key."
+        ),
+        { status: 500 }
+      );
+    }
 
     // Ensure user exists in database
     const { data: user, error: userError } = await supabaseAdmin
