@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Play, ArrowRight } from "lucide-react";
 import dashboardHero from "@/assets/dashboard-hero.jpg";
