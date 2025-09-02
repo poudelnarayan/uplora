@@ -37,7 +37,6 @@ const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
   { href: "/make-post", label: "Make Post", icon: Upload },
   { href: "/teams", label: "Teams", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
   { href: "/social", label: "Social", icon: Plus },
 ];
 
