@@ -629,9 +629,6 @@ const MakePostImage = () => {
               </Card>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
     </AppShell>
   );
 };

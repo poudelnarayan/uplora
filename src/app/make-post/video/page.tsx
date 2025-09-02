@@ -743,9 +743,6 @@ const MakePostVideos = () => {
             </Card>
           </div>
         </div>
-      </div>
-      </div>
-    </div>
     </AppShell>
   );
 };
