@@ -11,6 +11,8 @@ import FAQSection from "@/components/Landing/FAQSection";
 import ContactSection from "@/components/Landing/ContactSection";
 import ReviewsSection from "@/components/Landing/ReviewsSection";
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   return (
     <DashboardLayout>
