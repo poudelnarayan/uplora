@@ -130,13 +130,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add the owner as a team member with OWNER role
+    // Add the owner as a team member with ADMIN role (since enum doesn't include OWNER)
     const { error: memberError } = await supabaseAdmin
       .from('team_members')
       .insert({
         teamId: team.id,
         userId: user.id,
-        role: 'OWNER',
+        role: 'ADMIN', // Use ADMIN since OWNER is not in the enum
         status: 'ACTIVE',
         joinedAt: now
       });
