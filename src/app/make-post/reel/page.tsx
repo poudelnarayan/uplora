@@ -662,8 +662,6 @@ const MakePostReels = () => {
             </Card>
           </div>
         </div>
-      </div>
-    </div>
     </AppShell>
   );
 };
