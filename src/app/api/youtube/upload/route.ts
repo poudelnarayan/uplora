@@ -36,10 +36,11 @@ export async function POST(req: NextRequest) {
     const obj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
     const body = obj.Body as Readable;
 
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || undefined;
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`
+      process.env.YT_REDIRECT_URI || `${origin || ''}/api/youtube/connect`
     );
     oauth2Client.setCredentials({ 
       access_token: user.youtubeAccessToken,
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
 
     const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
+    // Use resumable upload to avoid multipart size limits
     const insertRes = await youtube.videos.insert({
       part: ["snippet", "status"],
       requestBody: {
@@ -63,11 +65,32 @@ export async function POST(req: NextRequest) {
       media: {
         body: body,
       },
-    });
+    }, {
+      // Explicitly tell googleapis to use resumable protocol
+      params: { uploadType: 'resumable' }
+    } as any);
+
+    const videoId = insertRes.data.id;
+
+    // Optional: set thumbnail if provided
+    if (videoId && thumbnailKey) {
+      try {
+        const thumb = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: thumbnailKey }));
+        const thumbBody = thumb.Body as Readable;
+        const mime = (thumb as any).ContentType || 'image/jpeg';
+        await youtube.thumbnails.set({
+          videoId,
+          media: { mimeType: mime as string, body: thumbBody },
+        } as any);
+      } catch (e) {
+        console.error('Thumbnail set failed:', e);
+        // Continue without failing the whole upload
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      videoId: insertRes.data.id,
+      videoId: videoId,
       title: insertRes.data.snippet?.title,
     });
   } catch (error) {

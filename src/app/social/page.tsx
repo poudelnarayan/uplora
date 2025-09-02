@@ -1,277 +1,191 @@
 "use client";
-
-import { motion } from "framer-motion";
-const MotionDiv = motion.div as any;
+import { useEffect, useState } from "react";
+import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, XCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import AppShell from "@/components/layout/AppLayout";
-import { Youtube, Instagram, Twitter, Facebook, Linkedin, Clock, Video } from "lucide-react";
-import YouTubeConnection from "@/components/settings/YouTubeConnection";
-import { useEffect, useState, Suspense } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useSearchParams } from "next/navigation";
 import { useNotifications } from "@/components/ui/Notification";
 
-function SocialContent() {
-  const { isSignedIn } = useUser();
-  const searchParams = useSearchParams();
+const SocialConnections = () => {
   const notifications = useNotifications();
-  const [youtubeData, setYouTubeData] = useState<{ isConnected: boolean; channelTitle?: string | null }>({ isConnected: false });
-  const [isLoading, setIsLoading] = useState(true);
-  const [ytCacheAt, setYtCacheAt] = useState<number | null>(null);
+  const [yt, setYt] = useState<{ loading: boolean; isConnected: boolean; channelTitle?: string | null }>({ loading: true, isConnected: false });
 
-  // Fetch YouTube status
   useEffect(() => {
-    if (!isSignedIn) {
-      setIsLoading(false);
-      return;
-    }
-    
-    const fetchYouTubeStatus = async () => {
+    (async () => {
       try {
-        setIsLoading(true);
-        // Cache: 5 minutes in-memory via localStorage
-        try {
-          const cached = JSON.parse(localStorage.getItem('yt-status-cache') || 'null');
-          if (cached && Date.now() - cached.t < 5 * 60 * 1000) {
-            setYouTubeData(cached.data);
-            setYtCacheAt(cached.t);
-            setIsLoading(false);
-            return;
-          }
-        } catch {}
-        const response = await fetch("/api/youtube/status", { cache: 'no-store' });
-        if (response.ok) {
-          const data = await response.json();
-          setYouTubeData(data);
-          try { localStorage.setItem('yt-status-cache', JSON.stringify({ data, t: Date.now() })); } catch {}
-        } else {
-          console.error("Failed to fetch YouTube status:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching YouTube status:", error);
-      } finally {
-        setIsLoading(false);
+        const res = await fetch('/api/youtube/status', { cache: 'no-store' });
+        const data = await res.json();
+        setYt({ loading: false, isConnected: !!data?.isConnected, channelTitle: data?.channelTitle || null });
+      } catch {
+        setYt({ loading: false, isConnected: false });
       }
-    };
-
-    fetchYouTubeStatus();
-  }, [isSignedIn]);
-
-  // Realtime: invalidate cache on youtube.* events
-  useEffect(() => {
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource('/api/events');
-      es.onmessage = async (ev) => {
-        try {
-          const evt = JSON.parse(ev.data || '{}');
-          if (!evt?.type?.startsWith('youtube.')) return;
-          // Invalidate cache and refetch
-          try { localStorage.removeItem('yt-status-cache'); } catch {}
-          const response = await fetch('/api/youtube/status', { cache: 'no-store' });
-          if (response.ok) {
-            const data = await response.json();
-            setYouTubeData(data);
-            try { localStorage.setItem('yt-status-cache', JSON.stringify({ data, t: Date.now() })); } catch {}
-          }
-        } catch {}
-      };
-      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
-    } catch {}
-    return () => { try { es?.close(); } catch {} };
+    })();
   }, []);
-
-  // Handle YouTube OAuth completion
-  useEffect(() => {
-    const youtubeCode = searchParams.get('youtube_code');
+  const getPlatformIcon = (platformId: string) => {
+    const iconMap = {
+      instagram: Instagram,
+      youtube: Youtube, 
+      twitter: Twitter,
+      facebook: Facebook,
+      linkedin: Linkedin,
+      tiktok: () => (
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.321 5.562a5.124 5.124 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.342-2.019-1.342-3.196h-3.064v13.814c0 1.384-1.117 2.507-2.5 2.507s-2.5-1.123-2.5-2.507c0-1.384 1.117-2.507 2.5-2.507.284 0 .556.048.81.135V9.321c-.254-.052-.516-.08-.785-.08C7.486 9.241 5 11.727 5 14.861c0 3.134 2.486 5.62 5.86 5.62 3.374 0 5.86-2.486 5.86-5.62V8.797c1.26.9 2.799 1.425 4.46 1.425v-3.064c-1.385 0-2.599-.562-3.459-1.476z"/>
+        </svg>
+      )
+    };
     
-    if (youtubeCode && isSignedIn) {
-      const completeYouTubeConnection = async () => {
-        try {
-          notifications.addNotification({
-            type: "info",
-            title: "Connecting YouTube...",
-            message: "Please wait while we connect your YouTube account."
-          });
-
-          const response = await fetch('/api/youtube/complete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code: youtubeCode }),
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            notifications.addNotification({
-              type: "success",
-              title: "YouTube Connected!",
-              message: `Successfully connected to ${result.channelTitle || 'your YouTube channel'}`
-            });
-            
-            // Refresh YouTube status
-            const statusResponse = await fetch("/api/youtube/status");
-            if (statusResponse.ok) {
-              const statusData = await statusResponse.json();
-              setYouTubeData(statusData);
-            }
-            
-            // Clean up URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('youtube_code');
-            window.history.replaceState({}, '', newUrl.toString());
-          } else {
-            notifications.addNotification({
-              type: "error",
-              title: "Connection Failed",
-              message: result.error || "Failed to complete YouTube connection"
-            });
-          }
-        } catch (error) {
-          console.error("YouTube completion error:", error);
-          notifications.addNotification({
-            type: "error",
-            title: "Connection Failed",
-            message: "Failed to complete YouTube connection. Please try again."
-          });
-        }
-      };
-
-      completeYouTubeConnection();
+    const IconComponent = iconMap[platformId as keyof typeof iconMap];
+    return IconComponent ? <IconComponent className="h-6 w-6" /> : null;
+  };
+  const platforms = [
+    {
+      id: "instagram",
+      name: "Instagram",
+      connected: true,
+      username: "@uplora_official",
+      bgColor: "bg-gradient-to-br from-purple-500/10 to-pink-500/10"
+    },
+    {
+      id: "youtube",
+      name: "YouTube", 
+      connected: yt.isConnected,
+      username: yt.channelTitle ? `@${yt.channelTitle}` : null,
+      bgColor: "bg-gradient-to-br from-red-500/10 to-red-600/10"
+    },
+    {
+      id: "twitter",
+      name: "X (Twitter)",
+      connected: false,
+      username: null,
+      bgColor: "bg-gradient-to-br from-gray-800/10 to-black/10"
+    },
+    {
+      id: "facebook",
+      name: "Facebook",
+      connected: true,
+      username: "Uplora Page",
+      bgColor: "bg-gradient-to-br from-blue-500/10 to-blue-600/10"
+    },
+    {
+      id: "linkedin",
+      name: "LinkedIn",
+      connected: false,
+      username: null,
+      bgColor: "bg-gradient-to-br from-blue-600/10 to-blue-700/10"
+    },
+    {
+      id: "tiktok",
+      name: "TikTok",
+      connected: false,
+      username: null,
+      bgColor: "bg-gradient-to-br from-gray-900/10 to-black/10"
     }
-  }, [searchParams, isSignedIn, notifications]);
+  ];
 
-  // Handle error parameters from URL
-  useEffect(() => {
-    const error = searchParams.get('error');
-    if (error) {
-      let errorMessage = "YouTube connection failed";
-      
-      switch (error) {
-        case 'youtube_connection_failed':
-          errorMessage = "Failed to connect YouTube account. Please try again.";
-          break;
-        case 'youtube_token_failed':
-          errorMessage = "Failed to authenticate with YouTube. Please try again.";
-          break;
-        case 'youtube_channel_failed':
-          errorMessage = "Failed to fetch YouTube channel information. Please try again.";
-          break;
-        case 'youtube_no_code':
-          errorMessage = "Authorization was cancelled or failed. Please try again.";
-          break;
-        case 'youtube_oauth_start_failed':
-          errorMessage = "Failed to start YouTube authorization. Please try again.";
-          break;
-        default:
-          errorMessage = "YouTube connection failed. Please try again.";
-      }
-
-      notifications.addNotification({
-        type: "error",
-        title: "YouTube Connection Failed",
-        message: errorMessage
-      });
-
-      // Clean up the URL
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('error');
-      window.history.replaceState({}, '', newUrl.toString());
-    }
-  }, [searchParams, notifications]);
-
-  return (
-    <div className="min-h-full space-y-8">
-      {/* Clean Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: '#222831' }}>Social</h1>
-        <p className="text-sm" style={{ color: '#393E46' }}>Connect your social media accounts</p>
-      </div>
-
-      {/* YouTube Connection */}
-      <div className="rounded-lg p-6 mb-6" style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#00ADB5' }}>
-              <Youtube className="w-6 h-6 text-white" />
-            </div> 
-            <div>
-              <h3 className="text-lg font-semibold" style={{ color: '#222831' }}>YouTube</h3>
-              <p className="text-sm" style={{ color: '#393E46' }}>
-                {isLoading ? 'Loading...' : 
-                  youtubeData.isConnected 
-                    ? `Connected: ${youtubeData.channelTitle || 'Your Channel'}`
-                    : 'Connect your YouTube channel for direct uploads'
-                }
-              </p>
-            </div>
-          </div>
-          <YouTubeConnection 
-            isConnected={youtubeData.isConnected} 
-            channelTitle={youtubeData.channelTitle} 
-            onConnect={() => {
-              // Refresh YouTube status after connection
-              const fetchYouTubeStatus = async () => {
-                try {
-                  const response = await fetch("/api/youtube/status");
-                  if (response.ok) {
-                    const data = await response.json();
-                    setYouTubeData(data);
-                  }
-                } catch (error) {
-                  console.error("Failed to fetch YouTube status:", error);
-                }
-              };
-              fetchYouTubeStatus();
-            }} 
-          />
-        </div>
-      </div>
-
-      {/* Other Platforms */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[
-          {icon: Instagram, name: 'Instagram', desc: 'Photo & story publishing'},
-          {icon: Twitter, name: 'X / Twitter', desc: 'Tweet scheduling'},
-          {icon: Facebook, name: 'Facebook', desc: 'Page management'},
-          {icon: Linkedin, name: 'LinkedIn', desc: 'Professional content'},
-          {icon: Video, name: 'TikTok', desc: 'Short-form video content'}
-        ].map(({icon: Icon, name, desc}) => (
-          <div 
-            key={name} 
-            className="rounded-lg p-4 transition-all hover:scale-105"
-            style={{ backgroundColor: '#EEEEEE', border: `1px solid #393E46` }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#393E46' }}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <div className="font-semibold" style={{ color: '#222831' }}>{name}</div>
-                  <div className="text-sm" style={{ color: '#393E46' }}>{desc}</div>
-                </div>
-              </div>
-              <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ backgroundColor: '#393E46', color: 'white' }}>
-                Soon
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export default function SocialPage() {
   return (
     <AppShell>
-      <Suspense fallback={<div>Loading...</div>}>
-        <SocialContent />
-      </Suspense>
+
+    <div className="container mx-auto px-4 py-12 space-y-8">
+      
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold">Social Media Connections</h1>
+        <p className="text-muted-foreground">Connect your social media accounts</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {platforms.map((platform) => (
+          <Card key={platform.id} className="hover:shadow-lg transition-all duration-300">
+            <CardContent className={`p-6 ${platform.bgColor}`}>
+              {platform.connected ? (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getPlatformIcon(platform.id)}
+                      <div>
+                        <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                        <p className="text-sm text-muted-foreground">{platform.username}</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={async () => {
+                      if (platform.id !== 'youtube') return;
+                      try {
+                        const resp = await fetch('/api/youtube/disconnect', { method: 'POST' });
+                        if (!resp.ok) throw new Error('Failed');
+                        notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'YouTube account disconnected' });
+                        setYt({ loading: false, isConnected: false });
+                      } catch (e) {
+                        notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
+                      }
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center space-y-6">
+                  <div className="flex flex-col items-center gap-3">
+                    {getPlatformIcon(platform.id)}
+                    <div>
+                      <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                      <p className="text-sm text-muted-foreground">Not connected</p>
+                    </div>
+                  </div>
+
+                  {platform.id === 'youtube' ? (
+                    <Button
+                      className="w-full gap-2"
+                      onClick={() => { window.location.href = '/api/youtube/start'; }}
+                      disabled={yt.loading}
+                    >
+                      <Link2 className="h-4 w-4" />
+                      {yt.loading ? 'Checking…' : 'Connect'}
+                    </Button>
+                  ) : (
+                    <Button className="w-full gap-2" disabled>
+                      <XCircle className="h-4 w-4" />
+                      Not Available
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+        
+        {/* Request Platform Card */}
+        <Card className="hover:shadow-lg transition-all duration-300 border-dashed border-2">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <div className="w-12 h-12 mx-auto bg-muted rounded-full flex items-center justify-center">
+                <Plus className="h-6 w-6 text-muted-foreground" />
+              </div>
+              
+              <div>
+                <h3 className="font-semibold">Request Platform</h3>
+                <p className="text-sm text-muted-foreground">Don't see your platform?</p>
+              </div>
+
+              <Button variant="outline" className="w-full gap-2">
+                <Plus className="h-4 w-4" />
+                Request Platform
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      </div>
     </AppShell>
+      
   );
-}
+};
 
-
+export default SocialConnections;

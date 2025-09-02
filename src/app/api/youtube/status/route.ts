@@ -54,7 +54,8 @@ export async function GET(_req: NextRequest) {
 
     if (needsRefresh) {
       try {
-        const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
+        const origin = process.env.NEXT_PUBLIC_SITE_URL || '';
+        const redirectUri = process.env.YT_REDIRECT_URI || `${origin}/api/youtube/connect`;
         const tokenData = await refreshAccessToken(user.youtubeRefreshToken, redirectUri);
         const newExpiresAt = tokenData.expires_in
           ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()

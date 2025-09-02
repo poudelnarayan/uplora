@@ -151,6 +151,7 @@ export default function Dashboard() {
         });
       } else {
         setVideos([]);
+        try { sessionStorage.removeItem(cacheKey); } catch {}
       }
     } catch {
       setVideos([]);
@@ -203,7 +204,12 @@ export default function Dashboard() {
                   email: user?.emailAddresses?.[0]?.emailAddress || '' 
                 }
               };
-              setVideos(prev => [newVideo, ...prev]);
+              setVideos(prev => {
+                const next = [newVideo, ...prev];
+                const cacheKey = `videos-cache:${selectedTeamId || 'personal'}`;
+                try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: next, t: Date.now() })); } catch {}
+                return next;
+              });
               
               notifications.addNotification({
                 type: "success",
@@ -211,13 +217,26 @@ export default function Dashboard() {
                 message: `"${evt.payload.title}" has been uploaded successfully`
               });
             } else if (evt.type === 'video.deleted') {
-              setVideos(prev => prev.filter(video => video.id !== evt.payload.id));
+              setVideos(prev => {
+                const next = prev.filter(video => video.id !== evt.payload.id);
+                const cacheKey = `videos-cache:${selectedTeamId || 'personal'}`;
+                try {
+                  if (next.length === 0) sessionStorage.removeItem(cacheKey);
+                  else sessionStorage.setItem(cacheKey, JSON.stringify({ data: next, t: Date.now() }));
+                } catch {}
+                return next;
+              });
             } else if (evt.type === 'video.status') {
-              setVideos(prev => prev.map(video => 
-                video.id === evt.payload.id 
-                  ? { ...video, status: evt.payload.status, updatedAt: new Date().toISOString() }
-                  : video
-              ));
+              setVideos(prev => {
+                const next = prev.map(video => 
+                  video.id === evt.payload.id 
+                    ? { ...video, status: evt.payload.status, updatedAt: new Date().toISOString() }
+                    : video
+                );
+                const cacheKey = `videos-cache:${selectedTeamId || 'personal'}`;
+                try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: next, t: Date.now() })); } catch {}
+                return next;
+              });
             } else if (evt.type === 'video.updated') {
               (async () => {
                 try {
@@ -319,7 +338,15 @@ export default function Dashboard() {
       const response = await fetch(`/api/videos/${videoToDelete.id}/delete`, { method: 'DELETE' });
       
       if (response.ok) {
-        setVideos(prev => prev.filter(video => video.id !== videoToDelete.id));
+        setVideos(prev => {
+          const next = prev.filter(video => video.id !== videoToDelete.id);
+          const cacheKey = `videos-cache:${selectedTeamId || 'personal'}`;
+          try {
+            if (next.length === 0) sessionStorage.removeItem(cacheKey);
+            else sessionStorage.setItem(cacheKey, JSON.stringify({ data: next, t: Date.now() }));
+          } catch {}
+          return next;
+        });
         
         notifications.addNotification({
           type: "success",

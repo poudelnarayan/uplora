@@ -1,560 +1,407 @@
 "use client";
-
-import { useState, useEffect, Suspense } from "react";
-import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-import AppShell from "@/components/layout/AppLayout";
-import { useNotifications } from "@/components/ui/Notification";
-import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import { useModalManager } from "@/components/ui/Modal";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-import TeamCard, { Team, TeamMember, TeamInvitation } from "@/components/teams/TeamCard";
-import TeamsHeader from "@/components/teams/TeamsHeader";
-import { useTeam } from "@/context/TeamContext";
-import TeamsStats from "@/components/teams/TeamsStats";
-import EmptyTeamsState from "@/components/teams/EmptyTeamsState";
-import LoadingSpinner from "@/components/teams/LoadingSpinner";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-const MotionDiv = motion.div as any;
+import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { TeamCard } from "@/components/teams/TeamCard";
+import { CreateTeamDialog } from "@/components/teams/CreateTeamDialog";
+import { InviteMemberDialog } from "@/components/teams/InviteMemberDialog";
+import { EditTeamDialog } from "@/components/teams/EditTeamDialog";
+import { EmptyState } from "@/components/teams/EmptyState";
+import { TeamDetailsDialog } from "@/components/teams/TeamDetailsDialog";
+import { platformIcons } from "@/components/teams/PlatformIcon";
+import AppShell from "@/components/layout/AppLayout";
 
-export const dynamic = "force-dynamic";
+interface TeamMember {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string;
+  platforms: string[];
+}
 
-export default function TeamsPage() {
-  const { user } = useUser();
-  const notifications = useNotifications();
-  const { teams: ctxTeams, selectedTeamId, setSelectedTeamId, personalTeam, refreshTeams } = useTeam();
-  const router = useRouter();
-  
-  // State management
+interface Team {
+  id: number; // local display id
+  backendId?: string; // real team id from API
+  name: string;
+  description: string;
+  platforms: string[];
+  members_data: TeamMember[];
+  color: string;
+}
+
+const teamColors = [
+  "from-blue-500 to-cyan-500",
+  "from-purple-500 to-pink-500",
+  "from-green-500 to-emerald-500",
+  "from-orange-500 to-red-500",
+  "from-indigo-500 to-purple-500",
+  "from-pink-500 to-rose-500"
+];
+
+const Teams = () => {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { openModal } = useModalManager();
-  const [resendingId, setResendingId] = useState<string | null>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
-  const [teamToDelete, setTeamToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [teamToLeave, setTeamToLeave] = useState<{ id: string; name: string } | null>(null);
-  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
-  const [leavingTeamId, setLeavingTeamId] = useState<string | null>(null);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [selectedTeamForInvite, setSelectedTeamForInvite] = useState<number | undefined>();
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
+  const [viewingTeam, setViewingTeam] = useState<Team | null>(null);
+  const { toast } = useToast();
 
-  // Filter out personal workspaces from team display
-  const actualTeams = teams.filter(team => !team.isPersonal);
-  const currentUserEmail = user?.emailAddresses?.[0]?.emailAddress || "";
-
-  // Load teams from server (uses TeamContext refresh to leverage shared cache)
   const loadTeams = async () => {
     try {
-      if (ctxTeams.length === 0) setLoading(true);
-      await refreshTeams();
-      const baseTeams = (ctxTeams || []).filter((t: any) => !t.isPersonal);
-      const detailed: Team[] = await Promise.all(
-        baseTeams.map(async (t: any) => {
-          try {
-            const dRes = await fetch(`/api/teams/${t.id}/details`, { cache: "no-store" });
-            if (dRes.ok) {
-              const result = await dRes.json();
-              const details = result.ok ? result : { team: result.team, members: result.members, invites: result.invites };
-              const mappedMembers: TeamMember[] = (details.members || []).map((m: any) => ({
-                id: m.id,
-                name: m.user?.name || m.user?.email?.split("@")[0] || "Member",
-                email: m.user?.email || "",
-                role: m.role,
-                joinedAt: new Date(m.joinedAt),
-                status: (m.status || "ACTIVE") as any,
-              }));
-              const ownerUser = details.team?.owner;
-              if (ownerUser) {
-                const ownerExists = mappedMembers.some(mm => mm.email.toLowerCase() === (ownerUser.email || "").toLowerCase());
-                if (!ownerExists) {
-                  mappedMembers.unshift({ id: ownerUser.id, name: ownerUser.name || ownerUser.email?.split("@")[0] || "Owner", email: ownerUser.email || "", role: "OWNER", joinedAt: new Date(details.team.createdAt || Date.now()) } as TeamMember);
-                }
-              }
-              return { id: details.team.id, name: details.team.name, description: details.team.description || "", members: mappedMembers, invitations: (details.invites || []).map((inv: any) => ({ id: inv.id || inv.token, email: inv.email, role: inv.role, status: (inv.status || "PENDING").toLowerCase(), invitedAt: new Date(inv.createdAt || inv.invitedAt || Date.now()), invitedBy: user?.fullName || user?.firstName || "" })), createdAt: details.team.createdAt ? new Date(details.team.createdAt) : new Date(), ownerEmail: ownerUser?.email || "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
-            }
-          } catch (error) {
-            console.error(`Error loading team details for ${t.id}:`, error);
-          }
-          return { id: t.id, name: t.name, description: t.description || "", members: [], invitations: [], createdAt: t.createdAt ? new Date(t.createdAt) : new Date(), ownerEmail: "", isOwner: t.isOwner || false, role: t.role || "MEMBER" } as Team;
-        })
-      );
-      setTeams(detailed);
-    } catch (e) {
-      console.error("Error loading teams:", e);
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to load teams", 
-        message: "Please refresh the page to try again" 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Hydrate instantly from TeamContext cache, then background refresh
-  useEffect(() => {
-    if (!user) return;
-    if (ctxTeams.length > 0) {
-      const baseTeams = ctxTeams.filter((t: any) => !t.isPersonal);
-      setTeams(baseTeams as any);
-      setLoading(false);
-      void loadTeams();
-    } else {
-      void loadTeams();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, ctxTeams.length]);
-
-  // Force refresh when coming from invite acceptance (read from window)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const shouldRefresh = params.get("refresh") === "1";
-    if (shouldRefresh) {
-      (async () => {
-        try {
-          await refreshTeams();
-        } finally {
-          router.replace("/teams");
-        }
-      })();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Live updates: refresh list on team.* events (created, member joins, invite accepted/canceled)
-  useEffect(() => {
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource('/api/events');
-      es.onmessage = (ev) => {
-        try {
-          const evt = JSON.parse(ev.data || '{}');
-          if (!evt?.type?.startsWith('team.')) return;
-          // Soft refresh teams; avoids full page reload
-          void loadTeams();
-        } catch {}
-      };
-      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+      const res = await fetch('/api/teams', { cache: 'no-store' });
+      const js = await res.json();
+      const data = (js?.data || js?.data?.data || []) as any[];
+      const filtered = data.filter((t: any) => !t.isPersonal);
+      const mapped: Team[] = filtered.map((t: any, i: number) => ({
+        id: i + 1,
+        backendId: t.id,
+        name: t.name,
+        description: t.description || '',
+        platforms: [],
+        members_data: [],
+        color: teamColors[i % teamColors.length],
+      }));
+      setTeams(mapped);
     } catch {}
-    return () => { try { es?.close(); } catch {} };
+  };
+
+  useEffect(() => {
+    void loadTeams();
   }, []);
 
-  // Team management handlers
-  const handleCreateTeam = async (name: string, description: string) => {
+  const handleCreateTeam = async (teamData: { name: string; description: string; platforms: string[] }) => {
     try {
-      const res = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), description })
+      const res = await fetch('/api/teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: teamData.name, description: teamData.description })
       });
-      
-      const result = await res.json();
-      
-      if (!res.ok) {
-        const errorMessage = result.error || result.message || "Failed to create team";
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to create team", 
-          message: errorMessage
-        });
-        return { success: false, error: errorMessage };
-      }
-      
-      notifications.addNotification({ 
-        type: "success", 
-        title: "Team created successfully!", 
-        message: `${name} has been created and you've been added as the owner.`
-      });
-      
-      // Refresh teams list
+      const js = await res.json();
+      if (!res.ok) throw new Error(js?.error || 'Failed to create team');
+      toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
       await loadTeams();
-      
-      return { success: true };
     } catch (e) {
-      console.error("Team creation error:", e);
-      const errorMessage = e instanceof Error ? e.message : "Network error - please check your connection";
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to create team", 
-        message: errorMessage
-      });
-      return { success: false, error: errorMessage };
+      toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
     }
   };
 
-  const handleInviteMember = async (email: string, role: string, team?: Team) => {
-    const targetTeam = team;
-    
-    if (!targetTeam) {
-      throw new Error("No team selected");
-    }
-    
+  const handleDeleteTeam = async (teamId: number) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return;
     try {
-      const res = await fetch(`/api/teams/${targetTeam.id}/invite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), role })
-      });
+      const res = await fetch(`/api/teams/${team.backendId}`, { method: 'DELETE' });
+      const js = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(js?.error || 'Failed to delete team');
+      await loadTeams();
+      toast({ title: 'Team Deleted', description: `${team.name} has been deleted` });
+    } catch (e) {
+      toast({ title: 'Delete failed', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
+    }
+  };
 
-      const result = await res.json();
-      
+  const handleInviteMember = async (memberData: { email: string; teamId: number; role: string }) => {
+    const email = memberData.email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address", variant: "destructive" as any });
+      return;
+    }
+    const team = teams.find(t => t.id === memberData.teamId);
+    if (!team || !team.backendId) {
+      toast({ title: "Team not found", description: "Please select a valid team", variant: "destructive" as any });
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/teams/${team.backendId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role: memberData.role.toUpperCase() })
+      });
+      const result = await res.json().catch(() => ({}));
       if (res.ok) {
-        if (result.emailSent) {
-          notifications.addNotification({ 
-            type: "success", 
-            title: "Invitation sent successfully!", 
-            message: `Email delivered to ${email}` 
-          });
-        } else {
-          notifications.addNotification({ 
-            type: "warning", 
-            title: "Invitation created but email failed", 
-            message: `Invitation saved but email to ${email} could not be delivered` 
-          });
-        }
-        await loadTeams();
-        return { success: true, message: "Invitation sent successfully" };
+        toast({
+          title: result?.emailSent ? "Invitation sent" : "Invitation created",
+          description: result?.emailSent ? `Email delivered to ${email}` : `Invite saved; email delivery failed for ${email}`
+        });
       } else {
-        const errorMessage = result?.message || result?.error || "Please try again";
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to send invitation", 
-          message: errorMessage
-        });
-        throw new Error(errorMessage);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Network error - please check your connection";
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to send invitation", 
-        message: errorMessage
-      });
-      throw err;
-    }
-  };
-
-  // Create a wrapper function that captures the team
-  const createInviteHandler = (team: Team) => {
-    return async (email: string, role: string) => {
-      return handleInviteMember(email, role, team);
-    };
-  };
-
-  const handleDeleteTeam = async (teamId: string, teamName: string) => {
-    setTeamToDelete({ id: teamId, name: teamName });
-    setDeleteModalOpen(true);
-  };
-
-  const handleLeaveTeam = async (teamId: string, teamName: string) => {
-    setTeamToLeave({ id: teamId, name: teamName });
-    setLeaveModalOpen(true);
-  };
-
-  const confirmDeleteTeam = async () => {
-    if (!teamToDelete) return;
-    
-    if (deletingTeamId) return;
-    
-    setDeletingTeamId(teamToDelete.id);
-    try {
-      const res = await fetch(`/api/teams/${teamToDelete.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to delete team", 
-          message: err.error || "Try again" 
-        });
-        return;
-      }
-      notifications.addNotification({ 
-        type: "success", 
-        title: "Team deleted!", 
-        message: "All team members have been removed and team data has been deleted."
-      });
-      await loadTeams();
-    } catch (e) {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to delete team", 
-        message: "Network error" 
-      });
-    } finally {
-      setDeletingTeamId(null);
-      setDeleteModalOpen(false);
-      setTeamToDelete(null);
-    }
-  };
-
-  const confirmLeaveTeam = async () => {
-    if (!teamToLeave) return;
-    
-    if (leavingTeamId) return;
-    
-    setLeavingTeamId(teamToLeave.id);
-    try {
-      const res = await fetch(`/api/teams/${teamToLeave.id}/leave`, { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to leave team", 
-          message: err.error || "Try again" 
-        });
-        return;
-      }
-      notifications.addNotification({ 
-        type: "success", 
-        title: "Left team successfully!", 
-        message: `You are no longer a member of ${teamToLeave.name}`
-      });
-      await loadTeams();
-    } catch (e) {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to leave team", 
-        message: "Network error" 
-      });
-    } finally {
-      setLeavingTeamId(null);
-      setLeaveModalOpen(false);
-      setTeamToLeave(null);
-    }
-  };
-
-  const handleResendInvitation = async (invitationId: string) => {
-    setResendingId(invitationId);
-    try {
-      // Find which team this invitation belongs to
-      const team = actualTeams.find(t => 
-        t.invitations.some(inv => inv.id === invitationId)
-      );
-      
-      if (!team) {
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to resend invitation", 
-          message: "Team not found" 
-        });
-        return;
-      }
-
-      const res = await fetch(`/api/teams/${team.id}/invite/${invitationId}`, { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
-      
-      const result = await res.json();
-      
-      if (res.ok) {
-        if (result.emailSent) {
-          notifications.addNotification({ 
-            type: "success", 
-            title: "Invitation resent!", 
-            message: "Email delivered successfully" 
-          });
-        } else {
-          notifications.addNotification({ 
-            type: "warning", 
-            title: "Resend failed", 
-            message: "Could not deliver email" 
-          });
-        }
-        await loadTeams();
-      } else {
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to resend invitation", 
-          message: result.error || "Try again" 
-        });
+        const msg = result?.message || result?.error || "Failed to send invitation";
+        toast({ title: "Invite failed", description: msg, variant: "destructive" as any });
       }
     } catch (e) {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to resend invitation", 
-        message: "Network error" 
-      });
-    } finally {
-      setResendingId(null);
+      toast({ title: "Invite failed", description: e instanceof Error ? e.message : 'Network error', variant: "destructive" as any });
     }
   };
 
-  const handleCancelInvitation = async (invitationId: string) => {
-    try {
-      // Find which team this invitation belongs to
-      const team = actualTeams.find(t => 
-        t.invitations.some(inv => inv.id === invitationId)
-      );
-      
-      if (!team) {
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to cancel invitation", 
-          message: "Team not found" 
-        });
-        return;
-      }
-
-      const res = await fetch(`/api/teams/${team.id}/invite/${invitationId}`, { 
-        method: "DELETE"
-      });
-      
-      if (res.ok) {
-        notifications.addNotification({ 
-          type: "success", 
-          title: "Invitation canceled!", 
-          message: "The invitation has been removed" 
-        });
-        await loadTeams();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        notifications.addNotification({ 
-          type: "error", 
-          title: "Failed to cancel invitation", 
-          message: err.error || "Try again" 
-        });
-      }
-    } catch (e) {
-      notifications.addNotification({ 
-        type: "error", 
-        title: "Failed to cancel invitation", 
-        message: "Network error" 
-      });
-    }
-  };
-
-  const handleRemoveMember = async (teamId: string, memberId: string, teamName: string) => {
-    try {
-      const res = await fetch(`/api/teams/${teamId}/members/${memberId}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        notifications.addNotification({
-          type: "error",
-          title: "Failed to remove member",
-          message: err.error || "Try again"
-        });
-        return;
-      }
-      notifications.addNotification({
-        type: "success",
-        title: "Member removed",
-        message: `The user has been removed from ${teamName}`
-      });
-      await loadTeams();
-    } catch (e) {
-      notifications.addNotification({
-        type: "error",
-        title: "Failed to remove member",
-        message: "Network error"
-      });
-    }
-  };
-
-  const openCreateTeamModal = () => {
-    openModal("create-team", {
-      onSubmit: handleCreateTeam
+  const handleUpdateTeam = (teamId: number, updates: Partial<Team>) => {
+    setTeams(prev => prev.map(team => 
+      team.id === teamId ? { ...team, ...updates } : team
+    ));
+    toast({
+      title: "Team Updated",
+      description: "Team information has been updated successfully"
     });
   };
 
-  const openInviteMemberModal = (team: Team) => {
-    openModal("invite-member", {
-      teamName: team.name,
-      onSubmit: createInviteHandler(team),
-      currentUserEmail
+  const handleRemoveMember = (teamId: number, memberId: number) => {
+    setTeams(prev => prev.map(team => 
+      team.id === teamId 
+        ? { ...team, members_data: team.members_data.filter(m => m.id !== memberId) }
+        : team
+    ));
+    toast({
+      title: "Member Removed",
+      description: "Member has been removed from the team"
     });
   };
+
+  const openInviteDialog = (teamId?: number) => {
+    setSelectedTeamForInvite(teamId);
+    setIsInviteOpen(true);
+  };
+
+  const totalMembers = teams.reduce((acc, team) => acc + team.members_data.length, 0);
 
   return (
-    <>
-      <SignedIn>
-        <Suspense fallback={null}>
-          <AppShell>
-            <NextSeoNoSSR title="Teams" noindex nofollow />
-            
-            <div className="h-[calc(100vh-8rem)] overflow-hidden">
-              <div className="h-full overflow-y-auto px-4 lg:px-0">
-                <div className="space-y-4 py-4">
-                  {/* Workspace switcher card removed per request */}
+    <AppShell>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen w-full p-6 lg:p-8 space-y-8"
+    >
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-2">
+            Team Management
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Create teams, manage members, and control platform access
+          </p>
+        </div>
+        
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            className="gap-2" 
+            onClick={() => openInviteDialog()}
+            disabled={teams.length === 0}
+          >
+            <UserPlus className="h-4 w-4" />
+            Invite Member
+          </Button>
+          
+          <CreateTeamDialog 
+            onCreateTeam={handleCreateTeam} 
+            isOpen={isCreateTeamOpen}
+            onOpenChange={setIsCreateTeamOpen}
+          />
+        </div>
+      </div>
 
-                  {loading ? (
-                    <LoadingSpinner />
-                  ) : actualTeams.length === 0 ? (
-                    <EmptyTeamsState onCreateTeam={openCreateTeamModal} />
-                  ) : (
-                    <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
-                      <TeamsHeader 
-                        teams={actualTeams} 
-                        onCreateTeam={openCreateTeamModal}
-                      />
-                      
-                      <TeamsStats 
-                        teams={actualTeams} 
-                        currentUserEmail={currentUserEmail}
-                      />
-
-                      {/* Teams Grid */}
-                      <div className="grid gap-4">
-                        {actualTeams.map((team, index) => (
-                          <MotionDiv key={team.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}>
-                            <TeamCard
-                              team={team}
-                              currentUserEmail={currentUserEmail}
-                              onInviteMember={openInviteMemberModal}
-                              onDeleteTeam={handleDeleteTeam}
-                              onLeaveTeam={handleLeaveTeam}
-                              onResendInvitation={handleResendInvitation}
-                              onCancelInvitation={handleCancelInvitation}
-                              resendingId={resendingId}
-                              onRemoveMember={handleRemoveMember}
-                            />
-                          </MotionDiv>
-                        ))}
+      {/* Teams Grid */}
+      <div className={`grid gap-6 ${
+        teams.length === 1 
+          ? "grid-cols-1" 
+          : teams.length === 2 
+          ? "grid-cols-1 lg:grid-cols-2" 
+          : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+      }`}>
+        {teams.length === 0 ? (
+          <EmptyState onCreateTeam={() => setIsCreateTeamOpen(true)} />
+        ) : teams.length === 1 ? (
+          // Special expanded layout for single team
+          <div className="col-span-full">
+            <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-4 rounded-2xl bg-gradient-to-r ${teams[0].color} text-white shadow-2xl`}>
+                      <Users className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">{teams[0].name}</h2>
+                      <p className="text-muted-foreground mt-1">{teams[0].description}</p>
+                      <div className="flex items-center gap-4 mt-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {teams[0].members_data.length} member{teams[0].members_data.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {teams[0].platforms.length} platform{teams[0].platforms.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
                       </div>
-                    </MotionDiv>
-                  )}
+                    </div>
+                  </div>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => setEditingTeam(teams[0])}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Team
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openInviteDialog(teams[0].id)}>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Invite Member
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => handleDeleteTeam(teams[0].id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Team
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              </div>
-            </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Platform Access */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-primary" />
+                      Platform Access
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {teams[0].platforms.map((platform) => {
+                        const Icon = platformIcons[platform as keyof typeof platformIcons];
+                        return (
+                          <div
+                            key={platform}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md"
+                          >
+                            <Icon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                            <span className="text-sm font-medium capitalize text-green-700 dark:text-green-300">{platform}</span>
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                          </div>
+                        );
+                      })}
+                      {teams[0].platforms.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No platforms connected</p>
+                      )}
+                    </div>
+                  </div>
 
-            {/* Delete Team Confirmation Modal */}
-            <ConfirmationModal
-              isOpen={deleteModalOpen}
-              onClose={() => setDeleteModalOpen(false)}
-              onConfirm={confirmDeleteTeam}
-              title="Delete Team?"
-              message="This action cannot be undone. The team and all its data will be permanently deleted. All team members will be removed."
-              itemName={teamToDelete?.name}
-              confirmText={deletingTeamId ? "Deleting..." : "Delete Permanently"}
-              cancelText="Cancel"
-              variant="danger"
-              icon="trash"
-              isLoading={!!deletingTeamId}
-            />
+                  {/* Team Members */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" />
+                      Team Members
+                    </h3>
+                    {teams[0].members_data.length > 0 ? (
+                      <div className="space-y-2">
+                        {teams[0].members_data.slice(0, 3).map((member) => (
+                          <div key={member.id} className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={member.avatar} />
+                              <AvatarFallback className="text-xs">
+                                {member.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{member.name}</p>
+                              <p className="text-xs text-muted-foreground">{member.role}</p>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {member.platforms.length} platforms
+                            </Badge>
+                          </div>
+                        ))}
+                        {teams[0].members_data.length > 3 && (
+                          <p className="text-xs text-muted-foreground">
+                            +{teams[0].members_data.length - 3} more members
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No members yet</p>
+                    )}
+                  </div>
+                </div>
 
-            {/* Leave Team Confirmation Modal */}
-            <ConfirmationModal
-              isOpen={leaveModalOpen}
-              onClose={() => setLeaveModalOpen(false)}
-              onConfirm={confirmLeaveTeam}
-              title="Leave Team?"
-              message="You will no longer have access to this team's content and will need to be re-invited to rejoin."
-              itemName={teamToLeave?.name}
-              confirmText={leavingTeamId ? "Leaving..." : "Leave Team"}
-              cancelText="Cancel"
-              variant="warning"
-              icon="info"
-              isLoading={!!leavingTeamId}
+                <Separator />
+                
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1 gap-2" onClick={() => setViewingTeam(teams[0])}>
+                    <Eye className="h-4 w-4" />
+                    View Team Details
+                  </Button>
+                  <Button className="flex-1 gap-2" onClick={() => openInviteDialog(teams[0].id)}>
+                    <UserPlus className="h-4 w-4" />
+                    Invite Member
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          teams.map((team, index) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              index={index}
+              onEdit={(t) => setEditingTeam(t)}
+              onDelete={handleDeleteTeam}
+              onInviteMember={openInviteDialog}
+              onViewTeam={(t) => setViewingTeam(t)}
             />
-          </AppShell>
-        </Suspense>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn redirectUrl="/teams" />
-      </SignedOut>
-    </>
+          ))
+        )}
+      </div>
+
+
+      {/* Dialogs */}
+      <InviteMemberDialog
+        isOpen={isInviteOpen}
+        onClose={() => {
+          setIsInviteOpen(false);
+          setSelectedTeamForInvite(undefined);
+        }}
+        teams={teams}
+        selectedTeamId={selectedTeamForInvite}
+        onInviteMember={handleInviteMember}
+      />
+
+      <EditTeamDialog
+        isOpen={!!editingTeam}
+        onClose={() => setEditingTeam(null)}
+        team={editingTeam}
+        onUpdateTeam={handleUpdateTeam}
+      />
+
+      <TeamDetailsDialog
+        isOpen={!!viewingTeam}
+        onClose={() => setViewingTeam(null)}
+        team={viewingTeam}
+        onRemoveMember={handleRemoveMember}
+        onEditTeam={setEditingTeam}
+        onInviteMember={openInviteDialog}
+        onUpdateTeam={handleUpdateTeam}
+      />
+      </motion.div>
+    </AppShell>
   );
-}
+};
+
+export default Teams;

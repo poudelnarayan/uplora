@@ -17,8 +17,13 @@ export async function GET(request: NextRequest) {
     // Define the scopes we need - both upload and readonly for channel info
     const scope = "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly";
     
-    // Use the YT_REDIRECT_URI environment variable
-    const redirectUri = process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`;
+    // Prefer explicit env; otherwise infer from current request (works on localhost)
+    const reqOrigin = (() => { try { return new URL(request.url).origin; } catch { return 'http://localhost:3000'; } })();
+    const isLocal = /localhost|127\.0\.0\.1/i.test(reqOrigin);
+    const origin = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
+    const redirectUri = isLocal
+      ? `${reqOrigin}/api/youtube/connect`
+      : (process.env.YT_REDIRECT_URI || `${origin}/api/youtube/connect`);
     
     // Build the Google OAuth URL
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -35,7 +40,7 @@ export async function GET(request: NextRequest) {
       client_id: process.env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       scope: scope,
-      baseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io',
+      baseUrl: origin,
       state: state,
       environment: process.env.NODE_ENV,
       vercelEnv: process.env.VERCEL_ENV

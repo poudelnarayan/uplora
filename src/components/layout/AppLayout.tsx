@@ -35,7 +35,7 @@ import { useNotifications } from "@/components/ui/Notification";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
-  { href: "/upload", label: "Make Post", icon: Upload },
+  { href: "/make-post", label: "Make Post", icon: Upload },
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/social", label: "Social", icon: Plus },
@@ -278,10 +278,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             {/* Left side - Icons, Mobile Menu, Logo */}
             <div className="flex items-center gap-3">
               {/* Perfect Circle Icons - Always Visible */}
-              <div className="hidden lg:flex items-center gap-2">
-                <ThemeToggle />
-                <NotificationBell onClick={() => setShowNotificationCenter(true)} />
-              </div>
+             
               
               {/* Mobile menu button */}
               <button
