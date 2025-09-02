@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import AppShell from "@/components/layout/AppLayout";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { RedirectToSignIn } from "@clerk/nextjs";
 import { useNotifications } from "@/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
@@ -374,10 +374,11 @@ export default function Dashboard() {
     }
   };
 
+  if (!isLoaded) return null;
+  if (!user) return <RedirectToSignIn redirectUrl="/dashboard" />;
+
   return (
-    <>
-      <SignedIn>
-        <AppShell>
+    <AppShell>
           <NextSeoNoSSR title="Dashboard" noindex nofollow />
           
           <div className="h-[calc(100vh-8rem)] overflow-hidden">
@@ -425,11 +426,6 @@ export default function Dashboard() {
             icon="trash"
             isLoading={!!deletingVideoId}
           />
-        </AppShell>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn redirectUrl="/dashboard" />
-      </SignedOut>
-    </>
+    </AppShell>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ const teamColors = [
 ];
 
 const Teams = () => {
+  const { user, isLoaded } = useUser();
   const [teams, setTeams] = useState<Team[]>([]);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [selectedTeamForInvite, setSelectedTeamForInvite] = useState<number | undefined>();
@@ -170,6 +172,9 @@ const Teams = () => {
   };
 
   const totalMembers = teams.reduce((acc, team) => acc + team.members_data.length, 0);
+
+  if (!isLoaded) return null;
+  if (!user) return <RedirectToSignIn redirectUrl="/teams" />;
 
   return (
     <AppShell>
