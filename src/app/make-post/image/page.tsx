@@ -129,6 +129,48 @@ const MakePostImage = () => {
   return (
     <AppShell>
 
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => router.push("/make-post")}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <ImageIcon className="h-4 w-4 text-purple-600" />
+                </div>
+                <div>
+                  <h1 className="font-semibold">Image Post</h1>
+                  <p className="text-sm text-gray-500">Visual content</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Save className="h-4 w-4" />
+                Save Draft
+              </Button>
+              <Button size="sm" className="gap-2">
+                <Send className="h-4 w-4" />
+                Publish
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
