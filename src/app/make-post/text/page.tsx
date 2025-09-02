@@ -82,7 +82,7 @@ const MakePostText = () => {
 
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
+      <div className="bg-white border-b fixed top-0 left-0 right-0 z-50">
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -121,7 +121,7 @@ const MakePostText = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
