@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, Star, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { SignedIn, SignedOut, SignInButton, SignUpButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
-import Link from "next/link";
+import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
+import AuthButtons from "./AuthButtons";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -104,37 +104,7 @@ const Navbar = () => {
                 </div>
               </ClerkLoading>
               <ClerkLoaded>
-                <SignedOut>
-                  <Link href="/sign-in?redirect_url=/dashboard">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium px-6"
-                    >
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/sign-up?redirect_url=/dashboard">
-                    <Button
-                      size="sm"
-                      className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
-                    >
-                      Get Started Free
-                      <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </Link>
-                </SignedOut>
-                <SignedIn>
-                  <Link href="/dashboard">
-                    <Button
-                      size="sm"
-                      className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
-                    >
-                      Go to Dashboard
-                      <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </Link>
-                </SignedIn>
+                <AuthButtons />
               </ClerkLoaded>
             </div>
           </div>
@@ -186,37 +156,7 @@ const Navbar = () => {
                   </div>
                 </ClerkLoading>
                 <ClerkLoaded>
-                  <SignedOut>
-                    <Link href="/sign-in?redirect_url=/dashboard">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium"
-                      >
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link href="/sign-up?redirect_url=/dashboard">
-                      <Button
-                        size="sm"
-                        className="w-full gradient-primary text-primary-foreground font-medium group"
-                      >
-                        Get Started Free
-                        <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                      </Button>
-                    </Link>
-                  </SignedOut>
-                  <SignedIn>
-                    <Link href="/dashboard">
-                      <Button
-                        size="sm"
-                        className="w-full gradient-primary text-primary-foreground font-medium group"
-                      >
-                        Go to Dashboard
-                        <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                      </Button>
-                    </Link>
-                  </SignedIn>
+                  <AuthButtons />
                 </ClerkLoaded>
               </div>
             </div>
