@@ -1,5 +1,6 @@
 import "./globals.css";
 import Providers from "./providers";
+import { ClerkProvider } from '@clerk/nextjs';
 
 export const metadata = {
   title: 'Uplora - Team YouTube Workflow',
@@ -11,12 +12,21 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   return (
     <html lang="en">
       <body>
-        <Providers>
-          {children}
-        </Providers>
+        {publishableKey ? (
+          <ClerkProvider publishableKey={publishableKey}>
+            <Providers>
+              {children}
+            </Providers>
+          </ClerkProvider>
+        ) : (
+          <Providers>
+            {children}
+          </Providers>
+        )}
       </body>
     </html>
   )

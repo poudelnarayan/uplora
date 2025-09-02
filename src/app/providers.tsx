@@ -1,6 +1,4 @@
 "use client";
-
-import { ClerkProvider } from '@clerk/nextjs';
 import { usePathname } from "next/navigation";
 import { NotificationProvider } from "@/components/ui/Notification";
 import { TeamProvider } from "@/context/TeamContext";
@@ -28,42 +26,40 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {hasValidClerkKey ? (
-        <ClerkProvider publishableKey={clerkPublishableKey}>
-          <NotificationProvider>
-            {isAuthPage ? (
-              <ThemeProvider>
-                <DefaultSeoNoSSR {...defaultSeo} />
-                <OrganizationJsonLdNoSSR
-                  type="Organization"
-                  id={`${siteUrl}/#organization`}
-                  name="Uplora"
-                  url={siteUrl}
-                  sameAs={[]}
-                />
-                {children}
-              </ThemeProvider>
-            ) : (
-              <TeamProvider>
-                <UploadProvider>
-                  <ModalProvider>
-                    <ThemeProvider>
-                      <DefaultSeoNoSSR {...defaultSeo} />
-                      <OrganizationJsonLdNoSSR
-                        type="Organization"
-                        id={`${siteUrl}/#organization`}
-                        name="Uplora"
-                        url={siteUrl}
-                        sameAs={[]}
-                      />
-                      {children}
-                      <UploadTray />
-                    </ThemeProvider>
-                  </ModalProvider>
-                </UploadProvider>
-              </TeamProvider>
-            )}
-          </NotificationProvider>
-        </ClerkProvider>
+        <NotificationProvider>
+          {isAuthPage ? (
+            <ThemeProvider>
+              <DefaultSeoNoSSR {...defaultSeo} />
+              <OrganizationJsonLdNoSSR
+                type="Organization"
+                id={`${siteUrl}/#organization`}
+                name="Uplora"
+                url={siteUrl}
+                sameAs={[]}
+              />
+              {children}
+            </ThemeProvider>
+          ) : (
+            <TeamProvider>
+              <UploadProvider>
+                <ModalProvider>
+                  <ThemeProvider>
+                    <DefaultSeoNoSSR {...defaultSeo} />
+                    <OrganizationJsonLdNoSSR
+                      type="Organization"
+                      id={`${siteUrl}/#organization`}
+                      name="Uplora"
+                      url={siteUrl}
+                      sameAs={[]}
+                    />
+                    {children}
+                    <UploadTray />
+                  </ThemeProvider>
+                </ModalProvider>
+              </UploadProvider>
+            </TeamProvider>
+          )}
+        </NotificationProvider>
       ) : (
         <div style={{
           minHeight: '100vh',
