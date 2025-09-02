@@ -355,7 +355,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       href={href}
                       className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                         active
-                          ? "bg-primary text-primary-foreground" 
+                          ? "bg-[#00ADB5] text-white" 
                           : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                       style={{ fontFamily: 'Inter, "Open Sans", sans-serif' }}
