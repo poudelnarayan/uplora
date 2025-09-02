@@ -393,57 +393,6 @@ const MakePostVideos = () => {
   return (
     <AppShell>
 
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-0 z-20 lg:left-64">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => router.push("/make-post")}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                  <Youtube className="h-4 w-4 text-red-600" />
-                </div>
-                <div>
-                  <h1 className="font-semibold">YouTube Video</h1>
-                  <p className="text-sm text-gray-500">Long-form content</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-xs">{uploadProgress > 0 ? `${uploadProgress}%` : 'Max 4GB'}</Badge>
-              {!isConnected ? (
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => router.push('/social')}>
-                  Connect YouTube
-                </Button>
-              ) : (
-                <Badge variant="outline" className="text-xs">{channelTitle || 'YouTube Connected'}</Badge>
-              )}
-              <Button variant="outline" size="sm" className="gap-2" onClick={persistVideoMeta} disabled={savingMeta || !videoId}>
-                <Save className="h-4 w-4" />
-                {savingMeta ? 'Saving…' : 'Save Draft'}
-              </Button>
-              <Button size="sm" className="gap-2" disabled={isPublishing || isUploading} onClick={async () => { await persistVideoMeta(); await publishToYouTube(); }}>
-                <Send className="h-4 w-4" />
-                {isPublishing ? 'Publishing...' : 'Publish to YouTube'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-6 py-8">
-      <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">

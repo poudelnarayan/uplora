@@ -80,48 +80,6 @@ const MakePostText = () => {
   return (
     <AppShell>
 
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-0 z-20 lg:left-64">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => router.push("/make-post")}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Type className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="font-semibold">Text Post</h1>
-                  <p className="text-sm text-gray-500">Create text content</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Save className="h-4 w-4" />
-                Save Draft
-              </Button>
-              <Button size="sm" className="gap-2">
-                <Send className="h-4 w-4" />
-                Publish
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
