@@ -79,7 +79,7 @@ const MakePostText = () => {
 
   return (
     <AppShell>
-
+      <div className="min-h-screen bg-background">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -279,7 +279,6 @@ const MakePostText = () => {
           </div>
         </div>
       </div>
-    </div>
     </AppShell>
   );
 };
