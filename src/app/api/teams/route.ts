@@ -134,11 +134,13 @@ export async function POST(request: NextRequest) {
     const { error: memberError } = await supabaseAdmin
       .from('team_members')
       .insert({
+        id: user.id, // Use Clerk user ID as the member ID
         teamId: team.id,
         userId: user.id,
         role: 'ADMIN', // Use ADMIN since OWNER is not in the enum
         status: 'ACTIVE',
-        joinedAt: now
+        joinedAt: now,
+        updatedAt: now // Add required updatedAt field
       });
 
     if (memberError) {
