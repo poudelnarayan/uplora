@@ -1,3 +1,5 @@
+'use client';
+
 import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
