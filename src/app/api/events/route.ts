@@ -1,5 +1,3 @@
-'use server';
-
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { addSubscriber, removeSubscriber } from "@/lib/realtime";
