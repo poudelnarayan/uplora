@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
@@ -16,11 +17,42 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    // Get user details from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
+    // Ensure user exists in Supabase
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        clerkId: userId,
+        email: userEmail || "", 
+        name: userName, 
+        image: userImage,
+        updatedAt: new Date().toISOString()
+      }, {
+        onConflict: 'clerkId'
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("User sync error:", userError);
+      return NextResponse.json(
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to sync user"),
+        { status: 500 }
+      );
+    }
+
     // Release any upload lock for this user
     const { error: lockError } = await supabaseAdmin
       .from('upload_locks')
       .delete()
-      .eq('userId', userId);
+      .eq('userId', user.id);
 
     return NextResponse.json(createSuccessResponse({ success: true }));
   } catch (e: unknown) {

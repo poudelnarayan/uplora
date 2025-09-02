@@ -14,8 +14,9 @@ import { ModalProvider } from "@/components/ui/Modal";
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const siteUrl =
+    (typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) ||
+    "http://localhost:3000";
   const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up" || pathname === "/admin-login";
   
   // Check if Clerk keys are properly configured
