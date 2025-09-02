@@ -672,6 +672,8 @@ const MakePostImage = () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
     </AppShell>
   );
 };
