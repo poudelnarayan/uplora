@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useUser, SignOutButton } from '@clerk/nextjs';
 import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 
 // Type assertion to fix Framer Motion typing issues
@@ -90,7 +90,6 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const { user } = useUser();
-  const { signOut } = useClerk();
   const pathname = usePathname();
   const notifications = useNotifications();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -125,9 +124,8 @@ export default function Sidebar() {
     );
   };
 
-  const handleSignOut = () => {
+  const handleSignOutClick = () => {
     notifications.addNotification({ type: "info", title: "Signing out...", message: "See you next time!" });
-    setTimeout(() => signOut({ redirectUrl: '/' }), 500);
   };
 
   const isActive = (href: string) => {
@@ -312,13 +310,22 @@ export default function Sidebar() {
       <ConfirmModal
         isOpen={showSignOutConfirm}
         onClose={() => setShowSignOutConfirm(false)}
-        onConfirm={handleSignOut}
+        onConfirm={() => {
+          setShowSignOutConfirm(false);
+        }}
         title="Sign Out"
         message="Are you sure you want to sign out? You'll need to sign in again to access your account."
         confirmText="Sign Out"
         cancelText="Cancel"
         type="danger"
       />
+      {showSignOutConfirm && (
+        <div className="hidden">
+          <SignOutButton signOutOptions={{ redirectUrl: '/' }}>
+            <button onClick={handleSignOutClick}></button>
+          </SignOutButton>
+        </div>
+      )}
     </>
   );
 }
