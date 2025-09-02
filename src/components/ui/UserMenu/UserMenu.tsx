@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MotionDiv = motion.div as any;
 import { Settings, Heart, LogOut, CreditCard, ChevronDown } from "lucide-react";
-import { useClerk, useUser, SignOutButton } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 
 interface UserMenuProps {
@@ -14,6 +14,7 @@ interface UserMenuProps {
 
 export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +27,11 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleSignOut = () => {
+    setIsOpen(false);
+    signOut({ redirectUrl: "/" });
+  };
 
   const userInitials = user?.fullName?.split(' ').map(n => n[0]).join('') || 
                       user?.firstName?.[0] || 
@@ -107,12 +113,13 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
               {/* Divider */}
               <div className="my-2 border-t border-border"></div>
               
-              <SignOutButton redirectUrl="/">
-                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-150">
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </SignOutButton>
+              <button 
+                onClick={handleSignOut}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-150"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </MotionDiv>
         )}
