@@ -219,7 +219,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 href={href}
                 className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   active
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-[#00ADB5]/10 text-[#00ADB5] border border-[#00ADB5]/20 shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
