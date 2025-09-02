@@ -9,7 +9,7 @@ import { subscriptionConfig, formatPrice } from "@/config/subscription";
 import SubscriptionHeader from "@/components/subscription/SubscriptionHeader/SubscriptionHeader";
 import BillingTab from "@/components/subscription/BillingTab/BillingTab";
 import PlansTab from "@/components/subscription/PlansTab/PlansTab";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import styles from "./Subscription.module.css";
 
 const MotionDiv = motion.div as any;
@@ -17,6 +17,7 @@ const MotionDiv = motion.div as any;
 export const dynamic = "force-dynamic";
 
 export default function SubscriptionPage() {
+  const { user, isLoaded } = useUser();
   const [activeTab, setActiveTab] = useState<"billing" | "plans">("billing");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   
@@ -138,10 +139,11 @@ export default function SubscriptionPage() {
     );
   }
 
+  if (!isLoaded) return null;
+  if (!user) return <RedirectToSignIn redirectUrl="/subscription" />;
+
   return (
-    <>
-      <SignedIn>
-        <AppShell>
+    <AppShell>
           <NextSeoNoSSR 
             title="Subscription" 
             description="Manage your Uplora subscription and billing." 
@@ -219,11 +221,6 @@ export default function SubscriptionPage() {
             </MotionDiv>
             </div>
           </div>
-        </AppShell>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn redirectUrl="/subscription" />
-      </SignedOut>
-    </>
+    </AppShell>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 type TeamBasic = { id: string; name: string; description?: string };
 
@@ -16,6 +17,7 @@ type TeamContextType = {
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
 
 export function TeamProvider({ children }: { children: React.ReactNode }) {
+  const { isSignedIn, isLoaded } = useAuth();
   const [teams, setTeams] = useState<TeamBasic[]>([]);
   const [selectedTeamId, setSelectedTeamIdState] = useState<string | null>(null);
   const [etag, setEtag] = useState<string | null>(null);
@@ -45,6 +47,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
 
   const refreshTeams = async (force = false) => {
     try {
+      if (!isLoaded || !isSignedIn) return;
       // Use shared cache unless forced (e.g., after SSE event)
       if (!force && shared.data.length > 0 && Date.now() - shared.t < CACHE_TTL_MS) {
         setTeams(shared.data.filter(t => !(t as any).isPersonal));
@@ -145,10 +148,14 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {}
 
-    refreshTeams(false);
+    if (isSignedIn) {
+      refreshTeams(false);
+    }
     const onFocusOrVisible = () => { if (!document.hidden) refreshTeams(); };
-    window.addEventListener("focus", onFocusOrVisible);
-    document.addEventListener("visibilitychange", onFocusOrVisible);
+    if (isSignedIn) {
+      window.addEventListener("focus", onFocusOrVisible);
+      document.addEventListener("visibilitychange", onFocusOrVisible);
+    }
     // Sync across tabs
     const onStorage = (e: StorageEvent) => { if (e.key === "currentTeamId") setSelectedTeamIdState(e.newValue); };
     window.addEventListener("storage", onStorage);
@@ -156,25 +163,29 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     // SSE subscribe for team updates
     let es: EventSource | null = null;
     try {
-      const url = selectedTeamId ? `/api/events?teamId=${encodeURIComponent(selectedTeamId)}` : `/api/events`;
-      es = new EventSource(url);
-      es.onmessage = (ev) => {
-        try {
-          const evt = JSON.parse(ev.data);
-          if (evt?.type?.startsWith('team.')) refreshTeams(true);
-        } catch {}
-      };
-      es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+      if (isSignedIn) {
+        const url = selectedTeamId ? `/api/events?teamId=${encodeURIComponent(selectedTeamId)}` : `/api/events`;
+        es = new EventSource(url);
+        es.onmessage = (ev) => {
+          try {
+            const evt = JSON.parse(ev.data);
+            if (evt?.type?.startsWith('team.')) refreshTeams(true);
+          } catch {}
+        };
+        es.onerror = () => { try { es?.close(); } catch {}; es = null; };
+      }
     } catch {}
 
     return () => {
-      window.removeEventListener("focus", onFocusOrVisible);
-      document.removeEventListener("visibilitychange", onFocusOrVisible);
+      if (isSignedIn) {
+        window.removeEventListener("focus", onFocusOrVisible);
+        document.removeEventListener("visibilitychange", onFocusOrVisible);
+      }
       window.removeEventListener("storage", onStorage);
       try { es?.close(); } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTeamId]);
+  }, [selectedTeamId, isSignedIn, isLoaded]);
 
   const selectedTeam = useMemo(() => {
     // Check regular teams first
