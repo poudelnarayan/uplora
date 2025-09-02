@@ -796,6 +796,7 @@ const MakePostVideos = () => {
         </div>
       </div>
       </div>
+    </div>
     </AppShell>
   );
 };
