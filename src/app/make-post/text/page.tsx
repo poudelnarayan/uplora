@@ -82,7 +82,7 @@ const MakePostText = () => {
 
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-36 z-40 lg:left-64">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-40 z-40 lg:left-64">
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
