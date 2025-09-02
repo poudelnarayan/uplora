@@ -132,7 +132,7 @@ const MakePostImage = () => {
     <div className="min-h-screen bg-gray-50/50">
 
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-0 z-40 lg:left-64">
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -172,6 +172,7 @@ const MakePostImage = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">

@@ -122,6 +122,7 @@ const MakePostText = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
+      <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
