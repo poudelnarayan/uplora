@@ -171,7 +171,6 @@ const MakePostImage = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Main Content */}
