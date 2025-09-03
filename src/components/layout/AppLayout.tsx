@@ -19,6 +19,10 @@ import {
   MessageCircle,
   Lightbulb,
   Plus,
+  Clock,
+  Calendar,
+  CheckCircle,
+  FileText,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/components/ui/NotificationCenter/NotificationCenter";
@@ -38,6 +42,13 @@ const routes = [
   { href: "/make-post", label: "Make Post", icon: Upload },
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/social", label: "Social", icon: Plus },
+];
+
+const postRoutes = [
+  { href: "/timeline", label: "Timeline", icon: Clock },
+  { href: "/all", label: "All", icon: FileText },
+  { href: "/scheduled", label: "Scheduled", icon: Calendar },
+  { href: "/posted", label: "Posted", icon: CheckCircle },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -196,9 +207,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r border-border" style={{ backgroundColor: '#213130' }}>
         {/* Header */}
-        <div className="flex items-center h-16 px-4 bg-card border-b border-border">
+        <div className="flex items-center justify-center h-16 px-4 border-b border-white/20" style={{ backgroundColor: '#213130' }}>
           <div className="flex items-center">
             <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-12 w-auto" />
           </div>
@@ -206,7 +217,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* Team Selector removed in sidebar; using top-bar compact switcher */}
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        <nav className="flex-1 space-y-1 px-3 py-4" style={{ backgroundColor: '#213130' }}>
+          {/* Main Navigation */}
           {routes.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
             return (
@@ -215,8 +227,31 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 href={href}
                 className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   active
-                    ? "bg-[#00ADB5]/10 text-[#00ADB5] border border-[#00ADB5]/20 shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30 shadow-sm"
+                    : "text-white/70 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10"
+                }`}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="truncate">{label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Post Navigation Section */}
+          <div className="my-6 mx-3 border-t border-white/20 pt-4" />
+          <div className="px-3 pb-2">
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">Posts</h3>
+          </div>
+          {postRoutes.map(({ href, label, icon: Icon }) => {
+            const active = path === href || path.startsWith(href + "/");
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  active
+                    ? "bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30 shadow-sm"
+                    : "text-white/70 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -226,14 +261,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
 
           {/* Creative Action Buttons */}
-          <div className="my-6 mx-3 border-t border-border pt-4" />
+          <div className="my-6 mx-3 border-t border-white/20 pt-4" />
           
           {/* Feedback Studio */}
           <button
             onClick={() => openModal("feedback-studio", {
               onSubmit: submitFeedback
             })}
-            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
+            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white/70 hover:text-[#00E5FF] hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
           >
             <MessageCircle className="h-5 w-5 shrink-0" />
             <span className="truncate">Feedback Studio</span>
@@ -244,22 +279,34 @@ export default function AppShell({ children }: { children: ReactNode }) {
             onClick={() => openModal("idea-lab", {
               onSubmit: submitIdea
             })}
-            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
+            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-white/70 hover:text-[#00E5FF] hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
           >
             <Lightbulb className="h-5 w-5 shrink-0" />
             <span className="truncate">Idea Lab</span>
           </button>
         </nav>
 
+        {/* User Profile Menu */}
+        <div className="border-t border-white/20 p-4 bg-black/30" style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', zIndex: 50 }}>
+            <UserMenu 
+              dropdownPosition="top"
+              onFeedbackClick={() => openModal("feedback-studio", {
+                onSubmit: submitFeedback
+              })} 
+            />
+          </div>
+        </div>
+
         {/* Footer */}
-        <div className="border-t border-border px-4 py-4">
-          <div className="text-[11px] text-muted-foreground space-y-2">
+        <div className="border-t border-white/20 px-4 py-3" style={{ backgroundColor: '#213130' }}>
+          <div className="text-[11px] text-white/50 space-y-2">
             <div className="flex flex-wrap gap-x-3 gap-y-1">
-              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-              <Link href="/copyright" className="hover:text-foreground transition-colors">Copyright</Link>
-              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/about" className="hover:text-white/80 transition-colors">About</Link>
+              <Link href="/copyright" className="hover:text-white/80 transition-colors">Copyright</Link>
+              <Link href="/contact" className="hover:text-white/80 transition-colors">Contact</Link>
+              <Link href="/terms" className="hover:text-white/80 transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-white/80 transition-colors">Privacy</Link>
             </div>
             <div>© {new Date().getFullYear()} Uplora</div>
           </div>
@@ -268,34 +315,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 ml-0">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-30 bg-card backdrop-blur-none lg:bg-card/95 lg:backdrop-blur-sm">
-          <div className="flex items-center justify-between px-4 lg:px-8 py-3">
-            {/* Left side - Icons, Mobile Menu, Logo */}
-            <div className="flex items-center gap-3">
-              {/* Perfect Circle Icons - Always Visible */}
-             
-              
-              {/* Mobile menu button */}
-              <button
-                className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-                onClick={() => setMobileNavOpen(true)}
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+        {/* Mobile Top Bar - Only for mobile */}
+        <div className="lg:hidden sticky top-0 z-30 bg-card backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Mobile menu button */}
+            <button
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setMobileNavOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-              {/* Mobile logo */}
-              <div className="lg:hidden">
-                <Image src="/text-logo.png" alt="Uplora" width={140} height={35} className="h-10 w-auto" />
-              </div>
+            {/* Mobile logo */}
+            <div>
+              <Image src="/text-logo.png" alt="Uplora" width={140} height={35} className="h-10 w-auto" />
             </div>
 
-            {/* Right side - User Menu */}
-            <div className="flex items-center">
-              <UserMenu onFeedbackClick={() => openModal("feedback-studio", {
-                onSubmit: submitFeedback
-              })} />
-            </div>
+            {/* Empty right side */}
+            <div className="w-10"></div>
           </div>
         </div>
 
@@ -332,17 +369,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-card border-r border-border shadow-2xl z-50 lg:hidden flex flex-col"
-              style={{ backgroundColor: 'rgb(var(--card))' }}
+              className="fixed inset-y-0 left-0 w-72 max-w-[85vw] border-r border-border shadow-2xl z-50 lg:hidden flex flex-col"
+              style={{ backgroundColor: '#213130' }}
             >
-              <header className="h-auto flex items-center justify-between p-4 border-b border-border bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
+              <header className="h-auto flex items-center justify-center p-4 border-b border-white/20" style={{ backgroundColor: '#213130' }}>
                 <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-10 w-auto rounded-md block" />
-                <button onClick={() => setMobileNavOpen(false)} className="btn btn-ghost btn-sm">
+                <button onClick={() => setMobileNavOpen(false)} className="absolute right-4 text-white hover:text-[#00E5FF] p-2">
                   <X className="w-4 h-4" />
                 </button>
               </header>
               
-              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
+              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto" style={{ backgroundColor: '#213130' }}>
+                {/* Main Navigation */}
                 {routes.map(({ href, label, icon: Icon }) => {
                   const active = path === href || path.startsWith(href + "/");
                   return (
@@ -351,8 +389,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       href={href}
                       className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                         active
-                          ? "bg-[#00ADB5] text-white" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          ? "bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30" 
+                          : "text-white/70 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10"
                       }`}
                       style={{ fontFamily: 'Inter, "Open Sans", sans-serif' }}
                       onClick={() => setMobileNavOpen(false)}
@@ -363,32 +401,56 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   );
                 })}
 
+                {/* Post Navigation Section */}
+                <div className="my-6 mx-3 border-t border-white/20 pt-4" />
+                <div className="px-3 pb-2">
+                  <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">Posts</h3>
+                </div>
+                {postRoutes.map(({ href, label, icon: Icon }) => {
+                  const active = path === href || path.startsWith(href + "/");
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                        active
+                          ? "bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30"
+                          : "text-white/70 hover:text-[#00E5FF] hover:bg-[#00E5FF]/10"
+                      }`}
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  );
+                })}
+
                 {/* Mobile: Feedback Studio & Idea Lab */}
-                <div className="my-4 border-t border-border pt-3" />
+                <div className="my-4 border-t border-white/20 pt-3" />
                 <button
                   onClick={() => { setMobileNavOpen(false); openModal("feedback-studio", { onSubmit: submitFeedback }); }}
-                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
+                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-white/70 hover:text-[#00E5FF] hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-purple-500/10"
                 >
                   <MessageCircle className="h-5 w-5 shrink-0" />
                   <span className="truncate">Feedback Studio</span>
                 </button>
                 <button
                   onClick={() => { setMobileNavOpen(false); openModal("idea-lab", { onSubmit: submitIdea }); }}
-                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
+                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-white/70 hover:text-[#00E5FF] hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10"
                 >
                   <Lightbulb className="h-5 w-5 shrink-0" />
                   <span className="truncate">Idea Lab</span>
                 </button>
               </nav>
               {/* Mobile Footer Links */}
-              <div className="border-t border-border px-4 py-4 bg-card" style={{ backgroundColor: 'rgb(var(--card))' }}>
-                <div className="text-[11px] text-muted-foreground space-y-2">
+              <div className="border-t border-white/20 px-4 py-4" style={{ backgroundColor: '#213130' }}>
+                <div className="text-[11px] text-white/50 space-y-2">
                   <div className="flex flex-wrap gap-x-3 gap-y-1">
-                    <Link href="/about" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>About</Link>
-                    <Link href="/copyright" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Copyright</Link>
-                    <Link href="/contact" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Contact</Link>
-                    <Link href="/terms" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Terms</Link>
-                    <Link href="/privacy" className="hover:text-foreground transition-colors" onClick={() => setMobileNavOpen(false)}>Privacy</Link>
+                    <Link href="/about" className="hover:text-white/80 transition-colors" onClick={() => setMobileNavOpen(false)}>About</Link>
+                    <Link href="/copyright" className="hover:text-white/80 transition-colors" onClick={() => setMobileNavOpen(false)}>Copyright</Link>
+                    <Link href="/contact" className="hover:text-white/80 transition-colors" onClick={() => setMobileNavOpen(false)}>Contact</Link>
+                    <Link href="/terms" className="hover:text-white/80 transition-colors" onClick={() => setMobileNavOpen(false)}>Terms</Link>
+                    <Link href="/privacy" className="hover:text-white/80 transition-colors" onClick={() => setMobileNavOpen(false)}>Privacy</Link>
                   </div>
                   <div>© {new Date().getFullYear()} Uplora</div>
                 </div>

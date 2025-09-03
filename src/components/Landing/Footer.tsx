@@ -1,6 +1,7 @@
 "use client";
 
 import { Youtube, Twitter, Linkedin, Instagram } from "lucide-react";
+import Link from "next/link";
 
 const Footer = () => {
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -112,15 +113,15 @@ const Footer = () => {
             © 2024 Uplora. All rights reserved.
           </div>
           <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-smooth">
+            <Link href="/copyright" className="hover:text-foreground transition-smooth">
               Copyright
-            </a>
-            <a href="#" className="hover:text-foreground transition-smooth">
+            </Link>
+            <Link href="/privacy" className="hover:text-foreground transition-smooth">
               Privacy Policy
-            </a>
-            <a href="#" className="hover:text-foreground transition-smooth">
+            </Link>
+            <Link href="/terms" className="hover:text-foreground transition-smooth">
               Terms of Service
-            </a>
+            </Link>
           </div>
         </div>
       </div>

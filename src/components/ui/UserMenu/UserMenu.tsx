@@ -10,9 +10,10 @@ import Link from "next/link";
 
 interface UserMenuProps {
   onFeedbackClick: () => void;
+  dropdownPosition?: 'top' | 'bottom';
 }
 
-export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
+export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' }: UserMenuProps) {
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -71,11 +72,15 @@ export default function UserMenu({ onFeedbackClick }: UserMenuProps) {
       <AnimatePresence>
         {isOpen && (
           <MotionDiv
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'top' ? 10 : -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'top' ? 10 : -10 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+            className={`absolute right-0 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden ${
+              dropdownPosition === 'top' 
+                ? 'bottom-full mb-2' 
+                : 'top-full mt-2'
+            }`}
           >
             {/* Menu Items */}
             <div className="p-2">
