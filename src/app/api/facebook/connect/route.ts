@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const origin = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
     const redirectUri = isLocal
       ? `${reqOrigin}/api/facebook/connect`
-      : (process.env.FB_REDIRECT_URI || `${origin}/api/facebook/connect`);
+      : (process.env.META_REDIRECT_URI || `${origin}/api/facebook/connect`);
 
     console.log('FB_CONNECT_DIAGNOSTIC:', {
       client_id: process.env.META_APP_ID,

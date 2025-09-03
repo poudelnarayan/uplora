@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const origin = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
     const redirectUri = isLocal
       ? `${reqOrigin}/api/facebook/connect`
-      : (process.env.FB_REDIRECT_URI || `${origin}/api/facebook/connect`);
+      : (process.env.META_REDIRECT_URI || `${origin}/api/facebook/connect`);
     
     // Build the Facebook OAuth URL
     const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
