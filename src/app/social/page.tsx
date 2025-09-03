@@ -9,8 +9,15 @@ import { useNotifications } from "@/components/ui/Notification";
 const SocialConnections = () => {
   const notifications = useNotifications();
   const [yt, setYt] = useState<{ loading: boolean; isConnected: boolean; channelTitle?: string | null }>({ loading: true, isConnected: false });
+  const [fb, setFb] = useState<{ loading: boolean; isConnected: boolean; userName?: string | null; pages: any[]; instagramAccounts: any[] }>({ 
+    loading: true, 
+    isConnected: false, 
+    pages: [], 
+    instagramAccounts: [] 
+  });
 
   useEffect(() => {
+    // Load YouTube status
     (async () => {
       try {
         const res = await fetch('/api/youtube/status', { cache: 'no-store' });
@@ -18,6 +25,23 @@ const SocialConnections = () => {
         setYt({ loading: false, isConnected: !!data?.isConnected, channelTitle: data?.channelTitle || null });
       } catch {
         setYt({ loading: false, isConnected: false });
+      }
+    })();
+
+    // Load Facebook status
+    (async () => {
+      try {
+        const res = await fetch('/api/facebook/status', { cache: 'no-store' });
+        const data = await res.json();
+        setFb({ 
+          loading: false, 
+          isConnected: !!data?.connected, 
+          userName: data?.user?.name || null,
+          pages: data?.pages || [],
+          instagramAccounts: data?.instagramAccounts || []
+        });
+      } catch {
+        setFb({ loading: false, isConnected: false, pages: [], instagramAccounts: [] });
       }
     })();
   }, []);
@@ -42,8 +66,8 @@ const SocialConnections = () => {
     {
       id: "instagram",
       name: "Instagram",
-      connected: true,
-      username: "@uplora_official",
+      connected: fb.isConnected && fb.instagramAccounts.length > 0,
+      username: fb.instagramAccounts[0]?.instagram?.username ? `@${fb.instagramAccounts[0].instagram.username}` : null,
       bgColor: "bg-gradient-to-br from-purple-500/10 to-pink-500/10"
     },
     {
@@ -63,8 +87,8 @@ const SocialConnections = () => {
     {
       id: "facebook",
       name: "Facebook",
-      connected: true,
-      username: "Uplora Page",
+      connected: fb.isConnected,
+      username: fb.userName || null,
       bgColor: "bg-gradient-to-br from-blue-500/10 to-blue-600/10"
     },
     {
@@ -115,12 +139,19 @@ const SocialConnections = () => {
                     size="sm"
                     className="w-full"
                     onClick={async () => {
-                      if (platform.id !== 'youtube') return;
                       try {
-                        const resp = await fetch('/api/youtube/disconnect', { method: 'POST' });
-                        if (!resp.ok) throw new Error('Failed');
-                        notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'YouTube account disconnected' });
-                        setYt({ loading: false, isConnected: false });
+                        let resp;
+                        if (platform.id === 'youtube') {
+                          resp = await fetch('/api/youtube/disconnect', { method: 'POST' });
+                          if (!resp.ok) throw new Error('Failed');
+                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'YouTube account disconnected' });
+                          setYt({ loading: false, isConnected: false });
+                        } else if (platform.id === 'facebook' || platform.id === 'instagram') {
+                          resp = await fetch('/api/facebook/disconnect', { method: 'POST' });
+                          if (!resp.ok) throw new Error('Failed');
+                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Facebook/Instagram disconnected' });
+                          setFb({ loading: false, isConnected: false, pages: [], instagramAccounts: [] });
+                        }
                       } catch (e) {
                         notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
                       }
@@ -147,6 +178,15 @@ const SocialConnections = () => {
                     >
                       <Link2 className="h-4 w-4" />
                       {yt.loading ? 'Checking…' : 'Connect'}
+                    </Button>
+                  ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
+                    <Button
+                      className="w-full gap-2"
+                      onClick={() => { window.location.href = '/api/facebook/start'; }}
+                      disabled={fb.loading}
+                    >
+                      <Link2 className="h-4 w-4" />
+                      {fb.loading ? 'Checking…' : 'Connect'}
                     </Button>
                   ) : (
                     <Button className="w-full gap-2" disabled>
