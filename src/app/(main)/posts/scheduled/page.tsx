@@ -11,7 +11,7 @@ import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
-
+import AppShell from "@/components/layout/AppLayout";
 const MotionDiv = motion.div as any;
 
 interface ScheduledPost {
@@ -25,44 +25,7 @@ interface ScheduledPost {
   timeUntilPost: string;
 }
 
-const mockScheduledPosts: ScheduledPost[] = [
-  {
-    id: '1',
-    title: 'Product Launch Video',
-    type: 'video',
-    scheduledFor: '2024-01-15T10:00:00Z',
-    platform: ['YouTube', 'TikTok'],
-    description: 'Exciting product launch announcement video',
-    timeUntilPost: '3 days',
-  },
-  {
-    id: '2',
-    title: 'Weekly Newsletter',
-    type: 'text',
-    scheduledFor: '2024-01-16T09:00:00Z',
-    platform: ['LinkedIn', 'X'],
-    description: 'Weekly company update and industry insights',
-    timeUntilPost: '4 days',
-  },
-  {
-    id: '3',
-    title: 'Team Achievement Post',
-    type: 'image',
-    scheduledFor: '2024-01-18T14:30:00Z',
-    platform: ['Instagram', 'Facebook', 'LinkedIn'],
-    description: 'Celebrating our team\'s latest milestone',
-    timeUntilPost: '6 days',
-  },
-  {
-    id: '4',
-    title: 'Tutorial: Getting Started',
-    type: 'video',
-    scheduledFor: '2024-01-20T16:00:00Z',
-    platform: ['YouTube'],
-    description: 'Beginner-friendly tutorial for new users',
-    timeUntilPost: '8 days',
-  },
-];
+
 
 const Scheduled = () => {
   const { user, isLoaded } = useUser();
@@ -172,7 +135,7 @@ const Scheduled = () => {
   };
 
   if (!isLoaded) return <PageLoader />;
-  if (!user) return <RedirectToSignIn redirectUrl="/scheduled" />;
+  if (!user) return <RedirectToSignIn redirectUrl="/posts/scheduled" />;
   
   // Show loading while team context is initializing
   if (!selectedTeamId || !selectedTeam) {
@@ -180,6 +143,7 @@ const Scheduled = () => {
   }
 
   return (
+    <AppShell>
       <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
@@ -331,6 +295,7 @@ const Scheduled = () => {
         </div>
         </MotionDiv>
       </div>
+      </AppShell>
   );
 };
 

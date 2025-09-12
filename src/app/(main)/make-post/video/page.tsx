@@ -32,7 +32,8 @@ import RichTextEditor from "@/components/editor/RichTextEditor";
 import { useRouter } from "next/navigation";
 import { useNotifications } from "@/components/ui/Notification";
 import { InlineSpinner } from "@/components/ui/loading-spinner";
-
+import AppShell from "@/components/layout/AppLayout";
+    
 interface ExpandableDescriptionProps {
   description: string;
   formatContent: (text: string) => React.ReactNode;
@@ -389,6 +390,7 @@ const MakePostVideos = () => {
   };
 
   return (
+    <AppShell>
 
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
@@ -418,29 +420,13 @@ const MakePostVideos = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-xs">{uploadProgress > 0 ? `${uploadProgress}%` : 'Max 4GB'}</Badge>
-              {!isConnected ? (
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => router.push('/social')}>
-                  Connect YouTube
-                </Button>
-              ) : (
-                <Badge variant="outline" className="text-xs">{channelTitle || 'YouTube Connected'}</Badge>
-              )}
               <Button variant="outline" size="sm" className="gap-2" onClick={persistVideoMeta} disabled={savingMeta || !videoId}>
                 {savingMeta ? (
                   <InlineSpinner size="sm" />
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {savingMeta ? 'Saving…' : 'Save Draft'}
-              </Button>
-              <Button size="sm" className="gap-2" disabled={isPublishing || isUploading} onClick={async () => { await persistVideoMeta(); await publishToYouTube(); }}>
-                {isPublishing || isUploading ? (
-                  <InlineSpinner size="sm" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                {isPublishing ? 'Publishing...' : 'Publish to YouTube'}
+                {savingMeta ? 'Saving…' : 'Save'}
               </Button>
             </div>
           </div>
@@ -472,7 +458,7 @@ const MakePostVideos = () => {
                   >
                     <Upload className="h-8 w-8 text-gray-400 mb-4" />
                     <p className="text-sm font-medium mb-2">Drop video here or click to upload</p>
-                    <p className="text-xs text-gray-500 mb-4">MP4, MOV, AVI • Maximum 4GB</p>
+                    <p className="text-xs text-gray-500 mb-4">MP4, MOV, AVI</p>
                     <input
                       type="file"
                       accept="video/*"
@@ -771,6 +757,7 @@ const MakePostVideos = () => {
         </div>
       </div>
       </div>
+      </AppShell>
   );
 };
 

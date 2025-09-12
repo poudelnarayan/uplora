@@ -29,6 +29,7 @@ import RichTextEditor from "@/components/editor/RichTextEditor";
 import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { InlineSpinner } from "@/components/ui/loading-spinner";
+import AppShell from "@/components/layout/AppLayout";
 
 const MakePostImage = () => {
   const router = useRouter();
@@ -165,7 +166,7 @@ const MakePostImage = () => {
   };
 
   return (
-
+<AppShell>
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-44 z-40 lg:left-64">
@@ -693,7 +694,8 @@ const MakePostImage = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      </AppShell>
   );
 };
 

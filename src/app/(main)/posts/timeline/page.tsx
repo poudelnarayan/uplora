@@ -11,6 +11,7 @@ import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
+import AppShell from "@/components/layout/AppLayout";
 
 const MotionDiv = motion.div as any;
 
@@ -25,68 +26,6 @@ interface TimelinePost {
   description: string;
 }
 
-const mockPosts: TimelinePost[] = [
-  {
-    id: '1',
-    title: 'Product Launch Video',
-    type: 'video',
-    status: 'scheduled',
-    date: '2024-01-15',
-    time: '10:00',
-    platform: ['YouTube', 'TikTok'],
-    description: 'Exciting product launch announcement',
-  },
-  {
-    id: '2',
-    title: 'Behind the Scenes',
-    type: 'image',
-    status: 'posted',
-    date: '2024-01-10',
-    time: '14:30',
-    platform: ['Instagram', 'Facebook'],
-    description: 'Behind the scenes content',
-  },
-  {
-    id: '3',
-    title: 'Weekly Update',
-    type: 'text',
-    status: 'scheduled',
-    date: '2024-01-12',
-    time: '09:00',
-    platform: ['LinkedIn', 'X'],
-    description: 'Weekly company update',
-  },
-  {
-    id: '4',
-    title: 'Tutorial Part 1',
-    type: 'video',
-    status: 'posted',
-    date: '2024-01-08',
-    time: '16:00',
-    platform: ['YouTube'],
-    description: 'First tutorial in series',
-  },
-  {
-    id: '5',
-    title: 'Team Photo',
-    type: 'image',
-    status: 'posted',
-    date: '2024-01-05',
-    time: '12:00',
-    platform: ['Instagram', 'LinkedIn'],
-    description: 'Team holiday party photo',
-  },
-  {
-    id: '6',
-    title: 'Q4 Results',
-    type: 'text',
-    status: 'scheduled',
-    date: '2024-01-20',
-    time: '11:00',
-    platform: ['LinkedIn'],
-    description: 'Q4 financial results announcement',
-  },
-];
 
 const Timeline = () => {
   const { user, isLoaded } = useUser();
@@ -268,7 +207,7 @@ const Timeline = () => {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   if (!isLoaded) return <PageLoader />;
-  if (!user) return <RedirectToSignIn redirectUrl="/timeline" />;
+  if (!user) return <RedirectToSignIn redirectUrl="/posts/timeline" />;
   
   // Show loading while team context is initializing
   if (!selectedTeamId || !selectedTeam) {
@@ -276,6 +215,7 @@ const Timeline = () => {
   }
 
   return (
+    <AppShell>
       <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
@@ -516,6 +456,7 @@ const Timeline = () => {
         </div>
         </MotionDiv>
       </div>
+      </AppShell>
   );
 };
 

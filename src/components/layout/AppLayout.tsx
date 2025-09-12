@@ -45,10 +45,10 @@ const routes = [
 ];
 
 const postRoutes = [
-  { href: "/timeline", label: "Timeline", icon: Clock },
-  { href: "/all", label: "All", icon: FileText },
-  { href: "/scheduled", label: "Scheduled", icon: Calendar },
-  { href: "/posted", label: "Posted", icon: CheckCircle },
+  { href: "/posts/timeline", label: "Timeline", icon: Clock },
+  { href: "/posts/all", label: "All", icon: FileText },
+  { href: "/posts/scheduled", label: "Scheduled", icon: Calendar },
+  { href: "/posts/posted", label: "Posted", icon: CheckCircle },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

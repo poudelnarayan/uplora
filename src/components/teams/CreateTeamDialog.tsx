@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,10 @@ interface CreateTeamDialogProps {
   onCreateTeam: (team: { name: string; description: string; platforms: string[] }) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
-export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenChange }: CreateTeamDialogProps) => {
+export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenChange, isLoading = false }: CreateTeamDialogProps) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
   const setIsOpen = onOpenChange || setInternalIsOpen;
@@ -65,6 +66,7 @@ export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenC
               value={newTeam.name}
               onChange={(e) => setNewTeam(prev => ({...prev, name: e.target.value}))}
               placeholder="Enter team name"
+              disabled={isLoading}
             />
           </div>
           
@@ -76,6 +78,7 @@ export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenC
               onChange={(e) => setNewTeam(prev => ({...prev, description: e.target.value}))}
               placeholder="Describe the team's purpose"
               rows={3}
+              disabled={isLoading}
             />
           </div>
           
@@ -88,12 +91,12 @@ export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenC
                 return (
                   <div
                     key={platform}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 ${
                       isSelected
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-background hover:bg-muted border-border hover:border-primary/50"
-                    }`}
-                    onClick={() => togglePlatform(platform)}
+                    } ${isLoading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                    onClick={() => !isLoading && togglePlatform(platform)}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="text-sm font-medium capitalize">{platform}</span>
@@ -108,11 +111,18 @@ export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenC
         </div>
         
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!newTeam.name.trim()}>
-            Create Team
+          <Button onClick={handleSubmit} disabled={!newTeam.name.trim() || isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Creating Team...
+              </>
+            ) : (
+              "Create Team"
+            )}
           </Button>
         </div>
       </DialogContent>

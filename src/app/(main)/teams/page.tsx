@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Eye } from "lucide-react";
+import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/teams/EmptyState";
 import { TeamDetailsDialog } from "@/components/teams/TeamDetailsDialog";
 import { platformIcons } from "@/components/teams/PlatformIcon";
 import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
+import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/components/layout/AppLayout";
 
 interface TeamMember {
@@ -48,38 +49,51 @@ const teamColors = [
 ];
 
 const Teams = () => {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const { teams: contextTeams, refreshTeams } = useTeam();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [selectedTeamForInvite, setSelectedTeamForInvite] = useState<number | undefined>();
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
   const [viewingTeam, setViewingTeam] = useState<Team | null>(null);
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const loadTeams = async () => {
-    try {
-      const res = await fetch('/api/teams', { cache: 'no-store' });
-      const js = await res.json();
-      const data = (js?.data || js?.data?.data || []) as any[];
-      const filtered = data.filter((t: any) => !t.isPersonal);
-      const mapped: Team[] = filtered.map((t: any, i: number) => ({
-        id: i + 1,
-        backendId: t.id,
-        name: t.name,
-        description: t.description || '',
-        platforms: [],
-        members_data: [],
-        color: teamColors[i % teamColors.length],
-      }));
-      setTeams(mapped);
-    } catch {}
-  };
+  // Transform context teams to local Team format
+  const teams = contextTeams.map((t, i) => ({
+    id: i + 1,
+    backendId: t.id,
+    name: t.name,
+    description: t.description || '',
+    platforms: [],
+    members_data: [],
+    color: teamColors[i % teamColors.length],
+  }));
 
+  // Load teams data on mount
   useEffect(() => {
-    void loadTeams();
-  }, []);
+    const loadTeamsData = async () => {
+      setIsLoading(true);
+      try {
+        await refreshTeams();
+      } catch (error) {
+        console.error('Failed to load teams:', error);
+        toast({
+          title: 'Failed to load teams',
+          description: 'Please try refreshing the page',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleCreateTeam = async (teamData: { name: string; description: string; platforms: string[] }) => {
+    loadTeamsData();
+  }, []); // Remove dependencies to prevent infinite loop
+
+  const handleCreateTeam = useCallback(async (teamData: { name: string; description: string; platforms: string[] }) => {
+    setIsCreatingTeam(true);
     try {
       const res = await fetch('/api/teams', {
         method: 'POST',
@@ -89,25 +103,28 @@ const Teams = () => {
       const js = await res.json();
       if (!res.ok) throw new Error(js?.error || 'Failed to create team');
       toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
-      await loadTeams();
+      await refreshTeams();
+      setIsCreateTeamOpen(false);
     } catch (e) {
       toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
+    } finally {
+      setIsCreatingTeam(false);
     }
-  };
+  }, [refreshTeams, toast]);
 
-  const handleDeleteTeam = async (teamId: number) => {
+  const handleDeleteTeam = useCallback(async (teamId: number) => {
     const team = teams.find(t => t.id === teamId);
     if (!team) return;
     try {
       const res = await fetch(`/api/teams/${team.backendId}`, { method: 'DELETE' });
       const js = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(js?.error || 'Failed to delete team');
-      await loadTeams();
+      await refreshTeams();
       toast({ title: 'Team Deleted', description: `${team.name} has been deleted` });
     } catch (e) {
       toast({ title: 'Delete failed', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
     }
-  };
+  }, [teams, refreshTeams, toast]);
 
   const handleInviteMember = async (memberData: { email: string; teamId: number; role: string }) => {
     const email = memberData.email.trim();
@@ -144,26 +161,36 @@ const Teams = () => {
   };
 
   const handleUpdateTeam = (teamId: number, updates: Partial<Team>) => {
-    setTeams(prev => prev.map(team => 
-      team.id === teamId ? { ...team, ...updates } : team
-    ));
+    // Note: This is for local updates only. For server updates, use refreshTeams()
     toast({
       title: "Team Updated",
       description: "Team information has been updated successfully"
     });
   };
 
-  const handleRemoveMember = (teamId: number, memberId: number) => {
-    setTeams(prev => prev.map(team => 
-      team.id === teamId 
-        ? { ...team, members_data: team.members_data.filter(m => m.id !== memberId) }
-        : team
-    ));
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshTeams();
+    } catch (error) {
+      console.error('Failed to refresh teams:', error);
+      toast({
+        title: 'Failed to refresh teams',
+        description: 'Please try again',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshTeams, toast]);
+
+  const handleRemoveMember = useCallback((teamId: number, memberId: number) => {
+    // Note: This is for local updates only. For server updates, use refreshTeams()
     toast({
       title: "Member Removed",
       description: "Member has been removed from the team"
     });
-  };
+  }, [toast]);
 
   const openInviteDialog = (teamId?: number) => {
     setSelectedTeamForInvite(teamId);
@@ -195,8 +222,22 @@ const Teams = () => {
           <Button 
             variant="outline" 
             className="gap-2" 
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Users className="h-4 w-4" />
+            )}
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="gap-2" 
             onClick={() => openInviteDialog()}
-            disabled={teams.length === 0}
+            disabled={teams.length === 0 || isLoading}
           >
             <UserPlus className="h-4 w-4" />
             Invite Member
@@ -206,21 +247,42 @@ const Teams = () => {
             onCreateTeam={handleCreateTeam} 
             isOpen={isCreateTeamOpen}
             onOpenChange={setIsCreateTeamOpen}
+            isLoading={isCreatingTeam}
           />
         </div>
       </div>
 
       {/* Teams Grid */}
-      <div className={`grid gap-6 ${
+      <div className={`relative grid gap-6 ${
         teams.length === 1 
           ? "grid-cols-1" 
           : teams.length === 2 
           ? "grid-cols-1 lg:grid-cols-2" 
           : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
       }`}>
-        {teams.length === 0 ? (
-          <EmptyState onCreateTeam={() => setIsCreateTeamOpen(true)} />
-        ) : teams.length === 1 ? (
+        {/* Initial Loading State */}
+        {isLoading ? (
+          <div className="col-span-full flex items-center justify-center py-16">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading teams...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Creating Team Overlay */}
+            {isCreatingTeam && (
+              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                <div className="flex items-center gap-3 bg-background border border-border rounded-lg px-6 py-4 shadow-lg">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-sm font-medium">Creating team...</span>
+                </div>
+              </div>
+            )}
+            
+            {teams.length === 0 ? (
+              <EmptyState onCreateTeam={() => setIsCreateTeamOpen(true)} />
+            ) : teams.length === 1 ? (
           // Special expanded layout for single team
           <div className="col-span-full">
             <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
@@ -369,6 +431,8 @@ const Teams = () => {
               onViewTeam={(t) => setViewingTeam(t)}
             />
           ))
+        )}
+          </>
         )}
       </div>
 

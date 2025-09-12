@@ -72,15 +72,11 @@ export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' 
       <AnimatePresence>
         {isOpen && (
           <MotionDiv
-            initial={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'top' ? 10 : -10 }}
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: dropdownPosition === 'top' ? 10 : -10 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className={`absolute right-0 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden ${
-              dropdownPosition === 'top' 
-                ? 'bottom-full mb-2' 
-                : 'top-full mt-2'
-            }`}
+            className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
           >
             {/* Menu Items */}
             <div className="p-2">

@@ -11,7 +11,7 @@ import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
-
+import AppShell from "@/components/layout/AppLayout";
 const MotionDiv = motion.div as any;
 
 interface PostedContent {
@@ -152,7 +152,7 @@ const Posted = () => {
   }), { views: 0, likes: 0, shares: 0, comments: 0 });
 
   if (!isLoaded) return <PageLoader />;
-  if (!user) return <RedirectToSignIn redirectUrl="/posted" />;
+  if (!user) return <RedirectToSignIn redirectUrl="/posts/posted" />;
   
   // Show loading while team context is initializing
   if (!selectedTeamId || !selectedTeam) {
@@ -160,6 +160,7 @@ const Posted = () => {
   }
 
   return (
+    <AppShell>
       <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
@@ -340,6 +341,7 @@ const Posted = () => {
         </div>
         </MotionDiv>
       </div>
+      </AppShell>
   );
 };
 
