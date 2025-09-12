@@ -48,7 +48,7 @@ export async function GET(
     }
 
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('*')
       .eq('id', id)
       .single();

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     // For now, just mark as processed and create a mock web-optimized key
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('*')
       .eq('id', videoId)
       .eq('userId', userId)
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     
     // Update with processing complete
     const { error: updateError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .update({ 
         status: "PROCESSING",
         // Store web key in filename field temporarily

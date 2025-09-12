@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         }
 
         const { data: videos, error } = await supabaseAdmin
-          .from('videos')
+          .from('video_posts')
           .select(`
             *,
             users:users!videos_userId_fkey (
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
       }
 
       const { data: videos, error } = await supabaseAdmin
-        .from('videos')
+        .from('video_posts')
         .select(`
           *,
           users:users!videos_userId_fkey (
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
       }
 
       const { data: video, error } = await supabaseAdmin
-        .from('videos')
+        .from('video_posts')
         .insert({
           key,
           filename,

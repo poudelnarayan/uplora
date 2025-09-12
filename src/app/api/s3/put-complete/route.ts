@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     
     const newVideoId = videoIdFromKey || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .insert({
         id: newVideoId,
         key,

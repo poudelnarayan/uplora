@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let videoRoutes: MetadataRoute.Sitemap = [];
   try {
     const { data: videos } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('id, updatedAt, visibility, status')
       .eq('status', 'PUBLISHED')
       .order('updatedAt', { ascending: false })

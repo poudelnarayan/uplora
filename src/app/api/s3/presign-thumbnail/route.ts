@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // Resolve video and teamId
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('id, teamId, userId')
       .eq('id', videoId)
       .single();
@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
     }
     if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
 
-    // Presign thumbnail under teams/<teamId>/videos/<videoId>/thumbnail/thumbnail
-    const key = `teams/${finalTeamId}/videos/${videoId}/thumbnail/thumbnail`;
+    // Presign thumbnail under teams/<teamId>/videos/<videoId>/thumbnail
+    const key = `teams/${finalTeamId}/videos/${videoId}/thumbnail`;
 
     const command = new PutObjectCommand({ 
       Bucket: process.env.S3_BUCKET!, 

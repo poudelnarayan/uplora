@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlatformIcon, platformIcons } from "./PlatformIcon";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/nextjs";
+import { InlineSpinner } from "@/components/ui/loading-spinner";
 
 interface Team {
   id: number;
@@ -191,7 +192,11 @@ export const InviteMemberDialog = ({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading || !!emailError || !memberData.email || !memberData.teamId || !memberData.role} className="gap-2">
-            {isLoading && <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />}
+            {isLoading ? (
+              <InlineSpinner size="sm" />
+            ) : (
+              <UserPlus className="h-4 w-4" />
+            )}
             {isLoading ? 'Sending…' : 'Send Invitation'}
           </Button>
         </div>

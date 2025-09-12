@@ -3,6 +3,7 @@ import { usePathname } from "next/navigation";
 import { NotificationProvider } from "@/components/ui/Notification";
 import { TeamProvider } from "@/context/TeamContext";
 import { UploadProvider } from "@/context/UploadContext";
+import { ContentCacheProvider } from "@/context/ContentCacheContext";
 import UploadTray from "@/components/layout/UploadTray";
 import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
 import defaultSeo from "@/seo.config";
@@ -41,22 +42,24 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             </ThemeProvider>
           ) : (
             <TeamProvider>
-              <UploadProvider>
-                <ModalProvider>
-                  <ThemeProvider>
-                    <DefaultSeoNoSSR {...defaultSeo} />
-                    <OrganizationJsonLdNoSSR
-                      type="Organization"
-                      id={`${siteUrl}/#organization`}
-                      name="Uplora"
-                      url={siteUrl}
-                      sameAs={[]}
-                    />
-                    {children}
-                    <UploadTray />
-                  </ThemeProvider>
-                </ModalProvider>
-              </UploadProvider>
+              <ContentCacheProvider>
+                <UploadProvider>
+                  <ModalProvider>
+                    <ThemeProvider>
+                      <DefaultSeoNoSSR {...defaultSeo} />
+                      <OrganizationJsonLdNoSSR
+                        type="Organization"
+                        id={`${siteUrl}/#organization`}
+                        name="Uplora"
+                        url={siteUrl}
+                        sameAs={[]}
+                      />
+                      {children}
+                      <UploadTray />
+                    </ThemeProvider>
+                  </ModalProvider>
+                </UploadProvider>
+              </ContentCacheProvider>
             </TeamProvider>
           )}
         </NotificationProvider>

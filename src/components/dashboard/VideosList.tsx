@@ -7,6 +7,7 @@ import { Upload, Play, Image as ImageIcon, Trash2, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface VideoItem {
   id: string;
@@ -54,8 +55,7 @@ export default function VideosList({
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="spinner-lg mx-auto mb-4" />
-        <p className="text-muted-foreground">Loading videos...</p>
+        <LoadingSpinner size="lg" variant="primary" text="Loading videos..." />
       </div>
     );
   }

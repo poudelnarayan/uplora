@@ -44,7 +44,7 @@ export async function GET(
     }
 
     const { data: v, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select(`
         *,
         users!videos_userId_fkey (
@@ -152,7 +152,7 @@ export async function PATCH(
 
     // Check access: owner or team member (team owner included)
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('*')
       .eq('id', id)
       .single();
@@ -250,7 +250,7 @@ export async function PATCH(
     if (statusData.approvedByUserId !== undefined) updateData.approvedByUserId = statusData.approvedByUserId;
 
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .update(updateData)
       .eq('id', id)
       .select()

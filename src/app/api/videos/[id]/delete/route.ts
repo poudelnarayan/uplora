@@ -48,7 +48,7 @@ export async function DELETE(
 
     // Get video and check access
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('*')
       .eq('id', id)
       .single();
@@ -132,7 +132,7 @@ export async function DELETE(
 
     // Delete video record from database
     await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .delete()
       .eq('id', id);
 

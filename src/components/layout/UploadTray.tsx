@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Upload } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { InlineSpinner } from "@/components/ui/loading-spinner";
 
 const MotionDiv = motion.div as any;
 
@@ -66,6 +67,8 @@ export default function UploadTray() {
                     <AlertCircle className="w-5 h-5 text-red-500" />
                   ) : u.status === "cancelled" ? (
                     <X className="w-5 h-5 text-orange-500" />
+                  ) : u.status === "uploading" ? (
+                    <InlineSpinner size="sm" className="text-primary" />
                   ) : (
                     <Upload className="w-5 h-5 text-primary" />
                   )}

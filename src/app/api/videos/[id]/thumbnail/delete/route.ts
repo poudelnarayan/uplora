@@ -47,7 +47,7 @@ export async function DELETE(
 
     // Get video and check access
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .select('*')
       .eq('id', id)
       .single();
@@ -88,7 +88,7 @@ export async function DELETE(
 
     // Update video record to remove thumbnail reference
     await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .update({ 
         thumbnailKey: null,
         updatedAt: new Date().toISOString()

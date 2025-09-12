@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
     const newVideoId = (lockMeta.videoId as string | undefined) || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videos')
+      .from('video_posts')
       .insert({
         id: newVideoId,
         key,
@@ -186,13 +186,13 @@ export async function POST(req: NextRequest) {
 
             // Update video.key to canonical path
             await supabaseAdmin
-              .from('videos')
+              .from('video_posts')
               .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
               .eq('id', video.id);
           } else {
             // Key is already canonical; ensure DB reflects it
             await supabaseAdmin
-              .from('videos')
+              .from('video_posts')
               .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
               .eq('id', video.id);
           }
