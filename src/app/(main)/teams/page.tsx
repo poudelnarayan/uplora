@@ -57,7 +57,6 @@ const Teams = () => {
   const [viewingTeam, setViewingTeam] = useState<Team | null>(null);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   // Transform context teams to local Team format
@@ -130,13 +129,11 @@ const Teams = () => {
     const email = memberData.email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address", variant: "destructive" as any });
-      return;
+      throw new Error("Please enter a valid email address");
     }
     const team = teams.find(t => t.id === memberData.teamId);
     if (!team || !team.backendId) {
-      toast({ title: "Team not found", description: "Please select a valid team", variant: "destructive" as any });
-      return;
+      throw new Error("Please select a valid team");
     }
 
     try {
@@ -145,18 +142,19 @@ const Teams = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, role: memberData.role.toUpperCase() })
       });
+      
       const result = await res.json().catch(() => ({}));
+      
       if (res.ok) {
-        toast({
-          title: result?.emailSent ? "Invitation sent" : "Invitation created",
-          description: result?.emailSent ? `Email delivered to ${email}` : `Invite saved; email delivery failed for ${email}`
-        });
+        // Success - let the dialog handle the success toast
+        return result;
       } else {
         const msg = result?.message || result?.error || "Failed to send invitation";
-        toast({ title: "Invite failed", description: msg, variant: "destructive" as any });
+        throw new Error(msg);
       }
     } catch (e) {
-      toast({ title: "Invite failed", description: e instanceof Error ? e.message : 'Network error', variant: "destructive" as any });
+      const errorMessage = e instanceof Error ? e.message : 'Network error occurred';
+      throw new Error(errorMessage);
     }
   };
 
@@ -168,21 +166,6 @@ const Teams = () => {
     });
   };
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshTeams();
-    } catch (error) {
-      console.error('Failed to refresh teams:', error);
-      toast({
-        title: 'Failed to refresh teams',
-        description: 'Please try again',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refreshTeams, toast]);
 
   const handleRemoveMember = useCallback((teamId: number, memberId: number) => {
     // Note: This is for local updates only. For server updates, use refreshTeams()
@@ -219,20 +202,6 @@ const Teams = () => {
         </div>
         
         <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            className="gap-2" 
-            onClick={handleRefresh}
-            disabled={isRefreshing || isLoading}
-          >
-            {isRefreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Users className="h-4 w-4" />
-            )}
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          
           <Button 
             variant="outline" 
             className="gap-2" 
@@ -375,12 +344,12 @@ const Teams = () => {
                     </h3>
                     {teams[0].members_data.length > 0 ? (
                       <div className="space-y-2">
-                        {teams[0].members_data.slice(0, 3).map((member) => (
+                        {teams[0].members_data.slice(0, 3).map((member: TeamMember) => (
                           <div key={member.id} className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
                             <Avatar className="h-6 w-6">
                               <AvatarImage src={member.avatar} />
                               <AvatarFallback className="text-xs">
-                                {member.name.split(' ').map(n => n[0]).join('')}
+                                {member.name.split(' ').map((n: string) => n[0]).join('')}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">

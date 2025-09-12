@@ -44,6 +44,7 @@ export const InviteMemberDialog = ({
   const { user } = useUser();
   const [emailError, setEmailError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,7 +52,12 @@ export const InviteMemberDialog = ({
   };
 
   const handleSubmit = async () => {
+    // Clear previous errors
+    setError("");
+    setEmailError("");
+
     if (!memberData.email || !memberData.teamId || !memberData.role) {
+      setError("Please fill in all required fields");
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -63,28 +69,47 @@ export const InviteMemberDialog = ({
     const currentEmail = user?.emailAddresses?.[0]?.emailAddress || "";
     if (currentEmail && memberData.email.trim().toLowerCase() === currentEmail.toLowerCase()) {
       setEmailError("You cannot invite yourself");
+      setError("You cannot invite yourself");
       toast({ title: "Cannot invite yourself", description: "Please enter a different email address", variant: "destructive" });
       return;
     }
 
     if (!validateEmail(memberData.email)) {
       setEmailError("Enter a valid email address");
+      setError("Please enter a valid email address");
       toast({ title: "Invalid email", description: "Please enter a valid email address", variant: "destructive" });
       return;
     }
 
     try {
       setIsLoading(true);
-      await Promise.resolve(onInviteMember({
+      setError("");
+      
+      const result = await Promise.resolve(onInviteMember({
         email: memberData.email,
         teamId: Number(memberData.teamId),
         role: memberData.role
       }));
+      
       setMemberData({ email: "", teamId: "", role: "" });
       onClose();
-      toast({ title: "Invitation Sent", description: `Invitation sent to ${memberData.email}` });
+      
+      // Show appropriate success message based on email delivery
+      if (result?.emailSent) {
+        toast({ 
+          title: "Invitation Sent", 
+          description: `Email delivered to ${memberData.email}` 
+        });
+      } else {
+        toast({ 
+          title: "Invitation Created", 
+          description: `Invite saved but email delivery failed for ${memberData.email}`,
+          variant: "destructive"
+        });
+      }
     } catch (e: any) {
       const msg = e?.message || 'Failed to send invitation';
+      setError(msg);
       toast({ title: "Invite failed", description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -130,6 +155,9 @@ export const InviteMemberDialog = ({
             />
             {emailError && (
               <p className="text-xs text-destructive">{emailError}</p>
+            )}
+            {error && !emailError && (
+              <p className="text-xs text-destructive">{error}</p>
             )}
           </div>
           
@@ -191,13 +219,17 @@ export const InviteMemberDialog = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading || !!emailError || !memberData.email || !memberData.teamId || !memberData.role} className="gap-2">
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isLoading || !!emailError || !!error || !memberData.email || !memberData.teamId || !memberData.role} 
+            className="gap-2"
+          >
             {isLoading ? (
               <InlineSpinner size="sm" />
             ) : (
               <UserPlus className="h-4 w-4" />
             )}
-            {isLoading ? 'Sending…' : 'Send Invitation'}
+            {isLoading ? 'Sending invitation...' : 'Send Invitation'}
           </Button>
         </div>
       </DialogContent>

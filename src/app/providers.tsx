@@ -9,6 +9,7 @@ import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSR
 import defaultSeo from "@/seo.config";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ModalProvider } from "@/components/ui/Modal";
+import OnboardingGuard from "@/components/OnboardingGuard";
 
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -41,26 +42,28 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               {children}
             </ThemeProvider>
           ) : (
-            <TeamProvider>
-              <ContentCacheProvider>
-                <UploadProvider>
-                  <ModalProvider>
-                    <ThemeProvider>
-                      <DefaultSeoNoSSR {...defaultSeo} />
-                      <OrganizationJsonLdNoSSR
-                        type="Organization"
-                        id={`${siteUrl}/#organization`}
-                        name="Uplora"
-                        url={siteUrl}
-                        sameAs={[]}
-                      />
-                      {children}
-                      <UploadTray />
-                    </ThemeProvider>
-                  </ModalProvider>
-                </UploadProvider>
-              </ContentCacheProvider>
-            </TeamProvider>
+            <OnboardingGuard>
+              <TeamProvider>
+                <ContentCacheProvider>
+                  <UploadProvider>
+                    <ModalProvider>
+                      <ThemeProvider>
+                        <DefaultSeoNoSSR {...defaultSeo} />
+                        <OrganizationJsonLdNoSSR
+                          type="Organization"
+                          id={`${siteUrl}/#organization`}
+                          name="Uplora"
+                          url={siteUrl}
+                          sameAs={[]}
+                        />
+                        {children}
+                        <UploadTray />
+                      </ThemeProvider>
+                    </ModalProvider>
+                  </UploadProvider>
+                </ContentCacheProvider>
+              </TeamProvider>
+            </OnboardingGuard>
           )}
         </NotificationProvider>
       ) : (
