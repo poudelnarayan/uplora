@@ -38,9 +38,16 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
           <div className="flex items-center space-x-8">
-            <div className="flex items-center">
-              <Image src="/text-logo.png" alt="Uplora" width={220} height={50} className="h-12 w-auto" />
-            </div>
+            <Link href="/" className="flex items-center">
+              <Image 
+                src="/text-logo.png" 
+                alt="Uplora" 
+                width={280} 
+                height={60} 
+                className="h-24 w-auto hover:opacity-80 transition-opacity" 
+                priority
+              />
+            </Link>
 
             {/* Enhanced Review Indicator */}
             <div

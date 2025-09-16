@@ -2,6 +2,7 @@
 
 import { Youtube, Twitter, Linkedin, Instagram } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const Footer = () => {
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -19,9 +20,15 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="text-2xl font-bold gradient-text mb-4">
-              Uplora
-            </div>
+            <Link href="/" className="inline-block mb-4">
+              <Image 
+                src="/text-logo.png" 
+                alt="Uplora" 
+                width={230} 
+                height={55} 
+                className="h-16 w-auto hover:opacity-80 transition-opacity" 
+              />
+            </Link>
             <p className="text-muted-foreground mb-6 max-w-md">
               <span className="text-base font-inter">
                 Helping creators and teams streamline their content workflow from draft to publish.
