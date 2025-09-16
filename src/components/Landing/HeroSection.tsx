@@ -64,78 +64,35 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <SignedOut>
                 <SignUpButton>
-                  {/* Mobile-specific compact button */}
-                  <div className="sm:hidden">
-                    <Button 
-                      size="sm" 
-                      className="gradient-primary text-primary-foreground hover-glow text-sm px-4 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      Start Free
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* Desktop button */}
-                  <div className="hidden sm:block">
-                    <Button 
-                      size="lg" 
-                      className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
-                    >
-                      Get Started Free
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
+                  <Button 
+                    size="lg" 
+                    className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard">
-                  {/* Mobile-specific compact button */}
-                  <div className="sm:hidden">
-                    <Button 
-                      size="sm" 
-                      className="gradient-primary text-primary-foreground hover-glow text-sm px-4 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      Dashboard
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* Desktop button */}
-                  <div className="hidden sm:block">
-                    <Button 
-                      size="lg" 
-                      className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
-                    >
-                      Go to Dashboard
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
+                  <Button 
+                    size="lg" 
+                    className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
+                  >
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
                 </Link>
               </SignedIn>
               
-              {/* Mobile-specific compact secondary button */}
-              <div className="sm:hidden">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-sm px-4 py-2 rounded-full font-medium border-2 hover:bg-primary/5 hover:border-primary/50 transition-all duration-200"
-                >
-                  <Play className="mr-1 h-3 w-3" />
-                  Demo
-                </Button>
-              </div>
-              
-              {/* Desktop secondary button */}
-              <div className="hidden sm:block">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="text-lg px-8 py-4 hover-lift"
-                >
-                  <Play className="mr-2 h-5 w-5" />
-                  See How It Works
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 hover-lift w-full sm:w-auto"
+              >
+                <Play className="mr-2 h-5 w-5" />
+                See How It Works
+              </Button>
             </div>
 
             {/* Platform Logos */}
