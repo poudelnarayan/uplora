@@ -17,6 +17,7 @@ interface UserMenuProps {
 export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' }: UserMenuProps) {
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,4 +137,3 @@ export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' 
     </div>
   );
 }
-    {isOpen && (
