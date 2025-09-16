@@ -83,22 +83,27 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Continuous animation loop
+  // Continuous animation loop with smooth start
   useEffect(() => {
-    const animate = () => {
-      setAnimationTime(Date.now());
-      requestAnimationFrame(animate);
-    };
-    const animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
+    // Start with a small delay to prevent initial jitter
+    const startDelay = setTimeout(() => {
+      const animate = () => {
+        setAnimationTime(Date.now());
+        requestAnimationFrame(animate);
+      };
+      const animationId = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animationId);
+    }, 100);
+    
+    return () => clearTimeout(startDelay);
   }, []);
 
-  // Automatic floating animations - subtle movement on mobile
+  // Automatic floating animations - smooth movement on mobile
   const time = animationTime * 0.001;
-  const floatMultiplier = isMobile ? 0.6 : 1; // Reduced but still visible movement on mobile
-  const autoFloatX = Math.sin(time * 0.6 + index * 1.2) * 12 * floatMultiplier;
-  const autoFloatY = Math.cos(time * 0.8 + index * 0.9) * 15 * floatMultiplier;
-  const autoRotate = Math.sin(time * 0.4 + index) * 3 * floatMultiplier;
+  const floatMultiplier = isMobile ? 0.7 : 1; // Slightly more movement for better visibility
+  const autoFloatX = Math.sin(time * 0.5 + index * 1.0) * 10 * floatMultiplier; // Slower, smoother
+  const autoFloatY = Math.cos(time * 0.6 + index * 0.8) * 12 * floatMultiplier; // Slower, smoother
+  const autoRotate = Math.sin(time * 0.3 + index) * 2 * floatMultiplier; // Slower rotation
 
   return (
     <div
@@ -107,10 +112,10 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
       style={{
         transform: `translate(${autoFloatX}px, ${autoFloatY}px) rotate(${autoRotate}deg)`,
         left: isMobile 
-          ? `${20 + (index % 3) * 20}%` // Truly centered with proper margins
+          ? `${15 + (index % 3) * 25}%` // Centered with proper gaps between icons
           : `${20 + (index % 3) * 30}%`, // Original desktop positioning
         top: isMobile 
-          ? `${25 + Math.floor(index / 3) * 25}%` // Truly centered with proper margins
+          ? `${20 + Math.floor(index / 3) * 30}%` // Centered with proper gaps between icons
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}
