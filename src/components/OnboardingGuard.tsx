@@ -28,7 +28,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     '/privacy',
     '/terms',
     '/copyright',
-    '/invite' // Invitation pages
+    '/invite', // Invitation pages
+    '/test-supabase' // Test pages
   ];
 
   const shouldSkipOnboarding = skipOnboardingPages.some(page => 
