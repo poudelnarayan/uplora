@@ -112,17 +112,17 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
       style={{
         transform: `translate(${autoFloatX}px, ${autoFloatY}px) rotate(${autoRotate}deg)`,
         left: isMobile 
-          ? `${15 + (index % 3) * 30}%` // Increased horizontal spacing
+          ? `${15 + (index % 3) * 30}%` // Horizontal spacing
           : `${20 + (index % 3) * 30}%`, // Original desktop positioning
         top: isMobile 
-          ? `${5 + Math.floor(index / 3) * 45}%` // Increased vertical spacing between rows
+          ? `${8 + Math.floor(index / 3) * 35}%` // Perfect vertical spacing - no overlap
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}
     >
       <div
         className={`
-          relative w-16 h-16 md:w-20 md:h-20 rounded-2xl 
+          relative w-14 h-14 md:w-20 md:h-20 rounded-2xl 
           ${icon.bgColor} 
           flex items-center justify-center 
           shadow-lg
@@ -133,7 +133,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
       >
         {/* Icon */}
         <div 
-          className="w-8 h-8 md:w-10 md:h-10 text-white relative z-10"
+          className="w-7 h-7 md:w-10 md:h-10 text-white relative z-10"
           style={{ color: icon.name === 'Instagram' ? 'white' : icon.color === '#000000' ? 'white' : 'white' }}
           dangerouslySetInnerHTML={{ __html: icon.svg }}
         />
@@ -144,7 +144,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
 
 export default function InteractiveSocialIcons() {
   return (
-    <div className="relative w-full h-40 md:h-96">
+    <div className="relative w-full h-48 md:h-96">
       {/* Animated background particles */}
       <div className="absolute inset-0 opacity-30 flex items-center justify-center">
         {[...Array(20)].map((_, i) => (
