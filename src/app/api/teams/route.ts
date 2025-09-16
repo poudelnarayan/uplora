@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { safeAuth } from "@/lib/clerk-supabase-utils";
+import { auth } from "@clerk/nextjs/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
