@@ -7,7 +7,7 @@ import { withAuth } from "@/lib/clerk-supabase-utils";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function DELETE(req: NextRequest) {
-  return withAuth(async (user) => {
+  const result = await withAuth(async (user) => {
     try {
       // Release any upload lock for this user
       const { error: lockError } = await supabaseAdmin
@@ -15,20 +15,25 @@ export async function DELETE(req: NextRequest) {
         .delete()
         .eq('userId', user.clerkUserId);
 
-      return NextResponse.json(createSuccessResponse({ success: true }));
+      return createSuccessResponse({ success: true });
     } catch (e: unknown) {
       const err = e as { message?: string };
       console.error("lock release error", e);
-      return NextResponse.json(
+      return (
         createErrorResponse(
           ErrorCodes.INTERNAL_ERROR,
           "Failed to release lock",
           err?.message ? { detail: String(err.message) } : undefined
-        ),
-        { status: 500 }
+        )
       );
     }
   });
+
+  if (!result.ok) {
+    return NextResponse.json(result, { status: 500 });
+  }
+
+  return NextResponse.json(result);
 }    
 
 // Add POST method support for compatibility

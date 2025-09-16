@@ -91,7 +91,7 @@ export async function withAuth<T>(
   handler: (user: Awaited<ReturnType<typeof getAuthenticatedUser>>) => Promise<T>
 ) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserSafe();
     return await handler(user);
   } catch (error) {
     if (error instanceof Error && error.message === "Authentication required") {
