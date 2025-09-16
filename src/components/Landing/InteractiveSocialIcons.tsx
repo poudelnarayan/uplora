@@ -112,10 +112,10 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
       style={{
         transform: `translate(${autoFloatX}px, ${autoFloatY}px) rotate(${autoRotate}deg)`,
         left: isMobile 
-          ? `${15 + (index % 3) * 30}%` // Increased horizontal spacing
+          ? `${15 + (index % 3) * 25}%` // Centered with proper gaps between icons
           : `${20 + (index % 3) * 30}%`, // Original desktop positioning
         top: isMobile 
-          ? `${5 + Math.floor(index / 3) * 45}%` // Increased vertical spacing between rows
+          ? `${10 + Math.floor(index / 3) * 40}%` // Clear vertical gaps between rows
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}

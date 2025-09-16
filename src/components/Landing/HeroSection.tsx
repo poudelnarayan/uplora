@@ -1,16 +1,13 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { Play, ArrowRight, ChevronDown, X } from "lucide-react";
+import { Play, ArrowRight } from "lucide-react";
 import dashboardHero from "@/assets/dashboard-hero.jpg";
 import InteractiveSocialIcons from "./InteractiveSocialIcons";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { useState } from "react";
 
 const HeroSection = () => {
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Gradient */}
@@ -64,86 +61,7 @@ const HeroSection = () => {
               </p>
             </div>
 
-            {/* Mobile Breadcrumb Menu */}
-            <div className="sm:hidden relative mb-8">
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-primary font-medium text-sm hover:bg-primary/20 transition-all duration-200"
-              >
-                <span>Get Started</span>
-                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showMobileMenu ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {/* Mobile Dropdown Menu */}
-              {showMobileMenu && (
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
-                  <div className="p-2">
-                    <SignedOut>
-                      <SignUpButton>
-                        <button className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 transition-colors group">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <ArrowRight className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="text-left">
-                              <div className="font-semibold text-gray-900">Get Started Free</div>
-                              <div className="text-xs text-gray-500">7-day free trial</div>
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary transition-colors" />
-                        </button>
-                      </SignUpButton>
-                    </SignedOut>
-                    <SignedIn>
-                      <Link href="/dashboard">
-                        <button className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 transition-colors group">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <ArrowRight className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="text-left">
-                              <div className="font-semibold text-gray-900">Go to Dashboard</div>
-                              <div className="text-xs text-gray-500">Access your workspace</div>
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary transition-colors" />
-                        </button>
-                      </Link>
-                    </SignedIn>
-                    
-                    <button 
-                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group"
-                      onClick={() => {
-                        document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
-                        setShowMobileMenu(false);
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                          <Play className="h-4 w-4 text-gray-600" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-semibold text-gray-900">See How It Works</div>
-                          <div className="text-xs text-gray-500">Watch demo</div>
-                        </div>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* Backdrop to close menu */}
-              {showMobileMenu && (
-                <div 
-                  className="fixed inset-0 bg-black/20 z-40"
-                  onClick={() => setShowMobileMenu(false)}
-                />
-              )}
-            </div>
-
-            {/* Desktop Buttons */}
-            <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <SignedOut>
                 <SignUpButton>
                   <Button 
