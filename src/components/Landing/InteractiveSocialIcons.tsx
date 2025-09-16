@@ -115,7 +115,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
           ? `${15 + (index % 3) * 25}%` // Centered with proper gaps between icons
           : `${20 + (index % 3) * 30}%`, // Original desktop positioning
         top: isMobile 
-          ? `${20 + Math.floor(index / 3) * 30}%` // Centered with proper gaps between icons
+          ? `${15 + Math.floor(index / 3) * 35}%` // Reduced margins, proper gaps between rows
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}
@@ -144,7 +144,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
 
 export default function InteractiveSocialIcons() {
   return (
-    <div className="relative w-full h-48 md:h-96">
+    <div className="relative w-full h-40 md:h-96">
       {/* Animated background particles */}
       <div className="absolute inset-0 opacity-30 flex items-center justify-center">
         {[...Array(20)].map((_, i) => (
