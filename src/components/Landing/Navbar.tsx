@@ -1,15 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Menu, X, Star, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Star } from "lucide-react";
 import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import AuthButtons from "./AuthButtons";
 import Image from "next/image";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const scrollToReviews = () => {
     document.getElementById("reviews")?.scrollIntoView({
       behavior: "smooth",
@@ -105,38 +101,17 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Auth Button */}
           <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="hover:bg-primary/10 hover:text-primary"
-            >
-              {isMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
+            <ClerkLoading>
+              <div className="h-9 w-24 bg-primary/10 rounded animate-pulse" />
+            </ClerkLoading>
+            <ClerkLoaded>
+              <AuthButtons />
+            </ClerkLoaded>
           </div>
         </div>
 
-        {/* Simplified Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-6 border-t border-border/50 bg-secondary/20 rounded-b-xl -mx-4 px-4">
-            <div className="flex flex-col space-y-4">
-              <ClerkLoading>
-                <div className="h-12 flex items-center gap-2">
-                  <span className="w-full h-12 bg-primary/10 rounded animate-pulse" />
-                </div>
-              </ClerkLoading>
-              <ClerkLoaded>
-                <AuthButtons />
-              </ClerkLoaded>
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );
