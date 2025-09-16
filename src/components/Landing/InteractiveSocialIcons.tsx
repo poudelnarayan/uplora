@@ -117,6 +117,9 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
         top: isMobile 
           ? `${8 + Math.floor(index / 3) * 35}%` // Perfect vertical spacing - no overlap
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
+        top: isMobile 
+          ? `${5 + Math.floor(index / 3) * 45}%` // Much larger vertical gaps
+          : `${15 + Math.floor(index / 3) * 45}%`, // Increased desktop spacing too
         willChange: 'transform', // Optimize for animations
       }}
     >
