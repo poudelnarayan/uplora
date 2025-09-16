@@ -23,7 +23,7 @@ const HeroSection = () => {
           </div>
 
           {/* Content - Show second on mobile */}
-          <div className="text-center order-2 lg:order-1">
+          <div className="text-center lg:text-center order-2 lg:order-1">
             {/* Differentiator Badge - Industry Standard */}
             <div className="mb-8">
               <div className="inline-block bg-secondary/50 border border-border rounded-lg px-4 py-2">
@@ -33,11 +33,11 @@ const HeroSection = () => {
               </div>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-poppins mb-6 leading-tight tracking-tight text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-poppins mb-6 leading-tight tracking-tight text-center lg:text-center">
               <div className="font-bold gradient-text text-4xl md:text-5xl lg:text-6xl mb-1">
                 Collaborative
               </div>
-              <div className="font-medium text-2xl md:text-3xl lg:text-4xl text-foreground flex items-center justify-center gap-4">
+              <div className="font-medium text-2xl md:text-3xl lg:text-4xl text-foreground flex items-center justify-center lg:justify-center gap-4">
                 <span>Scheduling</span>
                 <span className="w-16 h-0.5 bg-primary"></span>
               </div>
@@ -46,13 +46,13 @@ const HeroSection = () => {
               </div>
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl">
+            <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto text-center">
               Uplora helps creators and teams draft, approve, and publish across 
               <span className="text-primary font-medium"> YouTube, TikTok, Instagram, LinkedIn, X, and Facebook</span>{" "}
               with seamless team workflow collaboration.
             </p>
             
-            <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-8 max-w-2xl">
+            <div className="bg-secondary/50 border border-border rounded-lg p-4 mb-8 max-w-2xl mx-auto text-center">
               <p className="text-foreground font-medium text-lg">
                 🎯 Built for teams who need approval workflows
               </p>
@@ -61,7 +61,7 @@ const HeroSection = () => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-center">
               <SignedOut>
                 <SignUpButton>
                   <Button 
@@ -98,7 +98,7 @@ const HeroSection = () => {
             {/* Platform Logos */}
             <div className="mt-12">
               <p className="text-sm text-muted-foreground mb-4">Publish to all major platforms</p>
-              <div className="flex flex-wrap gap-6 justify-center items-center opacity-60">
+              <div className="flex flex-wrap gap-6 justify-center lg:justify-center items-center opacity-60">
                 <div className="text-red-500 font-bold">YouTube</div>
                 <div className="text-pink-500 font-bold">TikTok</div>
                 <div className="text-purple-500 font-bold">Instagram</div>
