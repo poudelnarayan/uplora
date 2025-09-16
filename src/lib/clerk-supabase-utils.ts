@@ -4,12 +4,70 @@ import { createErrorResponse, createSuccessResponse, ErrorCodes } from "./api-ut
 
 // Get authenticated user from Clerk and sync with Supabase
 export async function getAuthenticatedUser() {
-  const { userId } = await auth();
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Authentication required");
+    }
+
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      throw new Error("User not found");
+    }
+
+    // Sync user data with Supabase
+    const supabaseUser = await upsertSupabaseUser(userId, {
+      email: clerkUser.emailAddresses[0]?.emailAddress || "",
+      name: clerkUser.fullName || undefined,
+      image: clerkUser.imageUrl || undefined,
+    });
+
+    return {
+      clerkUserId: userId,
+      clerkUser,
+      supabaseUser,
+    };
+  } catch (error) {
+    // Handle cases where auth() might fail due to context issues
+    if (error instanceof Error && error.message.includes('cookies')) {
+      throw new Error("Authentication required");
+    }
+    throw error;
+  }
+}
+
+// Safe wrapper for auth() that handles context issues
+export async function safeAuth() {
+  try {
+    return await auth();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('cookies')) {
+      return { userId: null };
+    }
+    throw error;
+  }
+}
+
+// Safe wrapper for currentUser() that handles context issues  
+export async function safeCurrentUser() {
+  try {
+    return await currentUser();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('cookies')) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+// Updated getAuthenticatedUser using safe wrappers
+export async function getAuthenticatedUserSafe() {
+  const { userId } = await safeAuth();
   if (!userId) {
     throw new Error("Authentication required");
   }
 
-  const clerkUser = await currentUser();
+  const clerkUser = await safeCurrentUser();
   if (!clerkUser) {
     throw new Error("User not found");
   }
