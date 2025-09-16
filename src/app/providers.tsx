@@ -17,7 +17,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const siteUrl =
     (typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL) ||
     "http://localhost:3000";
-  const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up" || pathname === "/admin-login";
+  
+  // Pages that should NOT have onboarding guard applied
+  const isPublicPage = pathname === "/" || 
+                      pathname === "/sign-in" || 
+                      pathname === "/sign-up" || 
+                      pathname === "/admin-login" ||
+                      pathname.startsWith("/about") ||
+                      pathname.startsWith("/contact") ||
+                      pathname.startsWith("/privacy") ||
+                      pathname.startsWith("/terms") ||
+                      pathname.startsWith("/copyright") ||
+                      pathname.startsWith("/invite/");
   
   // Check if Clerk keys are properly configured
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -29,7 +40,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <>
       {hasValidClerkKey ? (
         <NotificationProvider>
-          {isAuthPage ? (
+          {isPublicPage ? (
+            // Public pages - no onboarding guard
             <ThemeProvider>
               <DefaultSeoNoSSR {...defaultSeo} />
               <OrganizationJsonLdNoSSR
@@ -42,6 +54,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               {children}
             </ThemeProvider>
           ) : (
+            // Protected pages - with onboarding guard
             <OnboardingGuard>
               <TeamProvider>
                 <ContentCacheProvider>

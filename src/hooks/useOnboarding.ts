@@ -9,6 +9,7 @@ export function useOnboarding() {
   const router = useRouter();
   const pathname = usePathname();
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Function to check onboarding status from database
   const checkOnboardingStatus = async () => {
@@ -27,40 +28,36 @@ export function useOnboarding() {
         
         console.log('📊 Onboarding status from database:', onboardingCompleted);
         
+        setShouldShowOnboarding(!onboardingCompleted);
+        
         if (!onboardingCompleted) {
-          console.log('➡️ User needs to complete onboarding, redirecting...');
-          setShouldShowOnboarding(true);
-          // Only redirect if not already on onboarding page
-          if (!pathname.startsWith('/onboarding')) {
-            router.push('/onboarding/welcome');
-          }
+          console.log('➡️ User needs to complete onboarding');
         } else {
           console.log('✅ User has completed onboarding');
-          setShouldShowOnboarding(false);
         }
       } else {
         console.error('❌ Failed to fetch onboarding status');
-        // Fallback: assume they need onboarding
+        // On error, assume they need onboarding (safer default)
         setShouldShowOnboarding(true);
-        if (!pathname.startsWith('/onboarding')) {
-          router.push('/onboarding/welcome');
-        }
       }
     } catch (error) {
       console.error('❌ Error checking onboarding status:', error);
-      // Fallback: assume they need onboarding
+      // On error, assume they need onboarding (safer default)
       setShouldShowOnboarding(true);
-      if (!pathname.startsWith('/onboarding')) {
-        router.push('/onboarding/welcome');
-      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!isLoaded || !user) return;
+    if (!isLoaded || !user) {
+      setIsLoading(false);
+      setShouldShowOnboarding(false);
+      return;
+    }
 
     checkOnboardingStatus();
-  }, [user, isLoaded]); // Removed router from dependencies to prevent loop
+  }, [user, isLoaded]);
 
   const redirectToOnboarding = () => {
     router.push('/onboarding/welcome');
@@ -109,6 +106,6 @@ export function useOnboarding() {
     shouldShowOnboarding,
     redirectToOnboarding,
     completeOnboarding,
-    isLoading: shouldShowOnboarding === null
+    isLoading
   };
 }

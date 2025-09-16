@@ -17,24 +17,26 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
-  // Skip onboarding check for certain pages
+  // Pages that should NEVER trigger onboarding redirect
   const skipOnboardingPages = [
     '/onboarding',
     '/sign-in',
     '/sign-up',
-    '/',
+    '/', // Landing page should never redirect
     '/about',
     '/contact',
     '/privacy',
     '/terms',
-    '/copyright'
+    '/copyright',
+    '/invite' // Invitation pages
   ];
 
   const shouldSkipOnboarding = skipOnboardingPages.some(page => 
-    pathname.startsWith(page)
+    pathname === page || pathname.startsWith(page + '/')
   );
 
   useEffect(() => {
+    // Don't check onboarding for unauthenticated users or excluded pages
     if (!isLoaded || !user || shouldSkipOnboarding) {
       setIsChecking(false);
       return;
@@ -46,7 +48,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     }
   }, [isLoaded, user, shouldSkipOnboarding, isLoading]);
 
-  // Show loading spinner while checking
+  // Show loading spinner while checking (only for authenticated users on protected pages)
   if (isChecking || (isLoaded && user && !shouldSkipOnboarding && isLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -58,8 +60,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     );
   }
 
-  // If user needs onboarding and not on onboarding page, redirect
-  if (isLoaded && user && shouldShowOnboarding && !shouldSkipOnboarding) {
+  // Only redirect to onboarding if:
+  // 1. User is authenticated
+  // 2. Not on an excluded page
+  // 3. Onboarding is not completed
+  // 4. Not already on onboarding page
+  if (isLoaded && user && !shouldSkipOnboarding && shouldShowOnboarding && !pathname.startsWith('/onboarding')) {
     router.push('/onboarding/welcome');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

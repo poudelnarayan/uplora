@@ -12,15 +12,21 @@ export async function GET(req: NextRequest) {
 
     console.log(`🔍 Fetching onboarding status for user: ${userId}`);
 
-    // Get user's onboarding status from database
+    // Get user's onboarding status from database - using correct column name
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('onboardingcompleted')
+      .select('onboardingcompleted') // lowercase column name
       .eq('clerkId', userId)
       .single();
 
     if (error) {
       console.error("❌ Error fetching onboarding status:", error);
+      // If user doesn't exist, they haven't completed onboarding
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ 
+          onboardingCompleted: false 
+        });
+      }
       return NextResponse.json({ error: "Failed to fetch onboarding status" }, { status: 500 });
     }
 
@@ -53,11 +59,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "onboardingCompleted must be a boolean" }, { status: 400 });
     }
 
-    // Update user's onboarding status
+    // Update user's onboarding status - using correct column name
     const { error } = await supabaseAdmin
       .from('users')
       .update({ 
-        onboardingcompleted: onboardingCompleted,
+        onboardingcompleted: onboardingCompleted, // lowercase column name
         updatedAt: new Date().toISOString()
       })
       .eq('clerkId', userId);

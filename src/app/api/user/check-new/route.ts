@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Check if user exists in our database
+    // Check if user exists in our database and their onboarding status
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, createdAt')
+      .select('id, createdAt, onboardingcompleted') // Use correct column name
       .eq('clerkId', userId)
       .single();
 
@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
 
     // If user doesn't exist in our database, they're new
     if (!user) {
+      return NextResponse.json({ isNew: true });
+    }
+
+    // Check onboarding status - if not completed, they're considered new
+    if (!user.onboardingcompleted) {
       return NextResponse.json({ isNew: true });
     }
 
@@ -91,14 +96,14 @@ export async function POST(req: NextRequest) {
       console.error('Error checking reels:', reelsError);
     }
 
-    // User is considered new if they have no content, teams, videos, images, or reels
+    // User is considered new if they haven't completed onboarding OR have no content
     const hasContent = content && content.length > 0;
     const hasTeams = teams && teams.length > 0;
     const hasVideos = videos && videos.length > 0;
     const hasImages = images && images.length > 0;
     const hasReels = reels && reels.length > 0;
 
-    const isNew = !hasContent && !hasTeams && !hasVideos && !hasImages && !hasReels;
+    const isNew = !user.onboardingcompleted || (!hasContent && !hasTeams && !hasVideos && !hasImages && !hasReels);
 
     return NextResponse.json({ isNew });
 
