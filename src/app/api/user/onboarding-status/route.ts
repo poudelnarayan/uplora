@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { safeAuth } from "@/lib/clerk-supabase-utils";
 import { supabaseAdmin } from "@/lib/supabase";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       console.log("❌ No userId found in GET request");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       console.log("❌ No userId found in POST request");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

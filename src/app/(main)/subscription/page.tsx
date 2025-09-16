@@ -61,18 +61,18 @@ export default function SubscriptionPage() {
   const handleSubscribe = async (priceId: string, mode: 'subscription' | 'payment') => {
     setCheckoutLoading(true);
     try {
-      const apiUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`;
-      const response = await fetch(apiUrl, {
+      // Extract planId and cycle from priceId (assuming format like "price_1S827kDS63fnzmVBBpk36xma")
+      const planId = 'creator'; // Default to creator plan
+      const cycle = 'monthly'; // Default to monthly
+      
+      const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          price_id: priceId,
-          success_url: `${window.location.origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${window.location.origin}/subscription?canceled=true`,
-          mode: mode,
+          planId,
+          cycle,
         }),
       });
 
@@ -80,13 +80,15 @@ export default function SubscriptionPage() {
         const { url } = await response.json();
         window.location.href = url;
       } else {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
     } catch (error) {
+      console.error('Checkout error:', error);
       notifications.addNotification({
         type: 'error',
         title: 'Checkout Error',
-        message: 'Failed to start checkout process. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to start checkout process. Please try again.',
       });
     } finally {
       setCheckoutLoading(false);

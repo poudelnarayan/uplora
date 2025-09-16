@@ -65,7 +65,7 @@ export const STRIPE_PRICES = {
     yearly: process.env.STRIPE_STARTER_YEARLY_PRICE_ID || 'price_starter_yearly',
   },
   creator: {
-    monthly: process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID || 'price_creator_monthly', 
+    monthly: process.env.STRIPE_CREATOR_MONTHLY_PRICE_ID || 'price_1S827kDS63fnzmVBBpk36xma', // Use the actual price ID from stripe-config.ts
     yearly: process.env.STRIPE_CREATOR_YEARLY_PRICE_ID || 'price_creator_yearly',
   },
   pro: {
