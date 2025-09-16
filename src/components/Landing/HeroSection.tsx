@@ -23,7 +23,7 @@ const HeroSection = () => {
           </div>
 
           {/* Content - Show second on mobile */}
-          <div className="text-center lg:text-left order-2 lg:order-1">
+          <div className="text-center order-2 lg:order-1">
             {/* Differentiator Badge - Industry Standard */}
             <div className="mb-8">
               <div className="inline-block bg-secondary/50 border border-border rounded-lg px-4 py-2">
@@ -33,13 +33,13 @@ const HeroSection = () => {
               </div>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-poppins mb-6 leading-tight tracking-tight text-center lg:text-left">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-poppins mb-6 leading-tight tracking-tight text-center">
               <div className="font-bold gradient-text text-4xl md:text-5xl lg:text-6xl mb-1">
                 Collaborative
               </div>
-              <div className="font-medium text-2xl md:text-3xl lg:text-4xl text-foreground flex items-center justify-center lg:justify-start gap-4">
+              <div className="font-medium text-2xl md:text-3xl lg:text-4xl text-foreground flex items-center justify-center gap-4">
                 <span>Scheduling</span>
-                <span className="hidden lg:block w-16 h-0.5 bg-primary"></span>
+                <span className="w-16 h-0.5 bg-primary"></span>
               </div>
               <div className="font-extralight text-xl md:text-2xl lg:text-3xl text-muted-foreground mt-2 tracking-widest">
                 FOR EVERY PLATFORM
@@ -61,7 +61,7 @@ const HeroSection = () => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <SignedOut>
                 <SignUpButton>
                   <Button 
@@ -98,7 +98,7 @@ const HeroSection = () => {
             {/* Platform Logos */}
             <div className="mt-12">
               <p className="text-sm text-muted-foreground mb-4">Publish to all major platforms</p>
-              <div className="flex flex-wrap gap-6 justify-center lg:justify-start items-center opacity-60">
+              <div className="flex flex-wrap gap-6 justify-center items-center opacity-60">
                 <div className="text-red-500 font-bold">YouTube</div>
                 <div className="text-pink-500 font-bold">TikTok</div>
                 <div className="text-purple-500 font-bold">Instagram</div>
