@@ -41,7 +41,7 @@ export async function safeAuth() {
   try {
     return await auth();
   } catch (error) {
-    if (error instanceof Error && error.message.includes('cookies')) {
+    if (error instanceof Error && (error.message.includes('cookies') || error.message.includes('headers'))) {
       return { userId: null };
     }
     throw error;
@@ -53,7 +53,7 @@ export async function safeCurrentUser() {
   try {
     return await currentUser();
   } catch (error) {
-    if (error instanceof Error && error.message.includes('cookies')) {
+    if (error instanceof Error && (error.message.includes('cookies') || error.message.includes('headers'))) {
       return null;
     }
     throw error;
