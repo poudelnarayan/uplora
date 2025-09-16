@@ -1,9 +1,11 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
+import { ClerkLoaded, ClerkLoading, SignedOut, SignedIn } from "@clerk/nextjs";
 import AuthButtons from "./AuthButtons";
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
   const scrollToReviews = () => {
