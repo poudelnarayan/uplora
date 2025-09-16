@@ -1,33 +1,45 @@
 "use client";
 
 import { useEffect } from "react";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function TestLogoutPage() {
   const { signOut } = useClerk();
+  const { isSignedIn } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     const performLogout = async () => {
       try {
-        // Automatically sign out without confirmation
+        // Check if user is actually signed in before attempting logout
+        if (!isSignedIn) {
+          console.log("User not signed in, redirecting to home");
+          router.push("/");
+          return;
+        }
+
+        console.log("Performing automatic logout...");
+        
+        // Use signOut with immediate redirect to avoid cookies context issues
         await signOut({
-          redirectUrl: "/"
+          redirectUrl: "/",
         });
+        
       } catch (error) {
         console.error("Logout error:", error);
-        // Fallback: redirect to home page
-        router.push("/");
+        
+        // Fallback: force redirect to home page
+        window.location.href = "/";
       }
     };
 
     // Small delay to show the loading state briefly
-    const timer = setTimeout(performLogout, 500);
+    const timer = setTimeout(performLogout, 800);
     
     return () => clearTimeout(timer);
-  }, [signOut, router]);
+  }, [signOut, router, isSignedIn]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
