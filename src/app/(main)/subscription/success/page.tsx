@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, CreditCard, Calendar } from "lucide-react";
@@ -41,7 +41,7 @@ interface CheckoutSession {
   }>;
 }
 
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
   const { user, isLoaded } = useUser();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -317,5 +317,19 @@ export default function SubscriptionSuccessPage() {
         </div>
       </AppShell>
     </>
+  );
+}
+
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" text="Loading..." />
+        </div>
+      </AppShell>
+    }>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }

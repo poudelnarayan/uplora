@@ -1,18 +1,61 @@
 import Stripe from 'stripe';
 
-// Server-side Stripe instance
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-  appInfo: {
-    name: 'Uplora',
-    version: '1.0.0',
+// Server-side Stripe instance - lazy initialization
+let stripeInstance: Stripe | null = null;
+
+export const getStripeInstance = (): Stripe => {
+  if (!stripeInstance) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+    }
+    
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2025-08-27.basil',
+      appInfo: {
+        name: 'Uplora',
+        version: '1.0.0',
+      },
+    });
+  }
+  return stripeInstance;
+};
+
+// For backward compatibility
+export const stripe = {
+  get billingPortal() {
+    return getStripeInstance().billingPortal;
   },
-});
+  get customers() {
+    return getStripeInstance().customers;
+  },
+  get subscriptions() {
+    return getStripeInstance().subscriptions;
+  },
+  get checkout() {
+    return getStripeInstance().checkout;
+  },
+  get webhooks() {
+    return getStripeInstance().webhooks;
+  },
+  get prices() {
+    return getStripeInstance().prices;
+  },
+  get products() {
+    return getStripeInstance().products;
+  },
+} as Stripe;
 
 // Client-side Stripe instance (for frontend)
 export const getStripe = async () => {
   const { loadStripe } = await import('@stripe/stripe-js');
-  return loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  
+  if (!publishableKey) {
+    throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable is not set');
+  }
+  
+  return loadStripe(publishableKey);
 };
 
 // Price IDs - these should match your Stripe dashboard

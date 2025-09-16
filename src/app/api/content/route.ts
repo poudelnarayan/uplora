@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
 
 export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
