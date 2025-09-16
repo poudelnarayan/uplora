@@ -66,7 +66,7 @@ const HeroSection = () => {
                 <SignUpButton>
                   <Button 
                     size="lg" 
-                    className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
+                    className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
                   >
                     Get Started Free
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -77,7 +77,7 @@ const HeroSection = () => {
                 <Link href="/dashboard">
                   <Button 
                     size="lg" 
-                    className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4"
+                    className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
                   >
                     Go to Dashboard
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -88,7 +88,7 @@ const HeroSection = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 py-4 hover-lift"
+                className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 hover-lift w-full sm:w-auto"
               >
                 <Play className="mr-2 h-5 w-5" />
                 See How It Works
