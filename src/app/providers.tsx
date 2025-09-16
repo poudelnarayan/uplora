@@ -9,7 +9,7 @@ import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSR
 import defaultSeo from "@/seo.config";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ModalProvider } from "@/components/ui/Modal";
-import OnboardingGuard from "@/components/OnboardingGuard";
+// import OnboardingGuard from "@/components/OnboardingGuard";
 
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -55,7 +55,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             </ThemeProvider>
           ) : (
             // Protected pages - with onboarding guard
-            <OnboardingGuard>
+            // <OnboardingGuard>
               <TeamProvider>
                 <ContentCacheProvider>
                   <UploadProvider>
@@ -76,7 +76,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                   </UploadProvider>
                 </ContentCacheProvider>
               </TeamProvider>
-            </OnboardingGuard>
+            // </OnboardingGuard>
           )}
         </NotificationProvider>
       ) : (
