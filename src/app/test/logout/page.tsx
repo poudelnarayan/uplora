@@ -1,45 +1,58 @@
 "use client";
 
-import { useEffect } from "react";
-import { useClerk, useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function TestLogoutPage() {
-  const { signOut } = useClerk();
-  const { isSignedIn } = useAuth();
-  const router = useRouter();
+  const { signOut, loaded } = useClerk();
+  const [status, setStatus] = useState<'loading' | 'signing-out' | 'complete'>('loading');
 
   useEffect(() => {
+    // Wait for Clerk to be fully loaded before attempting logout
+    if (!loaded) return;
+
     const performLogout = async () => {
       try {
-        // Check if user is actually signed in before attempting logout
-        if (!isSignedIn) {
-          console.log("User not signed in, redirecting to home");
-          router.push("/");
-          return;
-        }
-
+        setStatus('signing-out');
         console.log("Performing automatic logout...");
         
-        // Use signOut with immediate redirect to avoid cookies context issues
-        await signOut({
-          redirectUrl: "/",
-        });
+        // Use the simplest possible signOut call
+        await signOut();
+        
+        setStatus('complete');
+        
+        // Force redirect after a brief delay
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 500);
         
       } catch (error) {
         console.error("Logout error:", error);
         
-        // Fallback: force redirect to home page
+        // Immediate fallback redirect
         window.location.href = "/";
       }
     };
 
-    // Small delay to show the loading state briefly
-    const timer = setTimeout(performLogout, 800);
+    // Small delay to ensure everything is loaded
+    const timer = setTimeout(performLogout, 300);
     
     return () => clearTimeout(timer);
-  }, [signOut, router, isSignedIn]);
+  }, [loaded, signOut]);
+
+  const getMessage = () => {
+    switch (status) {
+      case 'loading':
+        return "Preparing to sign out...";
+      case 'signing-out':
+        return "Signing you out...";
+      case 'complete':
+        return "Redirecting...";
+      default:
+        return "Signing you out...";
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -47,7 +60,7 @@ export default function TestLogoutPage() {
         <LoadingSpinner size="lg" />
         <div>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
-            Signing you out...
+            {getMessage()}
           </h1>
           <p className="text-gray-600">
             Please wait while we log you out of your account.
