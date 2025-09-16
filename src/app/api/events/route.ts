@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { safeAuth } from "@/lib/clerk-supabase-utils";
 import { addSubscriber, removeSubscriber } from "@/lib/realtime";
 import { createErrorResponse, ErrorCodes } from "@/lib/api-utils";
 
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const teamId = searchParams.get("teamId");
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
 
     // Validate required parameters
     if (!userId) {

@@ -5,7 +5,7 @@ import { createErrorResponse, createSuccessResponse, ErrorCodes } from "./api-ut
 // Get authenticated user from Clerk and sync with Supabase
 export async function getAuthenticatedUser() {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       throw new Error("Authentication required");
     }

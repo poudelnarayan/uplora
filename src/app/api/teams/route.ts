@@ -1,14 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { safeAuth } from "@/lib/clerk-supabase-utils";
+import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 import { broadcast } from "@/lib/realtime";
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
