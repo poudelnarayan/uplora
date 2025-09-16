@@ -7,6 +7,7 @@ const MotionDiv = motion.div as any;
 import { Settings, Heart, LogOut, CreditCard, ChevronDown } from "lucide-react";
 import { useUser, SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
+import SubscriptionBadge from "@/components/ui/SubscriptionBadge";
 
 interface UserMenuProps {
   onFeedbackClick: () => void;
@@ -125,6 +126,13 @@ export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' 
           </MotionDiv>
         )}
       </AnimatePresence>
+      
+      {/* Show subscription badge in dropdown when open */}
+      {showProfileDropdown && (
+        <div className="absolute right-0 top-12 mt-2">
+          <SubscriptionBadge showTrialInfo={false} />
+        </div>
+      )}
     </div>
   );
 }

@@ -32,6 +32,7 @@ import UserMenu from "@/components/ui/UserMenu/UserMenu";
 import ThemeToggle from "@/components/ui/ThemeToggle/ThemeToggle";
 import NotificationBell from "@/components/ui/NotificationBell/NotificationBell";
 import TrialBanner from "@/components/ui/TrialBanner/TrialBanner";
+import SubscriptionBadge from "@/components/ui/SubscriptionBadge";
 import { usePathname as usePathnameForFeedback } from "next/navigation";
 import { useModalManager } from "@/components/ui/Modal";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -288,6 +289,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* User Profile Menu */}
         <div className="border-t border-white/20 p-4 bg-black/30" style={{ position: 'relative' }}>
+          {/* Subscription Badge */}
+          <div className="mb-3">
+            <SubscriptionBadge />
+          </div>
+          
           <div style={{ position: 'relative', zIndex: 50 }}>
             <UserMenu 
               dropdownPosition="top"
