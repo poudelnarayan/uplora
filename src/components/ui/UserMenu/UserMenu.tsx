@@ -136,3 +136,4 @@ export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' 
     </div>
   );
 }
+    {isOpen && (
