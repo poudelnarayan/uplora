@@ -46,20 +46,28 @@ export async function POST(
         return createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions to invite members");
       }
 
-      // Check if user is already a member
-      const { data: existingMember, error: memberError } = await supabaseAdmin
-        .from('team_members')
-        .select(`
-          *,
-          users (email)
-        `)
-        .eq('teamId', teamId)
-        .eq('users.email', email)
+      // Check if user is already a member by looking up the user first
+      const { data: userToInvite, error: userLookupError } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('email', email.toLowerCase())
         .single();
 
-      if (memberError && memberError.code !== 'PGRST116') {
-        console.error("Error checking existing membership:", memberError);
-        return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to check team membership");
+      let existingMember = null;
+      if (userToInvite && !userLookupError) {
+        const { data: memberCheck, error: memberError } = await supabaseAdmin
+          .from('team_members')
+          .select('*')
+          .eq('teamId', teamId)
+          .eq('userId', userToInvite.id)
+          .single();
+        
+        if (memberError && memberError.code !== 'PGRST116') {
+          console.error("Error checking existing membership:", memberError);
+          return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to check team membership");
+        }
+        
+        existingMember = memberCheck;
       }
 
       if (existingMember) {
@@ -147,11 +155,23 @@ export async function POST(
       try {
         console.log(`📧 Attempting to send invitation email to: ${email}`);
         console.log(`🔗 Team ID: ${teamId}, Role: ${role}, Token: ${token}`);
+        console.log(`📧 SMTP Config Check:`, {
+          hasUser: !!process.env.SMTP_USER,
+          hasPass: !!process.env.SMTP_PASS,
+          host: process.env.SMTP_HOST,
+          port: process.env.SMTP_PORT,
+          secure: process.env.SMTP_SECURE
+        });
+        
         await sendInvitationEmail(token, email, teamId, role);
         console.log(`✅ Invitation email sent successfully to: ${email}`);
       } catch (emailError) {
         console.error("❌ INVITATION EMAIL SENDING FAILED:", emailError);
         console.error("📧 Email details:", { email, teamId, role, token });
+        console.error("📧 SMTP Error details:", {
+          message: emailError instanceof Error ? emailError.message : 'Unknown error',
+          stack: emailError instanceof Error ? emailError.stack : undefined
+        });
         emailSent = false;
       }
 

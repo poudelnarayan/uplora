@@ -15,8 +15,15 @@ const HeroSection = () => {
       
       <div className="container mx-auto px-4 lg:px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
-          <div className="text-center lg:text-left">
+          {/* Interactive Social Media Icons - Show first on mobile */}
+          <div className="relative flex justify-center lg:justify-end order-1 lg:order-2">
+            <div className="w-full max-w-md mx-auto lg:max-w-none lg:mx-0">
+              <InteractiveSocialIcons />
+            </div>
+          </div>
+
+          {/* Content - Show second on mobile */}
+          <div className="text-center lg:text-left order-2 lg:order-1">
             {/* Differentiator Badge - Industry Standard */}
             <div className="mb-8">
               <div className="inline-block bg-secondary/50 border border-border rounded-lg px-4 py-2">
@@ -99,13 +106,6 @@ const HeroSection = () => {
                 <div className="text-gray-800 font-bold">X</div>
                 <div className="text-blue-500 font-bold">Facebook</div>
               </div>
-            </div>
-          </div>
-
-          {/* Interactive Social Media Icons */}
-          <div className="relative flex justify-center lg:justify-end">
-            <div className="w-full max-w-md mx-auto lg:max-w-none lg:mx-0">
-              <InteractiveSocialIcons />
             </div>
           </div>
         </div>

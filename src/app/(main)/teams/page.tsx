@@ -101,13 +101,19 @@ const Teams = () => {
       });
       const js = await res.json();
       if (!res.ok) throw new Error(js?.error || 'Failed to create team');
-      toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
-      await refreshTeams();
-      setIsCreateTeamOpen(false);
-    } catch (e) {
-      toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
-    } finally {
+      
+      // Hide loading immediately after successful creation
       setIsCreatingTeam(false);
+      setIsCreateTeamOpen(false);
+      
+      // Show success message immediately
+      toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
+      
+      // Refresh teams in background (non-blocking)
+      refreshTeams().catch(console.error);
+    } catch (e) {
+      setIsCreatingTeam(false);
+      toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
     }
   }, [refreshTeams, toast]);
 

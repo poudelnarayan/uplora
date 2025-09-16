@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     // Add the owner as a team member with ADMIN role (since enum doesn't include OWNER)
     const { error: memberError } = await supabaseAdmin
       .from('team_members')
-      .insert({
+      .upsert({
         id: user.id, // Use Clerk user ID as the member ID
         teamId: team.id,
         userId: user.id,
@@ -141,6 +141,8 @@ export async function POST(request: NextRequest) {
         status: 'ACTIVE',
         joinedAt: now,
         updatedAt: now // Add required updatedAt field
+      }, {
+        onConflict: 'id,teamId' // Handle conflicts on both id and teamId
       });
 
     if (memberError) {

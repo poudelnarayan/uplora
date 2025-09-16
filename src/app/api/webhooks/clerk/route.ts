@@ -87,6 +87,18 @@ export async function POST(req: NextRequest) {
         const userName = `${first_name || ""} ${last_name || ""}`.trim() || "there";
         const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard`;
 
+        console.log("📧 Welcome email attempt:", {
+          userEmail,
+          userName,
+          dashboardUrl,
+          smtpConfig: {
+            hasUser: !!process.env.SMTP_USER,
+            hasPass: !!process.env.SMTP_PASS,
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT
+          }
+        });
+
         if (userEmail) {
           const emailTemplate = welcomeEmailTemplate({
             userName,
@@ -109,15 +121,24 @@ export async function POST(req: NextRequest) {
           });
 
           if (emailResponse.ok) {
-            console.log("✅ Welcome email sent successfully to:", userEmail);
+            const responseData = await emailResponse.json();
+            console.log("✅ Welcome email sent successfully to:", userEmail, responseData);
           } else {
-            console.error("❌ Failed to send welcome email:", await emailResponse.text());
+            const errorText = await emailResponse.text();
+            console.error("❌ Failed to send welcome email:", {
+              status: emailResponse.status,
+              statusText: emailResponse.statusText,
+              error: errorText
+            });
           }
         } else {
           console.warn("⚠️ No email address found for new user:", id);
         }
       } catch (emailError) {
-        console.error("❌ Error sending welcome email:", emailError);
+        console.error("❌ Error sending welcome email:", {
+          error: emailError instanceof Error ? emailError.message : 'Unknown error',
+          stack: emailError instanceof Error ? emailError.stack : undefined
+        });
         // Don't fail the webhook if email sending fails
       }
     }

@@ -70,6 +70,18 @@ const socialIcons: IconData[] = [
 function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
   const iconRef = useRef<HTMLDivElement>(null);
   const [animationTime, setAnimationTime] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Continuous animation loop
   useEffect(() => {
@@ -81,11 +93,12 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
     return () => cancelAnimationFrame(animationId);
   }, []);
 
-  // Automatic floating animations
+  // Automatic floating animations - reduced intensity on mobile
   const time = animationTime * 0.001;
-  const autoFloatX = Math.sin(time * 0.6 + index * 1.2) * 12;
-  const autoFloatY = Math.cos(time * 0.8 + index * 0.9) * 15;
-  const autoRotate = Math.sin(time * 0.4 + index) * 3;
+  const floatMultiplier = isMobile ? 0.2 : 1; // Further reduce movement on mobile
+  const autoFloatX = Math.sin(time * 0.6 + index * 1.2) * 12 * floatMultiplier;
+  const autoFloatY = Math.cos(time * 0.8 + index * 0.9) * 15 * floatMultiplier;
+  const autoRotate = Math.sin(time * 0.4 + index) * 3 * floatMultiplier;
 
   return (
     <div
@@ -95,6 +108,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
         transform: `translate(${autoFloatX}px, ${autoFloatY}px) rotate(${autoRotate}deg)`,
         left: `${20 + (index % 3) * 30}%`,
         top: `${20 + Math.floor(index / 3) * 40}%`,
+        willChange: 'transform', // Optimize for animations
       }}
     >
       <div

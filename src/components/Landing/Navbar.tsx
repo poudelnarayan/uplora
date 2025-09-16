@@ -122,39 +122,18 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Enhanced Mobile Navigation */}
+        {/* Simplified Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-6 border-t border-border/50 bg-secondary/20 rounded-b-xl -mx-4 px-4">
-            <div className="flex flex-col space-y-1">
-              <button
-                onClick={scrollToFeatures}
-                className="text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 text-left py-3 px-4 rounded-lg font-medium"
-              >
-                Features
-              </button>
-              <button
-                onClick={scrollToPricing}
-                className="text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 text-left py-3 px-4 rounded-lg font-medium"
-              >
-                Pricing
-              </button>
-              <button
-                onClick={scrollToContact}
-                className="text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 text-left py-3 px-4 rounded-lg font-medium"
-              >
-                Contact
-              </button>
-
-              <div className="pt-4 space-y-3">
-                <ClerkLoading>
-                  <div className="h-9 flex items-center gap-2">
-                    <span className="w-full h-9 bg-primary/10 rounded animate-pulse" />
-                  </div>
-                </ClerkLoading>
-                <ClerkLoaded>
-                  <AuthButtons />
-                </ClerkLoaded>
-              </div>
+            <div className="flex flex-col space-y-4">
+              <ClerkLoading>
+                <div className="h-12 flex items-center gap-2">
+                  <span className="w-full h-12 bg-primary/10 rounded animate-pulse" />
+                </div>
+              </ClerkLoading>
+              <ClerkLoaded>
+                <AuthButtons />
+              </ClerkLoaded>
             </div>
           </div>
         )}
