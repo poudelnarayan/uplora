@@ -107,10 +107,10 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
       style={{
         transform: `translate(${autoFloatX}px, ${autoFloatY}px) rotate(${autoRotate}deg)`,
         left: isMobile 
-          ? `${15 + (index % 3) * 35}%` // Better centered on mobile
+          ? `${20 + (index % 3) * 20}%` // Truly centered with proper margins
           : `${20 + (index % 3) * 30}%`, // Original desktop positioning
         top: isMobile 
-          ? `${15 + Math.floor(index / 3) * 35}%` // Better centered on mobile
+          ? `${25 + Math.floor(index / 3) * 25}%` // Truly centered with proper margins
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}
@@ -139,7 +139,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
 
 export default function InteractiveSocialIcons() {
   return (
-    <div className="relative w-full h-64 md:h-96">
+    <div className="relative w-full h-48 md:h-96">
       {/* Animated background particles */}
       <div className="absolute inset-0 opacity-30 flex items-center justify-center">
         {[...Array(20)].map((_, i) => (
