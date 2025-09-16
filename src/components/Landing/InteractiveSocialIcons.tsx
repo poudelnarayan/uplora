@@ -93,9 +93,9 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
     return () => cancelAnimationFrame(animationId);
   }, []);
 
-  // Automatic floating animations - reduced intensity on mobile
+  // Automatic floating animations - subtle movement on mobile
   const time = animationTime * 0.001;
-  const floatMultiplier = isMobile ? 0.2 : 1; // Further reduce movement on mobile
+  const floatMultiplier = isMobile ? 0.6 : 1; // Reduced but still visible movement on mobile
   const autoFloatX = Math.sin(time * 0.6 + index * 1.2) * 12 * floatMultiplier;
   const autoFloatY = Math.cos(time * 0.8 + index * 0.9) * 15 * floatMultiplier;
   const autoRotate = Math.sin(time * 0.4 + index) * 3 * floatMultiplier;
@@ -106,8 +106,12 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
       className="absolute transition-all duration-300 ease-out"
       style={{
         transform: `translate(${autoFloatX}px, ${autoFloatY}px) rotate(${autoRotate}deg)`,
-        left: `${20 + (index % 3) * 30}%`,
-        top: `${20 + Math.floor(index / 3) * 40}%`,
+        left: isMobile 
+          ? `${15 + (index % 3) * 35}%` // Better centered on mobile
+          : `${20 + (index % 3) * 30}%`, // Original desktop positioning
+        top: isMobile 
+          ? `${15 + Math.floor(index / 3) * 35}%` // Better centered on mobile
+          : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}
     >
@@ -135,7 +139,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
 
 export default function InteractiveSocialIcons() {
   return (
-    <div className="relative w-full h-96">
+    <div className="relative w-full h-64 md:h-96">
       {/* Animated background particles */}
       <div className="absolute inset-0 opacity-30 flex items-center justify-center">
         {[...Array(20)].map((_, i) => (
