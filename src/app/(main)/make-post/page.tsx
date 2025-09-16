@@ -17,7 +17,7 @@ export default function MakePostPage() {
   
   if (!isLoaded) return null;
   if (!user) return <RedirectToSignIn redirectUrl="/upload" />;
-
+ 
   return ( 
     <>
       <AppShell>
