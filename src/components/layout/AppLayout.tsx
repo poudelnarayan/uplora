@@ -211,7 +211,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {/* Header */}
         <div className="flex items-center justify-center h-16 px-4 border-b border-white/20" style={{ backgroundColor: '#213130' }}>
           <div className="flex items-center">
-            <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-12 w-auto" />
+            <Image src="/text-logo.png" alt="Uplora" width={240} height={60} className="h-16 w-auto" />
           </div>
         </div>
 
@@ -328,7 +328,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
             {/* Mobile logo */}
             <div>
-              <Image src="/text-logo.png" alt="Uplora" width={140} height={35} className="h-10 w-auto" />
+              <Image src="/text-logo.png" alt="Uplora" width={180} height={45} className="h-14 w-auto" />
             </div>
 
             {/* Empty right side */}
@@ -373,7 +373,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               style={{ backgroundColor: '#213130' }}
             >
               <header className="h-auto flex items-center justify-center p-4 border-b border-white/20" style={{ backgroundColor: '#213130' }}>
-                <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-10 w-auto rounded-md block" />
+                <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-14 w-auto rounded-md block" />
                 <button onClick={() => setMobileNavOpen(false)} className="absolute right-4 text-white hover:text-[#00E5FF] p-2">
                   <X className="w-4 h-4" />
                 </button>

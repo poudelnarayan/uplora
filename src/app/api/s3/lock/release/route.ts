@@ -7,13 +7,13 @@ import { withAuth } from "@/lib/clerk-supabase-utils";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 
 export async function DELETE(req: NextRequest) {
-  return withAuth(req, async (user) => {
+  return withAuth(async (user) => {
     try {
       // Release any upload lock for this user
       const { error: lockError } = await supabaseAdmin
         .from('upload_locks')
         .delete()
-        .eq('userId', user.id);
+        .eq('userId', user.clerkUserId);
 
       return NextResponse.json(createSuccessResponse({ success: true }));
     } catch (e: unknown) {
