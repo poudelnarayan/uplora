@@ -104,10 +104,31 @@ const Navbar = () => {
           {/* Mobile Auth Button */}
           <div className="md:hidden">
             <ClerkLoading>
-              <div className="h-9 w-24 bg-primary/10 rounded animate-pulse" />
+              <div className="h-8 w-20 bg-primary/10 rounded animate-pulse" />
             </ClerkLoading>
             <ClerkLoaded>
-              <AuthButtons />
+              <div className="flex items-center gap-2">
+                <SignedOut>
+                  <Link href="/sign-up?redirect_url=/dashboard">
+                    <Button
+                      size="sm"
+                      className="gradient-primary text-primary-foreground font-medium px-4 py-2 text-sm rounded-lg"
+                    >
+                      Start Free
+                    </Button>
+                  </Link>
+                </SignedOut>
+                <SignedIn>
+                  <Link href="/dashboard">
+                    <Button
+                      size="sm"
+                      className="gradient-primary text-primary-foreground font-medium px-4 py-2 text-sm rounded-lg"
+                    >
+                      Dashboard
+                    </Button>
+                  </Link>
+                </SignedIn>
+              </div>
             </ClerkLoaded>
           </div>
         </div>

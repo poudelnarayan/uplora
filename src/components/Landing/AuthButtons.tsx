@@ -46,13 +46,13 @@ export default function AuthButtons() {
       {/* Mobile version - only one button */}
       <div className="md:hidden">
         <SignedOut>
-          <Link href="/sign-up?redirect_url=/dashboard">
+          <Link href="/sign-in?redirect_url=/dashboard">
             <Button
+              variant="ghost"
               size="sm"
-              className="gradient-primary text-primary-foreground font-medium px-6 group"
+              className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border border-primary/20 font-medium px-4"
             >
-              Get Started Free
-              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              Sign In
             </Button>
           </Link>
         </SignedOut>
@@ -60,10 +60,9 @@ export default function AuthButtons() {
           <Link href="/dashboard">
             <Button
               size="sm"
-              className="gradient-primary text-primary-foreground font-medium px-6 group"
+              className="gradient-primary text-primary-foreground font-medium px-4"
             >
-              Go to Dashboard
-              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              Dashboard
             </Button>
           </Link>
         </SignedIn>
