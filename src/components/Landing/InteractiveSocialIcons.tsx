@@ -115,7 +115,7 @@ function SocialIcon({ icon, index }: { icon: IconData; index: number }) {
           ? `${15 + (index % 3) * 25}%` // Centered with proper gaps between icons
           : `${20 + (index % 3) * 30}%`, // Original desktop positioning
         top: isMobile 
-          ? `${15 + Math.floor(index / 3) * 35}%` // Reduced margins, proper gaps between rows
+          ? `${10 + Math.floor(index / 3) * 40}%` // Clear vertical gaps between rows
           : `${20 + Math.floor(index / 3) * 40}%`, // Original desktop positioning
         willChange: 'transform', // Optimize for animations
       }}
