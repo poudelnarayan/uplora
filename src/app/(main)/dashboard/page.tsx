@@ -483,11 +483,11 @@ export default function Dashboard() {
                         Create Reel
                       </Button>
                       <Button
-                        onClick={() => window.location.href = '/make-post/video'}
+                        onClick={() => window.location.href = '/subscription'}
                         className="gap-2"
                       >
-                        <Video className="w-4 h-4" />
-                        Create Video
+                        <CreditCard className="w-4 h-4" />
+                        Upgrade Plan
                       </Button>
                     </div>
                   </div>

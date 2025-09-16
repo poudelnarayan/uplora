@@ -63,7 +63,7 @@ const HeroSection = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-center">
               <SignedOut>
-                <SignUpButton>
+                <SignUpButton mode="redirect" forceRedirectUrl="/subscription">
                   <Button 
                     size="lg" 
                     className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
@@ -74,12 +74,12 @@ const HeroSection = () => {
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
-                <Link href="/dashboard">
+                <Link href="/subscription">
                   <Button 
                     size="lg" 
                     className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
                   >
-                    Go to Dashboard
+                    Get Started Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>

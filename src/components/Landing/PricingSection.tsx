@@ -189,6 +189,7 @@ const PricingSection = () => {
 
                 <Button 
                   size="lg" 
+                  onClick={() => window.location.href = '/subscription'}
                   className={`w-full text-lg py-4 mb-6 transition-all duration-300 group ${
                     selectedPlan === index
                       ? 'gradient-primary text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl' 

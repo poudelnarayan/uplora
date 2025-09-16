@@ -25,18 +25,18 @@ export default function AuthButtons() {
               size="sm"
               className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
             >
-              Get Started Free
+              Start Free Trial
               <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
           </Link>
         </SignedOut>
         <SignedIn>
-          <Link href="/dashboard">
+          <Link href="/subscription">
             <Button
               size="sm"
               className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
             >
-              Go to Dashboard
+              Manage Subscription
               <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
           </Link>
@@ -57,12 +57,12 @@ export default function AuthButtons() {
           </Link>
         </SignedOut>
         <SignedIn>
-          <Link href="/dashboard">
+          <Link href="/subscription">
             <Button
               size="sm"
               className="gradient-primary text-primary-foreground font-medium px-4"
             >
-              Dashboard
+              Subscription
             </Button>
           </Link>
         </SignedIn>
