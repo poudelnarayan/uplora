@@ -40,7 +40,7 @@ export async function PATCH(
 
       // Load member
       const { data: member, error: memErr } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('id, userId, teamId')
         .eq('id', memberId)
         .single();
@@ -54,7 +54,7 @@ export async function PATCH(
       }
 
       const { error: updErr } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .update({ status: requestedStatus, updatedAt: new Date().toISOString() })
         .eq('id', memberId);
       if (updErr) {
@@ -103,7 +103,7 @@ export async function DELETE(
 
       // Load member
       const { data: member, error: memErr } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('id, userId, teamId')
         .eq('id', memberId)
         .single();
@@ -125,7 +125,7 @@ export async function DELETE(
 
       // Delete membership
       const { error: delErr } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .delete()
         .eq('id', memberId);
       if (delErr) {

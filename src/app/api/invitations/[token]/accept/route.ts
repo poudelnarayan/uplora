@@ -41,7 +41,7 @@ export async function POST(
 
       // Check if user is already a member
       const { data: existingMember, error: memberError } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('*')
         .eq('userId', supabaseUser.id)
         .eq('teamId', invitation.teamId)
@@ -93,7 +93,7 @@ export async function POST(
       const nowIso = new Date().toISOString();
 
       const { error: insertMemberErr } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .insert({
           id: memberId,
           role: invitation.role,

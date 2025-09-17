@@ -56,7 +56,7 @@ export async function POST(
       let existingMember = null;
       if (userToInvite && !userLookupError) {
         const { data: memberCheck, error: memberError } = await supabaseAdmin
-          .from('teamMembers')
+          .from('team_members')
           .select('*')
           .eq('teamId', teamId)
           .eq('userId', userToInvite.id)

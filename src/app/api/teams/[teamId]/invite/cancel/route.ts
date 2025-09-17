@@ -65,7 +65,7 @@ export async function POST(
 
     if (team.ownerId !== currentUser.id) {
       const { data: isPrivileged, error: privilegeError } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('*')
         .eq('teamId', teamId)
         .eq('userId', currentUser.id)

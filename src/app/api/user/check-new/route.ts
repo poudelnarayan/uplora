@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any content
     const { data: content, error: contentError } = await supabaseAdmin
-      .from('textPosts')
+      .from('text_posts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any videos
     const { data: videos, error: videosError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any images
     const { data: images, error: imagesError } = await supabaseAdmin
-      .from('imagePosts')
+      .from('image_posts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any reels
     const { data: reels, error: reelsError } = await supabaseAdmin
-      .from('reelPosts')
+      .from('reel_posts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);

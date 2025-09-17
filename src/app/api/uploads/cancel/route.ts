@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       if (videoId) {
         try {
           const { error: deleteError } = await supabaseAdmin
-            .from('videoPosts')
+            .from('video_posts')
             .delete()
             .eq('id', videoId)
             .eq('userId', supabaseUser.id);

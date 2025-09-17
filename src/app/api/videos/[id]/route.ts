@@ -44,7 +44,7 @@ export async function GET(
     }
 
     const { data: v, error: videoError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .select(`
         *,
         users!videos_userId_fkey (
@@ -75,7 +75,7 @@ export async function GET(
         hasAccess = true;
       } else {
         const { data: membership, error: membershipError } = await supabaseAdmin
-          .from('teamMembers')
+          .from('team_members')
           .select('*')
           .eq('teamId', v.teamId)
           .eq('userId', user.id)
@@ -152,7 +152,7 @@ export async function PATCH(
 
     // Check access: owner or team member (team owner included)
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .select('*')
       .eq('id', id)
       .single();
@@ -177,7 +177,7 @@ export async function PATCH(
       } else {
         // Check if user is a member of the video's team
         const { data: membership, error: membershipError } = await supabaseAdmin
-          .from('teamMembers')
+          .from('team_members')
           .select('*')
           .eq('teamId', video.teamId)
           .eq('userId', user.id)
@@ -250,7 +250,7 @@ export async function PATCH(
     if (statusData.approvedByUserId !== undefined) updateData.approvedByUserId = statusData.approvedByUserId;
 
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .update(updateData)
       .eq('id', id)
       .select()

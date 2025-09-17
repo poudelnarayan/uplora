@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (!isOwner) {
       const { data: membership } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('role, status')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     if (type === 'text') {
       // Text posts table
       const { data: textPost, error: textError } = await supabaseAdmin
-        .from('textPosts')
+        .from('text_posts')
         .insert({
           id: postId,
           content: content?.trim() || "",
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     } else if (type === 'image') {
       // Image posts table
       const { data: imagePost, error: imageError } = await supabaseAdmin
-        .from('imagePosts')
+        .from('image_posts')
         .insert({
           id: postId,
           content: content?.trim() || "",
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     } else if (type === 'reel') {
       // Reels table
       const { data: reelPost, error: reelError } = await supabaseAdmin
-        .from('reelPosts')
+        .from('reel_posts')
         .insert({
           id: postId,
           title: title.trim(),

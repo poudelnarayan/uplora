@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       if (teamError || !team) {
         // If not owner, check if user is a team member
         const { data: membership, error: membershipError } = await supabaseAdmin
-          .from('teamMembers')
+          .from('team_members')
           .select('*')
           .eq('teamId', finalTeamId)
           .eq('userId', user.id)
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     
     const newVideoId = videoIdFromKey || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .insert({
         id: newVideoId,
         key,

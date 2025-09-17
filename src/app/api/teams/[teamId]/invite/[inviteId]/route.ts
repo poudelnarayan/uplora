@@ -56,7 +56,7 @@ export async function DELETE(
     if (!hasPermission) {
       // Check if user is admin or manager
       const { data: membership } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('role')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -174,7 +174,7 @@ export async function POST(
     
     if (!hasPermission) {
       const { data: membership } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('role')
         .eq('teamId', teamId)
         .eq('userId', user.id)

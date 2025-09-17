@@ -48,7 +48,7 @@ export async function GET(
     }
 
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .select('*')
       .eq('id', id)
       .single();
@@ -87,7 +87,7 @@ export async function GET(
 
     // Otherwise, check team membership
     const { data: membership, error: membershipError } = await supabaseAdmin
-      .from('teamMembers')
+      .from('team_members')
       .select('role')
       .eq('teamId', video.teamId)
       .eq('userId', user.id)

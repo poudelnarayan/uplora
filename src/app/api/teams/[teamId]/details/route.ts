@@ -53,7 +53,7 @@ export async function GET(
     
     if (!hasAccess) {
       const { data: membership } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('id')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -79,7 +79,7 @@ export async function GET(
 
     // Get team members
     const { data: members, error: membersError } = await supabaseAdmin
-      .from('teamMembers')
+      .from('team_members')
       .select(`
         id,
         role,

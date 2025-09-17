@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     if (team.ownerId !== user.id) {
       const { data: membership } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('id')
         .eq('teamId', teamId)
         .eq('userId', user.id)

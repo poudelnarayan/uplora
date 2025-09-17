@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // Resolve video and teamId
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('videoPosts')
+      .from('video_posts')
       .select('id, teamId, userId')
       .eq('id', videoId)
       .single();
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     let allowed = team?.ownerId === user.id;
     if (!allowed) {
       const { data: membership } = await supabaseAdmin
-        .from('teamMembers')
+        .from('team_members')
         .select('id')
         .eq('teamId', finalTeamId)
         .eq('userId', user.id)
