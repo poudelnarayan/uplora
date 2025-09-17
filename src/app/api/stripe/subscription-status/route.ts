@@ -1,59 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { safeAuth } from "@/lib/clerk-supabase-utils";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await safeAuth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user's subscription status
-    const { data: customer } = await supabaseAdmin
-      .from('stripe_customers')
-      .select(`
-        customer_id,
-        stripe_subscriptions (
-          subscription_id,
-          price_id,
-          status,
-          current_period_start,
-          current_period_end,
-          cancel_at_period_end,
-          payment_method_brand,
-          payment_method_last4
-        )
-      `)
-      .eq('user_id', userId)
+    // First check user's subscription status in users table
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('hasActiveSubscription, subscriptionStatus, subscriptionPlan')
+      .eq('id', userId)
       .single();
 
+    // Get detailed subscription info from Stripe tables
+    const { data: customer } = await supabaseAdmin
+      .from('stripeCustomers')
+      .select(`
+        customerId,
+        stripeSubscriptions (
+          subscriptionId,
+          priceId,
+          status,
+          currentPeriodStart,
+          currentPeriodEnd,
+          cancelAtPeriodEnd,
+          paymentMethodBrand,
+          paymentMethodLast4
+        )
+      `)
+      .eq('userId', userId)
+      .single();
+
+    // If no Stripe customer record, return user table status
     if (!customer) {
       return NextResponse.json({
-        hasSubscription: false,
-        status: null,
-        trialActive: false,
+        hasSubscription: user?.hasActiveSubscription || false,
+        status: user?.subscriptionStatus || null,
+        trialActive: user?.subscriptionStatus === 'trialing',
         trialDaysRemaining: 0,
+        plan: user?.subscriptionPlan || null,
       });
     }
 
-    const subscription = customer.stripe_subscriptions?.[0];
+    const subscription = customer.stripeSubscriptions?.[0];
     
+    // If no Stripe subscription, return user table status
     if (!subscription) {
       return NextResponse.json({
-        hasSubscription: false,
-        status: null,
-        trialActive: false,
+        hasSubscription: user?.hasActiveSubscription || false,
+        status: user?.subscriptionStatus || null,
+        trialActive: user?.subscriptionStatus === 'trialing',
         trialDaysRemaining: 0,
+        plan: user?.subscriptionPlan || null,
       });
     }
 
     // Calculate trial info
     const isTrialing = subscription.status === 'trialing';
-    const trialDaysRemaining = isTrialing && subscription.current_period_end
-      ? Math.max(0, Math.ceil((subscription.current_period_end * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
+    const trialDaysRemaining = isTrialing && subscription.currentPeriodEnd
+      ? Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
       : 0;
 
     return NextResponse.json({
@@ -61,11 +72,13 @@ export async function GET(req: NextRequest) {
       status: subscription.status,
       trialActive: isTrialing,
       trialDaysRemaining,
-      currentPeriodEnd: subscription.current_period_end,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      currentPriceId: subscription.priceId,
+      plan: user?.subscriptionPlan || null,
       paymentMethod: {
-        brand: subscription.payment_method_brand,
-        last4: subscription.payment_method_last4,
+        brand: subscription.paymentMethodBrand,
+        last4: subscription.paymentMethodLast4,
       },
     });
 

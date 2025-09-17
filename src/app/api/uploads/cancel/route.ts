@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       if (videoId) {
         try {
           const { error: deleteError } = await supabaseAdmin
-            .from('video_posts')
+            .from('videoPosts')
             .delete()
             .eq('id', videoId)
             .eq('userId', supabaseUser.id);
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       // Release any upload lock for this user
       try {
         const { error: lockError } = await supabaseAdmin
-          .from('upload_locks')
+          .from('uploadLocks')
           .delete()
           .eq('userId', supabaseUser.id);
 

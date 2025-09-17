@@ -6,10 +6,11 @@ import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import ProductCard from "@/components/subscription/ProductCard";
+import SubscriptionManager from "@/components/subscription/SubscriptionManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CreditCard, ExternalLink, CheckCircle } from "lucide-react";
+import { CreditCard, ExternalLink, CheckCircle, Crown } from "lucide-react";
 import { products } from "@/stripe-config";
 import { useNotifications } from "@/components/ui/Notification";
 import AppShell from "@/components/layout/AppLayout";
@@ -142,104 +143,57 @@ export default function SubscriptionPage() {
       
       <AppShell>
         <div className="max-w-6xl mx-auto space-y-8">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold">Subscription & Billing</h1>
-            <p className="text-xl text-muted-foreground">
-              Manage your Uplora subscription and access premium features
-            </p>
-          </div>
-          
-          {/* Current Subscription Status */}
-          {subscriptionStatus?.hasSubscription && (
-            <MotionDiv
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Current Subscription
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold">
-                          {currentProduct?.name || 'Uplora'}
-                        </h3>
-                        <Badge variant={subscriptionStatus.trialActive ? 'secondary' : 'default'}>
-                          {subscriptionStatus.trialActive ? 'Free Trial' : subscriptionStatus.status}
-                        </Badge>
-                      </div>
-                      {subscriptionStatus.trialActive && (
-                        <p className="text-sm text-muted-foreground">
-                          {subscriptionStatus.trialDaysRemaining} days remaining in trial
-                        </p>
-                      )}
-                      {subscriptionStatus.currentPeriodEnd && (
-                        <p className="text-sm text-muted-foreground">
-                          {subscriptionStatus.cancelAtPeriodEnd ? 'Ends' : 'Renews'} on{' '}
-                          {new Date(subscriptionStatus.currentPeriodEnd * 1000).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={handleBillingPortal}>
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Manage Billing
-                      </Button>
-                    </div>
-                  </div>
-
-                  {subscriptionStatus.paymentMethod && (
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium">Payment Method</p>
-                      <p className="text-sm text-muted-foreground">
-                        {subscriptionStatus.paymentMethod.brand?.toUpperCase()} ending in {subscriptionStatus.paymentMethod.last4}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </MotionDiv>
-          )}
-
-          {/* Available Products */}
+          {/* Header */}
           <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            className="text-center space-y-4"
           >
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">
-                {subscriptionStatus?.hasSubscription ? 'Upgrade Your Plan' : 'Choose Your Plan'}
-              </h2>
-              <p className="text-muted-foreground">
-                {subscriptionStatus?.hasSubscription 
-                  ? 'Manage your current subscription or explore other options'
-                  : 'Get started with Uplora and unlock powerful team collaboration features'
-                }
-              </p>
-            </div>
+            <h1 className="text-4xl font-bold">Subscription Management</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Manage your Uplora subscription, billing, and plan upgrades.
+            </p>
+          </MotionDiv>
 
-            <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
-              {products.map((product) => {
-                const isCurrent = subscriptionStatus?.currentPriceId === product.priceId;
-                return (
+          {/* Subscription Manager */}
+          <MotionDiv
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <SubscriptionManager 
+              subscriptionStatus={subscriptionStatus}
+              onRefresh={fetchSubscriptionStatus}
+            />
+          </MotionDiv>
+          
+          {/* Available Plans - Only show if no active subscription */}
+          {!subscriptionStatus?.hasSubscription && (
+            <MotionDiv
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="text-center space-y-4 mb-8">
+                <h2 className="text-2xl font-bold">Available Plans</h2>
+                <p className="text-muted-foreground">
+                  Choose the plan that best fits your needs
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
+                {products.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
                     onSubscribe={handleSubscribe}
-                    isCurrentPlan={isCurrent}
+                    isCurrentPlan={currentProduct?.id === product.id}
                     loading={checkoutLoading}
                   />
-                );
-              })}
-            </div>
-          </MotionDiv>
+                ))}
+              </div>
+            </MotionDiv>
+          )}
 
           {/* Additional Info */}
           <div className="text-center space-y-4">

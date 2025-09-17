@@ -105,7 +105,7 @@ export default function GetStartedPage() {
   };
 
   const handleBack = () => {
-    router.push('/onboarding/billing');
+    router.push('/onboarding/subscription');
   };
 
   return (

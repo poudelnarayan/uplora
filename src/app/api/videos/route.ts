@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
           .eq('ownerId', supabaseUser.id);
 
         const memberTeamsPromise = supabaseAdmin
-          .from('team_members')
+          .from('teamMembers')
           .select('teamId')
           .eq('userId', supabaseUser.id);
 
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         }
 
         const { data: videos, error } = await supabaseAdmin
-          .from('video_posts')
+          .from('videoPosts')
           .select(`
             *,
             users:users!videos_userId_fkey (
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
       }
 
       const { data: videos, error } = await supabaseAdmin
-        .from('video_posts')
+        .from('videoPosts')
         .select(`
           *,
           users:users!videos_userId_fkey (
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
       }
 
       const { data: video, error } = await supabaseAdmin
-        .from('video_posts')
+        .from('videoPosts')
         .insert({
           key,
           filename,

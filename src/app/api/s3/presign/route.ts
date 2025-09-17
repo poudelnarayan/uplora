@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Enforce single active upload per user
     const { data: existingLock } = await supabaseAdmin
-      .from('upload_locks')
+      .from('uploadLocks')
       .select('*')
       .eq('userId', user.id)
       .single();
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       
       if (team.ownerId !== user.id) {
         const { data: membership, error: memberError } = await supabaseAdmin
-          .from('team_members')
+          .from('teamMembers')
           .select('*')
           .eq('teamId', teamId)
           .eq('userId', user.id)
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     // Create upload lock with metadata for completion
     const { error: lockError } = await supabaseAdmin
-      .from('upload_locks')
+      .from('uploadLocks')
       .insert({ 
         userId: user.id, 
         key: finalKey,

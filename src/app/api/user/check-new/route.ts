@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Check if user exists in our database and their onboarding status
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, createdAt, onboardingcompleted') // Use correct column name
+      .select('id, createdAt, onboardingCompleted') // Use correct column name
       .eq('clerkId', userId)
       .single();
 
@@ -36,13 +36,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Check onboarding status - if not completed, they're considered new
-    if (!user.onboardingcompleted) {
+    if (!user.onboardingCompleted) {
       return NextResponse.json({ isNew: true });
     }
 
     // Check if user has any content
     const { data: content, error: contentError } = await supabaseAdmin
-      .from('text_posts')
+      .from('textPosts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any videos
     const { data: videos, error: videosError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any images
     const { data: images, error: imagesError } = await supabaseAdmin
-      .from('image_posts')
+      .from('imagePosts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has any reels
     const { data: reels, error: reelsError } = await supabaseAdmin
-      .from('reel_posts')
+      .from('reelPosts')
       .select('id')
       .eq('userId', user.id)
       .limit(1);
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     const hasImages = images && images.length > 0;
     const hasReels = reels && reels.length > 0;
 
-    const isNew = !user.onboardingcompleted || (!hasContent && !hasTeams && !hasVideos && !hasImages && !hasReels);
+    const isNew = !user.onboardingCompleted || (!hasContent && !hasTeams && !hasVideos && !hasImages && !hasReels);
 
     return NextResponse.json({ isNew });
 

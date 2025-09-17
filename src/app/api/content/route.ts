@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
         
         if (team.ownerId !== user.id) {
           const { data: membership, error: memberError } = await supabaseAdmin
-            .from('team_members')
+            .from('teamMembers')
             .select('*')
             .eq('teamId', teamId)
             .eq('userId', user.id)
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       // Fetch videos
       if (types.includes('video')) {
         let videoQuery = supabaseAdmin
-          .from('video_posts')
+          .from('videoPosts')
           .select(`
             id,
             key,
@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
       // Fetch image posts
       if (types.includes('image')) {
         let imageQuery = supabaseAdmin
-          .from('image_posts')
+          .from('imagePosts')
           .select(`
             id,
             content,
@@ -190,7 +190,7 @@ export async function GET(req: NextRequest) {
       // Fetch text posts
       if (types.includes('text')) {
         let textQuery = supabaseAdmin
-          .from('text_posts')
+          .from('textPosts')
           .select(`
             id,
             content,
@@ -242,7 +242,7 @@ export async function GET(req: NextRequest) {
       // Fetch reel posts
       if (types.includes('reel')) {
         let reelQuery = supabaseAdmin
-          .from('reel_posts')
+          .from('reelPosts')
           .select(`
             id,
             title,

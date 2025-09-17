@@ -56,7 +56,7 @@ export async function DELETE(
     if (!hasPermission) {
       // Check if user is admin or manager
       const { data: membership } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('role')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -74,7 +74,7 @@ export async function DELETE(
 
     // Get invitation details
     const { data: invitation, error: inviteError } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .select('*')
       .eq('id', inviteId)
       .eq('teamId', teamId)
@@ -89,7 +89,7 @@ export async function DELETE(
 
     // Delete the invitation
     const { error: deleteError } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .delete()
       .eq('id', inviteId);
 
@@ -174,7 +174,7 @@ export async function POST(
     
     if (!hasPermission) {
       const { data: membership } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('role')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -192,7 +192,7 @@ export async function POST(
 
     // Get invitation details
     const { data: invitation, error: inviteError } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .select('*')
       .eq('id', inviteId)
       .eq('teamId', teamId)
@@ -207,7 +207,7 @@ export async function POST(
 
     // Update invitation timestamp
     const { error: updateError } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .update({ updatedAt: new Date().toISOString() })
       .eq('id', inviteId);
 

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     // Verify the lock belongs to the user (best-effort)
     const { data: lock } = await supabaseAdmin
-      .from('upload_locks')
+      .from('uploadLocks')
       .select('*')
       .eq('userId', userId)
       .eq('key', key)
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (lock) {
       try {
         await supabaseAdmin
-          .from('upload_locks')
+          .from('uploadLocks')
           .delete()
           .eq('userId', userId)
           .eq('key', key);

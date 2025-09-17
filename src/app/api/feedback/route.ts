@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
 
       // Store feedback in Supabase for analytics
       const { error: dbError } = await supabaseAdmin
-        .from('feedback_submissions')
+        .from('feedbackSubmissions')
         .insert({
           userId: supabaseUser.id,
           type: type || 'feedback',

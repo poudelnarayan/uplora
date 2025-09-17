@@ -48,7 +48,7 @@ export async function DELETE(
 
     // Get video and check access
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .select('*')
       .eq('id', id)
       .single();
@@ -72,7 +72,7 @@ export async function DELETE(
       } else {
         // Check if user is a member of the video's team
         const { data: membership, error: membershipError } = await supabaseAdmin
-          .from('team_members')
+          .from('teamMembers')
           .select('*')
           .eq('teamId', video.teamId)
           .eq('userId', user.id)
@@ -132,7 +132,7 @@ export async function DELETE(
 
     // Delete video record from database
     await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .delete()
       .eq('id', id);
 

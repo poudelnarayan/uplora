@@ -14,29 +14,29 @@ export async function POST(req: NextRequest) {
 
     // Get user's subscription
     const { data: customer } = await supabaseAdmin
-      .from('stripe_customers')
+      .from('stripeCustomers')
       .select(`
-        customer_id,
-        stripe_subscriptions (
-          subscription_id,
+        customerId,
+        stripeSubscriptions (
+          subscriptionId,
           status
         )
       `)
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .single();
 
-    if (!customer?.stripe_subscriptions?.[0]) {
+    if (!customer?.stripeSubscriptions?.[0]) {
       return NextResponse.json({ error: "No active subscription found" }, { status: 404 });
     }
 
-    const subscription = customer.stripe_subscriptions[0];
+    const subscription = customer.stripeSubscriptions[0];
 
     if (immediate) {
       // Cancel immediately
-      await stripe.subscriptions.cancel(subscription.subscription_id);
+      await stripe.subscriptions.cancel(subscription.subscriptionId);
     } else {
       // Cancel at period end
-      await stripe.subscriptions.update(subscription.subscription_id, {
+      await stripe.subscriptions.update(subscription.subscriptionId, {
         cancel_at_period_end: true,
       });
     }

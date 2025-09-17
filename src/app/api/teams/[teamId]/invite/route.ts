@@ -56,7 +56,7 @@ export async function POST(
       let existingMember = null;
       if (userToInvite && !userLookupError) {
         const { data: memberCheck, error: memberError } = await supabaseAdmin
-          .from('team_members')
+          .from('teamMembers')
           .select('*')
           .eq('teamId', teamId)
           .eq('userId', userToInvite.id)
@@ -76,7 +76,7 @@ export async function POST(
 
       // Check for existing pending invitation
       const { data: existingInvite, error: inviteError } = await supabaseAdmin
-        .from('team_invites')
+        .from('teamInvites')
         .select('*')
         .eq('teamId', teamId)
         .eq('email', email)
@@ -92,7 +92,7 @@ export async function POST(
         if (resend) {
           // Resend existing invitation
           const { error: updateError } = await supabaseAdmin
-            .from('team_invites')
+            .from('teamInvites')
             .update({ 
               expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
               updatedAt: new Date().toISOString()
@@ -129,7 +129,7 @@ export async function POST(
       const inviteId = `invite-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
       const { data: newInvite, error: createError } = await supabaseAdmin
-        .from('team_invites')
+        .from('teamInvites')
         .insert({
           id: inviteId,
           email: email.toLowerCase(),

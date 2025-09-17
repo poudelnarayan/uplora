@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     
     const { data: deleted, error } = await supabaseAdmin
-      .from('upload_locks')
+      .from('uploadLocks')
       .delete()
       .lt('createdAt', oneHourAgo.toISOString())
       .select();

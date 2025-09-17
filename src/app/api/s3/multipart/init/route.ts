@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     if (team.ownerId !== user.id) {
       const { data: membership } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('id')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     // Store upload lock with metadata for completion
     try {
       const { error: lockError } = await supabaseAdmin
-        .from('upload_locks')
+        .from('uploadLocks')
         .insert({
           userId: user.id, 
           key: finalKey,

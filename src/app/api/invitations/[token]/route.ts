@@ -10,7 +10,7 @@ export async function GET(
     const { token } = context.params;
     
     const { data: invitation, error } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .select(`
         *,
         teams (

@@ -72,11 +72,11 @@ export default function BillingPage() {
         freeTrialEnabled
       }));
       
-      // Redirect to get-started
-      router.push('/onboarding/get-started');
+      // Redirect to subscription page
+      router.push('/onboarding/subscription');
     } catch (error) {
       console.error('Error saving plan:', error);
-      router.push('/onboarding/get-started');
+      router.push('/onboarding/subscription');
     }
   };
 

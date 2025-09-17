@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     // Get user's onboarding status from database - using correct column name
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('onboardingcompleted') // lowercase column name
+      .select('onboardingCompleted') // camelCase column name
       .eq('clerkId', userId)
       .single();
 
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch onboarding status" }, { status: 500 });
     }
 
-    const onboardingCompleted = user?.onboardingcompleted || false;
+    const onboardingCompleted = user?.onboardingCompleted || false;
     console.log(`📊 User ${userId} onboarding status:`, onboardingCompleted);
 
     return NextResponse.json({ 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     const { error } = await supabaseAdmin
       .from('users')
       .update({ 
-        onboardingcompleted: onboardingCompleted, // lowercase column name
+        onboardingCompleted: onboardingCompleted, // camelCase column name
         updatedAt: new Date().toISOString()
       })
       .eq('clerkId', userId);

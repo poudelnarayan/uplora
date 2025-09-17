@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     // Get video record
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .select('*')
       .eq('id', videoId)
       .eq('userId', userId)
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     // Mark as processing
     const { error: updateError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .update({ status: "PROCESSING" })
       .eq('id', videoId);
     
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     // Update database with web-optimized key
     const { error: finalUpdateError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .update({ 
         status: "PROCESSING",
         // Store web-optimized key in filename for now (you might want to add webOptimizedKey column)
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     
     // Reset status on error
     const { error: resetError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .update({ status: "PROCESSING" })
       .eq('id', videoId);
     

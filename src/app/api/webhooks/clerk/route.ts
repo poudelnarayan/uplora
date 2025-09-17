@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         name: `${first_name || ""} ${last_name || ""}`.trim()
       });
 
-      // Create user in database with onboardingcompleted = false (lowercase column name)
+      // Create user in database with onboardingCompleted = false (camelCase column name)
       try {
         const userEmail = email_addresses[0]?.email_address;
         const userName = `${first_name || ""} ${last_name || ""}`.trim() || "User";
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
             clerkId: id,
             email: userEmail || "",
             name: userName,
-            onboardingcompleted: false, // lowercase column name - New users need to complete onboarding
+            onboardingCompleted: false, // camelCase column name - New users need to complete onboarding
             updatedAt: new Date().toISOString()
           }, {
             onConflict: 'clerkId'
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         if (userError) {
           console.error("❌ Failed to create user in database:", userError);
         } else {
-          console.log("✅ User created in database with onboardingcompleted = false");
+          console.log("✅ User created in database with onboardingCompleted = false");
         }
       } catch (dbError) {
         console.error("❌ Database error during user creation:", dbError);

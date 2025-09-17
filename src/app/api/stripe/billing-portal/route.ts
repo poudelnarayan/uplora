@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
 
     // Get Stripe customer ID
     const { data: customer, error } = await supabaseAdmin
-      .from('stripe_customers')
-      .select('customer_id')
-      .eq('user_id', userId)
+      .from('stripeCustomers')
+      .select('customerId')
+      .eq('userId', userId)
       .single();
 
     if (error || !customer) {
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     // Create billing portal session
     const session = await stripe.billingPortal.sessions.create({
-      customer: customer.customer_id,
+      customer: customer.customerId,
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
     });
 

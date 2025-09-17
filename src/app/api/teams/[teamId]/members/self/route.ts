@@ -60,7 +60,7 @@ export async function DELETE(
     }
 
     const { data: member, error: memberError } = await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .select('*')
       .eq('teamId', teamId)
       .eq('userId', user.id)
@@ -71,7 +71,7 @@ export async function DELETE(
     }
 
     await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .delete()
       .eq('id', member.id);
 

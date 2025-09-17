@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     // Get upload lock to retrieve metadata (tolerate missing lock)
     const { data: uploadLock } = await supabaseAdmin
-      .from('upload_locks')
+      .from('uploadLocks')
       .select('*')
       .eq('userId', user.id)
       .eq('key', key)
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     }
     if (team.ownerId !== user.id) {
       const { data: membership } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('id')
         .eq('teamId', finalTeamId)
         .eq('userId', user.id)
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
     const newVideoId = (lockMeta.videoId as string | undefined) || crypto.randomUUID();
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .insert({
         id: newVideoId,
         key,
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
     // Clean up upload lock (best-effort)
     try {
       await supabaseAdmin
-        .from('upload_locks')
+        .from('uploadLocks')
         .delete()
         .eq('userId', user.id)
         .eq('key', key);
@@ -186,13 +186,13 @@ export async function POST(req: NextRequest) {
 
             // Update video.key to canonical path
             await supabaseAdmin
-              .from('video_posts')
+              .from('videoPosts')
               .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
               .eq('id', video.id);
           } else {
             // Key is already canonical; ensure DB reflects it
             await supabaseAdmin
-              .from('video_posts')
+              .from('videoPosts')
               .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
               .eq('id', video.id);
           }
@@ -278,7 +278,7 @@ export async function POST(req: NextRequest) {
     } catch {}
     try {
       await supabaseAdmin
-        .from('upload_locks')
+        .from('uploadLocks')
         .delete()
         .eq('userId', userId)
         .eq('key', key);

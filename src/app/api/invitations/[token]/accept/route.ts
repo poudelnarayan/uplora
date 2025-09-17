@@ -20,7 +20,7 @@ export async function POST(
 
       // Find the invitation
       const { data: invitation, error: inviteError } = await supabaseAdmin
-        .from('team_invites')
+        .from('teamInvites')
         .select(`
           *,
           teams (*)
@@ -41,7 +41,7 @@ export async function POST(
 
       // Check if user is already a member
       const { data: existingMember, error: memberError } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('*')
         .eq('userId', supabaseUser.id)
         .eq('teamId', invitation.teamId)
@@ -55,7 +55,7 @@ export async function POST(
       if (existingMember) {
         // Update invitation status
         const { error: updateError } = await supabaseAdmin
-          .from('team_invites')
+          .from('teamInvites')
           .update({ status: 'ACCEPTED' })
           .eq('id', invitation.id);
 
@@ -71,7 +71,7 @@ export async function POST(
       // If already member, mark invite accepted and return success
       if (existingMember) {
         const { error: updErr } = await supabaseAdmin
-          .from('team_invites')
+          .from('teamInvites')
           .update({ status: 'ACCEPTED', inviteeId: supabaseUser.id, updatedAt: new Date().toISOString() })
           .eq('id', invitation.id);
         if (updErr) {
@@ -93,7 +93,7 @@ export async function POST(
       const nowIso = new Date().toISOString();
 
       const { error: insertMemberErr } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .insert({
           id: memberId,
           role: invitation.role,
@@ -111,7 +111,7 @@ export async function POST(
 
       // Mark invite accepted
       const { error: updateInviteErr } = await supabaseAdmin
-        .from('team_invites')
+        .from('teamInvites')
         .update({ status: 'ACCEPTED', inviteeId: supabaseUser.id, updatedAt: nowIso })
         .eq('id', invitation.id);
 

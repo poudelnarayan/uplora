@@ -65,7 +65,7 @@ export async function POST(
 
     if (team.ownerId !== currentUser.id) {
       const { data: isPrivileged, error: privilegeError } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('*')
         .eq('teamId', teamId)
         .eq('userId', currentUser.id)
@@ -79,7 +79,7 @@ export async function POST(
 
     // Build query for finding the invitation
     let query = supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .select('*')
       .eq('teamId', teamId)
       .eq('status', 'PENDING');
@@ -97,7 +97,7 @@ export async function POST(
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .update({ status: 'REJECTED', updatedAt: new Date().toISOString() })
       .eq('id', invite.id)
       .select()

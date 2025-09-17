@@ -52,7 +52,7 @@ export async function POST(
 
     // Get video with team and user info
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .select(`
         *,
         users!videos_userId_fkey (
@@ -207,7 +207,7 @@ export async function POST(
 
     // Update video status to PUBLISHED after successful upload
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .update({ 
         status: "PUBLISHED", 
         approvedByUserId: me.id,

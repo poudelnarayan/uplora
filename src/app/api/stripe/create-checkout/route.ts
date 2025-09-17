@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
 
     // Get or create Stripe customer
     let { data: customer } = await supabaseAdmin
-      .from('stripe_customers')
-      .select('customer_id')
-      .eq('user_id', userId)
+      .from('stripeCustomers')
+      .select('customerId')
+      .eq('userId', userId)
       .single();
 
     let customerId: string;
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('email, name')
-        .eq('clerkId', userId)
+        .eq('id', userId)
         .single();
 
       const stripeCustomer = await stripe.customers.create({
@@ -49,15 +49,15 @@ export async function POST(req: NextRequest) {
 
       // Save customer to database
       await supabaseAdmin
-        .from('stripe_customers')
+        .from('stripeCustomers')
         .insert({
-          user_id: userId,
-          customer_id: stripeCustomer.id,
+          userId: userId,
+          customerId: stripeCustomer.id,
         });
 
       customerId = stripeCustomer.id;
     } else {
-      customerId = customer.customer_id;
+      customerId = customer.customerId;
     }
 
     // Get price ID

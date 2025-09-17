@@ -53,7 +53,7 @@ export async function GET(
     
     if (!hasAccess) {
       const { data: membership } = await supabaseAdmin
-        .from('team_members')
+        .from('teamMembers')
         .select('id')
         .eq('teamId', teamId)
         .eq('userId', user.id)
@@ -79,7 +79,7 @@ export async function GET(
 
     // Get team members
     const { data: members, error: membersError } = await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .select(`
         id,
         role,
@@ -97,7 +97,7 @@ export async function GET(
 
     // Get team invitations
     const { data: invites, error: invitesError } = await supabaseAdmin
-      .from('team_invites')
+      .from('teamInvites')
       .select('*')
       .eq('teamId', teamId)
       .order('createdAt', { ascending: false });

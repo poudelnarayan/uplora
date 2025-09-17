@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     // Add the owner as a team member with ADMIN role (since enum doesn't include OWNER)
     const { error: memberError } = await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .upsert({
         id: user.id, // Use Clerk user ID as the member ID
         teamId: team.id,
@@ -294,14 +294,14 @@ export async function GET(request: NextRequest) {
       .from('teams')
       .select(`
         *,
-        team_members!inner (
+        teamMembers!inner (
           role,
           status,
           userId
         )
       `)
-      .eq('team_members.userId', user.id)
-      .eq('team_members.status', 'ACTIVE')
+      .eq('teamMembers.userId', user.id)
+      .eq('teamMembers.status', 'ACTIVE')
       .order('createdAt', { ascending: false });
 
     if (memberError) {
@@ -325,7 +325,7 @@ export async function GET(request: NextRequest) {
       ownerId: team.ownerId,
       isOwner: team.ownerId === user.id,
       role: team.ownerId === user.id ? 'OWNER' : 
-          team.team_members?.[0]?.role || 'MEMBER'
+          team.teamMembers?.[0]?.role || 'MEMBER'
     }));
 
     return NextResponse.json(createSuccessResponse({ data: formattedTeams }));

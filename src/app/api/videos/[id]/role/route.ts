@@ -48,7 +48,7 @@ export async function GET(
     }
 
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
+      .from('videoPosts')
       .select('*')
       .eq('id', id)
       .single();
@@ -67,7 +67,7 @@ export async function GET(
       return NextResponse.json({ role });
     }
 
-    // Team video. First check if user is the team owner (may not exist in team_members)
+    // Team video. First check if user is the team owner (may not exist in teamMembers)
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
       .select('*')
@@ -87,7 +87,7 @@ export async function GET(
 
     // Otherwise, check team membership
     const { data: membership, error: membershipError } = await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .select('role')
       .eq('teamId', video.teamId)
       .eq('userId', user.id)

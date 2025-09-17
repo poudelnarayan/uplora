@@ -59,7 +59,7 @@ export async function POST(
 
     // Check if user is actually a member of this team
     const { data: membership, error: membershipError } = await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .select('*')
       .eq('teamId', teamId)
       .eq('userId', user.id)
@@ -74,7 +74,7 @@ export async function POST(
 
     // Remove user from team
     const { error: removeError } = await supabaseAdmin
-      .from('team_members')
+      .from('teamMembers')
       .delete()
       .eq('teamId', teamId)
       .eq('userId', user.id);

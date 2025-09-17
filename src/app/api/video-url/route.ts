@@ -21,7 +21,7 @@ async function assertAuthorizedForKey(key: string) {
 
   // Otherwise ensure the user can access the video by team membership or ownership
   const { data: video } = await supabaseAdmin
-    .from('video_posts')
+    .from('videoPosts')
     .select('id, teamId, userId')
     .eq('key', key)
     .maybeSingle();
