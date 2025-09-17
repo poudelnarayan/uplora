@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     // Add the owner as a team member with ADMIN role (since enum doesn't include OWNER)
     const { error: memberError } = await supabaseAdmin
-      .from('teamMembers')
+      .from('team_members')
       .upsert({
         id: user.id, // Use Clerk user ID as the member ID
         teamId: team.id,
@@ -289,19 +289,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch owned teams"), { status: 500 });
     }
 
-    // Get teams where user is a member
+    // Get teams where user is a member (production schema uses snake_case: team_members)
     const { data: memberTeams, error: memberError } = await supabaseAdmin
       .from('teams')
       .select(`
         *,
-        teamMembers!inner (
+        team_members!inner (
           role,
           status,
           userId
         )
       `)
-      .eq('teamMembers.userId', user.id)
-      .eq('teamMembers.status', 'ACTIVE')
+      .eq('team_members.userId', user.id)
+      .eq('team_members.status', 'ACTIVE')
       .order('createdAt', { ascending: false });
 
     if (memberError) {
@@ -325,7 +325,7 @@ export async function GET(request: NextRequest) {
       ownerId: team.ownerId,
       isOwner: team.ownerId === user.id,
       role: team.ownerId === user.id ? 'OWNER' : 
-          team.teamMembers?.[0]?.role || 'MEMBER'
+          (team as any).team_members?.[0]?.role || 'MEMBER'
     }));
 
     return NextResponse.json(createSuccessResponse({ data: formattedTeams }));
