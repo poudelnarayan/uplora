@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import AppShell from "@/components/layout/AppLayout";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
 
   return (
+    <AppShell>
 
     <div className="space-y-6">
       {/* Header */}
@@ -348,6 +350,7 @@ const Settings = () => {
         </TabsContent>
       </Tabs>
       </div>
+      </AppShell>
       
   );
 };
