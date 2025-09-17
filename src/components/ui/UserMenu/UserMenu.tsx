@@ -74,11 +74,11 @@ export default function UserMenu({ onFeedbackClick, dropdownPosition = 'bottom' 
       <AnimatePresence>
         {isOpen && (
           <MotionDiv
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            initial={dropdownPosition === 'top' ? { opacity: 0, scale: 0.95, x: -10 } : { opacity: 0, scale: 0.95, y: -10 }}
+            animate={dropdownPosition === 'top' ? { opacity: 1, scale: 1, x: 0 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={dropdownPosition === 'top' ? { opacity: 0, scale: 0.95, x: -10 } : { opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+            className={`absolute ${dropdownPosition === 'top' ? 'left-full ml-2 top-0' : 'right-0 top-full mt-2'} w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden`}
           >
             {/* Menu Items */}
             <div className="p-2">
