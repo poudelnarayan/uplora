@@ -11,7 +11,7 @@ import EmailVerificationBanner from "@/components/pages/Dashboard/EmailVerificat
 import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
 import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { BarChart3, TrendingUp, Users, Calendar, FileText, Image as ImageIcon, Video, Play, Edit, Trash2, Clock, Send, MoreVertical } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Calendar, FileText, Image as ImageIcon, Video, Play, Edit, Trash2, Clock, Send, MoreVertical, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
