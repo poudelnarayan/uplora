@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
         joinedAt: now,
         updatedAt: now // Add required updatedAt field
       }, {
-        onConflict: 'id,teamId' // Handle conflicts on both id and teamId
+        onConflict: 'id,teamId' // Handl e conflicts on both id and teamId
       });
 
     if (memberError) {
