@@ -304,8 +304,13 @@ export async function GET(req: NextRequest) {
         allContent.sort((a, b) => a.status.localeCompare(b.status));
       }
 
-      // Get user info for uploaders
-      const userIds = [...new Set(allContent.map(item => item.userId))];
+      // Get user info for uploaders (avoid Set iteration for older targets)
+      const userIds = Object.keys(
+        allContent.reduce((acc: Record<string, true>, item: any) => {
+          if (item.userId) acc[item.userId] = true;
+          return acc;
+        }, {})
+      );
       const { data: users } = await supabaseAdmin
         .from('users')
         .select('id, name, email, image')
