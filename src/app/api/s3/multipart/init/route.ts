@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     // Store upload lock with metadata for completion
     try {
       const { error: lockError } = await supabaseAdmin
-        .from('uploadLocks')
+        .from('upload_locks')
         .insert({
           userId: user.id, 
           key: finalKey,

@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     // Release upload lock for this user
     await supabaseAdmin
-      .from('uploadLocks')
+      .from('upload_locks')
       .delete()
       .eq('userId', user.id)
       .eq('key', key);

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Enforce single active upload per user
     const { data: existingLock } = await supabaseAdmin
-      .from('uploadLocks')
+      .from('upload_locks')
       .select('*')
       .eq('userId', user.id)
       .single();
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     // Create upload lock with metadata for completion
     const { error: lockError } = await supabaseAdmin
-      .from('uploadLocks')
+      .from('upload_locks')
       .insert({ 
         userId: user.id, 
         key: finalKey,

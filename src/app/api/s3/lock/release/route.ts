@@ -11,7 +11,7 @@ export async function DELETE(req: NextRequest) {
     try {
       // Release any upload lock for this user
       const { error: lockError } = await supabaseAdmin
-        .from('uploadLocks')
+        .from('upload_locks')
         .delete()
         .eq('userId', user.clerkUserId);
 

@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     // Get upload lock to retrieve metadata (tolerate missing lock)
     const { data: uploadLock } = await supabaseAdmin
-      .from('uploadLocks')
+      .from('upload_locks')
       .select('*')
       .eq('userId', user.id)
       .eq('key', key)
@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
     // Clean up upload lock (best-effort)
     try {
       await supabaseAdmin
-        .from('uploadLocks')
+        .from('upload_locks')
         .delete()
         .eq('userId', user.id)
         .eq('key', key);
@@ -278,7 +278,7 @@ export async function POST(req: NextRequest) {
     } catch {}
     try {
       await supabaseAdmin
-        .from('uploadLocks')
+        .from('upload_locks')
         .delete()
         .eq('userId', userId)
         .eq('key', key);
