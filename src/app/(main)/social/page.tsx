@@ -173,6 +173,7 @@ const SocialConnections = () => {
 
                   {platform.id === 'youtube' ? (
                     <Button
+                      type="button"
                       className="w-full gap-2"
                       onClick={() => { window.location.href = '/api/youtube/start'; }}
                       disabled={yt.loading}
@@ -182,17 +183,18 @@ const SocialConnections = () => {
                     </Button>
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
                     <Button
+                      type="button"
                       className="w-full gap-2"
                       onClick={() => {
                         window.location.href = platform.id === "instagram" ? "/api/instagram/start" : "/api/facebook/start?intent=facebook";
                       }}
-                      disabled={fb.loading}
+                      disabled={platform.id === "facebook" ? fb.loading : false}
                     >
                       <Link2 className="h-4 w-4" />
-                      {fb.loading ? 'Checking…' : 'Connect'}
+                      {platform.id === "facebook" ? (fb.loading ? "Checking…" : "Connect") : "Connect Instagram"}
                     </Button>
                   ) : (
-                    <Button className="w-full gap-2" disabled>
+                    <Button type="button" className="w-full gap-2" disabled>
                       <Clock className="h-4 w-4" />
                       Coming Soon...
                     </Button>
