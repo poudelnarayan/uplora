@@ -9,9 +9,10 @@ import AppShell from "@/components/layout/AppLayout";
 const SocialConnections = () => {
   const notifications = useNotifications();
   const [yt, setYt] = useState<{ loading: boolean; isConnected: boolean; channelTitle?: string | null }>({ loading: true, isConnected: false });
-  const [fb, setFb] = useState<{ loading: boolean; isConnected: boolean; userName?: string | null; pages: any[]; instagramAccounts: any[] }>({ 
+  const [fb, setFb] = useState<{ loading: boolean; isConnected: boolean; instagramConnected: boolean; userName?: string | null; pages: any[]; instagramAccounts: any[] }>({ 
     loading: true, 
     isConnected: false, 
+    instagramConnected: false,
     pages: [], 
     instagramAccounts: [] 
   });
@@ -36,12 +37,13 @@ const SocialConnections = () => {
         setFb({ 
           loading: false, 
           isConnected: !!data?.connected, 
+          instagramConnected: !!data?.instagramConnected,
           userName: data?.user?.name || null,
           pages: data?.pages || [],
           instagramAccounts: data?.instagramAccounts || []
         });
       } catch {
-        setFb({ loading: false, isConnected: false, pages: [], instagramAccounts: [] });
+        setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
       }
     })();
   }, []);
@@ -66,8 +68,8 @@ const SocialConnections = () => {
     {
       id: "instagram",
       name: "Instagram",
-      connected: fb.isConnected && fb.instagramAccounts.length > 0,
-      username: fb.instagramAccounts[0]?.instagram?.username ? `@${fb.instagramAccounts[0].instagram.username}` : null,
+      connected: fb.instagramConnected || (fb.isConnected && fb.instagramAccounts.length > 0),
+      username: null,
       bgColor: "bg-gradient-to-br from-purple-500/10 to-pink-500/10"
     },
     {
@@ -149,7 +151,7 @@ const SocialConnections = () => {
                           resp = await fetch('/api/facebook/disconnect', { method: 'POST' });
                           if (!resp.ok) throw new Error('Failed');
                           notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Facebook/Instagram disconnected' });
-                          setFb({ loading: false, isConnected: false, pages: [], instagramAccounts: [] });
+                          setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
                         }
                       } catch (e) {
                         notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
@@ -181,7 +183,9 @@ const SocialConnections = () => {
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
                     <Button
                       className="w-full gap-2"
-                      onClick={() => { window.location.href = '/api/facebook/start'; }}
+                      onClick={() => {
+                        window.location.href = platform.id === "instagram" ? "/api/instagram/start" : "/api/facebook/start?intent=facebook";
+                      }}
                       disabled={fb.loading}
                     >
                       <Link2 className="h-4 w-4" />

@@ -11,12 +11,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const intentParam = (searchParams.get("intent") || "facebook").toLowerCase();
+    const intent: "facebook" | "instagram" = intentParam === "instagram" ? "instagram" : "facebook";
+
     // CSRF state - persisted in an HttpOnly cookie and validated on callback.
     const state = crypto.randomUUID();
 
-    // Facebook Login scopes (do NOT request instagram_* scopes here).
-    // Instagram publishing is discovered later via the Page's instagram_business_account linkage.
-    const scope = ["pages_show_list", "pages_manage_posts"].join(",");
+    // Meta (Facebook Login) scopes.
+    // - For Facebook publishing: page list + manage posts.
+    // - For Instagram publishing (via IG business account on a Page): need additional instagram_* scopes.
+    const scopes =
+      intent === "instagram"
+        ? [
+            "pages_show_list",
+            "pages_read_engagement",
+            "pages_manage_posts",
+            "instagram_basic",
+            "instagram_content_publish",
+          ]
+        : ["pages_show_list", "pages_manage_posts"];
+
+    const scope = scopes.join(",");
 
     const apiVersion = process.env.META_API_VERSION || "v19.0";
     
@@ -57,6 +73,13 @@ export async function GET(request: NextRequest) {
     // Redirect to Facebook OAuth
     const res = NextResponse.redirect(authUrl);
     res.cookies.set("uplora_fb_oauth_state", state, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 10 * 60, // 10 minutes
+    });
+    res.cookies.set("uplora_meta_oauth_intent", intent, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",

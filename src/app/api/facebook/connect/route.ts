@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const requestedPageId = searchParams.get("page_id");
 
     const expectedState = request.cookies.get("uplora_fb_oauth_state")?.value;
+    const intentCookie = (request.cookies.get("uplora_meta_oauth_intent")?.value || "facebook").toLowerCase();
+    const intent: "facebook" | "instagram" = intentCookie === "instagram" ? "instagram" : "facebook";
 
     console.log("Facebook OAuth callback received:", {
       hasCode: !!code,
@@ -142,8 +144,10 @@ export async function GET(request: NextRequest) {
         const p = pages.find(x => x.id === requestedPageId);
         if (p) return p;
       }
-      const withIg = pages.find(x => !!x.instagram_business_account?.id);
-      if (withIg) return withIg;
+      if (intent === "instagram") {
+        const withIg = pages.find(x => !!x.instagram_business_account?.id);
+        if (withIg) return withIg;
+      }
       return pages[0];
     };
 
@@ -232,9 +236,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Clear CSRF cookie
-    const redirectUrl = isLocal ? `${reqOrigin}/social?success=facebook_connected` : `${origin}/social?success=facebook_connected`;
+    const successKey =
+      intent === "instagram" && instagramBusinessAccountId
+        ? "instagram_connected"
+        : "facebook_connected";
+    const redirectUrl = isLocal ? `${reqOrigin}/social?success=${successKey}` : `${origin}/social?success=${successKey}`;
     const res = NextResponse.redirect(new URL(redirectUrl, request.url));
     res.cookies.set("uplora_fb_oauth_state", "", { path: "/", maxAge: 0 });
+    res.cookies.set("uplora_meta_oauth_intent", "", { path: "/", maxAge: 0 });
     return res;
 
   } catch (error) {

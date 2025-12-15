@@ -25,14 +25,27 @@ export async function GET(request: NextRequest) {
     }
 
     const facebookConnection = user?.socialConnections?.facebook;
-    const isConnected = !!((facebookConnection?.userAccessToken || facebookConnection?.accessToken) && facebookConnection?.userId);
+    const instagramConnection = user?.socialConnections?.instagram;
 
-    if (!isConnected) {
+    const isFacebookConnected = !!(
+      (facebookConnection?.userAccessToken || facebookConnection?.accessToken) && facebookConnection?.userId
+    );
+    const igBusinessAccountId =
+      facebookConnection?.instagramBusinessAccountId ||
+      instagramConnection?.businessAccountId ||
+      instagramConnection?.instagramUserId ||
+      null;
+    const isInstagramConnected = !!(igBusinessAccountId && instagramConnection?.accessToken);
+
+    if (!isFacebookConnected) {
       return NextResponse.json({
         connected: false,
+        instagramConnected: isInstagramConnected,
         user: null,
         pages: [],
-        instagramAccounts: []
+        instagramAccounts: igBusinessAccountId
+          ? [{ id: igBusinessAccountId, pageId: instagramConnection?.pageId || facebookConnection?.selectedPageId || null }]
+          : []
       });
     }
 
@@ -60,6 +73,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
           connected: false,
+          instagramConnected: isInstagramConnected,
           user: null,
           pages: [],
           instagramAccounts: [],
@@ -69,14 +83,15 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         connected: true,
+        instagramConnected: isInstagramConnected,
         user: {
           id: userInfo.id,
           name: userInfo.name,
           connectedAt: facebookConnection.connectedAt
         },
         pages: facebookConnection.pages || [],
-        instagramAccounts: facebookConnection.instagramBusinessAccountId
-          ? [{ id: facebookConnection.instagramBusinessAccountId, pageId: facebookConnection.selectedPageId || null }]
+        instagramAccounts: igBusinessAccountId
+          ? [{ id: igBusinessAccountId, pageId: facebookConnection.selectedPageId || instagramConnection?.pageId || null }]
           : []
       });
 
@@ -84,14 +99,15 @@ export async function GET(request: NextRequest) {
       console.error("Error verifying Facebook token:", error);
       return NextResponse.json({
         connected: true, // Don't auto-disconnect on network errors
+        instagramConnected: isInstagramConnected,
         user: {
           id: facebookConnection.userId,
           name: facebookConnection.userName,
           connectedAt: facebookConnection.connectedAt
         },
         pages: facebookConnection.pages || [],
-        instagramAccounts: facebookConnection.instagramBusinessAccountId
-          ? [{ id: facebookConnection.instagramBusinessAccountId, pageId: facebookConnection.selectedPageId || null }]
+        instagramAccounts: igBusinessAccountId
+          ? [{ id: igBusinessAccountId, pageId: facebookConnection.selectedPageId || instagramConnection?.pageId || null }]
           : [],
         error: "Unable to verify connection"
       });
