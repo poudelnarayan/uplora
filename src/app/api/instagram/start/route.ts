@@ -21,6 +21,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/social?error=instagram_missing_app_id", request.url));
     }
 
+    // If you hit /api/instagram/start?debug=1, return the computed OAuth inputs as JSON (no secrets).
+    // This helps diagnose redirect_uri mismatches in production.
+    const debug = (() => {
+      try {
+        return new URL(request.url).searchParams.get("debug") === "1";
+      } catch {
+        return false;
+      }
+    })();
+
     // Step 1a) CSRF protection
     const state = crypto.randomUUID();
 
@@ -33,7 +43,9 @@ export async function GET(request: NextRequest) {
       }
     })();
     const isLocal = /localhost|127\.0\.0\.1/i.test(reqOrigin);
-    const origin = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
+    const originRaw = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
+    // Normalize to avoid double slashes like https://uplora.io//api/...
+    const origin = originRaw.replace(/\/+$/g, "");
     // If set, IG_REDIRECT_URI must EXACTLY match the whitelisted redirect URI in your Instagram app settings.
     // This avoids subtle mismatches (http vs https, trailing slash, different domain).
     const redirectUri = process.env.IG_REDIRECT_URI || `${origin}/api/instagram/callback`;
@@ -41,6 +53,15 @@ export async function GET(request: NextRequest) {
     // Step 1c) Build Instagram authorization URL
     // Scopes requested per requirements
     const scope = ["instagram_business_basic", "instagram_business_content_publish"].join(",");
+
+    if (debug) {
+      return NextResponse.json({
+        client_id: appId,
+        redirect_uri: redirectUri,
+        scope,
+        response_type: "code",
+      });
+    }
 
     const authUrl = new URL("https://api.instagram.com/oauth/authorize");
     authUrl.searchParams.set("client_id", appId);
