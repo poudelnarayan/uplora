@@ -11,6 +11,7 @@ const MotionDiv = motion.div as any;
 
 export const dynamic = "force-dynamic";
 
+
 export default function MakePostPage() {
   const { user, isLoaded } = useUser();
   const { selectedTeamId, selectedTeam } = useTeam();
