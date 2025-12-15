@@ -55,15 +55,23 @@ export async function GET(request: NextRequest) {
     const scope = ["instagram_business_basic", "instagram_business_content_publish"].join(",");
 
     if (debug) {
+      const debugAuthUrl = new URL("https://www.instagram.com/oauth/authorize");
+      debugAuthUrl.searchParams.set("client_id", appId);
+      debugAuthUrl.searchParams.set("redirect_uri", redirectUri);
+      debugAuthUrl.searchParams.set("response_type", "code");
+      debugAuthUrl.searchParams.set("scope", scope);
+      debugAuthUrl.searchParams.set("state", state);
       return NextResponse.json({
         client_id: appId,
         redirect_uri: redirectUri,
         scope,
         response_type: "code",
+        authorize_url: debugAuthUrl.toString(),
       });
     }
 
-    const authUrl = new URL("https://api.instagram.com/oauth/authorize");
+    // Use instagram.com authorization host (matches the error page host and is accepted for Instagram OAuth).
+    const authUrl = new URL("https://www.instagram.com/oauth/authorize");
     authUrl.searchParams.set("client_id", appId);
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("response_type", "code");
