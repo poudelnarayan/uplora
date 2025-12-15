@@ -32,7 +32,7 @@ import { InlineSpinner } from "@/components/ui/loading-spinner";
 import AppShell from "@/components/layout/AppLayout";
 import { useSearchParams } from "next/navigation";
 
-const MakePostReels = () => {
+function MakePostReelsContent() {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
   const notifications = useNotifications();
@@ -493,13 +493,6 @@ const MakePostReels = () => {
   );
 
   return (
-<Suspense fallback={
-  <AppShell>
-    <div className="flex items-center justify-center py-12">
-      <InlineSpinner size="sm" />
-    </div>
-  </AppShell>
-}>
 <AppShell>
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
@@ -854,8 +847,19 @@ const MakePostReels = () => {
       </div>
       </div>
       </AppShell>
-      </Suspense>
   );
-};
+}
 
-export default MakePostReels;
+export default function MakePostReelsPage() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="flex items-center justify-center py-12">
+          <InlineSpinner size="sm" />
+        </div>
+      </AppShell>
+    }>
+      <MakePostReelsContent />
+    </Suspense>
+  );
+}

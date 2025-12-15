@@ -32,7 +32,7 @@ import { InlineSpinner } from "@/components/ui/loading-spinner";
 import AppShell from "@/components/layout/AppLayout";
 import { useSearchParams } from "next/navigation";
 
-const MakePostImage = () => {
+function MakePostImageContent() {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
   const notifications = useNotifications();
@@ -195,13 +195,6 @@ const MakePostImage = () => {
   };
 
   return (
-<Suspense fallback={
-  <AppShell>
-    <div className="flex items-center justify-center py-12">
-      <InlineSpinner size="sm" />
-    </div>
-  </AppShell>
-}>
 <AppShell>
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
@@ -741,8 +734,19 @@ const MakePostImage = () => {
       </div>
       </div>
       </AppShell>
-      </Suspense>
   );
-};
+}
 
-export default MakePostImage;
+export default function MakePostImagePage() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="flex items-center justify-center py-12">
+          <InlineSpinner size="sm" />
+        </div>
+      </AppShell>
+    }>
+      <MakePostImageContent />
+    </Suspense>
+  );
+}
