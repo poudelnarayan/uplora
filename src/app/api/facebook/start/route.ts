@@ -11,11 +11,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Generate a random state for security
-    const state = Math.random().toString(36).substring(7);
-    
-    // Define the scopes we need - using only public_profile which requires no app review
-    const scope = "public_profile";
+    // CSRF state - persisted in an HttpOnly cookie and validated on callback.
+    const state = crypto.randomUUID();
+
+    // Scopes needed for Page posting + Instagram publishing via IG Graph API.
+    // Note: Additional permissions may be required depending on your app mode / review status.
+    const scope = [
+      "pages_show_list",
+      "pages_manage_posts",
+      "instagram_basic",
+      "instagram_content_publish",
+    ].join(",");
+
+    const apiVersion = process.env.META_API_VERSION || "v19.0";
     
     // Determine redirect URI based on environment
     const reqOrigin = (() => { 
@@ -32,7 +40,7 @@ export async function GET(request: NextRequest) {
       : (process.env.META_REDIRECT_URI || `${origin}/api/facebook/connect`);
     
     // Build the Facebook OAuth URL
-    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+    const authUrl = `https://www.facebook.com/${apiVersion}/dialog/oauth?` +
       `client_id=${process.env.META_APP_ID}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `response_type=code&` +
@@ -52,7 +60,15 @@ export async function GET(request: NextRequest) {
     console.log('FB_AUTH_URL:', authUrl);
 
     // Redirect to Facebook OAuth
-    return NextResponse.redirect(authUrl);
+    const res = NextResponse.redirect(authUrl);
+    res.cookies.set("uplora_fb_oauth_state", state, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 10 * 60, // 10 minutes
+    });
+    return res;
     
   } catch (error) {
     console.error("Facebook OAuth start error:", error);

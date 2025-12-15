@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { broadcast } from "@/lib/realtime";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,6 +11,9 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get("code");
     const error = searchParams.get("error");
     const state = searchParams.get("state");
+    const requestedPageId = searchParams.get("page_id");
+
+    const expectedState = request.cookies.get("uplora_fb_oauth_state")?.value;
 
     console.log("Facebook OAuth callback received:", {
       hasCode: !!code,
@@ -27,11 +31,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/social?error=facebook_no_code", request.url));
     }
 
+    if (!state || !expectedState || state !== expectedState) {
+      console.error("Facebook OAuth state mismatch:", { state, expectedState: !!expectedState });
+      return NextResponse.redirect(new URL("/social?error=facebook_state_mismatch", request.url));
+    }
+
     const { userId } = await auth();
     
     if (!userId) {
       // If no user is authenticated, redirect to sign in with the code
-      return NextResponse.redirect(new URL(`/sign-in?redirect_url=${encodeURIComponent(`/social?facebook_code=${code}`)}`, request.url));
+      return NextResponse.redirect(new URL(`/sign-in?redirect_url=${encodeURIComponent(`/api/facebook/connect?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`)}`, request.url));
     }
 
     // Determine redirect URI based on environment
@@ -48,6 +57,8 @@ export async function GET(request: NextRequest) {
       ? `${reqOrigin}/api/facebook/connect`
       : (process.env.META_REDIRECT_URI || `${origin}/api/facebook/connect`);
 
+    const apiVersion = process.env.META_API_VERSION || "v19.0";
+
     console.log('FB_CONNECT_DIAGNOSTIC:', {
       client_id: process.env.META_APP_ID,
       client_secret_set: !!process.env.META_APP_SECRET,
@@ -56,90 +67,175 @@ export async function GET(request: NextRequest) {
       userId: userId
     });
 
-    // Exchange code for access token
-    const tokenResponse = await fetch("https://graph.facebook.com/v18.0/oauth/access_token", {
+    // 1) Exchange code -> short-lived user access token
+    const shortTokenRes = await fetch(`https://graph.facebook.com/${apiVersion}/oauth/access_token`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         client_id: process.env.META_APP_ID!,
         client_secret: process.env.META_APP_SECRET!,
-        code: code,
+        code,
         redirect_uri: redirectUri,
       }),
     });
-
-    const tokenData = await tokenResponse.json();
-
-    if (!tokenResponse.ok || tokenData.error) {
-      console.error("Facebook token exchange failed:", tokenData);
+    const shortToken = await shortTokenRes.json();
+    if (!shortTokenRes.ok || shortToken.error || !shortToken.access_token) {
+      console.error("Facebook short-lived token exchange failed:", shortToken);
       return NextResponse.redirect(new URL("/social?error=facebook_token_failed", request.url));
     }
 
-    console.log("Facebook token exchange successful, fetching user info...");
+    // 2) Exchange short-lived -> long-lived user access token
+    const longTokenUrl = new URL(`https://graph.facebook.com/${apiVersion}/oauth/access_token`);
+    longTokenUrl.searchParams.set("grant_type", "fb_exchange_token");
+    longTokenUrl.searchParams.set("client_id", process.env.META_APP_ID!);
+    longTokenUrl.searchParams.set("client_secret", process.env.META_APP_SECRET!);
+    longTokenUrl.searchParams.set("fb_exchange_token", shortToken.access_token);
 
-    // Get user's basic Facebook info (only public_profile data)
-    const userResponse = await fetch(`https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${tokenData.access_token}`);
+    const longTokenRes = await fetch(longTokenUrl.toString(), { method: "GET" });
+    const longToken = await longTokenRes.json();
+    if (!longTokenRes.ok || longToken.error || !longToken.access_token) {
+      console.error("Facebook long-lived token exchange failed:", longToken);
+      return NextResponse.redirect(new URL("/social?error=facebook_long_token_failed", request.url));
+    }
+
+    const longLivedUserToken = longToken.access_token as string;
+    const tokenExpiresAt = typeof longToken.expires_in === "number"
+      ? new Date(Date.now() + longToken.expires_in * 1000).toISOString()
+      : null;
+
+    // 3) Fetch user info
+    const userResponse = await fetch(
+      `https://graph.facebook.com/${apiVersion}/me?fields=id,name&access_token=${encodeURIComponent(longLivedUserToken)}`
+    );
     const userData = await userResponse.json();
-
     if (!userResponse.ok || userData.error) {
       console.error("Failed to fetch Facebook user data:", userData);
       return NextResponse.redirect(new URL("/social?error=facebook_user_failed", request.url));
     }
 
-    console.log("Facebook user data fetched successfully:", {
-      userId: userData.id,
-      name: userData.name
+    // 4) Fetch pages (+ page tokens)
+    const pagesUrl = new URL(`https://graph.facebook.com/${apiVersion}/me/accounts`);
+    pagesUrl.searchParams.set("fields", "id,name,access_token,instagram_business_account");
+    pagesUrl.searchParams.set("access_token", longLivedUserToken);
+
+    const pagesRes = await fetch(pagesUrl.toString(), { method: "GET" });
+    const pagesData = await pagesRes.json();
+    if (!pagesRes.ok || pagesData.error) {
+      console.error("Failed to fetch /me/accounts:", pagesData);
+      return NextResponse.redirect(new URL("/social?error=facebook_pages_failed", request.url));
+    }
+
+    const pages: Array<{
+      id: string;
+      name?: string;
+      access_token?: string;
+      instagram_business_account?: { id: string };
+    }> = Array.isArray(pagesData?.data) ? pagesData.data : [];
+
+    if (pages.length === 0) {
+      console.error("No Facebook Pages returned from /me/accounts");
+      return NextResponse.redirect(new URL("/social?error=facebook_no_pages", request.url));
+    }
+
+    const findPage = () => {
+      if (requestedPageId) {
+        const p = pages.find(x => x.id === requestedPageId);
+        if (p) return p;
+      }
+      const withIg = pages.find(x => !!x.instagram_business_account?.id);
+      if (withIg) return withIg;
+      return pages[0];
+    };
+
+    const selectedPage = findPage();
+    if (!selectedPage?.access_token) {
+      console.error("Selected page missing access token", { selectedPageId: selectedPage?.id });
+      return NextResponse.redirect(new URL("/social?error=facebook_page_token_missing", request.url));
+    }
+
+    // 5) From selected Page, get instagram_business_account (if not present)
+    let instagramBusinessAccountId: string | null = selectedPage.instagram_business_account?.id || null;
+
+    if (!instagramBusinessAccountId) {
+      const igLookupUrl = new URL(`https://graph.facebook.com/${apiVersion}/${selectedPage.id}`);
+      igLookupUrl.searchParams.set("fields", "instagram_business_account");
+      igLookupUrl.searchParams.set("access_token", selectedPage.access_token);
+
+      const igLookupRes = await fetch(igLookupUrl.toString(), { method: "GET" });
+      const igLookup = await igLookupRes.json();
+      if (igLookupRes.ok && !igLookup.error && igLookup?.instagram_business_account?.id) {
+        instagramBusinessAccountId = igLookup.instagram_business_account.id;
+      }
+    }
+
+    // Persist connection (user token + selected Page + Page token + IG business id if present)
+    const connectedAt = new Date().toISOString();
+    const sanitizedPages = pages.map(p => ({
+      id: p.id,
+      name: p.name || null,
+      hasPageToken: !!p.access_token,
+      instagramBusinessAccountId: p.instagram_business_account?.id || null,
+    }));
+
+    const { data: currentUser } = await supabaseAdmin
+      .from("users")
+      .select("socialConnections")
+      .eq("id", userId)
+      .single();
+
+    const socialConnections = {
+      ...(currentUser?.socialConnections || {}),
+      facebook: {
+        connectedAt,
+        userId: userData.id,
+        userName: userData.name,
+        userAccessToken: longLivedUserToken,
+        userTokenExpiresAt: tokenExpiresAt,
+        pages: sanitizedPages,
+        selectedPageId: selectedPage.id,
+        selectedPageName: selectedPage.name || null,
+        selectedPageAccessToken: selectedPage.access_token,
+        instagramBusinessAccountId,
+      },
+      instagram: instagramBusinessAccountId
+        ? {
+            connectedAt,
+            businessAccountId: instagramBusinessAccountId,
+            pageId: selectedPage.id,
+          }
+        : (currentUser?.socialConnections?.instagram || null),
+    };
+
+    const { error: updateError } = await supabaseAdmin
+      .from("users")
+      .update({
+        socialConnections,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    if (updateError) {
+      console.error("Failed to save Facebook connection:", updateError);
+      return NextResponse.redirect(new URL("/social?error=facebook_save_failed", request.url));
+    }
+
+    // Broadcast the connection update
+    broadcast({
+      type: "social.facebook.connected",
+      payload: {
+        userId,
+        platform: "facebook",
+        userName: userData.name,
+        pageId: selectedPage.id,
+        instagramBusinessAccountId,
+      },
     });
 
-    // Store Facebook connection in database (using existing columns or create simple storage)
-    try {
-      const { supabaseAdmin } = await import("@/lib/supabase");
-      
-      // For now, let's store Facebook connection info in a simple way
-      // You can add proper columns later or use a JSON field
-      const { error: updateError } = await supabaseAdmin
-        .from('users')
-        .update({
-          // Store in existing fields temporarily or add new columns
-          socialConnections: {
-            facebook: {
-              accessToken: tokenData.access_token,
-              userId: userData.id,
-              userName: userData.name,
-              connectedAt: new Date().toISOString()
-            }
-          },
-          updatedAt: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error("Failed to save Facebook connection:", updateError);
-        return NextResponse.redirect(new URL("/social?error=facebook_save_failed", request.url));
-      }
-
-      console.log("Facebook connection saved successfully");
-
-      // Broadcast the connection update
-              broadcast({
-          type: "social.facebook.connected",
-          payload: { 
-            userId,
-            platform: "facebook",
-            userName: userData.name
-          }
-        });
-
-      // Redirect to social page with success
-      const redirectUrl = isLocal ? `${reqOrigin}/social?success=facebook_connected` : `${origin}/social?success=facebook_connected`;
-      return NextResponse.redirect(new URL(redirectUrl, request.url));
-
-    } catch (error) {
-      console.error("Database error:", error);
-      return NextResponse.redirect(new URL("/social?error=facebook_connection_failed", request.url));
-    }
+    // Clear CSRF cookie
+    const redirectUrl = isLocal ? `${reqOrigin}/social?success=facebook_connected` : `${origin}/social?success=facebook_connected`;
+    const res = NextResponse.redirect(new URL(redirectUrl, request.url));
+    res.cookies.set("uplora_fb_oauth_state", "", { path: "/", maxAge: 0 });
+    return res;
 
   } catch (error) {
     console.error("Facebook OAuth callback error:", error);

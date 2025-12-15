@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
       .update({
         socialConnections: {
           ...(currentUser?.socialConnections || {}),
-          facebook: null
+          facebook: null,
+          instagram: null
         },
         updatedAt: new Date().toISOString()
       })

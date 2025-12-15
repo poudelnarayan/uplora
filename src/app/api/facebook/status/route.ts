@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     const facebookConnection = user?.socialConnections?.facebook;
-    const isConnected = !!(facebookConnection?.accessToken && facebookConnection?.userId);
+    const isConnected = !!((facebookConnection?.userAccessToken || facebookConnection?.accessToken) && facebookConnection?.userId);
 
     if (!isConnected) {
       return NextResponse.json({
@@ -38,7 +38,11 @@ export async function GET(request: NextRequest) {
 
     // If connected, verify the token is still valid and get fresh data
     try {
-      const userInfoResponse = await fetch(`https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${facebookConnection.accessToken}`);
+      // Backward compatibility: older code stored `accessToken`. New flow stores `userAccessToken`.
+      const userAccessToken = facebookConnection.userAccessToken || facebookConnection.accessToken;
+      const apiVersion = process.env.META_API_VERSION || "v19.0";
+
+      const userInfoResponse = await fetch(`https://graph.facebook.com/${apiVersion}/me?fields=id,name&access_token=${encodeURIComponent(userAccessToken)}`);
       const userInfo = await userInfoResponse.json();
 
       if (!userInfoResponse.ok || userInfo.error) {
@@ -70,8 +74,10 @@ export async function GET(request: NextRequest) {
           name: userInfo.name,
           connectedAt: facebookConnection.connectedAt
         },
-        pages: [],
-        instagramAccounts: []
+        pages: facebookConnection.pages || [],
+        instagramAccounts: facebookConnection.instagramBusinessAccountId
+          ? [{ id: facebookConnection.instagramBusinessAccountId, pageId: facebookConnection.selectedPageId || null }]
+          : []
       });
 
     } catch (error) {
@@ -83,8 +89,10 @@ export async function GET(request: NextRequest) {
           name: facebookConnection.userName,
           connectedAt: facebookConnection.connectedAt
         },
-        pages: [],
-        instagramAccounts: [],
+        pages: facebookConnection.pages || [],
+        instagramAccounts: facebookConnection.instagramBusinessAccountId
+          ? [{ id: facebookConnection.instagramBusinessAccountId, pageId: facebookConnection.selectedPageId || null }]
+          : [],
         error: "Unable to verify connection"
       });
     }
