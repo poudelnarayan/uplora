@@ -201,9 +201,28 @@ export default function Dashboard() {
     }
   };
 
-  const handleScheduleContent = (item: any) => {
-    // Navigate to schedule page
-    window.location.href = `/schedule/${item.id}`;
+  const handleScheduleContent = async (item: any) => {
+    try {
+      const input = window.prompt('Schedule time (YYYY-MM-DD HH:mm, 24h)');
+      if (!input) return;
+      const parsed = new Date(input.replace(' ', 'T'));
+      if (isNaN(parsed.getTime())) {
+        notifications.addNotification({ type: 'error', title: 'Invalid time', message: 'Use format YYYY-MM-DD HH:mm' });
+        return;
+      }
+      const scheduledFor = parsed.toISOString();
+      const res = await fetch(`/api/content/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduledFor, status: 'SCHEDULED' }),
+      });
+      if (!res.ok) throw new Error('Failed to schedule');
+      const updated = await res.json();
+      setContent(prev => prev.map((c: any) => c.id === item.id ? { ...c, scheduledFor: updated.scheduledFor, status: 'SCHEDULED' } : c));
+      notifications.addNotification({ type: 'success', title: 'Scheduled', message: 'Post scheduled successfully' });
+    } catch (e) {
+      notifications.addNotification({ type: 'error', title: 'Schedule failed', message: 'Try again' });
+    }
   };
 
   const handleDuplicateContent = async (item: any) => {

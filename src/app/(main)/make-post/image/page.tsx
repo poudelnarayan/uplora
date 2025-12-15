@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Image as ImageIcon, 
@@ -30,11 +30,14 @@ import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { InlineSpinner } from "@/components/ui/loading-spinner";
 import AppShell from "@/components/layout/AppLayout";
+import { useSearchParams } from "next/navigation";
 
 const MakePostImage = () => {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
   const notifications = useNotifications();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
   
   const [dragActive, setDragActive] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -43,6 +46,7 @@ const MakePostImage = () => {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Instagram", "Facebook"]);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState<boolean>(!!editId);
 
   const platforms = [
     { id: "Instagram", name: "Instagram", limit: 2200 },
@@ -96,6 +100,31 @@ const MakePostImage = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  // Load existing post
+  useEffect(() => {
+    const load = async () => {
+      if (!editId) return;
+      try {
+        const res = await fetch(`/api/content/${editId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Failed to load post');
+        setContent(data.content || "");
+        if (Array.isArray(data.platforms)) setSelectedPlatforms(data.platforms);
+        if (data.imageKey) {
+          // display current image via signed URL
+          const urlRes = await fetch(`/api/s3/get-url?key=${encodeURIComponent(data.imageKey)}`);
+          const { url } = await urlRes.json();
+          if (url) setSelectedImage(url);
+        }
+      } catch (e) {
+        notifications.addNotification({ type: 'error', title: 'Failed to load', message: e instanceof Error ? e.message : 'Try again' });
+      } finally {
+        setLoadingExisting(false);
+      }
+    };
+    load();
+  }, [editId, notifications]);
 
   const formatContentWithColors = (text: string) => {
     if (!text) return <span className="text-gray-400">Write a caption for your image...</span>;
@@ -199,7 +228,7 @@ const MakePostImage = () => {
                 size="sm" 
                 className="gap-2"
                 onClick={async () => {
-                  if (!selectedTeamId) {
+                  if (!selectedTeamId && !editId) {
                     notifications.addNotification({
                       type: "error",
                       title: "No Team Selected",
@@ -219,7 +248,7 @@ const MakePostImage = () => {
 
                   setIsSaving(true);
                   try {
-                    let imageKey = null;
+                    let imageKey: string | null = null;
                     
                     // Upload image to S3 if file is selected
                     if (selectedFile) {
@@ -228,26 +257,35 @@ const MakePostImage = () => {
                       setIsUploading(false);
                     }
 
-                    const response = await fetch('/api/posts', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        type: 'image',
-                        content: content,
-                        teamId: selectedTeamId,
-                        platforms: selectedPlatforms,
-                        imageKey: imageKey,
-                        metadata: {}
-                      })
-                    });
+                    let response: Response;
+                    if (editId) {
+                      response = await fetch(`/api/content/${editId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content, platforms: selectedPlatforms, imageKey: imageKey ?? undefined })
+                      });
+                    } else {
+                      response = await fetch('/api/posts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          type: 'image',
+                          content,
+                          teamId: selectedTeamId,
+                          platforms: selectedPlatforms,
+                          imageKey,
+                          metadata: {}
+                        })
+                      });
+                    }
 
                     const result = await response.json();
                     
                     if (response.ok) {
                       notifications.addNotification({
                         type: "success",
-                        title: "Post Saved!",
-                        message: `Image post saved to ${selectedTeam?.name || 'team'}/images/`
+                        title: editId ? "Post Updated!" : "Post Saved!",
+                        message: editId ? "Your changes have been saved" : `Image post saved to ${selectedTeam?.name || 'team'}/images/`
                       });
                       router.push('/dashboard');
                     } else {
@@ -263,14 +301,14 @@ const MakePostImage = () => {
                     setIsSaving(false);
                   }
                 }}
-                disabled={isSaving || isUploading}
+                disabled={isSaving || isUploading || loadingExisting}
               >
-                {isUploading || isSaving ? (
+                {loadingExisting || isUploading || isSaving ? (
                   <InlineSpinner size="sm" className="mr-2" />
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isUploading ? 'Uploading...' : isSaving ? 'Saving...' : 'Save Post'}
+                {loadingExisting ? 'Loading...' : isUploading ? 'Uploading...' : isSaving ? 'Saving...' : (editId ? 'Save Changes' : 'Save Post')}
               </Button>
             </div>
           </div>

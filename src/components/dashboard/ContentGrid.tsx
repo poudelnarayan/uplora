@@ -220,7 +220,7 @@ const ContentCard: React.FC<{
           {/* Content Info */}
           <div className="p-4">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-sm line-clamp-2 text-gray-900">
+              <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 break-words">
                 {item.title}
               </h3>
               <DropdownMenu>
@@ -256,7 +256,7 @@ const ContentCard: React.FC<{
 
             {/* Content Preview */}
             {item.content && (
-              <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+              <p className="text-xs text-gray-600 line-clamp-2 mb-3 break-words">
                 {item.content}
               </p>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Type, 
@@ -28,15 +28,19 @@ import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { InlineSpinner } from "@/components/ui/loading-spinner";
 import AppShell from "@/components/layout/AppLayout";
+import { useSearchParams } from "next/navigation";
 
 const MakePostText = () => {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
   const notifications = useNotifications();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
   
   const [content, setContent] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Instagram", "X (Twitter)"]);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState<boolean>(!!editId);
 
   const platforms = [
     { id: "Instagram", name: "Instagram", limit: 2200 },
@@ -44,6 +48,25 @@ const MakePostText = () => {
     { id: "Facebook", name: "Facebook", limit: 63206 },
     { id: "LinkedIn", name: "LinkedIn", limit: 3000 }
   ];
+
+  // Load existing post for edit
+  useEffect(() => {
+    const load = async () => {
+      if (!editId) return;
+      try {
+        const res = await fetch(`/api/content/${editId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Failed to load post');
+        setContent(data.content || "");
+        if (Array.isArray(data.platforms)) setSelectedPlatforms(data.platforms);
+      } catch (e) {
+        notifications.addNotification({ type: 'error', title: 'Failed to load', message: e instanceof Error ? e.message : 'Try again' });
+      } finally {
+        setLoadingExisting(false);
+      }
+    };
+    load();
+  }, [editId, notifications]);
 
   const togglePlatform = (platformId: string) => {
     setSelectedPlatforms(prev => 
@@ -114,7 +137,7 @@ const MakePostText = () => {
                 size="sm" 
                 className="gap-2"
                 onClick={async () => {
-                  if (!selectedTeamId) {
+                  if (!selectedTeamId && !editId) {
                     notifications.addNotification({
                       type: "error",
                       title: "No Team Selected",
@@ -134,25 +157,34 @@ const MakePostText = () => {
 
                   setIsSaving(true);
                   try {
-                    const response = await fetch('/api/posts', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        type: 'text',
-                        content: content,
-                        teamId: selectedTeamId,
-                        platforms: selectedPlatforms,
-                        metadata: {}
-                      })
-                    });
+                    let response: Response;
+                    if (editId) {
+                      response = await fetch(`/api/content/${editId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content, platforms: selectedPlatforms })
+                      });
+                    } else {
+                      response = await fetch('/api/posts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          type: 'text',
+                          content,
+                          teamId: selectedTeamId,
+                          platforms: selectedPlatforms,
+                          metadata: {}
+                        })
+                      });
+                    }
 
                     const result = await response.json();
                     
                     if (response.ok) {
                       notifications.addNotification({
                         type: "success",
-                        title: "Post Saved!",
-                        message: `Text post saved to ${selectedTeam?.name || 'team'}/text/`
+                        title: editId ? "Post Updated!" : "Post Saved!",
+                        message: editId ? "Your changes have been saved" : `Text post saved to ${selectedTeam?.name || 'team'}/text/`
                       });
                       router.push('/dashboard');
                     } else {
@@ -168,14 +200,14 @@ const MakePostText = () => {
                     setIsSaving(false);
                   }
                 }}
-                disabled={isSaving}
+                disabled={isSaving || loadingExisting}
               >
-                {isSaving ? (
+                {isSaving || loadingExisting ? (
                   <InlineSpinner size="sm" className="mr-2" />
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isSaving ? 'Saving...' : 'Save Post'}
+                {loadingExisting ? 'Loading...' : isSaving ? 'Saving...' : (editId ? 'Save Changes' : 'Save Post')}
               </Button>
             </div>
           </div>

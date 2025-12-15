@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Play, 
@@ -30,11 +30,14 @@ import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/components/ui/Notification";
 import { InlineSpinner } from "@/components/ui/loading-spinner";
 import AppShell from "@/components/layout/AppLayout";
+import { useSearchParams } from "next/navigation";
 
 const MakePostReels = () => {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
   const notifications = useNotifications();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
   
   const [dragActive, setDragActive] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -44,6 +47,7 @@ const MakePostReels = () => {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Instagram", "TikTok"]);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState<boolean>(!!editId);
 
   const platforms = [
     { id: "Instagram", name: "Instagram", limit: 2200 },
@@ -51,6 +55,31 @@ const MakePostReels = () => {
     { id: "YouTube", name: "YouTube", limit: 5000 },
     { id: "Facebook", name: "Facebook", limit: 63206 }
   ];
+
+  // Load existing post for edit
+  useEffect(() => {
+    const load = async () => {
+      if (!editId) return;
+      try {
+        const res = await fetch(`/api/content/${editId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Failed to load post');
+        setTitle(data.title || "");
+        setContent(data.content || "");
+        if (Array.isArray(data.platforms)) setSelectedPlatforms(data.platforms);
+        if (data.videoKey) {
+          const urlRes = await fetch(`/api/s3/get-url?key=${encodeURIComponent(data.videoKey)}`);
+          const { url } = await urlRes.json();
+          if (url) setSelectedVideo(url);
+        }
+      } catch (e) {
+        notifications.addNotification({ type: 'error', title: 'Failed to load', message: e instanceof Error ? e.message : 'Try again' });
+      } finally {
+        setLoadingExisting(false);
+      }
+    };
+    load();
+  }, [editId, notifications]);
 
   const togglePlatform = (platformId: string) => {
     setSelectedPlatforms(prev => 
@@ -498,7 +527,7 @@ const MakePostReels = () => {
                 size="sm" 
                 className="gap-2"
                 onClick={async () => {
-                  if (!selectedTeamId) {
+                  if (!selectedTeamId && !editId) {
                     notifications.addNotification({
                       type: "error",
                       title: "No Team Selected",
@@ -518,7 +547,7 @@ const MakePostReels = () => {
 
                   setIsSaving(true);
                   try {
-                    let videoKey = null;
+                    let videoKey: string | null = null;
                     
                     // Upload reel to S3 if file is selected
                     if (selectedFile) {
@@ -527,27 +556,36 @@ const MakePostReels = () => {
                       setIsUploading(false);
                     }
 
-                    const response = await fetch('/api/posts', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        type: 'reel',
-                        title: title,
-                        content: content,
-                        teamId: selectedTeamId,
-                        platforms: selectedPlatforms,
-                        videoKey: videoKey,
-                        metadata: {}
-                      })
-                    });
+                    let response: Response;
+                    if (editId) {
+                      response = await fetch(`/api/content/${editId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, content, platforms: selectedPlatforms, videoKey: videoKey ?? undefined })
+                      });
+                    } else {
+                      response = await fetch('/api/posts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          type: 'reel',
+                          title,
+                          content,
+                          teamId: selectedTeamId,
+                          platforms: selectedPlatforms,
+                          videoKey,
+                          metadata: {}
+                        })
+                      });
+                    }
 
                     const result = await response.json();
                     
                     if (response.ok) {
                       notifications.addNotification({
                         type: "success",
-                        title: "Post Saved!",
-                        message: `Reel post saved to ${selectedTeam?.name || 'team'}/reels/`
+                        title: editId ? "Post Updated!" : "Post Saved!",
+                        message: editId ? "Your changes have been saved" : `Reel post saved to ${selectedTeam?.name || 'team'}/reels/`
                       });
                       router.push('/dashboard');
                     } else {
@@ -563,14 +601,14 @@ const MakePostReels = () => {
                     setIsSaving(false);
                   }
                 }}
-                disabled={isSaving || isUploading}
+                disabled={isSaving || isUploading || loadingExisting}
               >
-                {isUploading || isSaving ? (
+                {loadingExisting || isUploading || isSaving ? (
                   <InlineSpinner size="sm" className="mr-2" />
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isUploading ? 'Uploading...' : isSaving ? 'Saving...' : 'Save Post'}
+                {loadingExisting ? 'Loading...' : isUploading ? 'Uploading...' : isSaving ? 'Saving...' : (editId ? 'Save Changes' : 'Save Post')}
               </Button>
             </div>
           </div>
