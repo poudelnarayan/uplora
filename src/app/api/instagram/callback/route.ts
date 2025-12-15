@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
     })();
     const isLocal = /localhost|127\.0\.0\.1/i.test(reqOrigin);
     const origin = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
-    const redirectUri = `${origin}/api/instagram/callback`;
+    // Must match the redirect_uri used during authorization (and what is whitelisted in app settings).
+    const redirectUri = process.env.IG_REDIRECT_URI || `${origin}/api/instagram/callback`;
 
     // Step 3) Exchange code -> short-lived access token
     // POST https://api.instagram.com/oauth/access_token

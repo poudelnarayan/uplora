@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
     })();
     const isLocal = /localhost|127\.0\.0\.1/i.test(reqOrigin);
     const origin = isLocal ? reqOrigin : (process.env.NEXT_PUBLIC_SITE_URL || reqOrigin);
-    const redirectUri = `${origin}/api/instagram/callback`;
+    // If set, IG_REDIRECT_URI must EXACTLY match the whitelisted redirect URI in your Instagram app settings.
+    // This avoids subtle mismatches (http vs https, trailing slash, different domain).
+    const redirectUri = process.env.IG_REDIRECT_URI || `${origin}/api/instagram/callback`;
 
     // Step 1c) Build Instagram authorization URL
     // Scopes requested per requirements

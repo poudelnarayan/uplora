@@ -182,17 +182,26 @@ const SocialConnections = () => {
                       {yt.loading ? 'Checking…' : 'Connect'}
                     </Button>
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
-                    <Button
-                      type="button"
-                      className="w-full gap-2"
-                      onClick={() => {
-                        window.location.href = platform.id === "instagram" ? "/api/instagram/start" : "/api/facebook/start?intent=facebook";
-                      }}
-                      disabled={platform.id === "facebook" ? fb.loading : false}
-                    >
-                      <Link2 className="h-4 w-4" />
-                      {platform.id === "facebook" ? (fb.loading ? "Checking…" : "Connect") : "Connect Instagram"}
-                    </Button>
+                    platform.id === "instagram" ? (
+                      <Button asChild className="w-full gap-2">
+                        <a href="/api/instagram/start">
+                          <Link2 className="h-4 w-4" />
+                          Connect Instagram
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        className="w-full gap-2"
+                        onClick={() => {
+                          window.location.href = "/api/facebook/start?intent=facebook";
+                        }}
+                        disabled={fb.loading}
+                      >
+                        <Link2 className="h-4 w-4" />
+                        {fb.loading ? "Checking…" : "Connect"}
+                      </Button>
+                    )
                   ) : (
                     <Button type="button" className="w-full gap-2" disabled>
                       <Clock className="h-4 w-4" />

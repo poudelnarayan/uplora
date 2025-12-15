@@ -15,6 +15,8 @@ Required:
   - Production: Postgres connection string (Vercel Postgres/Neon/Supabase), append `?sslmode=require` if needed
 - AWS_REGION, S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 - NEXT_PUBLIC_SITE_URL: your site URL (e.g., `https://uplora.io`)
+- IG_APP_ID, IG_APP_SECRET: from your Instagram app
+- IG_REDIRECT_URI: must exactly match your whitelisted Instagram OAuth redirect (e.g., `http://localhost:3000/api/instagram/callback` and/or `https://<your-domain>/api/instagram/callback`)
 
 Optional (email for invites/notifications):
 
