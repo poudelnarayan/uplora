@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { 
   Play, 
@@ -493,6 +493,13 @@ const MakePostReels = () => {
   );
 
   return (
+<Suspense fallback={
+  <AppShell>
+    <div className="flex items-center justify-center py-12">
+      <InlineSpinner size="sm" />
+    </div>
+  </AppShell>
+}>
 <AppShell>
     <div className="min-h-screen bg-gray-50/50">
       {/* Header */}
@@ -847,6 +854,7 @@ const MakePostReels = () => {
       </div>
       </div>
       </AppShell>
+      </Suspense>
   );
 };
 
