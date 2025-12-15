@@ -14,14 +14,9 @@ export async function GET(request: NextRequest) {
     // CSRF state - persisted in an HttpOnly cookie and validated on callback.
     const state = crypto.randomUUID();
 
-    // Scopes needed for Page posting + Instagram publishing via IG Graph API.
-    // Note: Additional permissions may be required depending on your app mode / review status.
-    const scope = [
-      "pages_show_list",
-      "pages_manage_posts",
-      "instagram_basic",
-      "instagram_content_publish",
-    ].join(",");
+    // Facebook Login scopes (do NOT request instagram_* scopes here).
+    // Instagram publishing is discovered later via the Page's instagram_business_account linkage.
+    const scope = ["pages_show_list", "pages_manage_posts"].join(",");
 
     const apiVersion = process.env.META_API_VERSION || "v19.0";
     
