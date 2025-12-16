@@ -17,10 +17,11 @@ export async function POST(
     
     const result = await withAuth(async ({ clerkUser, supabaseUser }) => {
       const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+      const normalizedUserEmail = (userEmail || "").trim().toLowerCase();
 
       // Find the invitation
       const { data: invitation, error: inviteError } = await supabaseAdmin
-        .from('teamInvites')
+        .from('team_invites')
         .select(`
           *,
           teams (*)
@@ -35,7 +36,7 @@ export async function POST(
       }
 
       // Check if the email matches
-      if (invitation.email !== userEmail) {
+      if ((invitation.email || "").toLowerCase() !== normalizedUserEmail) {
         return createErrorResponse(ErrorCodes.FORBIDDEN, "This invitation is not for your email address");
       }
 
@@ -53,31 +54,15 @@ export async function POST(
       }
 
       if (existingMember) {
-        // Update invitation status
-        const { error: updateError } = await supabaseAdmin
-          .from('teamInvites')
-          .update({ status: 'ACCEPTED' })
-          .eq('id', invitation.id);
-
-        if (updateError) {
-          console.error("Error updating invitation:", updateError);
-        }
-
-        // Notify team to refresh invitation/member lists
-        try { broadcast({ type: "team.invitation.accepted", teamId: invitation.teamId, payload: { email: invitation.email } }); } catch {}
-        return createSuccessResponse({ message: "Already a member; invitation marked accepted" });
-      }
-
-      // If already member, mark invite accepted and return success
-      if (existingMember) {
         const { error: updErr } = await supabaseAdmin
-          .from('teamInvites')
+          .from('team_invites')
           .update({ status: 'ACCEPTED', inviteeId: supabaseUser.id, updatedAt: new Date().toISOString() })
           .eq('id', invitation.id);
         if (updErr) {
           console.error("Error updating invitation for existing member:", updErr);
         }
 
+        try { broadcast({ type: "team.invitation.accepted", teamId: invitation.teamId, payload: { email: invitation.email } }); } catch {}
         return createSuccessResponse({
           message: "Invitation already accepted",
           team: {
@@ -111,7 +96,7 @@ export async function POST(
 
       // Mark invite accepted
       const { error: updateInviteErr } = await supabaseAdmin
-        .from('teamInvites')
+        .from('team_invites')
         .update({ status: 'ACCEPTED', inviteeId: supabaseUser.id, updatedAt: nowIso })
         .eq('id', invitation.id);
 
@@ -142,7 +127,13 @@ export async function POST(
     });
 
     if (!result.ok) {
-      return NextResponse.json(result, { status: 401 });
+      const status =
+        result.code === ErrorCodes.UNAUTHORIZED ? 401 :
+        result.code === ErrorCodes.FORBIDDEN ? 403 :
+        result.code === ErrorCodes.NOT_FOUND ? 404 :
+        result.code === ErrorCodes.VALIDATION_ERROR ? 400 :
+        500;
+      return NextResponse.json(result, { status });
     }
 
     return NextResponse.json(result);
