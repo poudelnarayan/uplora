@@ -4,6 +4,10 @@ import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linked
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { useNotifications } from "@/app/components/ui/Notification";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Label } from "@/app/components/ui/label";
 import AppShell from "@/app/components/layout/AppLayout";
 
 const SocialConnections = () => {
@@ -40,6 +44,14 @@ const SocialConnections = () => {
     loading: true,
     isConnected: false,
     username: null,
+  });
+
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const [requestForm, setRequestForm] = useState<{ platformName: string; platformUrl: string; details: string }>({
+    platformName: "",
+    platformUrl: "",
+    details: "",
   });
 
   useEffect(() => {
@@ -390,7 +402,11 @@ const SocialConnections = () => {
                 <p className="text-sm text-muted-foreground">Don't see your platform?</p>
               </div>
 
-              <Button variant="outline" className="w-full gap-2">
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => setRequestOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 Request Platform
               </Button>
@@ -398,6 +414,93 @@ const SocialConnections = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={requestOpen} onOpenChange={(v) => { if (!requestSubmitting) setRequestOpen(v); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request a platform</DialogTitle>
+            <DialogDescription>
+              Tell us which platform you want next and how you plan to use it. We’ll prioritize based on demand.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="platformName">Platform name *</Label>
+              <Input
+                id="platformName"
+                placeholder="e.g. Reddit, Snapchat, Medium"
+                value={requestForm.platformName}
+                onChange={(e) => setRequestForm((p) => ({ ...p, platformName: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platformUrl">Platform URL (optional)</Label>
+              <Input
+                id="platformUrl"
+                placeholder="https://…"
+                value={requestForm.platformUrl}
+                onChange={(e) => setRequestForm((p) => ({ ...p, platformUrl: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="details">What do you want to do? (optional)</Label>
+              <Textarea
+                id="details"
+                placeholder="e.g. Connect account + publish posts + analytics…"
+                value={requestForm.details}
+                onChange={(e) => setRequestForm((p) => ({ ...p, details: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRequestOpen(false)}
+              disabled={requestSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const platformName = requestForm.platformName.trim();
+                if (!platformName) {
+                  notifications.addNotification({ type: "error", title: "Missing platform name", message: "Please enter a platform name." });
+                  return;
+                }
+
+                setRequestSubmitting(true);
+                try {
+                  const res = await fetch("/api/platform-requests", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      platformName,
+                      platformUrl: requestForm.platformUrl.trim(),
+                      details: requestForm.details.trim(),
+                    }),
+                  });
+                  const js = await res.json().catch(() => ({}));
+                  if (!res.ok) throw new Error(js?.message || "Failed to submit request");
+                  notifications.addNotification({ type: "success", title: "Request sent", message: "Thanks! We’ll review it soon." });
+                  setRequestOpen(false);
+                  setRequestForm({ platformName: "", platformUrl: "", details: "" });
+                } catch (e) {
+                  notifications.addNotification({ type: "error", title: "Request failed", message: e instanceof Error ? e.message : "Try again" });
+                } finally {
+                  setRequestSubmitting(false);
+                }
+              }}
+              disabled={requestSubmitting}
+            >
+              {requestSubmitting ? "Sending…" : "Submit request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       </div>
       </AppShell>

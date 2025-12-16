@@ -49,5 +49,3 @@ export async function getValidPinterestAccessToken(userId: string): Promise<stri
 
   return refreshed.accessToken;
 }
-
-
