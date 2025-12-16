@@ -158,7 +158,7 @@ function MakePostImageContent() {
   const uploadImageToS3 = async (file: File): Promise<string> => {
     try {
       // Get presigned URL
-      const presignResponse = await fetch('/api/s3/presign-image', {
+      const presignResponse = await fetch('/api/s3/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

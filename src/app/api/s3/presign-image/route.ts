@@ -1,5 +1,12 @@
 export const runtime = "nodejs";
 
+// Back-compat alias:
+// Some frontend flows call /api/s3/presign-image, but the canonical endpoint is /api/s3/presign.
+// Re-export the handler so both routes behave identically.
+export { POST } from "../presign/route";
+
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
