@@ -31,6 +31,11 @@ const SocialConnections = () => {
     isConnected: false,
     username: null,
   });
+  const [li, setLi] = useState<{ loading: boolean; isConnected: boolean; name?: string | null }>({
+    loading: true,
+    isConnected: false,
+    name: null,
+  });
 
   useEffect(() => {
     // Load YouTube status
@@ -95,6 +100,17 @@ const SocialConnections = () => {
         setPin({ loading: false, isConnected: false, username: null });
       }
     })();
+
+    // Load LinkedIn status
+    (async () => {
+      try {
+        const res = await fetch("/api/linkedin/status", { cache: "no-store" });
+        const data = await res.json();
+        setLi({ loading: false, isConnected: !!data?.isConnected, name: data?.name || null });
+      } catch {
+        setLi({ loading: false, isConnected: false, name: null });
+      }
+    })();
   }, []);
   const getPlatformIcon = (platformId: string) => {
     const iconMap = {
@@ -153,8 +169,8 @@ const SocialConnections = () => {
     {
       id: "linkedin",
       name: "LinkedIn",
-      connected: false,
-      username: null,
+      connected: li.isConnected,
+      username: li.name || null,
       bgColor: "bg-gradient-to-br from-blue-600/10 to-blue-700/10"
     },
     {
@@ -238,6 +254,11 @@ const SocialConnections = () => {
                           if (!resp.ok) throw new Error('Failed');
                           notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Pinterest disconnected' });
                           setPin({ loading: false, isConnected: false, username: null });
+                        } else if (platform.id === 'linkedin') {
+                          resp = await fetch('/api/linkedin/disconnect', { method: 'POST' });
+                          if (!resp.ok) throw new Error('Failed');
+                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'LinkedIn disconnected' });
+                          setLi({ loading: false, isConnected: false, name: null });
                         }
                       } catch (e) {
                         notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
@@ -286,6 +307,13 @@ const SocialConnections = () => {
                       <a href="/api/pinterest/auth/connect">
                         <Link2 className="h-4 w-4" />
                         {pin.loading ? "Checking…" : "Connect Pinterest"}
+                      </a>
+                    </Button>
+                  ) : platform.id === "linkedin" ? (
+                    <Button asChild className="w-full gap-2" disabled={li.loading}>
+                      <a href="/api/linkedin/connect">
+                        <Link2 className="h-4 w-4" />
+                        {li.loading ? "Checking…" : "Connect LinkedIn"}
                       </a>
                     </Button>
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
