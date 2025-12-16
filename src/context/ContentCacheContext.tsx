@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { useNotifications } from '@/components/ui/Notification';
+import { useNotifications } from '@/app/components/ui/Notification';
 
 interface ContentItem {
   id: string;

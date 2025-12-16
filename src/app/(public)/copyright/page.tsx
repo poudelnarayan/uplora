@@ -1,6 +1,6 @@
 "use client";
 
-import PublicLayout from "@/components/layout/PublicLayout";
+import PublicLayout from "@/app/components/layout/PublicLayout";
 
 export default function CopyrightPage() {
   return (

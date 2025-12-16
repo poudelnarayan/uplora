@@ -1,11 +1,11 @@
 "use client";
 
-import PublicLayout from "@/components/layout/PublicLayout";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-import ContactHeader from "@/components/pages/Contact/ContactHeader";
-import ContactForm from "@/components/pages/Contact/ContactForm";
-import ContactInfo from "@/components/pages/Contact/ContactInfo";
-import ContactFAQ from "@/components/pages/Contact/ContactFAQ";
+import PublicLayout from "@/app/components/layout/PublicLayout";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
+import ContactHeader from "@/app/components/pages/Contact/ContactHeader";
+import ContactForm from "@/app/components/pages/Contact/ContactForm";
+import ContactInfo from "@/app/components/pages/Contact/ContactInfo";
+import ContactFAQ from "@/app/components/pages/Contact/ContactFAQ";
 import { useState } from "react";
 import styles from "./Contact.module.css";
 

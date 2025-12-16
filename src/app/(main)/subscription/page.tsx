@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import ProductCard from "@/components/subscription/ProductCard";
-import SubscriptionManager from "@/components/subscription/SubscriptionManager";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
+import ProductCard from "@/app/components/subscription/ProductCard";
+import SubscriptionManager from "@/app/components/subscription/SubscriptionManager";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
 import { CreditCard, ExternalLink, CheckCircle, Crown } from "lucide-react";
 import { products } from "@/stripe-config";
-import { useNotifications } from "@/components/ui/Notification";
-import AppShell from "@/components/layout/AppLayout";
+import { useNotifications } from "@/app/components/ui/Notification";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const MotionDiv = motion.div as any;
 

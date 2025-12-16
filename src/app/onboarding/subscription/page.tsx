@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Switch } from "@/app/components/ui/switch";
 import { 
   CheckCircle, 
   ArrowRight,
@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import OnboardingLayout from "../layout";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { useNotifications } from "@/components/ui/Notification";
+import { useNotifications } from "@/app/components/ui/Notification";
 
 const MotionDiv = motion.div as any;
 const MotionCard = motion.div as any;

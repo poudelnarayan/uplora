@@ -6,12 +6,12 @@ import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2 } from "lucide-react";
 import Image from "next/image";
-import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { useNotifications } from "@/components/ui/Notification";
-import { NextSeoNoSSR, VideoJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
+import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
+import { StatusChip } from "@/app/components/ui/StatusChip";
+import { useNotifications } from "@/app/components/ui/Notification";
+import { NextSeoNoSSR, VideoJsonLdNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { videoCache } from "@/lib/videoCache";
-import { ThumbnailShimmer } from "@/components/ui/Shimmer";
+import { ThumbnailShimmer } from "@/app/components/ui/Shimmer";
 import { useTeam } from "@/context/TeamContext";
 export const dynamic = "force-dynamic";
 

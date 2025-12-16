@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, Clock } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNotifications } from "@/components/ui/Notification";
-import AppShell from "@/components/layout/AppLayout";
+import { Card, CardContent } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { useNotifications } from "@/app/components/ui/Notification";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const SocialConnections = () => {
   const notifications = useNotifications();
@@ -35,6 +35,11 @@ const SocialConnections = () => {
     loading: true,
     isConnected: false,
     name: null,
+  });
+  const [x, setX] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
+    loading: true,
+    isConnected: false,
+    username: null,
   });
 
   useEffect(() => {
@@ -111,6 +116,17 @@ const SocialConnections = () => {
         setLi({ loading: false, isConnected: false, name: null });
       }
     })();
+
+    // Load X status
+    (async () => {
+      try {
+        const res = await fetch("/api/twitter/status", { cache: "no-store" });
+        const data = await res.json();
+        setX({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
+      } catch {
+        setX({ loading: false, isConnected: false, username: null });
+      }
+    })();
   }, []);
   const getPlatformIcon = (platformId: string) => {
     const iconMap = {
@@ -155,8 +171,8 @@ const SocialConnections = () => {
     {
       id: "twitter",
       name: "X (Twitter)",
-      connected: false,
-      username: null,
+      connected: x.isConnected,
+      username: x.username ? `@${x.username}` : null,
       bgColor: "bg-gradient-to-br from-gray-800/10 to-black/10"
     },
     {
@@ -259,6 +275,11 @@ const SocialConnections = () => {
                           if (!resp.ok) throw new Error('Failed');
                           notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'LinkedIn disconnected' });
                           setLi({ loading: false, isConnected: false, name: null });
+                        } else if (platform.id === 'twitter') {
+                          resp = await fetch('/api/twitter/disconnect', { method: 'POST' });
+                          if (!resp.ok) throw new Error('Failed');
+                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'X disconnected' });
+                          setX({ loading: false, isConnected: false, username: null });
                         }
                       } catch (e) {
                         notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
@@ -314,6 +335,13 @@ const SocialConnections = () => {
                       <a href="/api/linkedin/connect">
                         <Link2 className="h-4 w-4" />
                         {li.loading ? "Checking…" : "Connect LinkedIn"}
+                      </a>
+                    </Button>
+                  ) : platform.id === "twitter" ? (
+                    <Button asChild className="w-full gap-2" disabled={x.loading}>
+                      <a href="/api/twitter/connect">
+                        <Link2 className="h-4 w-4" />
+                        {x.loading ? "Checking…" : "Connect X"}
                       </a>
                     </Button>
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (

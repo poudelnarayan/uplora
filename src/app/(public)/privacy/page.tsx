@@ -1,7 +1,7 @@
 "use client";
 
-import PublicLayout from "@/components/layout/PublicLayout";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import PublicLayout from "@/app/components/layout/PublicLayout";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
 import Link from "next/link";
 
 export default function PrivacyPage() {

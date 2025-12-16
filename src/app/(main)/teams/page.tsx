@@ -2,23 +2,23 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Eye, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import { Separator } from "@/app/components/ui/separator";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { TeamCard } from "@/components/teams/TeamCard";
-import { CreateTeamDialog } from "@/components/teams/CreateTeamDialog";
-import { InviteMemberDialog } from "@/components/teams/InviteMemberDialog";
-import { EditTeamDialog } from "@/components/teams/EditTeamDialog";
-import { EmptyState } from "@/components/teams/EmptyState";
-import { TeamDetailsDialog } from "@/components/teams/TeamDetailsDialog";
-import { platformIcons } from "@/components/teams/PlatformIcon";
-import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
+import { TeamCard } from "@/app/components/teams/TeamCard";
+import { CreateTeamDialog } from "@/app/components/teams/CreateTeamDialog";
+import { InviteMemberDialog } from "@/app/components/teams/InviteMemberDialog";
+import { EditTeamDialog } from "@/app/components/teams/EditTeamDialog";
+import { EmptyState } from "@/app/components/teams/EmptyState";
+import { TeamDetailsDialog } from "@/app/components/teams/TeamDetailsDialog";
+import { platformIcons } from "@/app/components/teams/PlatformIcon";
+import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
 import { useTeam } from "@/context/TeamContext";
-import AppShell from "@/components/layout/AppLayout";
+import AppShell from "@/app/components/layout/AppLayout";
 
 interface TeamMember {
   id: number;

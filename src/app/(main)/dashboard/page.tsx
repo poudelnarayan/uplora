@@ -2,23 +2,23 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useNotifications } from "@/components/ui/Notification";
+import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
 const MotionDiv = motion.div as any;
-import EmailVerificationBanner from "@/components/pages/Dashboard/EmailVerificationBanner";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
-import { Button } from "@/components/ui/button";
+import EmailVerificationBanner from "@/app/components/pages/Dashboard/EmailVerificationBanner";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
+import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { Button } from "@/app/components/ui/button";
 import { BarChart3, TrendingUp, Users, Calendar, FileText, Image as ImageIcon, Video, Play, Edit, Trash2, Clock, Send, MoreVertical, CreditCard } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 
 export const dynamic = "force-dynamic";
 
-import AppShell from "@/components/layout/AppLayout";
+import AppShell from "@/app/components/layout/AppLayout";
 
 export default function Dashboard() {
   const { user } = useUser();

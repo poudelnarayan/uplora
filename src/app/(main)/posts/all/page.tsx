@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { FileText, Video, Image as ImageIcon, Filter, Search, Grid, List, Calendar, Eye, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Input } from "@/app/components/ui/input";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
-import { useNotifications } from "@/components/ui/Notification";
-import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
-import AppShell from "@/components/layout/AppLayout";
+import { useNotifications } from "@/app/components/ui/Notification";
+import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const MotionDiv = motion.div as any;
 

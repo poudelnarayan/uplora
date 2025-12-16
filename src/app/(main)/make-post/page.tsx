@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-import MakePostInterface from "@/components/upload/MakePostInterface";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
+import MakePostInterface from "@/app/components/upload/MakePostInterface";
 import { useTeam } from "@/context/TeamContext";
-import AppShell from "@/components/layout/AppLayout";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const MotionDiv = motion.div as any;
 

@@ -17,22 +17,22 @@ import {
   Youtube,
   Eye
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import RichTextEditor from "@/components/editor/RichTextEditor";
+import { Button } from "@/app/components/ui/button";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
+import { Switch } from "@/app/components/ui/switch";
+import { Badge } from "@/app/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
+import { Separator } from "@/app/components/ui/separator";
+import RichTextEditor from "@/app/components/editor/RichTextEditor";
 import { useRouter } from "next/navigation";
-import { useNotifications } from "@/components/ui/Notification";
-import { InlineSpinner } from "@/components/ui/loading-spinner";
-import AppShell from "@/components/layout/AppLayout";
+import { useNotifications } from "@/app/components/ui/Notification";
+import { InlineSpinner } from "@/app/components/ui/loading-spinner";
+import AppShell from "@/app/components/layout/AppLayout";
     
 interface ExpandableDescriptionProps {
   description: string;

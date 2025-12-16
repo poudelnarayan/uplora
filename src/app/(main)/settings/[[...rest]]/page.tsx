@@ -1,21 +1,38 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, CreditCard, Bell, Shield, Globe, Save, Upload } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import AppShell from "@/components/layout/AppLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Switch } from "@/app/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import { Badge } from "@/app/components/ui/badge";
+import { Separator } from "@/app/components/ui/separator";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
+  const [xStatus, setXStatus] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
+    loading: true,
+    isConnected: false,
+    username: null,
+  });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/twitter/status", { cache: "no-store" });
+        const data = await res.json();
+        setXStatus({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
+      } catch {
+        setXStatus({ loading: false, isConnected: false, username: null });
+      }
+    })();
+  }, []);
 
   return (
     <AppShell>
@@ -30,7 +47,7 @@ const Settings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -50,6 +67,10 @@ const Settings = () => {
           <TabsTrigger value="preferences" className="gap-2">
             <Globe className="h-4 w-4" />
             <span className="hidden sm:inline">Preferences</span>
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
         </TabsList>
 
@@ -345,6 +366,49 @@ const Settings = () => {
                 <Save className="h-4 w-4" />
                 Save Preferences
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Integrations</CardTitle>
+              <CardDescription>Connect social accounts for publishing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <p className="font-medium">X (Twitter)</p>
+                  <p className="text-sm text-muted-foreground">
+                    {xStatus.loading
+                      ? "Checking connection…"
+                      : xStatus.isConnected
+                        ? `Connected${xStatus.username ? ` as @${xStatus.username}` : ""}`
+                        : "Not connected"}
+                  </p>
+                </div>
+                {xStatus.isConnected ? (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const resp = await fetch("/api/twitter/disconnect", { method: "POST" });
+                        if (!resp.ok) throw new Error("Failed");
+                        setXStatus({ loading: false, isConnected: false, username: null });
+                      } catch {
+                        // no-op: keep current UI state
+                      }
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                ) : (
+                  <Button asChild disabled={xStatus.loading}>
+                    <a href="/api/twitter/connect">Connect X</a>
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -17,20 +17,20 @@ import {
   Share,
   Bookmark
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import PlatformBadge from  "@/components/ui/PlatformBadge";
-import RichTextEditor from "@/components/editor/RichTextEditor";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import { Badge } from "@/app/components/ui/badge";
+import PlatformBadge from  "@/app/components/ui/PlatformBadge";
+import RichTextEditor from "@/app/components/editor/RichTextEditor";
 import { useTeam } from "@/context/TeamContext";
-import { useNotifications } from "@/components/ui/Notification";
-import { InlineSpinner } from "@/components/ui/loading-spinner";
-import AppShell from "@/components/layout/AppLayout";
+import { useNotifications } from "@/app/components/ui/Notification";
+import { InlineSpinner } from "@/app/components/ui/loading-spinner";
+import AppShell from "@/app/components/layout/AppLayout";
 import { useSearchParams } from "next/navigation";
 
 function MakePostImageContent() {

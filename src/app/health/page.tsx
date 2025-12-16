@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { CheckCircle, XCircle, AlertCircle, Database, Key, Globe, Mail, CreditCard, Shield } from 'lucide-react';
 
 export default function HealthPage() {

@@ -4,14 +4,14 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, CreditCard, Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { getProductByPriceId } from "@/stripe-config";
-import AppShell from "@/components/layout/AppLayout";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const MotionDiv = motion.div as any;
 

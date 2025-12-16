@@ -2,12 +2,12 @@
 
 import { motion } from "framer-motion";
 import { XCircle, ArrowLeft, CreditCard } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import { Card, CardContent } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import AppShell from "@/components/layout/AppLayout";
+import AppShell from "@/app/components/layout/AppLayout";
 
 const MotionDiv = motion.div as any;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
+import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/app/components/seo/NoSSRSeo";
 import defaultSeo from "@/seo.config";
 
 export function SeoProviders({ children, siteUrl }: { children: React.ReactNode; siteUrl: string }) {

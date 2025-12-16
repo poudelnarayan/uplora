@@ -3,7 +3,7 @@
 import React, { ReactNode, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, X, User, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
 

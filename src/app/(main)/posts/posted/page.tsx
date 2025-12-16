@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { CheckCircle, Video, Image as ImageIcon, FileText, Eye, Heart, Share, ExternalLink, TrendingUp, Calendar, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
-import { useNotifications } from "@/components/ui/Notification";
-import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
-import AppShell from "@/components/layout/AppLayout";
+import { useNotifications } from "@/app/components/ui/Notification";
+import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import AppShell from "@/app/components/layout/AppLayout";
 const MotionDiv = motion.div as any;
 
 interface PostedContent {

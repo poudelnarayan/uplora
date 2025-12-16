@@ -66,6 +66,26 @@ export const socialConnectionsSchema = z
   .object({
     facebook: facebookConnectionSchema.nullable().optional(),
     instagram: instagramConnectionSchema.nullable().optional(),
+    twitter: z
+      .object({
+        connectedAt: z.string().datetime().optional(),
+
+        // Encrypted tokens
+        encryptedAccessToken: z.string().optional(),
+        encryptedRefreshToken: z.string().optional(),
+        tokenExpiresAt: z.string().datetime().nullable().optional(),
+
+        // X user
+        userId: z.string().nullable().optional(),
+        username: z.string().nullable().optional(),
+        name: z.string().nullable().optional(),
+        profileImageUrl: z.string().nullable().optional(),
+
+        scope: z.string().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
     linkedin: z
       .object({
         connectedAt: z.string().datetime().optional(),

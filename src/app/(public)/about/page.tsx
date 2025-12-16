@@ -1,7 +1,7 @@
 "use client";
 
-import PublicLayout from "@/components/layout/PublicLayout";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
+import PublicLayout from "@/app/components/layout/PublicLayout";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { motion } from "framer-motion";
 
 const MotionDiv = motion.div as any;

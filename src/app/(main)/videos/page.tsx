@@ -8,12 +8,12 @@ const MotionDiv = motion.div as any;
 import { Play, Image as ImageIcon, X, User, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { useNotifications } from "@/components/ui/Notification";
+import { StatusChip } from "@/app/components/ui/StatusChip";
+import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
-import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import { NextSeoNoSSR } from "@/components/seo/NoSSRSeo";
-import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
+import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
+import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
+import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
 export const dynamic = "force-dynamic";
 
 interface VideoItem {
