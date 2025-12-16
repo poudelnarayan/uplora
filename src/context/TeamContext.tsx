@@ -3,7 +3,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 
-type TeamBasic = { id: string; name: string; description?: string };
+type TeamBasic = {
+  id: string;
+  name: string;
+  description?: string;
+  // Optional fields returned by /api/teams for richer UIs (Teams page member counts, avatars, etc.)
+  members_data?: Array<{ id: string; name: string; email: string; role: string; avatar: string }>;
+  memberCount?: number;
+  isPersonal?: boolean;
+};
 
 type TeamContextType = {
   teams: TeamBasic[];

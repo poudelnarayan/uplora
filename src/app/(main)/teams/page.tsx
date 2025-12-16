@@ -66,7 +66,14 @@ const Teams = () => {
     name: t.name,
     description: t.description || '',
     platforms: [],
-    members_data: [],
+    members_data: ((t as any).members_data || []).map((m: any, idx: number) => ({
+      id: idx + 1,
+      name: m?.name || '',
+      email: m?.email || '',
+      role: m?.role || 'MEMBER',
+      avatar: m?.avatar || '',
+      platforms: [],
+    })),
     color: teamColors[i % teamColors.length],
   }));
 

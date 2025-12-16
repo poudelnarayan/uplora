@@ -311,22 +311,67 @@ export async function GET(request: NextRequest) {
 
     // Merge and deduplicate teams
     const allTeams = [...(ownedTeams || []), ...(memberTeams || [])];
-    const uniqueTeams = allTeams.filter((team, index, self) => 
+    const uniqueTeams = allTeams.filter((team, index, self) =>
       index === self.findIndex(t => t.id === team.id)
     );
 
-    const formattedTeams = uniqueTeams.map(team => ({
-      id: team.id,
-      name: team.name,
-      description: team.description,
-      isPersonal: team.isPersonal || false,
-      createdAt: team.createdAt,
-      updatedAt: team.updatedAt,
-      ownerId: team.ownerId,
-      isOwner: team.ownerId === user.id,
-      role: team.ownerId === user.id ? 'OWNER' : 
-          (team as any).team_members?.[0]?.role || 'MEMBER'
-    }));
+    // Fetch active members for all teams (so UI can show correct member count immediately)
+    const teamIds = uniqueTeams.map(t => t.id).filter(Boolean);
+    const membersByTeamId = new Map<string, Array<{ id: string; name: string; email: string; role: string; avatar: string }>>();
+    if (teamIds.length > 0) {
+      const { data: memberRows, error: membersError } = await supabaseAdmin
+        .from("team_members")
+        .select(`
+          teamId,
+          role,
+          status,
+          userId,
+          users (
+            id,
+            name,
+            email,
+            image
+          )
+        `)
+        .in("teamId", teamIds)
+        .eq("status", "ACTIVE");
+
+      if (membersError) {
+        console.error("Team members fetch error:", membersError);
+      } else {
+        for (const row of memberRows || []) {
+          const teamId = (row as any).teamId as string;
+          const u = (row as any).users || {};
+          const list = membersByTeamId.get(teamId) || [];
+          list.push({
+            id: String((row as any).userId || u.id || ""),
+            name: String(u.name || ""),
+            email: String(u.email || ""),
+            role: String((row as any).role || "MEMBER"),
+            avatar: String(u.image || ""),
+          });
+          membersByTeamId.set(teamId, list);
+        }
+      }
+    }
+
+    const formattedTeams = uniqueTeams.map(team => {
+      const members_data = membersByTeamId.get(team.id) || [];
+      return {
+        id: team.id,
+        name: team.name,
+        description: team.description,
+        isPersonal: team.isPersonal || false,
+        createdAt: team.createdAt,
+        updatedAt: team.updatedAt,
+        ownerId: team.ownerId,
+        isOwner: team.ownerId === user.id,
+        role: team.ownerId === user.id ? 'OWNER' :
+          (team as any).team_members?.[0]?.role || 'MEMBER',
+        members_data,
+        memberCount: members_data.length,
+      };
+    });
 
     return NextResponse.json(createSuccessResponse({ data: formattedTeams }));
   } catch (error) {
