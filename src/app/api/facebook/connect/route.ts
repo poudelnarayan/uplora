@@ -135,9 +135,39 @@ export async function GET(request: NextRequest) {
       instagram_business_account?: { id: string };
     }> = Array.isArray(pagesData?.data) ? pagesData.data : [];
 
+    // Some users have no Pages. We still store the user access token so the UI can show
+    // "Connected", but we can't post to Pages/IG until a Page exists and is selected.
     if (pages.length === 0) {
-      console.error("No Facebook Pages returned from /me/accounts");
-      return NextResponse.redirect(new URL("/social?error=facebook_no_pages", request.url));
+      console.warn("No Facebook Pages returned from /me/accounts; storing user connection without page selection.");
+
+      const connectedAt = new Date().toISOString();
+      try {
+        await updateUserSocialConnections(userId, current => ({
+          ...current,
+          facebook: {
+            ...(current.facebook || {}),
+            connectedAt,
+            userId: userData.id,
+            userName: userData.name,
+            userAccessToken: longLivedUserToken,
+            userTokenExpiresAt: tokenExpiresAt,
+            pages: [],
+            selectedPageId: null,
+            selectedPageName: null,
+            // selectedPageAccessToken intentionally omitted
+            instagramBusinessAccountId: null,
+          },
+        }));
+      } catch (updateError) {
+        console.error("Failed to save Facebook connection (no pages):", updateError);
+        return NextResponse.redirect(new URL("/social?error=facebook_save_failed", request.url));
+      }
+
+      const redirectUrl = isLocal ? `${reqOrigin}/social?success=facebook_connected&warning=facebook_no_pages` : `${origin}/social?success=facebook_connected&warning=facebook_no_pages`;
+      const res = NextResponse.redirect(new URL(redirectUrl, request.url));
+      res.cookies.set("uplora_fb_oauth_state", "", { path: "/", maxAge: 0 });
+      res.cookies.set("uplora_meta_oauth_intent", "", { path: "/", maxAge: 0 });
+      return res;
     }
 
     const findPage = () => {
@@ -154,8 +184,43 @@ export async function GET(request: NextRequest) {
 
     const selectedPage = findPage();
     if (!selectedPage?.access_token) {
-      console.error("Selected page missing access token", { selectedPageId: selectedPage?.id });
-      return NextResponse.redirect(new URL("/social?error=facebook_page_token_missing", request.url));
+      console.warn("Selected page missing access token; storing user connection without page token", { selectedPageId: selectedPage?.id });
+
+      const connectedAt = new Date().toISOString();
+      const sanitizedPages = pages.map(p => ({
+        id: p.id,
+        name: p.name || null,
+        hasPageToken: !!p.access_token,
+        instagramBusinessAccountId: p.instagram_business_account?.id || null,
+      }));
+
+      try {
+        await updateUserSocialConnections(userId, current => ({
+          ...current,
+          facebook: {
+            ...(current.facebook || {}),
+            connectedAt,
+            userId: userData.id,
+            userName: userData.name,
+            userAccessToken: longLivedUserToken,
+            userTokenExpiresAt: tokenExpiresAt,
+            pages: sanitizedPages,
+            selectedPageId: selectedPage?.id || null,
+            selectedPageName: selectedPage?.name || null,
+            // selectedPageAccessToken intentionally omitted
+            instagramBusinessAccountId: null,
+          },
+        }));
+      } catch (updateError) {
+        console.error("Failed to save Facebook connection (missing page token):", updateError);
+        return NextResponse.redirect(new URL("/social?error=facebook_save_failed", request.url));
+      }
+
+      const redirectUrl = isLocal ? `${reqOrigin}/social?success=facebook_connected&warning=facebook_page_token_missing` : `${origin}/social?success=facebook_connected&warning=facebook_page_token_missing`;
+      const res = NextResponse.redirect(new URL(redirectUrl, request.url));
+      res.cookies.set("uplora_fb_oauth_state", "", { path: "/", maxAge: 0 });
+      res.cookies.set("uplora_meta_oauth_intent", "", { path: "/", maxAge: 0 });
+      return res;
     }
 
     // 5) From selected Page, get instagram_business_account (if not present)

@@ -55,6 +55,50 @@ const SocialConnections = () => {
   });
 
   useEffect(() => {
+    // Show one-time success/error banners based on query params (useful after OAuth redirects).
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const error = sp.get("error");
+      const warning = sp.get("warning");
+      const success = sp.get("success");
+      if (success) {
+        const msg =
+          success === "facebook_connected" ? "Facebook connected." :
+          success === "instagram_connected" ? "Instagram connected." :
+          success === "tiktok_connected" ? "TikTok connected." :
+          success === "threads_connected" ? "Threads connected." :
+          success === "pinterest_connected" ? "Pinterest connected." :
+          success === "linkedin_connected" ? "LinkedIn connected." :
+          success === "x_connected" ? "X connected." :
+          "Connected.";
+        notifications.addNotification({ type: "success", title: "Success", message: msg });
+      }
+      if (warning === "facebook_no_pages") {
+        notifications.addNotification({
+          type: "error",
+          title: "Facebook connected, but no Pages found",
+          message: "Create a Facebook Page (or get Page access) to enable posting, then reconnect.",
+        });
+      } else if (warning === "facebook_page_token_missing") {
+        notifications.addNotification({
+          type: "error",
+          title: "Facebook connected, but missing Page token",
+          message: "Please reconnect and ensure you grant all requested permissions.",
+        });
+      }
+      if (error) {
+        const msg =
+          error === "facebook_no_pages" ? "No Facebook Pages found for this account." :
+          error === "tiktok_token_failed" ? "TikTok token exchange failed. Check redirect URI + env vars." :
+          "Connection failed. Please try again.";
+        notifications.addNotification({ type: "error", title: "Connection issue", message: msg });
+      }
+      // Clean URL to avoid repeated toasts on refresh.
+      if (error || warning || success) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    } catch {}
+
     // Load YouTube status
     (async () => {
       try {

@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
         return "http://localhost:3000";
       }
     })();
-    const originRaw = process.env.NEXT_PUBLIC_SITE_URL || reqOrigin;
-    const origin = originRaw.replace(/\/+$/g, "");
+    // Use the current request origin so it matches the redirect_uri used in /auth/connect.
+    const origin = reqOrigin.replace(/\/+$/g, "");
     const redirectUri = process.env.TIKTOK_REDIRECT_URI || `${origin}/api/tiktok/auth/callback`;
 
     // 2) Exchange code -> tokens
@@ -69,6 +69,9 @@ export async function GET(request: NextRequest) {
       });
     } catch (e) {
       console.error("TikTok token exchange failure:", e);
+      // Common causes:
+      // - redirect_uri mismatch (uplora.io vs www.uplora.io)
+      // - missing TIKTOK_CLIENT_SECRET in production env
       return NextResponse.redirect(new URL("/social?error=tiktok_token_failed", request.url));
     }
 

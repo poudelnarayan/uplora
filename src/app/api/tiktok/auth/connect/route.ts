@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
         return "http://localhost:3000";
       }
     })();
-    const originRaw = process.env.NEXT_PUBLIC_SITE_URL || reqOrigin;
-    const origin = originRaw.replace(/\/+$/g, "");
+    // Use the current request origin so the redirect_uri matches the domain the user is on
+    // (important when both uplora.io and www.uplora.io are configured in TikTok console).
+    const origin = reqOrigin.replace(/\/+$/g, "");
     const redirectUri = process.env.TIKTOK_REDIRECT_URI || `${origin}/api/tiktok/auth/callback`;
 
     const scope = ["user.info.basic", "video.upload"].join(",");
