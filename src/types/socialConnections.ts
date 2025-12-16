@@ -66,6 +66,29 @@ export const socialConnectionsSchema = z
   .object({
     facebook: facebookConnectionSchema.nullable().optional(),
     instagram: instagramConnectionSchema.nullable().optional(),
+    tiktok: z
+      .object({
+        connectedAt: z.string().datetime().optional(),
+
+        // TikTok OAuth tokens
+        accessToken: z.string().optional(),
+        refreshToken: z.string().optional(),
+        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        refreshTokenExpiresAt: z.string().datetime().nullable().optional(),
+
+        // TikTok user profile
+        openId: z.string().optional(),
+        unionId: z.string().optional(),
+        username: z.string().nullable().optional(),
+        displayName: z.string().nullable().optional(),
+        avatarUrl: z.string().nullable().optional(),
+
+        // Scopes we obtained
+        scope: z.string().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
   })
   .passthrough();
 
