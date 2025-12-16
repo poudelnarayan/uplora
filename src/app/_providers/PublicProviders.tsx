@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { NotificationProvider } from "@/components/ui/Notification";
+import { NotificationProvider } from "@/app/components/ui/Notification";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SeoProviders } from "./SeoProviders";
 
