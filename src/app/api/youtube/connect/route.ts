@@ -97,21 +97,31 @@ export async function GET(request: NextRequest) {
     });
 
     // Store YouTube connection in database
-    const { supabaseAdmin } = await import("@/lib/supabase");
-    
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update({
-        youtubeAccessToken: tokenData.access_token,
-        youtubeRefreshToken: tokenData.refresh_token,
-        youtubeExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null,
-        youtubeChannelId: channelData.items?.[0]?.id,
-        youtubeChannelTitle: channelData.items?.[0]?.snippet?.title,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('clerkId', userId);
-      
-    if (updateError) {
+    const { updateUserSocialConnections } = await import("@/server/services/socialConnections");
+    try {
+      const connectedAt = new Date().toISOString();
+      const tokenExpiresAt = tokenData.expires_in
+        ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+        : null;
+
+      const channelId = channelData.items?.[0]?.id ?? null;
+      const channelTitle = channelData.items?.[0]?.snippet?.title ?? null;
+
+      await updateUserSocialConnections(userId, current => ({
+        ...current,
+        youtube: {
+          ...(current.youtube || {}),
+          connectedAt,
+          accessToken: tokenData.access_token,
+          // refresh_token may not be returned on every consent; keep existing if missing
+          refreshToken: tokenData.refresh_token || current.youtube?.refreshToken,
+          tokenExpiresAt,
+          scope: tokenData.scope || current.youtube?.scope || null,
+          channelId,
+          channelTitle,
+        },
+      }));
+    } catch (updateError) {
       console.error("YouTube connection update error:", updateError);
       return NextResponse.redirect(new URL("/social?error=youtube_connection_failed", request.url));
     }

@@ -5,7 +5,7 @@ import { google } from "googleapis";
 import { auth } from "@clerk/nextjs/server";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getUserSocialConnections } from "@/server/services/socialConnections";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -16,14 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Get user's YouTube credentials from database
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('youtubeAccessToken, youtubeRefreshToken')
-      .eq('clerkId', userId)
-      .single();
-
-    if (userError || !user?.youtubeAccessToken) {
+    // Get user's YouTube credentials from unified social connections
+    const social = await getUserSocialConnections(userId);
+    const yt = social.youtube;
+    if (!yt?.accessToken || !yt?.refreshToken) {
       return NextResponse.json(
         { error: "YouTube not connected. Please connect your YouTube account in settings." },
         { status: 403 }
@@ -43,8 +39,8 @@ export async function POST(req: NextRequest) {
       process.env.YT_REDIRECT_URI || `${origin || ''}/api/youtube/connect`
     );
     oauth2Client.setCredentials({ 
-      access_token: user.youtubeAccessToken,
-      refresh_token: user.youtubeRefreshToken 
+      access_token: yt.accessToken,
+      refresh_token: yt.refreshToken 
     });
 
     const youtube = google.youtube({ version: "v3", auth: oauth2Client });

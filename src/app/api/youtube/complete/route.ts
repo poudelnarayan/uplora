@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { broadcast } from "@/lib/realtime";
+import { updateUserSocialConnections } from "@/server/services/socialConnections";
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,22 +75,29 @@ export async function POST(request: NextRequest) {
       channelTitle: channelData.items?.[0]?.snippet?.title
     });
 
-    // Store YouTube connection in database
-    const { supabaseAdmin } = await import("@/lib/supabase");
-    
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update({
-        youtubeAccessToken: tokenData.access_token,
-        youtubeRefreshToken: tokenData.refresh_token,
-        youtubeExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null,
-        youtubeChannelId: channelData.items?.[0]?.id,
-        youtubeChannelTitle: channelData.items?.[0]?.snippet?.title,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('clerkId', userId);
-      
-    if (updateError) {
+    // Store YouTube connection (same storage model as other platforms)
+    try {
+      const connectedAt = new Date().toISOString();
+      const tokenExpiresAt = tokenData.expires_in
+        ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+        : null;
+      const channelId = channelData.items?.[0]?.id ?? null;
+      const channelTitle = channelData.items?.[0]?.snippet?.title ?? null;
+
+      await updateUserSocialConnections(userId, current => ({
+        ...current,
+        youtube: {
+          ...(current.youtube || {}),
+          connectedAt,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || current.youtube?.refreshToken,
+          tokenExpiresAt,
+          scope: tokenData.scope || current.youtube?.scope || null,
+          channelId,
+          channelTitle,
+        },
+      }));
+    } catch (updateError) {
       console.error("YouTube connection update error:", updateError);
       return NextResponse.json({ error: "Database update failed" }, { status: 500 });
     }

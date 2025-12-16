@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { getUserSocialConnections, updateUserSocialConnections } from "@/server/services/socialConnections";
 
 async function refreshAccessToken(refreshToken: string, redirectUri: string) {
   const params = new URLSearchParams({
@@ -34,21 +35,67 @@ export async function GET(_req: NextRequest) {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ isConnected: false });
 
-    const { data: user, error } = await supabaseAdmin
-      .from("users")
-      .select(
-        "youtubeAccessToken, youtubeRefreshToken, youtubeExpiresAt, youtubeChannelTitle"
-      )
-      .eq("clerkId", userId)
-      .single();
+    // Prefer unified storage in users.socialConnections.youtube
+    let social = await getUserSocialConnections(userId);
+    let yt = social.youtube || null;
 
-    if (error) return NextResponse.json({ isConnected: false });
+    // Back-compat migration: if legacy columns exist but JSON doesn't, copy them once.
+    if (!yt?.accessToken || !yt?.refreshToken) {
+      const { data: legacy } = await supabaseAdmin
+        .from("users")
+        .select("youtubeAccessToken,youtubeRefreshToken,youtubeExpiresAt,youtubeChannelId,youtubeChannelTitle")
+        .eq("clerkId", userId)
+        .single();
+      const legacyHasTokens = !!legacy?.youtubeAccessToken && !!legacy?.youtubeRefreshToken;
+      if (legacyHasTokens) {
+        try {
+          const connectedAt = new Date().toISOString();
+          await updateUserSocialConnections(userId, current => ({
+            ...current,
+            youtube: {
+              ...(current.youtube || {}),
+              connectedAt,
+              accessToken: legacy.youtubeAccessToken,
+              refreshToken: legacy.youtubeRefreshToken,
+              tokenExpiresAt: legacy.youtubeExpiresAt || null,
+              channelId: legacy.youtubeChannelId || null,
+              channelTitle: legacy.youtubeChannelTitle || null,
+            },
+          }));
+          // Best-effort: clear legacy columns after migrating
+          try {
+            await supabaseAdmin
+              .from("users")
+              .update({
+                youtubeAccessToken: null,
+                youtubeRefreshToken: null,
+                youtubeExpiresAt: null,
+                youtubeChannelId: null,
+                youtubeChannelTitle: null,
+                updatedAt: new Date().toISOString(),
+              })
+              .eq("clerkId", userId);
+          } catch {}
+          social = await getUserSocialConnections(userId);
+          yt = social.youtube || null;
+        } catch (e) {
+          // If migration fails, continue using legacy values for this request
+          yt = {
+            accessToken: legacy.youtubeAccessToken,
+            refreshToken: legacy.youtubeRefreshToken,
+            tokenExpiresAt: legacy.youtubeExpiresAt || null,
+            channelId: legacy.youtubeChannelId || null,
+            channelTitle: legacy.youtubeChannelTitle || null,
+          } as any;
+        }
+      }
+    }
 
-    const hasTokens = !!user?.youtubeAccessToken && !!user?.youtubeRefreshToken;
+    const hasTokens = !!yt?.accessToken && !!yt?.refreshToken;
     if (!hasTokens) return NextResponse.json({ isConnected: false });
 
     // If token close to expiry, try refreshing silently
-    const expiresAt = user.youtubeExpiresAt ? Date.parse(user.youtubeExpiresAt) : 0;
+    const expiresAt = yt?.tokenExpiresAt ? Date.parse(yt.tokenExpiresAt) : 0;
     const now = Date.now();
     const needsRefresh = !expiresAt || expiresAt - now < 60_000; // less than 60s remaining
 
@@ -56,20 +103,20 @@ export async function GET(_req: NextRequest) {
       try {
         const origin = process.env.NEXT_PUBLIC_SITE_URL || '';
         const redirectUri = process.env.YT_REDIRECT_URI || `${origin}/api/youtube/connect`;
-        const tokenData = await refreshAccessToken(user.youtubeRefreshToken, redirectUri);
+        const tokenData = await refreshAccessToken(yt!.refreshToken!, redirectUri);
         const newExpiresAt = tokenData.expires_in
           ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
           : null;
 
-        await supabaseAdmin
-          .from("users")
-          .update({
-            youtubeAccessToken: tokenData.access_token || user.youtubeAccessToken,
-            youtubeRefreshToken: tokenData.refresh_token || user.youtubeRefreshToken,
-            youtubeExpiresAt: newExpiresAt,
-            updatedAt: new Date().toISOString(),
-          })
-          .eq("clerkId", userId);
+        await updateUserSocialConnections(userId, current => ({
+          ...current,
+          youtube: {
+            ...(current.youtube || {}),
+            accessToken: tokenData.access_token || yt!.accessToken,
+            refreshToken: tokenData.refresh_token || yt!.refreshToken,
+            tokenExpiresAt: newExpiresAt,
+          },
+        }));
 
         try { broadcast({ type: "youtube.refreshed", userId }); } catch {}
       } catch (e) {
@@ -81,7 +128,7 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({
       isConnected: true,
-      channelTitle: user.youtubeChannelTitle || null,
+      channelTitle: yt?.channelTitle || null,
     });
   } catch (e) {
     return NextResponse.json({ isConnected: false });

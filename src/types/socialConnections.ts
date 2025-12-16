@@ -66,6 +66,21 @@ export const socialConnectionsSchema = z
   .object({
     facebook: facebookConnectionSchema.nullable().optional(),
     instagram: instagramConnectionSchema.nullable().optional(),
+    youtube: z
+      .object({
+        connectedAt: z.string().datetime().optional(),
+        accessToken: z.string().optional(),
+        refreshToken: z.string().optional(),
+        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        scope: z.string().nullable().optional(),
+
+        // Channel info (for nicer UI)
+        channelId: z.string().nullable().optional(),
+        channelTitle: z.string().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
     twitter: z
       .object({
         connectedAt: z.string().datetime().optional(),

@@ -2,8 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { supabaseAdmin } from "@/lib/supabase";
+import { updateUserSocialConnections } from "@/server/services/socialConnections";
 
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
@@ -13,23 +14,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Clear YouTube connection data
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update({
-        youtubeAccessToken: null,
-        youtubeRefreshToken: null,
-        youtubeExpiresAt: null,
-        youtubeChannelId: null,
-        youtubeChannelTitle: null,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('clerkId', userId);
-      
-    if (updateError) {
-      console.error("YouTube disconnect update error:", updateError);
-      return NextResponse.json({ error: "Failed to disconnect YouTube account" }, { status: 500 });
-    }
+    // Clear YouTube connection data in socialConnections
+    await updateUserSocialConnections(userId, current => ({
+      ...current,
+      youtube: null,
+    }));
+
+    // Best-effort: clear legacy columns to avoid confusion for users who connected before migration
+    try {
+      await supabaseAdmin
+        .from("users")
+        .update({
+          youtubeAccessToken: null,
+          youtubeRefreshToken: null,
+          youtubeExpiresAt: null,
+          youtubeChannelId: null,
+          youtubeChannelTitle: null,
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("clerkId", userId);
+    } catch {}
 
     try { broadcast({ type: "youtube.disconnected", userId }); } catch {}
     return NextResponse.json({ success: true });

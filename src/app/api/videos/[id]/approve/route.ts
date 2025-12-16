@@ -10,6 +10,7 @@ import { sendMail } from "@/lib/email";
 import { broadcast } from "@/lib/realtime";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
+import { getUserSocialConnections, updateUserSocialConnections } from "@/server/services/socialConnections";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -93,14 +94,10 @@ export async function POST(
     // Parse YouTube metadata from request
     const { title, description, privacyStatus, madeForKids } = await req.json().catch(() => ({ }));
 
-    // Ensure YouTube connection exists
-    const { data: ytUser, error: ytUserError } = await supabaseAdmin
-      .from('users')
-      .select('youtubeAccessToken, youtubeRefreshToken')
-      .eq('clerkId', userId)
-      .single();
-
-    if (ytUserError || !ytUser?.youtubeAccessToken) {
+    // Ensure YouTube connection exists (unified social connections)
+    const social = await getUserSocialConnections(userId);
+    const yt = social.youtube;
+    if (!yt?.accessToken || !yt?.refreshToken) {
       return NextResponse.json(
         { error: "YouTube not connected. Please connect your YouTube account in settings." },
         { status: 403 }
@@ -114,26 +111,26 @@ export async function POST(
       process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`
     );
     oauth2Client.setCredentials({ 
-      access_token: ytUser.youtubeAccessToken,
-      refresh_token: ytUser.youtubeRefreshToken 
+      access_token: yt.accessToken,
+      refresh_token: yt.refreshToken 
     });
     const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
-    // Ensure we have a fresh access token before uploading
+    // Ensure we have a fresh access token before uploading (and persist back to socialConnections)
     try {
       // Newer libs refresh lazily; proactively refresh to avoid 401s when expiry_date is missing
       // @ts-ignore - method exists at runtime
       const { credentials } = await oauth2Client.refreshAccessToken();
       if (credentials?.access_token) {
         try {
-          await supabaseAdmin
-            .from('users')
-            .update({
-              youtubeAccessToken: credentials.access_token,
-              youtubeExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
-              updatedAt: new Date().toISOString(),
-            })
-            .eq('clerkId', userId);
+          await updateUserSocialConnections(userId, current => ({
+            ...current,
+            youtube: {
+              ...(current.youtube || {}),
+              accessToken: credentials.access_token,
+              tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+            },
+          }));
         } catch {}
       }
     } catch {}
@@ -174,14 +171,14 @@ export async function POST(
           const { credentials } = await oauth2Client.refreshAccessToken();
           if (credentials?.access_token) {
             try {
-              await supabaseAdmin
-                .from('users')
-                .update({
-                  youtubeAccessToken: credentials.access_token,
-                  youtubeExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
-                  updatedAt: new Date().toISOString(),
-                })
-                .eq('clerkId', userId);
+              await updateUserSocialConnections(userId, current => ({
+                ...current,
+                youtube: {
+                  ...(current.youtube || {}),
+                  accessToken: credentials.access_token,
+                  tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+                },
+              }));
             } catch {}
           }
         } catch {}
