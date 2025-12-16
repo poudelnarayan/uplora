@@ -1,14 +1,17 @@
 "use client";
 
 import React from "react";
+import { NotificationProvider } from "@/components/ui/Notification";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SeoProviders } from "./SeoProviders";
 
 export function PublicProviders({ children, siteUrl }: { children: React.ReactNode; siteUrl: string }) {
   return (
-    <ThemeProvider>
-      <SeoProviders siteUrl={siteUrl}>{children}</SeoProviders>
-    </ThemeProvider>
+    <NotificationProvider>
+      <ThemeProvider>
+        <SeoProviders siteUrl={siteUrl}>{children}</SeoProviders>
+      </ThemeProvider>
+    </NotificationProvider>
   );
 }
 
