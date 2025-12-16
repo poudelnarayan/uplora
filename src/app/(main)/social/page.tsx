@@ -16,6 +16,11 @@ const SocialConnections = () => {
     pages: [], 
     instagramAccounts: [] 
   });
+  const [tt, setTt] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
+    loading: true,
+    isConnected: false,
+    username: null,
+  });
 
   useEffect(() => {
     // Load YouTube status
@@ -44,6 +49,18 @@ const SocialConnections = () => {
         });
       } catch {
         setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
+      }
+    })();
+
+    // Load TikTok status
+    (async () => {
+      try {
+        const res = await fetch("/api/tiktok/status", { cache: "no-store" });
+        const data = await res.json();
+        const username = data?.username || data?.displayName || null;
+        setTt({ loading: false, isConnected: !!data?.isConnected, username });
+      } catch {
+        setTt({ loading: false, isConnected: false, username: null });
       }
     })();
   }, []);
@@ -103,8 +120,8 @@ const SocialConnections = () => {
     {
       id: "tiktok",
       name: "TikTok",
-      connected: false,
-      username: null,
+      connected: tt.isConnected,
+      username: tt.username ? `@${tt.username}` : null,
       bgColor: "bg-gradient-to-br from-gray-900/10 to-black/10"
     }
   ];
@@ -152,6 +169,11 @@ const SocialConnections = () => {
                           if (!resp.ok) throw new Error('Failed');
                           notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Facebook/Instagram disconnected' });
                           setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
+                        } else if (platform.id === 'tiktok') {
+                          resp = await fetch('/api/tiktok/disconnect', { method: 'POST' });
+                          if (!resp.ok) throw new Error('Failed');
+                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'TikTok disconnected' });
+                          setTt({ loading: false, isConnected: false, username: null });
                         }
                       } catch (e) {
                         notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
@@ -180,6 +202,13 @@ const SocialConnections = () => {
                     >
                       <Link2 className="h-4 w-4" />
                       {yt.loading ? 'Checking…' : 'Connect'}
+                    </Button>
+                  ) : platform.id === "tiktok" ? (
+                    <Button asChild className="w-full gap-2" disabled={tt.loading}>
+                      <a href="/api/tiktok/auth/connect">
+                        <Link2 className="h-4 w-4" />
+                        {tt.loading ? "Checking…" : "Connect TikTok"}
+                      </a>
                     </Button>
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
                     platform.id === "instagram" ? (
