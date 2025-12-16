@@ -79,7 +79,7 @@ export async function POST(
 
     // Build query for finding the invitation
     let query = supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .select('*')
       .eq('teamId', teamId)
       .eq('status', 'PENDING');
@@ -97,7 +97,7 @@ export async function POST(
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .update({ status: 'REJECTED', updatedAt: new Date().toISOString() })
       .eq('id', invite.id)
       .select()

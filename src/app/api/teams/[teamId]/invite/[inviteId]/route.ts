@@ -74,7 +74,7 @@ export async function DELETE(
 
     // Get invitation details
     const { data: invitation, error: inviteError } = await supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .select('*')
       .eq('id', inviteId)
       .eq('teamId', teamId)
@@ -89,7 +89,7 @@ export async function DELETE(
 
     // Delete the invitation
     const { error: deleteError } = await supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .delete()
       .eq('id', inviteId);
 
@@ -192,7 +192,7 @@ export async function POST(
 
     // Get invitation details
     const { data: invitation, error: inviteError } = await supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .select('*')
       .eq('id', inviteId)
       .eq('teamId', teamId)
@@ -207,7 +207,7 @@ export async function POST(
 
     // Update invitation timestamp
     const { error: updateError } = await supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .update({ updatedAt: new Date().toISOString() })
       .eq('id', inviteId);
 

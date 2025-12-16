@@ -97,7 +97,7 @@ export async function GET(
 
     // Get team invitations
     const { data: invites, error: invitesError } = await supabaseAdmin
-      .from('teamInvites')
+      .from('team_invites')
       .select('*')
       .eq('teamId', teamId)
       .order('createdAt', { ascending: false });
