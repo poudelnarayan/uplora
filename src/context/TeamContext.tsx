@@ -19,7 +19,7 @@ type TeamContextType = {
   selectedTeam: TeamBasic | null;
   personalTeam: TeamBasic | null;
   setSelectedTeamId: (id: string | null) => void;
-  refreshTeams: () => Promise<void>;
+  refreshTeams: (force?: boolean) => Promise<void>;
 };
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);

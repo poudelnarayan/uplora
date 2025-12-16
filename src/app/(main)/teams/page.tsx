@@ -116,8 +116,8 @@ const Teams = () => {
       // Show success message immediately
       toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
       
-      // Refresh teams in background (non-blocking)
-      refreshTeams().catch(console.error);
+      // Force refresh teams so the newly created team appears immediately (bypass cache TTL)
+      refreshTeams(true).catch(console.error);
     } catch (e) {
       setIsCreatingTeam(false);
       toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
