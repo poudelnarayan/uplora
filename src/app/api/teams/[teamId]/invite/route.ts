@@ -106,16 +106,20 @@ export async function POST(
 
           // Send email
           let emailSent = true;
+          let inviteUrl: string | null = null;
           try {
             await sendInvitationEmail(existingInvite.token, email, teamId, role);
+            inviteUrl = buildInviteUrl(existingInvite.token);
           } catch (emailError) {
             console.error("Email resending failed:", emailError);
             emailSent = false;
+            inviteUrl = buildInviteUrl(existingInvite.token);
           }
 
           return createSuccessResponse({
             message: emailSent ? "Invitation resent successfully" : "Resend failed - email delivery error",
             emailSent,
+            inviteUrl,
             invitation: existingInvite
           });
         } else {
@@ -152,6 +156,7 @@ export async function POST(
 
       // Send email
       let emailSent = true;
+      let inviteUrl: string | null = null;
       try {
         console.log(`📧 Attempting to send invitation email to: ${email}`);
         console.log(`🔗 Team ID: ${teamId}, Role: ${role}, Token: ${token}`);
@@ -164,6 +169,7 @@ export async function POST(
         });
         
         await sendInvitationEmail(token, email, teamId, role);
+        inviteUrl = buildInviteUrl(token);
         console.log(`✅ Invitation email sent successfully to: ${email}`);
       } catch (emailError) {
         console.error("❌ INVITATION EMAIL SENDING FAILED:", emailError);
@@ -173,6 +179,7 @@ export async function POST(
           stack: emailError instanceof Error ? emailError.stack : undefined
         });
         emailSent = false;
+        inviteUrl = buildInviteUrl(token);
       }
 
       // Realtime notify team members
@@ -188,12 +195,19 @@ export async function POST(
       return createSuccessResponse({
         message: emailSent ? "Invitation sent successfully" : "Invitation created but email delivery failed",
         emailSent,
+        inviteUrl,
         invitation: newInvite
       });
     });
 
     if (!result.ok) {
-      return NextResponse.json(result, { status: 401 });
+      const status =
+        result.code === ErrorCodes.UNAUTHORIZED ? 401 :
+        result.code === ErrorCodes.FORBIDDEN ? 403 :
+        result.code === ErrorCodes.NOT_FOUND ? 404 :
+        result.code === ErrorCodes.VALIDATION_ERROR ? 400 :
+        500;
+      return NextResponse.json(result, { status });
     }
 
     return NextResponse.json(result);

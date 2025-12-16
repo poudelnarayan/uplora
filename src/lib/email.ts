@@ -36,6 +36,11 @@ export async function sendMail(opts: {
   html?: string;
   replyTo?: string;
 }) {
+  // Fail fast with a clear error when SMTP isn't configured (common cause of "no invite email").
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error("SMTP is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS (and optionally SMTP_FROM).");
+  }
+
   // Ensure header From aligns with authenticated SMTP user to satisfy DMARC/SPF
   const smtpUser = process.env.SMTP_USER!;
   const configuredFrom = process.env.SMTP_FROM;
