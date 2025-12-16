@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-
-const MotionDiv = motion.div as any;
 import { useUser, SignInButton, SignOutButton, useClerk } from "@clerk/nextjs";
-import { Users, Crown, UserCheck, Edit3, CheckCircle, X } from "lucide-react";
-import toast from "react-hot-toast";
-import { NextSeo } from "next-seo";
+import { Users, Crown, UserCheck, Edit3, CheckCircle, X, AlertTriangle, Calendar, Mail } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
+import { Separator } from "@/app/components/ui/separator";
+import { useNotifications } from "@/app/components/ui/Notification";
 
 interface Invitation {
   id: string;
@@ -30,6 +30,7 @@ export default function InvitePage() {
   const router = useRouter();
   const { user } = useUser();
   const { openSignIn } = useClerk();
+  const notifications = useNotifications();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -43,24 +44,17 @@ export default function InvitePage() {
 
   const fetchInvitation = async (token: string) => {
     try {
-      console.log("🔍 Fetching invitation with token:", token);
       const response = await fetch(`/api/invitations/${token}`);
-      console.log("📡 Response status:", response.status);
       
       if (response.ok) {
         const result = await response.json();
-        console.log("✅ Invitation data received:", result);
-        
-        // Handle both wrapped and direct response formats
-        const data = result.ok ? result : result;
-        setInvitation(data);
+        // API returns { ok: true, ...payload }
+        setInvitation(result?.ok ? result : null);
       } else {
         const error = await response.json();
-        console.error("❌ Invitation fetch error:", error);
         setError(error.message || "Invitation not found or expired");
       }
     } catch (error) {
-      console.error("❌ Invitation fetch failed:", error);
       setError("Failed to load invitation");
     } finally {
       setLoading(false);
@@ -77,14 +71,14 @@ export default function InvitePage() {
       });
 
       if (response.ok) {
-        toast.success("Welcome to the team!");
+        notifications.addNotification({ type: "success", title: "Welcome!", message: "You’ve joined the team." });
         router.push("/teams?refresh=1");
       } else {
         const error = await response.json();
-        toast.error(error.message || "Failed to accept invitation");
+        notifications.addNotification({ type: "error", title: "Invite failed", message: error.message || "Failed to accept invitation" });
       }
     } catch (error) {
-      toast.error("Failed to accept invitation");
+      notifications.addNotification({ type: "error", title: "Invite failed", message: "Failed to accept invitation" });
     } finally {
       setAccepting(false);
     }
@@ -92,46 +86,67 @@ export default function InvitePage() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "ADMIN": return <Crown className="w-6 h-6 text-yellow-400" />;
-      case "MANAGER": return <UserCheck className="w-6 h-6 text-green-400" />;
-      case "EDITOR": return <Edit3 className="w-6 h-6 text-blue-400" />;
-      default: return <Edit3 className="w-6 h-6 text-blue-400" />;
+      case "ADMIN": return <Crown className="h-5 w-5 text-yellow-500" />;
+      case "MANAGER": return <UserCheck className="h-5 w-5 text-emerald-600" />;
+      case "EDITOR": return <Edit3 className="h-5 w-5 text-blue-600" />;
+      default: return <Edit3 className="h-5 w-5 text-blue-600" />;
+    }
+  };
+
+  const roleLabel = (role: string) => {
+    switch (role) {
+      case "ADMIN": return "Admin";
+      case "MANAGER": return "Manager";
+      case "EDITOR": return "Editor";
+      default: return role;
     }
   };
 
   const getRoleDescription = (role: string) => {
     switch (role) {
-      case "ADMIN": return "Full team management and video upload permissions";
-      case "MANAGER": return "Can upload videos and invite new team members";
-      case "EDITOR": return "Can upload and manage videos for the team";
+      case "ADMIN": return "Full team management plus publishing permissions.";
+      case "MANAGER": return "Can manage members and publishing workflows.";
+      case "EDITOR": return "Can create and manage content for the team.";
       default: return "Team member";
     }
   };
 
+  const invitePath = useMemo(() => `/invite/${params.token as string}`, [params.token]);
+  const signedInEmail = (user?.emailAddresses?.[0]?.emailAddress || "").trim().toLowerCase();
+  const inviteEmail = (invitation?.email || "").trim().toLowerCase();
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner" />
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-lg">Loading invitation…</CardTitle>
+            <CardDescription>One moment while we verify your invite.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-2 w-full bg-muted rounded animate-pulse" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="card max-w-md w-full text-center p-6 rounded-lg">
-          <div className="w-16 h-16 rounded-full glass glow-red mx-auto mb-6 flex items-center justify-center">
-            <X className="w-8 h-8 text-red-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-4">Invalid Invitation</h1>
-          <p className="text-white/70 mb-6">{error}</p>
-          <button
-            onClick={() => router.push("/")}
-            className="btn btn-primary mt-2"
-          >
-            Back to Home
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Invitation not valid
+            </CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push("/")}>Back to Home</Button>
+            <Button onClick={() => router.push("/teams")}>Go to Teams</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -140,95 +155,124 @@ export default function InvitePage() {
     return null;
   }
 
-  const invitePath = `/invite/${params.token as string}`;
-
   const handleSwitchAccount = async () => {
     openSignIn({ redirectUrl: invitePath });
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <NextSeo title="Team Invitation" noindex nofollow />
-      <MotionDiv
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="card max-w-md w-full p-6 rounded-lg"
-      >
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full glass glow mx-auto mb-6 flex items-center justify-center">
-            <Users className="w-10 h-10 text-purple-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Team Invitation</h1>
-          <p className="text-white/70">You&apos;ve been invited to collaborate!</p>
-        </div>
+  const expiresText = invitation.expiresAt ? new Date(invitation.expiresAt).toLocaleString() : "Unknown";
 
-        <div className="space-y-6">
-          <div className="glass rounded-xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4">{invitation.team.name}</h2>
-            <p className="text-white/70 mb-4">{invitation.team.description}</p>
-            
-            <div className="flex items-center gap-3 mb-4">
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
+      <Card className="w-full max-w-2xl">
+        <CardHeader className="space-y-2">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                You’ve been invited to join a team
+              </CardTitle>
+              <CardDescription>
+                Accept the invitation to start collaborating in Uplora.
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="flex items-center gap-2">
               {getRoleIcon(invitation.role)}
-              <div>
-                <p className="text-white font-semibold">{invitation.role}</p>
-                <p className="text-white/60 text-sm">{getRoleDescription(invitation.role)}</p>
-              </div>
+              {roleLabel(invitation.role)}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <div className="rounded-lg border p-4">
+            <div className="flex flex-col gap-2">
+              <div className="text-lg font-semibold">{invitation.team.name}</div>
+              {invitation.team.description ? (
+                <div className="text-sm text-muted-foreground">{invitation.team.description}</div>
+              ) : (
+                <div className="text-sm text-muted-foreground">No team description provided.</div>
+              )}
             </div>
 
-            <div className="text-sm text-white/60">
-              <p>Invited by: <span className="text-white/80">{invitation.inviter.name}</span></p>
-              <p>Expires: <span className="text-white/80">{new Date(invitation.expiresAt).toLocaleDateString()}</span></p>
+            <Separator className="my-4" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span>Invite for:</span>
+                <span className="text-foreground font-medium">{invitation.email}</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>Expires:</span>
+                <span className="text-foreground font-medium">{expiresText}</span>
+              </div>
+              <div className="sm:col-span-2 text-muted-foreground">
+                Invited by{" "}
+                <span className="text-foreground font-medium">
+                  {invitation.inviter?.name || "A teammate"}
+                </span>
+                {invitation.inviter?.email ? (
+                  <>
+                    {" "}
+                    (<span className="font-medium text-foreground">{invitation.inviter.email}</span>)
+                  </>
+                ) : null}
+              </div>
+              <div className="sm:col-span-2 text-muted-foreground">
+                <span className="text-foreground font-medium">Role permissions:</span>{" "}
+                {getRoleDescription(invitation.role)}
+              </div>
             </div>
           </div>
 
           {!user ? (
-            <div className="space-y-4">
-              <p className="text-white/70 text-center text-sm">
-                Sign in or create an account to accept this invitation
-              </p>
-              <SignInButton mode="redirect" forceRedirectUrl={invitePath} fallbackRedirectUrl={invitePath}>
-                <button className="btn btn-primary w-full">
-                  Sign In / Create Account
-                </button>
-              </SignInButton>
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+              <div className="text-sm text-muted-foreground">
+                You must sign in with <span className="font-medium text-foreground">{invitation.email}</span> to accept.
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button asChild>
+                  <SignInButton mode="redirect" forceRedirectUrl={invitePath} fallbackRedirectUrl={invitePath}>
+                    <span>Sign in / Create account</span>
+                  </SignInButton>
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/")}>Back to Home</Button>
+              </div>
             </div>
-          ) : user.emailAddresses?.[0]?.emailAddress === invitation.email ? (
-            <button
-              onClick={acceptInvitation}
-              disabled={accepting}
-              className="btn btn-success w-full"
-            >
-              {accepting ? (
-                <>
-                  <div className="spinner" />
-                  Accepting...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  Accept Invitation
-                </>
-              )}
-            </button>
+          ) : signedInEmail === inviteEmail ? (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={acceptInvitation} disabled={accepting} className="gap-2">
+                <CheckCircle className="h-4 w-4" />
+                {accepting ? "Accepting…" : "Accept invitation"}
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/teams")}>View teams</Button>
+            </div>
           ) : (
-            <div className="text-center space-y-4">
-              <p className="text-white/70 text-sm">
-                This invitation is for {invitation.email}, but you&apos;re signed in as {user.emailAddresses?.[0]?.emailAddress}.
-              </p>
-              <div className="space-y-2">
-                <SignOutButton signOutOptions={{ redirectUrl: `/sign-in?redirect_url=${encodeURIComponent(invitePath)}` }}>
-                  <button className="btn btn-secondary w-full">
-                    Sign Out and Re-Sign In
-                  </button>
-                </SignOutButton>
-                <button className="btn btn-outline w-full" onClick={handleSwitchAccount}>
-                  Open Sign In
-                </button>
+            <div className="rounded-lg border bg-destructive/5 p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Wrong account signed in</div>
+                  <div className="text-muted-foreground">
+                    This invite is for <span className="font-medium text-foreground">{invitation.email}</span>, but you’re signed in as{" "}
+                    <span className="font-medium text-foreground">{user.emailAddresses?.[0]?.emailAddress}</span>.
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" asChild>
+                  <SignOutButton signOutOptions={{ redirectUrl: `/sign-in?redirect_url=${encodeURIComponent(invitePath)}` }}>
+                    <span>Sign out and sign in again</span>
+                  </SignOutButton>
+                </Button>
+                <Button variant="secondary" onClick={handleSwitchAccount}>
+                  Switch account
+                </Button>
               </div>
             </div>
           )}
-        </div>
-      </MotionDiv>
+        </CardContent>
+      </Card>
     </div>
   );
 }

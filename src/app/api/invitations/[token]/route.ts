@@ -30,6 +30,26 @@ export async function GET(
       );
     }
 
+    // Best-effort fetch inviter details (do not fail invite loading if missing)
+    let inviter: { name: string; email: string } = { name: "", email: "" };
+    try {
+      if (invitation.inviterId) {
+        const { data: inviterUser } = await supabaseAdmin
+          .from("users")
+          .select("name,email")
+          .eq("id", invitation.inviterId)
+          .single();
+        if (inviterUser) {
+          inviter = {
+            name: inviterUser.name || "",
+            email: inviterUser.email || "",
+          };
+        }
+      }
+    } catch (e) {
+      console.warn("Invite: failed to fetch inviter info (non-fatal)", e);
+    }
+
     return NextResponse.json(createSuccessResponse({
       id: invitation.id,
       email: invitation.email,
@@ -38,10 +58,7 @@ export async function GET(
         name: invitation.teams?.name,
         description: invitation.teams?.description || "",
       },
-      inviter: {
-        name: "",
-        email: ""
-      },
+      inviter,
       expiresAt: invitation.expiresAt,
     }));
   } catch (error) {
