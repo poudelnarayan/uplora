@@ -3,7 +3,6 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import { getUserSocialConnections, updateUserSocialConnections } from "@/server/services/socialConnections";
 
@@ -36,60 +35,8 @@ export async function GET(_req: NextRequest) {
     if (!userId) return NextResponse.json({ isConnected: false });
 
     // Prefer unified storage in users.socialConnections.youtube
-    let social = await getUserSocialConnections(userId);
-    let yt = social.youtube || null;
-
-    // Back-compat migration: if legacy columns exist but JSON doesn't, copy them once.
-    if (!yt?.accessToken || !yt?.refreshToken) {
-      const { data: legacy } = await supabaseAdmin
-        .from("users")
-        .select("youtubeAccessToken,youtubeRefreshToken,youtubeExpiresAt,youtubeChannelId,youtubeChannelTitle")
-        .eq("clerkId", userId)
-        .single();
-      const legacyHasTokens = !!legacy?.youtubeAccessToken && !!legacy?.youtubeRefreshToken;
-      if (legacyHasTokens) {
-        try {
-          const connectedAt = new Date().toISOString();
-          await updateUserSocialConnections(userId, current => ({
-            ...current,
-            youtube: {
-              ...(current.youtube || {}),
-              connectedAt,
-              accessToken: legacy.youtubeAccessToken,
-              refreshToken: legacy.youtubeRefreshToken,
-              tokenExpiresAt: legacy.youtubeExpiresAt || null,
-              channelId: legacy.youtubeChannelId || null,
-              channelTitle: legacy.youtubeChannelTitle || null,
-            },
-          }));
-          // Best-effort: clear legacy columns after migrating
-          try {
-            await supabaseAdmin
-              .from("users")
-              .update({
-                youtubeAccessToken: null,
-                youtubeRefreshToken: null,
-                youtubeExpiresAt: null,
-                youtubeChannelId: null,
-                youtubeChannelTitle: null,
-                updatedAt: new Date().toISOString(),
-              })
-              .eq("clerkId", userId);
-          } catch {}
-          social = await getUserSocialConnections(userId);
-          yt = social.youtube || null;
-        } catch (e) {
-          // If migration fails, continue using legacy values for this request
-          yt = {
-            accessToken: legacy.youtubeAccessToken,
-            refreshToken: legacy.youtubeRefreshToken,
-            tokenExpiresAt: legacy.youtubeExpiresAt || null,
-            channelId: legacy.youtubeChannelId || null,
-            channelTitle: legacy.youtubeChannelTitle || null,
-          } as any;
-        }
-      }
-    }
+    const social = await getUserSocialConnections(userId);
+    const yt = social.youtube || null;
 
     const hasTokens = !!yt?.accessToken && !!yt?.refreshToken;
     if (!hasTokens) return NextResponse.json({ isConnected: false });
