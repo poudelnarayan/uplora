@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { clearFacebookInstagramConnections } from "@/server/services/socialConnections";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,27 +15,9 @@ export async function POST(request: NextRequest) {
 
     console.log("Disconnecting Facebook for user:", userId);
 
-    // Get current user data first
-    const { data: currentUser } = await supabaseAdmin
-      .from('users')
-      .select('socialConnections')
-      .eq('id', userId)
-      .single();
-
-    // Remove Facebook connection from database
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update({
-        socialConnections: {
-          ...(currentUser?.socialConnections || {}),
-          facebook: null,
-          instagram: null
-        },
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', userId);
-
-    if (updateError) {
+    try {
+      await clearFacebookInstagramConnections(userId);
+    } catch (updateError) {
       console.error("Failed to disconnect Facebook:", updateError);
       return NextResponse.json({ error: "Failed to disconnect Facebook" }, { status: 500 });
     }

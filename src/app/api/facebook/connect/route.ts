@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { broadcast } from "@/lib/realtime";
 import { supabaseAdmin } from "@/lib/supabase";
+import { updateUserSocialConnections } from "@/server/services/socialConnections";
 
 export async function GET(request: NextRequest) {
   try {
@@ -181,44 +182,33 @@ export async function GET(request: NextRequest) {
       instagramBusinessAccountId: p.instagram_business_account?.id || null,
     }));
 
-    const { data: currentUser } = await supabaseAdmin
-      .from("users")
-      .select("socialConnections")
-      .eq("id", userId)
-      .single();
-
-    const socialConnections = {
-      ...(currentUser?.socialConnections || {}),
-      facebook: {
-        connectedAt,
-        userId: userData.id,
-        userName: userData.name,
-        userAccessToken: longLivedUserToken,
-        userTokenExpiresAt: tokenExpiresAt,
-        pages: sanitizedPages,
-        selectedPageId: selectedPage.id,
-        selectedPageName: selectedPage.name || null,
-        selectedPageAccessToken: selectedPage.access_token,
-        instagramBusinessAccountId,
-      },
-      instagram: instagramBusinessAccountId
-        ? {
-            connectedAt,
-            businessAccountId: instagramBusinessAccountId,
-            pageId: selectedPage.id,
-          }
-        : (currentUser?.socialConnections?.instagram || null),
-    };
-
-    const { error: updateError } = await supabaseAdmin
-      .from("users")
-      .update({
-        socialConnections,
-        updatedAt: new Date().toISOString(),
-      })
-      .eq("id", userId);
-
-    if (updateError) {
+    try {
+      await updateUserSocialConnections(userId, current => ({
+        ...current,
+        facebook: {
+          ...(current.facebook || {}),
+          connectedAt,
+          userId: userData.id,
+          userName: userData.name,
+          userAccessToken: longLivedUserToken,
+          userTokenExpiresAt: tokenExpiresAt,
+          pages: sanitizedPages,
+          selectedPageId: selectedPage.id,
+          selectedPageName: selectedPage.name || null,
+          selectedPageAccessToken: selectedPage.access_token,
+          instagramBusinessAccountId,
+        },
+        // Keep both styles: Page-linked IG business id and/or IG business login data.
+        instagram: instagramBusinessAccountId
+          ? {
+              ...(current.instagram || {}),
+              connectedAt,
+              businessAccountId: instagramBusinessAccountId,
+              pageId: selectedPage.id,
+            }
+          : (current.instagram || null),
+      }));
+    } catch (updateError) {
       console.error("Failed to save Facebook connection:", updateError);
       return NextResponse.redirect(new URL("/social?error=facebook_save_failed", request.url));
     }

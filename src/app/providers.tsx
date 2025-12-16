@@ -1,14 +1,8 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { NotificationProvider } from "@/components/ui/Notification";
-import { TeamProvider } from "@/context/TeamContext";
-import { UploadProvider } from "@/context/UploadContext";
-import { ContentCacheProvider } from "@/context/ContentCacheContext";
-import UploadTray from "@/components/layout/UploadTray";
-import { DefaultSeoNoSSR, OrganizationJsonLdNoSSR } from "@/components/seo/NoSSRSeo";
-import defaultSeo from "@/seo.config";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { ModalProvider } from "@/components/ui/Modal";
+import { MissingClerkConfig } from "./_providers/MissingClerkConfig";
+import { PublicProviders } from "./_providers/PublicProviders";
+import { ProtectedProviders } from "./_providers/ProtectedProviders";
 // import OnboardingGuard from "@/components/OnboardingGuard";
 
 // Main Providers Component
@@ -39,69 +33,17 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {hasValidClerkKey ? (
-        <NotificationProvider>
-          {isPublicPage ? (
-            // Public pages - no onboarding guard
-            <ThemeProvider>
-              <DefaultSeoNoSSR {...defaultSeo} />
-              <OrganizationJsonLdNoSSR
-                type="Organization"
-                id={`${siteUrl}/#organization`}
-                name="Uplora"
-                url={siteUrl}
-                sameAs={[]}
-              />
-              {children}
-            </ThemeProvider>
-          ) : (
-            // Protected pages - with onboarding guard
-            // <OnboardingGuard>
-              <TeamProvider>
-                <ContentCacheProvider>
-                  <UploadProvider>
-                    <ModalProvider>
-                      <ThemeProvider>
-                        <DefaultSeoNoSSR {...defaultSeo} />
-                        <OrganizationJsonLdNoSSR
-                          type="Organization"
-                          id={`${siteUrl}/#organization`}
-                          name="Uplora"
-                          url={siteUrl}
-                          sameAs={[]}
-                        />
-                        {children}
-                        <UploadTray />
-                      </ThemeProvider>
-                    </ModalProvider>
-                  </UploadProvider>
-                </ContentCacheProvider>
-              </TeamProvider>
-            // </OnboardingGuard>
-          )}
-        </NotificationProvider>
+        isPublicPage ? (
+          // Public pages
+          <PublicProviders siteUrl={siteUrl}>{children}</PublicProviders>
+        ) : (
+          // Protected pages (onboarding guard intentionally left commented to preserve current behavior)
+          // <OnboardingGuard>
+          <ProtectedProviders siteUrl={siteUrl}>{children}</ProtectedProviders>
+          // </OnboardingGuard>
+        )
       ) : (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'system-ui',
-          padding: '2rem',
-          textAlign: 'center'
-        }}>
-          <div>
-            <h1 style={{ marginBottom: '1rem', color: '#ef4444' }}>Clerk Configuration Required</h1>
-            <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
-              Please add your Clerk publishable key to continue.
-            </p>
-            <ol style={{ textAlign: 'left', color: '#374151', lineHeight: '1.6' }}>
-              <li>Go to <a href="https://dashboard.clerk.com/last-active?path=api-keys" target="_blank" style={{ color: '#3b82f6' }}>Clerk Dashboard</a></li>
-              <li>Copy your Publishable Key</li>
-              <li>Add it to your .env.local file as NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</li>
-              <li>Restart your development server</li>
-            </ol>
-          </div>
-        </div>
+        <MissingClerkConfig />
       )}
     </>
   );

@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { publishInstagramImagePost } from "@/lib/instagram";
+import { getUserSocialConnections } from "@/server/services/socialConnections";
 
 /**
  * Publish an Instagram image post using stored Instagram credentials.
@@ -26,18 +26,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Load stored Instagram credentials
-    const { data: user, error } = await supabaseAdmin
-      .from("users")
-      .select("socialConnections")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("Failed to fetch user socialConnections:", error);
-      return NextResponse.json({ error: "Failed to load credentials" }, { status: 500 });
-    }
-
-    const ig = user?.socialConnections?.instagram;
+    const socialConnections = await getUserSocialConnections(userId);
+    const ig = socialConnections.instagram;
     const instagramUserId = ig?.businessAccountId || ig?.instagramUserId;
     const accessToken = ig?.accessToken;
     if (!instagramUserId || !accessToken) {

@@ -48,7 +48,7 @@ export default function HealthPage() {
     );
   };
 
-  const getServiceStatus = (service: any) => {
+  const getServiceStatus = (service: unknown) => {
     if (typeof service === 'string') {
       return service === 'connected' || service === 'accessible';
     }
@@ -98,15 +98,24 @@ export default function HealthPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(healthData.services).map(([service, status]) => (
+                {Object.entries(healthData.services).map(([service, status]) => {
+                  const statusText =
+                    typeof status === "string"
+                      ? status
+                      : status == null
+                        ? "Unknown"
+                        : JSON.stringify(status);
+
+                  return (
                   <div key={service} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <span className="font-medium capitalize">{service}</span>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(getServiceStatus(status))}
-                      <span className="text-sm">{status}</span>
+                      <span className="text-sm">{statusText}</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

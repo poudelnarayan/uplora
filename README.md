@@ -5,14 +5,10 @@
 
 Required:
 
-- NEXTAUTH_URL: `https://<your-domain>`
-- NEXTAUTH_SECRET: long random string (e.g., run `openssl rand -base64 32`)
-- GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET: from Google Cloud Console (enable YouTube Data API). Add redirect URIs:
-  - `https://<your-domain>/api/auth/callback/google`
-  - `http://localhost:3000/api/auth/callback/google` (for local dev)
-- DATABASE_URL:
-  - Local dev: `file:./prisma/dev.db` (SQLite)
-  - Production: Postgres connection string (Vercel Postgres/Neon/Supabase), append `?sslmode=require` if needed
+- NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY / CLERK_SECRET_KEY: from Clerk dashboard
+- NEXT_PUBLIC_SUPABASE_URL: Supabase project URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon/public key
+- SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (server-only)
 - AWS_REGION, S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 - NEXT_PUBLIC_SITE_URL: your site URL (e.g., `https://uplora.io`)
 - IG_APP_ID, IG_APP_SECRET: from your Instagram app
@@ -24,10 +20,10 @@ Optional (email for invites/notifications):
   or
 - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 
-3. Deploy. The build runs `prisma migrate deploy && next build`.
+3. Deploy. The build runs `next build`.
 
 Notes:
 
 - SSE endpoint `/api/events` and all S3 routes run on Node runtime in Vercel by default (configured in code).
 - Thumbnails proxied via `/api/images/thumb` with long-lived cache + ETag.
-- Middleware protects `/dashboard`, `/upload`, `/teams`, `/videos`, `/settings`, `/subscription` and redirects to `/signin` if unauthenticated.
+- Middleware enables Clerk auth context across routes. Access control is handled in route/layout logic.

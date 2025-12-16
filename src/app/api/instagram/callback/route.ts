@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { updateUserSocialConnections } from "@/server/services/socialConnections";
 
 /**
  * Instagram Business Login - OAuth Callback
@@ -137,32 +137,19 @@ export async function GET(request: NextRequest) {
 
     // Step 6) Persist to Supabase `users.socialConnections.instagram`
     const connectedAt = new Date().toISOString();
-    const { data: currentUser } = await supabaseAdmin
-      .from("users")
-      .select("socialConnections")
-      .eq("id", userId)
-      .single();
-
-    const socialConnections = {
-      ...(currentUser?.socialConnections || {}),
-      instagram: {
-        connectedAt,
-        instagramUserId,
-        businessAccountId,
-        accessToken,
-        tokenExpiresAt,
-      },
-    };
-
-    const { error: updateError } = await supabaseAdmin
-      .from("users")
-      .update({
-        socialConnections,
-        updatedAt: new Date().toISOString(),
-      })
-      .eq("id", userId);
-
-    if (updateError) {
+    try {
+      await updateUserSocialConnections(userId, current => ({
+        ...current,
+        instagram: {
+          ...(current.instagram || {}),
+          connectedAt,
+          instagramUserId,
+          businessAccountId,
+          accessToken,
+          tokenExpiresAt,
+        },
+      }));
+    } catch (updateError) {
       console.error("Failed to save Instagram connection:", updateError);
       return NextResponse.redirect(new URL("/social?error=instagram_save_failed", request.url));
     }
