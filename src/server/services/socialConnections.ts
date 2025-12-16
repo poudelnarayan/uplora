@@ -11,7 +11,9 @@ export async function getUserSocialConnections(userId: string): Promise<SocialCo
   const { data, error } = await supabaseAdmin
     .from("users")
     .select("socialConnections")
-    .eq("id", userId)
+    // IMPORTANT: In production the `users.id` may be a UUID, while `clerkId` is the Clerk user id.
+    // Always key lookups by `clerkId` to avoid "connected but status shows disconnected".
+    .eq("clerkId", userId)
     .single();
 
   if (error) throw error;
@@ -31,7 +33,7 @@ export async function updateUserSocialConnections(
       socialConnections: next,
       updatedAt: new Date().toISOString(),
     })
-    .eq("id", userId);
+    .eq("clerkId", userId);
 
   if (error) throw error;
   return next;

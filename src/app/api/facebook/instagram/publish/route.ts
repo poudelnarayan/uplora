@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getUserSocialConnections } from "@/server/services/socialConnections";
 
 /**
  * Step 7: Post to Instagram (2 calls, always)
@@ -26,19 +26,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "imageUrl is required" }, { status: 400 });
     }
 
-    const { data: user, error } = await supabaseAdmin
-      .from("users")
-      .select("socialConnections")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("IG publish: failed to load user", error);
-      return NextResponse.json({ error: "Failed to load connection" }, { status: 500 });
-    }
-
-    const fb = user?.socialConnections?.facebook;
-    const igBusinessId = fb?.instagramBusinessAccountId || user?.socialConnections?.instagram?.businessAccountId;
+    const social = await getUserSocialConnections(userId);
+    const fb = social.facebook;
+    const igBusinessId = fb?.instagramBusinessAccountId || social.instagram?.businessAccountId;
     const pageToken = fb?.selectedPageAccessToken;
 
     if (!igBusinessId || !pageToken) {

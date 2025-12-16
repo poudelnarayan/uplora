@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getUserSocialConnections } from "@/server/services/socialConnections";
 
 /**
  * Step 6: Test Facebook posting FIRST
@@ -18,18 +18,8 @@ export async function POST(request: NextRequest) {
       ? body.message.trim()
       : "Hello from Uplora";
 
-    const { data: user, error } = await supabaseAdmin
-      .from("users")
-      .select("socialConnections")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("FB test-post: failed to load user", error);
-      return NextResponse.json({ error: "Failed to load connection" }, { status: 500 });
-    }
-
-    const fb = user?.socialConnections?.facebook;
+    const social = await getUserSocialConnections(userId);
+    const fb = social.facebook;
     const pageId = fb?.selectedPageId;
     const pageToken = fb?.selectedPageAccessToken;
 
