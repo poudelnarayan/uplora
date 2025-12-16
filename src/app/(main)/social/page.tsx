@@ -26,6 +26,11 @@ const SocialConnections = () => {
     isConnected: false,
     userId: null,
   });
+  const [pin, setPin] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
+    loading: true,
+    isConnected: false,
+    username: null,
+  });
 
   useEffect(() => {
     // Load YouTube status
@@ -77,6 +82,17 @@ const SocialConnections = () => {
         setTh({ loading: false, isConnected: !!data?.isConnected, userId: data?.threadsUserId || null });
       } catch {
         setTh({ loading: false, isConnected: false, userId: null });
+      }
+    })();
+
+    // Load Pinterest status
+    (async () => {
+      try {
+        const res = await fetch("/api/pinterest/status", { cache: "no-store" });
+        const data = await res.json();
+        setPin({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
+      } catch {
+        setPin({ loading: false, isConnected: false, username: null });
       }
     })();
   }, []);
@@ -144,8 +160,8 @@ const SocialConnections = () => {
     {
       id: "pinterest",
       name: "Pinterest",
-      connected: false,
-      username: null,
+      connected: pin.isConnected,
+      username: pin.username ? `@${pin.username}` : null,
       bgColor: "bg-gradient-to-br from-red-600/10 to-rose-600/10"
     },
     {
@@ -217,6 +233,11 @@ const SocialConnections = () => {
                           if (!resp.ok) throw new Error('Failed');
                           notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Threads disconnected' });
                           setTh({ loading: false, isConnected: false, userId: null });
+                        } else if (platform.id === 'pinterest') {
+                          resp = await fetch('/api/pinterest/disconnect', { method: 'POST' });
+                          if (!resp.ok) throw new Error('Failed');
+                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Pinterest disconnected' });
+                          setPin({ loading: false, isConnected: false, username: null });
                         }
                       } catch (e) {
                         notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
@@ -258,6 +279,13 @@ const SocialConnections = () => {
                       <a href="/api/threads/auth/connect">
                         <Link2 className="h-4 w-4" />
                         {th.loading ? "Checking…" : "Connect Threads"}
+                      </a>
+                    </Button>
+                  ) : platform.id === "pinterest" ? (
+                    <Button asChild className="w-full gap-2" disabled={pin.loading}>
+                      <a href="/api/pinterest/auth/connect">
+                        <Link2 className="h-4 w-4" />
+                        {pin.loading ? "Checking…" : "Connect Pinterest"}
                       </a>
                     </Button>
                   ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
