@@ -66,6 +66,17 @@ export const socialConnectionsSchema = z
   .object({
     facebook: facebookConnectionSchema.nullable().optional(),
     instagram: instagramConnectionSchema.nullable().optional(),
+    threads: z
+      .object({
+        connectedAt: z.string().datetime().optional(),
+        accessToken: z.string().optional(),
+        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        threadsUserId: z.string().optional(),
+        scope: z.string().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
     tiktok: z
       .object({
         connectedAt: z.string().datetime().optional(),
