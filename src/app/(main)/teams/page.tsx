@@ -197,45 +197,47 @@ const Teams = () => {
 
   return (
     <AppShell>
+      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="min-h-full"
+        >
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-border">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground">Team Management</h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Create teams, manage members, and control platform access
+                </p>
+              </div>
 
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen w-full p-6 lg:p-8 space-y-8"
-    >
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-2">
-            Team Management
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Create teams, manage members, and control platform access
-          </p>
-        </div>
-        
-        <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            className="gap-2" 
-            onClick={() => openInviteDialog()}
-            disabled={teams.length === 0 || isLoading}
-          >
-            <UserPlus className="h-4 w-4" />
-            Invite Member
-          </Button>
-          
-          <CreateTeamDialog 
-            onCreateTeam={handleCreateTeam} 
-            isOpen={isCreateTeamOpen}
-            onOpenChange={setIsCreateTeamOpen}
-            isLoading={isCreatingTeam}
-          />
-        </div>
-      </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => openInviteDialog()}
+                  disabled={teams.length === 0 || isLoading}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Invite Member
+                </Button>
 
-      {/* Teams Grid */}
-      <div className={`relative grid gap-6 ${
+                <CreateTeamDialog
+                  onCreateTeam={handleCreateTeam}
+                  isOpen={isCreateTeamOpen}
+                  onOpenChange={setIsCreateTeamOpen}
+                  isLoading={isCreatingTeam}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            <div className={`relative grid gap-6 ${
         teams.length === 1 
           ? "grid-cols-1" 
           : teams.length === 2 
@@ -416,40 +418,40 @@ const Teams = () => {
         )}
           </>
         )}
+            </div>
+          </div>
+
+          {/* Dialogs */}
+          <InviteMemberDialog
+            isOpen={isInviteOpen}
+            onClose={() => {
+              setIsInviteOpen(false);
+              setSelectedTeamForInvite(undefined);
+            }}
+            teams={teams}
+            selectedTeamId={selectedTeamForInvite}
+            onInviteMember={handleInviteMember}
+          />
+
+          <EditTeamDialog
+            isOpen={!!editingTeam}
+            onClose={() => setEditingTeam(null)}
+            team={editingTeam}
+            onUpdateTeam={handleUpdateTeam}
+          />
+
+          <TeamDetailsDialog
+            isOpen={!!viewingTeam}
+            onClose={() => setViewingTeam(null)}
+            team={viewingTeam}
+            onRemoveMember={handleRemoveMember}
+            onEditTeam={setEditingTeam}
+            onInviteMember={openInviteDialog}
+            onUpdateTeam={handleUpdateTeam}
+          />
+        </motion.div>
       </div>
-
-
-      {/* Dialogs */}
-      <InviteMemberDialog
-        isOpen={isInviteOpen}
-        onClose={() => {
-          setIsInviteOpen(false);
-          setSelectedTeamForInvite(undefined);
-        }}
-        teams={teams}
-        selectedTeamId={selectedTeamForInvite}
-        onInviteMember={handleInviteMember}
-      />
-
-      <EditTeamDialog
-        isOpen={!!editingTeam}
-        onClose={() => setEditingTeam(null)}
-        team={editingTeam}
-        onUpdateTeam={handleUpdateTeam}
-      />
-
-      <TeamDetailsDialog
-        isOpen={!!viewingTeam}
-        onClose={() => setViewingTeam(null)}
-        team={viewingTeam}
-        onRemoveMember={handleRemoveMember}
-        onEditTeam={setEditingTeam}
-        onInviteMember={openInviteDialog}
-        onUpdateTeam={handleUpdateTeam}
-        />
-      </motion.div>
-
-        </AppShell>
+    </AppShell>
   );
 };
 

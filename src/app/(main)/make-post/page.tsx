@@ -19,17 +19,31 @@ export default function MakePostPage() {
   if (!isLoaded) return null;
   if (!user) return <RedirectToSignIn redirectUrl="/upload" />;
  
-  return ( 
+  return (
     <>
-      <AppShell>
       <NextSeoNoSSR title="Create Content" noindex nofollow />
-      
-      <div className="min-h-[calc(100vh-8rem)] flex flex-col justify-center items-center px-4 py-0">
-        <MakePostInterface 
-          selectedTeam={selectedTeam}
-          selectedTeamId={selectedTeamId}
-        />
-      </div>
+      <AppShell>
+        <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+          <MotionDiv
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="min-h-full"
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-border">
+              <h1 className="text-2xl font-semibold text-foreground">Create Content</h1>
+              <p className="text-muted-foreground text-sm mt-1">Choose a content type to get started</p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 flex justify-center items-start min-h-[calc(100vh-5rem)]">
+              <MakePostInterface
+                selectedTeam={selectedTeam}
+                selectedTeamId={selectedTeamId}
+              />
+            </div>
+          </MotionDiv>
+        </div>
       </AppShell>
     </>
   );

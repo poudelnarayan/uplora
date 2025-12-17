@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, Clock } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -9,6 +10,8 @@ import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Label } from "@/app/components/ui/label";
 import AppShell from "@/app/components/layout/AppLayout";
+
+const MotionDiv = motion.div as any;
 
 const SocialConnections = () => {
   const notifications = useNotifications();
@@ -270,14 +273,21 @@ const SocialConnections = () => {
 
   return (
     <AppShell>
-    <div className="container mx-auto px-4 py-12 space-y-8">
-      
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold">Social Media Connections</h1>
-        <p className="text-muted-foreground">Connect your social media accounts</p>
-      </div>
+      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+        <MotionDiv
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="min-h-full"
+        >
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-border">
+            <h1 className="text-2xl font-semibold text-foreground">Social Media Connections</h1>
+            <p className="text-muted-foreground text-sm mt-1">Connect your social media accounts</p>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Content */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {platforms.map((platform) => (
           <Card key={platform.id} className="hover:shadow-lg transition-all duration-300">
             <CardContent className={`p-6 ${platform.bgColor}`}>
@@ -432,7 +442,7 @@ const SocialConnections = () => {
             </CardContent>
           </Card>
         ))}
-        
+
         {/* Request Platform Card */}
         <Card className="hover:shadow-lg transition-all duration-300 border-dashed border-2">
           <CardContent className="p-6">
@@ -440,7 +450,7 @@ const SocialConnections = () => {
               <div className="w-12 h-12 mx-auto bg-muted rounded-full flex items-center justify-center">
                 <Plus className="h-6 w-6 text-muted-foreground" />
               </div>
-              
+
               <div>
                 <h3 className="font-semibold">Request Platform</h3>
                 <p className="text-sm text-muted-foreground">Don't see your platform?</p>
@@ -457,7 +467,8 @@ const SocialConnections = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+            </div>
+          </div>
 
       <Dialog open={requestOpen} onOpenChange={(v) => { if (!requestSubmitting) setRequestOpen(v); }}>
         <DialogContent>
@@ -545,9 +556,9 @@ const SocialConnections = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+        </MotionDiv>
       </div>
-      </AppShell>
+    </AppShell>
   );
 };
 
