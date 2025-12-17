@@ -27,21 +27,12 @@ export default function MakePostPage() {
           <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="min-h-full"
+            className="min-h-full flex items-center justify-center"
           >
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-border">
-              <h1 className="text-2xl font-semibold text-foreground">Create Content</h1>
-              <p className="text-muted-foreground text-sm mt-1">Choose a content type to get started</p>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 flex justify-center items-start min-h-[calc(100vh-5rem)]">
-              <MakePostInterface
-                selectedTeam={selectedTeam}
-                selectedTeamId={selectedTeamId}
-              />
-            </div>
+            <MakePostInterface
+              selectedTeam={selectedTeam}
+              selectedTeamId={selectedTeamId}
+            />
           </MotionDiv>
         </div>
       </AppShell>
