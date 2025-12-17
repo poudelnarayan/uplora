@@ -142,93 +142,80 @@ export const TeamDetailsDialog = ({
         <div className="space-y-8 py-6">
 
           {/* Platform Access */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Platform Access</h3>
+              <h3 className="text-lg font-semibold">Platform Access</h3>
               <Link href="/social">
-                <Button variant="outline" size="sm" className="gap-2 text-xs">
+                <Button variant="outline" size="sm" className="gap-2 h-8 text-xs">
                   <LinkIcon className="h-3 w-3" />
-                  Connect Platforms
+                  Connect More
                 </Button>
               </Link>
             </div>
 
-            {/* Connected Platforms */}
+            {/* Connected Platforms as Chips */}
             {team.platforms.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Team has access to these platforms</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {team.platforms.map((platform) => (
-                    <div key={platform} className="relative group">
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-md text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
-                        {(() => {
-                          const Icon = platformIcons[platform as keyof typeof platformIcons];
-                          return <Icon className="h-3.5 w-3.5" />;
-                        })()}
-                        <span className="capitalize">{platform}</span>
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full"
-                        onClick={() => handleRemovePlatform(platform)}
-                      >
-                        <X className="h-2 w-2" />
-                      </Button>
+              <div className="flex flex-wrap gap-2">
+                {team.platforms.map((platform) => (
+                  <div key={platform} className="relative group">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-full text-xs font-medium text-green-700 dark:text-green-300 transition-all hover:shadow-sm">
+                      {(() => {
+                        const Icon = platformIcons[platform as keyof typeof platformIcons];
+                        return <Icon className="h-3.5 w-3.5" />;
+                      })()}
+                      <span className="capitalize">{platform}</span>
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                     </div>
-                  ))}
-                </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute -top-1 -right-1 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm"
+                      onClick={() => handleRemovePlatform(platform)}
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             ) : (
-              <Card className="text-center py-8 border-dashed">
-                <CardContent>
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="p-3 rounded-full bg-muted">
-                      <LinkIcon className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">No platforms added yet</h4>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Connect your social media accounts to give this team access
-                      </p>
-                      <Link href="/social">
-                        <Button size="sm" className="gap-2">
-                          <LinkIcon className="h-3 w-3" />
-                          Connect Platforms
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-dashed">
+                <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">No platforms connected.</p>
+                </div>
+                <Link href="/social">
+                  <Button size="sm" variant="ghost" className="text-xs h-7 gap-1 flex-shrink-0">
+                    <LinkIcon className="h-3 w-3" />
+                    Connect
+                  </Button>
+                </Link>
+              </div>
             )}
 
             {/* Quick Add - Show available platforms */}
             {team.platforms.length > 0 && Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Add More Platforms</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).slice(0, 6).map((platform) => (
-                    <div
-                      key={platform}
-                      className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 hover:bg-muted border border-dashed border-muted-foreground/30 hover:border-primary/50 rounded-md cursor-pointer transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
-                      onClick={() => handleAddPlatform(platform)}
-                    >
-                      {(() => {
-                        const Icon = platformIcons[platform as keyof typeof platformIcons];
-                        return <Icon className="h-3 w-3" />;
-                      })()}
-                      <span className="capitalize">{platform}</span>
-                      <Plus className="h-2.5 w-2.5 opacity-50" />
-                    </div>
-                  ))}
-                  {Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).length > 6 && (
-                    <div className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
-                      +{Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).length - 6} more
-                    </div>
-                  )}
-                </div>
+              <div className="pt-2">
+                <details className="group">
+                  <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
+                    <Plus className="h-3 w-3" />
+                    Add more platforms
+                  </summary>
+                  <div className="flex flex-wrap gap-1.5 mt-2 pt-2">
+                    {Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).map((platform) => (
+                      <div
+                        key={platform}
+                        className="flex items-center gap-1 px-2 py-1 bg-muted/50 hover:bg-muted border border-dashed border-border hover:border-primary/50 rounded-md cursor-pointer transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
+                        onClick={() => handleAddPlatform(platform)}
+                      >
+                        {(() => {
+                          const Icon = platformIcons[platform as keyof typeof platformIcons];
+                          return <Icon className="h-3 w-3" />;
+                        })()}
+                        <span className="capitalize">{platform}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               </div>
             )}
           </div>
