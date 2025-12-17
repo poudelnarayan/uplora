@@ -93,11 +93,7 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Team
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onInviteMember(team.id)}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Invite Member
-                </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onDelete(team.id)}
                 >
@@ -130,15 +126,11 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
           </div>
 
           <Separator />
-          
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => onViewTeam(team)}>
+
+          <div className="flex justify-center">
+            <Button size="sm" variant="outline" className="gap-2" onClick={() => onViewTeam(team)}>
               <Eye className="h-4 w-4" />
               View Team
-            </Button>
-            <Button size="sm" className="flex-1 gap-2" onClick={() => onInviteMember(team.id)}>
-              <UserPlus className="h-4 w-4" />
-              Add Member
             </Button>
           </div>
         </CardContent>

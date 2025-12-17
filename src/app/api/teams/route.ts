@@ -70,9 +70,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Basic validation
-    const { name, description } = body;
+    const { name, description, platforms } = body;
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Team name is required"),
@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
         id: teamId,
         name: name.trim(),
         description: description?.trim() || "",
+        platforms: platforms || [],
         ownerId: user.id,
         isPersonal: false, // Team workspaces are never personal
         createdAt: now,
@@ -361,6 +362,7 @@ export async function GET(request: NextRequest) {
         id: team.id,
         name: team.name,
         description: team.description,
+        platforms: (team as any).platforms || [],
         isPersonal: team.isPersonal || false,
         createdAt: team.createdAt,
         updatedAt: team.updatedAt,

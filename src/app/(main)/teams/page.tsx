@@ -65,7 +65,7 @@ const Teams = () => {
     backendId: t.id,
     name: t.name,
     description: t.description || '',
-    platforms: [],
+    platforms: (t as any).platforms || [],
     members_data: ((t as any).members_data || []).map((m: any, idx: number) => ({
       id: idx + 1,
       name: m?.name || '',
@@ -104,7 +104,7 @@ const Teams = () => {
       const res = await fetch('/api/teams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: teamData.name, description: teamData.description })
+        body: JSON.stringify({ name: teamData.name, description: teamData.description, platforms: teamData.platforms })
       });
       const js = await res.json();
       if (!res.ok) throw new Error(js?.error || 'Failed to create team');
@@ -214,17 +214,6 @@ const Teams = () => {
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => openInviteDialog()}
-                  disabled={teams.length === 0 || isLoading}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Invite Member
-                </Button>
-
                 <CreateTeamDialog
                   onCreateTeam={handleCreateTeam}
                   isOpen={isCreateTeamOpen}
@@ -324,11 +313,7 @@ const Teams = () => {
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Team
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openInviteDialog(teams[0].id)}>
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Invite Member
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => handleDeleteTeam(teams[0].id)}
                       >
@@ -406,15 +391,11 @@ const Teams = () => {
                 </div>
 
                 <Separator />
-                
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 gap-2" onClick={() => setViewingTeam(teams[0])}>
+
+                <div className="flex justify-center">
+                  <Button variant="outline" className="gap-2" onClick={() => setViewingTeam(teams[0])}>
                     <Eye className="h-4 w-4" />
                     View Team Details
-                  </Button>
-                  <Button className="flex-1 gap-2" onClick={() => openInviteDialog(teams[0].id)}>
-                    <UserPlus className="h-4 w-4" />
-                    Invite Member
                   </Button>
                 </div>
               </CardContent>

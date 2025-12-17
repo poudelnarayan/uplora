@@ -143,15 +143,7 @@ export const TeamDetailsDialog = ({
 
           {/* Platform Access */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Platform Access</h3>
-              <Link href="/social">
-                <Button variant="outline" size="sm" className="gap-2 h-8 text-xs">
-                  <LinkIcon className="h-3 w-3" />
-                  Connect More
-                </Button>
-              </Link>
-            </div>
+            <h3 className="text-lg font-semibold">Platform Access</h3>
 
             {/* Connected Platforms as Chips */}
             {team.platforms.length > 0 ? (
