@@ -51,17 +51,34 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
       <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 group">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-1">
               <div className={`p-3 rounded-xl bg-gradient-to-r ${team.color} text-white shadow-lg`}>
                 <Users className="h-5 w-5" />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
                   {team.name}
                 </CardTitle>
                 <CardDescription className="text-sm">
                   {team.members_data.length} member{team.members_data.length !== 1 ? 's' : ''}
                 </CardDescription>
+                {team.members_data && team.members_data.length > 0 && (
+                  <div className="flex -space-x-2 mt-2">
+                    {team.members_data.slice(0, 5).map((member) => (
+                      <Avatar key={member.id} className="border-2 border-background h-7 w-7" title={member.name}>
+                        <AvatarImage src={member.avatar} />
+                        <AvatarFallback className="text-xs bg-muted">
+                          {member.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {team.members_data.length > 5 && (
+                      <div className="h-7 w-7 rounded-full border-2 border-background bg-muted flex items-center justify-center" title={`+${team.members_data.length - 5} more`}>
+                        <span className="text-xs font-medium">+{team.members_data.length - 5}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -111,28 +128,7 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
               ))}
             </div>
           </div>
-          
-          {team.members_data && team.members_data.length > 0 && (
-            <div className="space-y-3">
-              <span className="text-sm font-medium">Team Members</span>
-              <div className="flex -space-x-2">
-                {team.members_data.slice(0, 4).map((member) => (
-                  <Avatar key={member.id} className="border-2 border-background h-8 w-8">
-                    <AvatarImage src={member.avatar} />
-                    <AvatarFallback className="text-xs bg-muted">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-                {team.members_data.length > 4 && (
-                  <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                    <span className="text-xs font-medium">+{team.members_data.length - 4}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          
+
           <Separator />
           
           <div className="flex gap-2">

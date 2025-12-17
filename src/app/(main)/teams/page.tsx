@@ -59,8 +59,8 @@ const Teams = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Transform context teams to local Team format
-  const teams = contextTeams.map((t, i) => ({
+  // Transform context teams to local Team format - newest first
+  const teams = contextTeams.slice().reverse().map((t, i) => ({
     id: i + 1,
     backendId: t.id,
     name: t.name,
@@ -109,15 +109,15 @@ const Teams = () => {
       const js = await res.json();
       if (!res.ok) throw new Error(js?.error || 'Failed to create team');
       
-      // Hide loading immediately after successful creation
-      setIsCreatingTeam(false);
-      setIsCreateTeamOpen(false);
-      
       // Show success message immediately
       toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
-      
+
       // Force refresh teams so the newly created team appears immediately (bypass cache TTL)
-      refreshTeams(true).catch(console.error);
+      await refreshTeams(true);
+
+      // Hide loading and close dialog after teams are refreshed
+      setIsCreatingTeam(false);
+      setIsCreateTeamOpen(false);
     } catch (e) {
       setIsCreatingTeam(false);
       toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
@@ -272,11 +272,11 @@ const Teams = () => {
             <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1">
                     <div className={`p-4 rounded-2xl bg-gradient-to-r ${teams[0].color} text-white shadow-2xl`}>
                       <Users className="h-8 w-8" />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h2 className="text-2xl font-bold text-foreground">{teams[0].name}</h2>
                       <p className="text-muted-foreground mt-1">{teams[0].description}</p>
                       <div className="flex items-center gap-4 mt-3">
@@ -293,6 +293,23 @@ const Teams = () => {
                           </span>
                         </div>
                       </div>
+                      {teams[0].members_data && teams[0].members_data.length > 0 && (
+                        <div className="flex -space-x-2 mt-3">
+                          {teams[0].members_data.slice(0, 6).map((member: TeamMember) => (
+                            <Avatar key={member.id} className="border-2 border-background h-8 w-8" title={member.name}>
+                              <AvatarImage src={member.avatar} />
+                              <AvatarFallback className="text-xs bg-muted">
+                                {member.name.split(' ').map((n: string) => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                          ))}
+                          {teams[0].members_data.length > 6 && (
+                            <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center" title={`+${teams[0].members_data.length - 6} more`}>
+                              <span className="text-xs font-medium">+{teams[0].members_data.length - 6}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

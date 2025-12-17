@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
 import { Button } from "@/app/components/ui/button";
@@ -45,6 +45,16 @@ export const InviteMemberDialog = ({
   const [emailError, setEmailError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+
+  // Auto-select team when selectedTeamId changes
+  useEffect(() => {
+    if (selectedTeamId) {
+      setMemberData(prev => ({
+        ...prev,
+        teamId: selectedTeamId
+      }));
+    }
+  }, [selectedTeamId, isOpen]);
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
