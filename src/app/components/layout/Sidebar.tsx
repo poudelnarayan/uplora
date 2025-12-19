@@ -47,6 +47,12 @@ const navItems: NavItem[] = [
     href: '/dashboard'
   },
   {
+    id: 'approvals',
+    label: 'Approvals',
+    icon: <ShieldCheck className="w-5 h-5" />,
+    href: '/approvals'
+  },
+  {
     id: 'videos',
     label: 'Videos',
     icon: <FileText className="w-5 h-5" />,

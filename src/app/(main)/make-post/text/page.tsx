@@ -41,6 +41,10 @@ function MakePostTextContent() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Instagram", "X (Twitter)"]);
   const [isSaving, setIsSaving] = useState(false);
   const [loadingExisting, setLoadingExisting] = useState<boolean>(!!editId);
+  const [postStatus, setPostStatus] = useState<string | null>(null);
+  const [role, setRole] = useState<"OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | null>(null);
+  const [requestingApproval, setRequestingApproval] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   const platforms = [
     { id: "Instagram", name: "Instagram", limit: 2200 },
@@ -59,6 +63,14 @@ function MakePostTextContent() {
         if (!res.ok) throw new Error(data?.error || 'Failed to load post');
         setContent(data.content || "");
         if (Array.isArray(data.platforms)) setSelectedPlatforms(data.platforms);
+        if (typeof data.status === "string") setPostStatus(data.status);
+        try {
+          const rr = await fetch(`/api/content/${editId}/role`, { cache: "no-store" });
+          if (rr.ok) {
+            const rj = await rr.json();
+            setRole(rj?.role ?? null);
+          }
+        } catch {}
       } catch (e) {
         notifications.addNotification({ type: 'error', title: 'Failed to load', message: e instanceof Error ? e.message : 'Try again' });
       } finally {
@@ -67,6 +79,44 @@ function MakePostTextContent() {
     };
     load();
   }, [editId, notifications]);
+
+  const locked = !!editId && postStatus === "PENDING" && role === "EDITOR";
+
+  const requestApproval = async () => {
+    if (!editId) {
+      notifications.addNotification({ type: "error", title: "Save first", message: "Save the post before requesting approval." });
+      return;
+    }
+    setRequestingApproval(true);
+    try {
+      const res = await fetch(`/api/content/${editId}/request-approval`, { method: "POST" });
+      const js = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(js?.error || "Failed to request approval");
+      setPostStatus("PENDING");
+      notifications.addNotification({ type: "success", title: "Request sent", message: "Owner/Admin/Manager can now approve it." });
+    } catch (e) {
+      notifications.addNotification({ type: "error", title: "Request failed", message: e instanceof Error ? e.message : "Try again" });
+    } finally {
+      setRequestingApproval(false);
+    }
+  };
+
+  const approve = async () => {
+    if (!editId) return;
+    setApproving(true);
+    try {
+      const res = await fetch(`/api/content/${editId}/approve`, { method: "POST" });
+      const js = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(js?.error || "Failed to approve");
+      setPostStatus(js?.status || "PUBLISHED");
+      notifications.addNotification({ type: "success", title: "Approved", message: `Status set to ${js?.status || "PUBLISHED"}` });
+      router.push("/approvals");
+    } catch (e) {
+      notifications.addNotification({ type: "error", title: "Approve failed", message: e instanceof Error ? e.message : "Try again" });
+    } finally {
+      setApproving(false);
+    }
+  };
 
   const togglePlatform = (platformId: string) => {
     setSelectedPlatforms(prev => 
@@ -209,15 +259,38 @@ function MakePostTextContent() {
                 )}
                 {loadingExisting ? 'Loading...' : isSaving ? 'Saving...' : (editId ? 'Save Changes' : 'Save Post')}
               </Button>
+              {editId && role === "EDITOR" && postStatus !== "PENDING" && (
+                <Button
+                  variant="secondary"
+                  onClick={requestApproval}
+                  disabled={requestingApproval || isSaving || loadingExisting}
+                >
+                  {requestingApproval ? <InlineSpinner size="sm" className="mr-2" /> : null}
+                  Request Approval
+                </Button>
+              )}
+              {editId && postStatus === "PENDING" && role && ["OWNER", "ADMIN", "MANAGER"].includes(role) && (
+                <Button onClick={approve} disabled={approving || loadingExisting}>
+                  {approving ? <InlineSpinner size="sm" className="mr-2" /> : null}
+                  Approve & Publish
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
+        {editId && postStatus === "PENDING" && (
+          <div className="mb-4 rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+            {role === "EDITOR"
+              ? "This post is awaiting approval. Editing is locked until it’s approved or sent back."
+              : "This post is awaiting approval. You can approve & publish from the top bar."}
+          </div>
+        )}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className={`lg:col-span-2 space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
             
             {/* Platform Selection - Compact */}
             <Card className="shadow-sm">
