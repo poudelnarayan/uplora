@@ -119,9 +119,11 @@ const Teams = () => {
       // Hide loading and close dialog after teams are refreshed
       setIsCreatingTeam(false);
       setIsCreateTeamOpen(false);
+      return js;
     } catch (e) {
       setIsCreatingTeam(false);
       toast({ title: 'Failed to create team', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
+      throw e;
     }
   }, [refreshTeams, toast]);
 

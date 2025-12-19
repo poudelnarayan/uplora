@@ -11,7 +11,7 @@ import { PlatformIcon, platformIcons } from "./PlatformIcon";
 import { Card, CardContent } from "@/app/components/ui/card";
 
 interface CreateTeamDialogProps {
-  onCreateTeam: (team: { name: string; description: string; platforms: string[] }) => void;
+  onCreateTeam: (team: { name: string; description: string; platforms: string[] }) => Promise<unknown> | unknown;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   isLoading?: boolean;
@@ -85,11 +85,17 @@ export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenC
     }
   }, [isOpen]);
 
-  const handleSubmit = () => {
-    if (newTeam.name.trim()) {
-      onCreateTeam(newTeam);
+  const handleSubmit = async () => {
+    if (!newTeam.name.trim() || isLoading) return;
+    try {
+      // Wait for the async create to finish so the loading spinner is meaningful,
+      // and only close the dialog once the UI will reflect the new team.
+      await Promise.resolve(onCreateTeam(newTeam));
       setNewTeam({ name: "", description: "", platforms: [] });
       setIsOpen(false);
+    } catch (e) {
+      // Keep dialog open; parent will typically toast the error already.
+      console.error("Create team failed:", e);
     }
   };
 
