@@ -303,11 +303,11 @@ export default function Dashboard() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-primary rounded-2xl shadow-gold">
-                    <Sparkles className="w-8 h-8 text-secondary" />
+                  <div className="p-3 bg-gradient-primary rounded-2xl shadow-sage">
+                    <Sparkles className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-display font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <h1 className="text-4xl font-display font-bold text-primary">
                       {selectedTeam?.name ? selectedTeam.name : "Personal Workspace"}
                     </h1>
                     <p className="text-muted-foreground mt-1 text-lg">
@@ -317,12 +317,12 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Filter Buttons - Luxury Style */}
+              {/* Filter Buttons */}
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button
                   onClick={() => setTypeFilter(['text'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('text') ? 'default' : 'outline'}
-                  className="gap-2 hover-gold transition-luxury border-2"
+                  className="gap-2 hover-sage transition-luxury border-2"
                   size="lg"
                 >
                   <FileText className="w-4 h-4" />
@@ -331,7 +331,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['image'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('image') ? 'default' : 'outline'}
-                  className="gap-2 hover-gold transition-luxury border-2"
+                  className="gap-2 hover-sage transition-luxury border-2"
                   size="lg"
                 >
                   <ImageIcon className="w-4 h-4" />
@@ -340,7 +340,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['reel'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('reel') ? 'default' : 'outline'}
-                  className="gap-2 hover-gold transition-luxury border-2"
+                  className="gap-2 hover-sage transition-luxury border-2"
                   size="lg"
                 >
                   <Play className="w-4 h-4" />
@@ -349,7 +349,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['video'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('video') ? 'default' : 'outline'}
-                  className="gap-2 hover-gold transition-luxury border-2"
+                  className="gap-2 hover-sage transition-luxury border-2"
                   size="lg"
                 >
                   <Video className="w-4 h-4" />
@@ -358,7 +358,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['video', 'image', 'text', 'reel'])}
                   variant={selectedTypes.length === 4 ? 'default' : 'outline'}
-                  className="gap-2 hover-gold transition-luxury border-2"
+                  className="gap-2 hover-sage transition-luxury border-2"
                   size="lg"
                 >
                   <Star className="w-4 h-4" />

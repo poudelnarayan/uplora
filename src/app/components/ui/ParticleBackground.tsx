@@ -41,9 +41,9 @@ export const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     window.addEventListener('resize', resizeCanvas);
 
     const colors = [
-      'rgba(212, 175, 55, 0.3)',
-      'rgba(16, 185, 129, 0.3)',
-      'rgba(255, 255, 255, 0.2)',
+      'rgba(151, 168, 122, 0.3)',
+      'rgba(168, 187, 163, 0.3)',
+      'rgba(255, 162, 57, 0.25)',
     ];
 
     const initParticles = () => {
@@ -85,7 +85,7 @@ export const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
 
           if (distance < 150) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - distance / 150)})`;
+            ctx.strokeStyle = `rgba(151, 168, 122, ${0.1 * (1 - distance / 150)})`;
             ctx.lineWidth = 0.5;
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(otherParticle.x, otherParticle.y);

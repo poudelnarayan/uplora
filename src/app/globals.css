@@ -2,221 +2,228 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Uplora Luxury Design System - Premium Brand Experience
-All colors MUST be HSL. Sophisticated gradients and refined aesthetics.
+/* Uplora Design System - 6-Color Palette
+#97A87A - Sage Green (Primary)
+#A8BBA3 - Light Sage (Accent)
+#FCF9EA - Cream (Background)
+#FFA239 - Orange (Highlight)
++ Black & White
 */
 
 @layer base {
   :root {
-    /* Core Background & Text - Luxury Cream & Charcoal */
-    --background: 40 20% 97%;
-    --foreground: 0 0% 10%;
+    /* Core Background & Text - Cream & Black */
+    --background: 50 60% 96%;
+    --foreground: 0 0% 0%;
 
-    /* Card System - Premium White with subtle warmth */
+    /* Card System - White */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 0%;
 
     /* Popover System */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 0%;
 
-    /* Primary Brand - Rich Gold */
-    --primary: 43 74% 49%;
-    --primary-hover: 43 74% 42%;
-    --primary-glow: 45 100% 60%;
-    --primary-foreground: 0 0% 10%;
+    /* Primary - Sage Green #97A87A */
+    --primary: 82 24% 57%;
+    --primary-hover: 82 24% 47%;
+    --primary-glow: 82 34% 67%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Sophisticated Charcoal */
-    --secondary: 210 11% 15%;
+    /* Secondary - Black */
+    --secondary: 0 0% 0%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted Elements - Warm Grays */
-    --muted: 30 10% 92%;
-    --muted-foreground: 30 5% 40%;
+    /* Muted - Light Sage tints */
+    --muted: 100 23% 90%;
+    --muted-foreground: 82 20% 35%;
 
-    /* Accent - Emerald Elegance */
-    --accent: 158 64% 42%;
-    --accent-hover: 158 64% 36%;
-    --accent-glow: 158 64% 52%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Light Sage #A8BBA3 */
+    --accent: 100 23% 69%;
+    --accent-hover: 100 23% 59%;
+    --accent-glow: 100 33% 79%;
+    --accent-foreground: 0 0% 0%;
 
-    /* Success - Rich Green */
-    --success: 142 71% 45%;
+    /* Orange - Highlight #FFA239 */
+    --orange: 33 100% 62%;
+    --orange-hover: 33 100% 52%;
+    --orange-foreground: 0 0% 0%;
+
+    /* Success - Sage Green variation */
+    --success: 82 24% 57%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 142 50% 95%;
+    --success-muted: 82 30% 95%;
 
-    /* Warning - Amber Luxury */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 10%;
-    --warning-muted: 38 90% 95%;
+    /* Warning - Orange */
+    --warning: 33 100% 62%;
+    --warning-foreground: 0 0% 0%;
+    --warning-muted: 33 100% 95%;
 
-    /* System Colors */
-    --destructive: 0 72% 51%;
+    /* System Colors - Black for destructive */
+    --destructive: 0 0% 0%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-muted: 0 70% 96%;
+    --destructive-muted: 0 0% 95%;
 
-    /* Borders & Inputs */
-    --border: 30 10% 88%;
-    --input: 30 10% 88%;
-    --ring: 43 74% 49%;
+    /* Borders & Inputs - Light sage tones */
+    --border: 100 23% 85%;
+    --input: 100 23% 85%;
+    --ring: 82 24% 57%;
 
     /* Design System Values */
     --radius: 0.875rem;
 
-    /* Premium Gradients - Luxury Feel */
+    /* Premium Gradients - Sage & Orange */
     --gradient-primary: linear-gradient(
       135deg,
-      hsl(43 74% 49%) 0%,
-      hsl(38 92% 50%) 50%,
-      hsl(43 100% 60%) 100%
+      hsl(82 24% 57%) 0%,
+      hsl(100 23% 69%) 100%
     );
     --gradient-accent: linear-gradient(
       135deg,
-      hsl(158 64% 42%) 0%,
-      hsl(158 64% 52%) 100%
+      hsl(100 23% 69%) 0%,
+      hsl(100 33% 79%) 100%
     );
     --gradient-hero: linear-gradient(
       135deg,
-      hsl(43 74% 49%) 0%,
-      hsl(158 64% 42%) 100%
+      hsl(82 24% 57%) 0%,
+      hsl(33 100% 62%) 100%
     );
     --gradient-luxury: linear-gradient(
       135deg,
-      hsl(43 74% 49%) 0%,
-      hsl(38 92% 50%) 25%,
-      hsl(30 100% 45%) 50%,
-      hsl(20 100% 50%) 75%,
-      hsl(0 80% 50%) 100%
+      hsl(82 24% 57%) 0%,
+      hsl(100 23% 69%) 50%,
+      hsl(33 100% 62%) 100%
     );
     --gradient-glass: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.9) 0%,
-      rgba(255, 255, 255, 0.7) 100%
+      rgba(252, 249, 234, 0.9) 0%,
+      rgba(252, 249, 234, 0.7) 100%
     );
     --gradient-subtle: linear-gradient(
       180deg,
-      hsl(40 20% 97%),
-      hsl(40 15% 94%)
+      hsl(50 60% 96%),
+      hsl(100 23% 95%)
     );
 
-    /* Premium Shadows - Depth & Elevation */
-    --shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.08);
-    --shadow-medium: 0 8px 24px -4px rgba(0, 0, 0, 0.12);
-    --shadow-strong: 0 16px 48px -8px rgba(0, 0, 0, 0.16);
-    --shadow-glow: 0 8px 32px -8px hsl(43 74% 49% / 0.4);
-    --shadow-gold: 0 8px 32px -8px rgba(212, 175, 55, 0.3);
-    --shadow-emerald: 0 8px 32px -8px rgba(16, 185, 129, 0.3);
+    /* Premium Shadows - Sage tones */
+    --shadow-soft: 0 2px 8px -2px rgba(151, 168, 122, 0.12);
+    --shadow-medium: 0 8px 24px -4px rgba(151, 168, 122, 0.18);
+    --shadow-strong: 0 16px 48px -8px rgba(151, 168, 122, 0.24);
+    --shadow-glow: 0 8px 32px -8px rgba(151, 168, 122, 0.4);
+    --shadow-sage: 0 8px 32px -8px rgba(151, 168, 122, 0.35);
+    --shadow-orange: 0 8px 32px -8px rgba(255, 162, 57, 0.35);
 
-    /* Animation Variables - Smooth & Luxurious */
+    /* Animation Variables */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --transition-luxury: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    /* Sidebar - Premium Dark */
-    --sidebar-background: 210 11% 15%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 210 11% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 210 11% 22%;
-    --sidebar-ring: 43 74% 49%;
+    /* Sidebar - Sage theme */
+    --sidebar-background: 82 24% 25%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 82 24% 57%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 82 24% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 82 20% 40%;
+    --sidebar-ring: 82 24% 57%;
   }
 
   .dark {
-    /* Dark Mode - Luxury Night Theme */
+    /* Dark Mode - 6-Color Palette */
     --background: 0 0% 8%;
-    --foreground: 40 10% 95%;
+    --foreground: 0 0% 95%;
 
     --card: 0 0% 12%;
-    --card-foreground: 40 10% 95%;
+    --card-foreground: 0 0% 95%;
 
     --popover: 0 0% 12%;
-    --popover-foreground: 40 10% 95%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 43 74% 55%;
-    --primary-hover: 43 74% 48%;
-    --primary-glow: 45 100% 65%;
-    --primary-foreground: 0 0% 10%;
+    --primary: 82 24% 57%;
+    --primary-hover: 82 24% 47%;
+    --primary-glow: 82 34% 67%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 210 11% 20%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 40 5% 60%;
+    --muted: 82 20% 20%;
+    --muted-foreground: 100 23% 75%;
 
-    --accent: 158 64% 48%;
-    --accent-hover: 158 64% 42%;
-    --accent-glow: 158 64% 58%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 100 23% 69%;
+    --accent-hover: 100 23% 59%;
+    --accent-glow: 100 33% 79%;
+    --accent-foreground: 0 0% 0%;
 
-    --success: 142 71% 50%;
-    --success-foreground: 0 0% 100%;
-    --success-muted: 142 50% 15%;
+    --orange: 33 100% 62%;
+    --orange-hover: 33 100% 52%;
+    --orange-foreground: 0 0% 0%;
 
-    --warning: 38 92% 55%;
-    --warning-foreground: 0 0% 10%;
-    --warning-muted: 38 90% 15%;
+    --success: 82 24% 57%;
+    --success-foreground: 0 0% 0%;
+    --success-muted: 82 20% 20%;
 
-    --destructive: 0 72% 56%;
-    --destructive-foreground: 0 0% 100%;
-    --destructive-muted: 0 70% 15%;
+    --warning: 33 100% 62%;
+    --warning-foreground: 0 0% 0%;
+    --warning-muted: 33 50% 20%;
 
-    --border: 0 0% 22%;
-    --input: 0 0% 22%;
-    --ring: 43 74% 55%;
+    --destructive: 0 0% 100%;
+    --destructive-foreground: 0 0% 0%;
+    --destructive-muted: 0 0% 20%;
+
+    --border: 82 20% 25%;
+    --input: 82 20% 25%;
+    --ring: 82 24% 57%;
 
     /* Dark Mode Gradients */
     --gradient-primary: linear-gradient(
       135deg,
-      hsl(43 74% 55%) 0%,
-      hsl(38 92% 55%) 50%,
-      hsl(43 100% 65%) 100%
+      hsl(82 24% 57%) 0%,
+      hsl(100 23% 69%) 100%
     );
     --gradient-accent: linear-gradient(
       135deg,
-      hsl(158 64% 48%) 0%,
-      hsl(158 64% 58%) 100%
+      hsl(100 23% 69%) 0%,
+      hsl(100 33% 79%) 100%
     );
     --gradient-hero: linear-gradient(
       135deg,
-      hsl(43 74% 55%) 0%,
-      hsl(158 64% 48%) 100%
+      hsl(82 24% 57%) 0%,
+      hsl(33 100% 62%) 100%
     );
     --gradient-luxury: linear-gradient(
       135deg,
-      hsl(43 74% 55%) 0%,
-      hsl(38 92% 55%) 25%,
-      hsl(30 100% 50%) 50%,
-      hsl(20 100% 55%) 75%,
-      hsl(0 80% 55%) 100%
+      hsl(82 24% 57%) 0%,
+      hsl(100 23% 69%) 50%,
+      hsl(33 100% 62%) 100%
     );
     --gradient-glass: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0.05) 100%
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.3) 100%
     );
     --gradient-subtle: linear-gradient(
       180deg,
       hsl(0 0% 8%),
-      hsl(0 0% 12%)
+      hsl(82 20% 12%)
     );
 
     --shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
     --shadow-medium: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
     --shadow-strong: 0 16px 48px -8px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 8px 32px -8px hsl(43 74% 55% / 0.5);
-    --shadow-gold: 0 8px 32px -8px rgba(212, 175, 55, 0.4);
-    --shadow-emerald: 0 8px 32px -8px rgba(16, 185, 129, 0.4);
+    --shadow-glow: 0 8px 32px -8px rgba(151, 168, 122, 0.5);
+    --shadow-sage: 0 8px 32px -8px rgba(151, 168, 122, 0.4);
+    --shadow-orange: 0 8px 32px -8px rgba(255, 162, 57, 0.4);
 
     --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 40 10% 95%;
-    --sidebar-primary: 43 74% 55%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 40 10% 95%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 43 74% 55%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 82 24% 57%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 82 20% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 82 20% 22%;
+    --sidebar-ring: 82 24% 57%;
   }
 
   /* Base Styles - Typography & Body */
@@ -277,12 +284,12 @@ All colors MUST be HSL. Sophisticated gradients and refined aesthetics.
     box-shadow: var(--shadow-glow);
   }
 
-  .shadow-gold {
-    box-shadow: var(--shadow-gold);
+  .shadow-sage {
+    box-shadow: var(--shadow-sage);
   }
 
-  .shadow-emerald {
-    box-shadow: var(--shadow-emerald);
+  .shadow-orange {
+    box-shadow: var(--shadow-orange);
   }
 
   /* Luxury Animations */
@@ -327,7 +334,7 @@ All colors MUST be HSL. Sophisticated gradients and refined aesthetics.
     @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20;
   }
 
-  /* Hover Effects - Luxury Feel */
+  /* Hover Effects - Sage & Orange */
   .hover-lift {
     @apply transition-luxury hover:-translate-y-2 hover:shadow-strong;
   }
@@ -336,8 +343,12 @@ All colors MUST be HSL. Sophisticated gradients and refined aesthetics.
     @apply transition-luxury hover:shadow-glow;
   }
 
-  .hover-gold {
-    @apply transition-luxury hover:shadow-gold hover:border-primary/50;
+  .hover-sage {
+    @apply transition-luxury hover:shadow-sage hover:border-primary/50;
+  }
+
+  .hover-orange {
+    @apply transition-luxury hover:shadow-orange hover:border-warning/50;
   }
 
   .hover-scale {
@@ -369,12 +380,21 @@ All colors MUST be HSL. Sophisticated gradients and refined aesthetics.
     }
   }
 
-  @keyframes pulse-gold {
+  @keyframes pulse-sage {
     0%, 100% {
-      box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+      box-shadow: 0 0 0 0 rgba(151, 168, 122, 0.7);
     }
     50% {
-      box-shadow: 0 0 0 20px rgba(212, 175, 55, 0);
+      box-shadow: 0 0 0 20px rgba(151, 168, 122, 0);
+    }
+  }
+
+  @keyframes pulse-orange {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(255, 162, 57, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 20px rgba(255, 162, 57, 0);
     }
   }
 
@@ -397,8 +417,12 @@ All colors MUST be HSL. Sophisticated gradients and refined aesthetics.
     animation: shimmer 3s linear infinite;
   }
 
-  .animate-pulse-gold {
-    animation: pulse-gold 2s ease-in-out infinite;
+  .animate-pulse-sage {
+    animation: pulse-sage 2s ease-in-out infinite;
+  }
+
+  .animate-pulse-orange {
+    animation: pulse-orange 2s ease-in-out infinite;
   }
 
   .animate-sparkle {

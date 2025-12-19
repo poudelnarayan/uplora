@@ -198,12 +198,20 @@ export default {
 						backgroundPosition: '200% 0'
 					}
 				},
-				'pulse-gold': {
+				'pulse-sage': {
 					'0%, 100%': {
-						boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.7)'
+						boxShadow: '0 0 0 0 rgba(151, 168, 122, 0.7)'
 					},
 					'50%': {
-						boxShadow: '0 0 0 20px rgba(212, 175, 55, 0)'
+						boxShadow: '0 0 0 20px rgba(151, 168, 122, 0)'
+					}
+				},
+				'pulse-orange': {
+					'0%, 100%': {
+						boxShadow: '0 0 0 0 rgba(255, 162, 57, 0.7)'
+					},
+					'50%': {
+						boxShadow: '0 0 0 20px rgba(255, 162, 57, 0)'
 					}
 				},
 				'sparkle': {
@@ -229,7 +237,8 @@ export default {
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
 				'float': 'float 6s ease-in-out infinite',
 				'shimmer': 'shimmer 3s linear infinite',
-				'pulse-gold': 'pulse-gold 2s ease-in-out infinite',
+				'pulse-sage': 'pulse-sage 2s ease-in-out infinite',
+				'pulse-orange': 'pulse-orange 2s ease-in-out infinite',
 				'sparkle': 'sparkle 2s ease-in-out infinite'
 			}
 		}
