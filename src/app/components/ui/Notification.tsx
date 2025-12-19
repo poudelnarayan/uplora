@@ -115,39 +115,61 @@ function NotificationContainer() {
   if (!mounted || !notifications.length) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
-      <AnimatePresence mode="wait" initial={false}>
-        {notifications.map((notification) => (
+    <div className="fixed top-4 right-4 z-50 space-y-3 max-w-md">
+      <AnimatePresence mode="sync" initial={false}>
+        {notifications.map((notification, index) => (
           <MotionDiv
             key={notification.id}
-            initial={{ opacity: 0, x: 300, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 300, scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`max-w-sm w-full bg-white dark:bg-slate-900 text-foreground border rounded-lg shadow-lg p-4 relative ${
-              notification.type === "success" ? "border-green-500/20" :
-              notification.type === "error" ? "border-red-500/20" :
-              notification.type === "warning" ? "border-yellow-500/20" :
-              "border-blue-500/20"
+            initial={{ opacity: 0, x: 400, scale: 0.9, y: -20 }}
+            animate={{ opacity: 1, x: 0, scale: 1, y: 0 }}
+            exit={{ opacity: 0, x: 400, scale: 0.9, height: 0, marginBottom: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 25,
+              mass: 0.8
+            }}
+            className={`w-full glass-card text-foreground border-2 rounded-2xl shadow-strong p-4 relative overflow-hidden backdrop-blur-xl ${
+              notification.type === "success" ? "border-success/30 bg-success-muted/80" :
+              notification.type === "error" ? "border-destructive/30 bg-destructive-muted/80" :
+              notification.type === "warning" ? "border-warning/30 bg-warning-muted/80" :
+              "border-primary/30 bg-primary/5"
             }`}
           >
+            {/* Luxury gradient accent bar */}
+            <div className={`absolute top-0 left-0 right-0 h-1 ${
+              notification.type === "success" ? "bg-gradient-to-r from-success via-success/80 to-success" :
+              notification.type === "error" ? "bg-gradient-to-r from-destructive via-destructive/80 to-destructive" :
+              notification.type === "warning" ? "bg-gradient-to-r from-warning via-warning/80 to-warning" :
+              "bg-gradient-primary"
+            }`} />
+
+            {/* Close button */}
             <button
               onClick={() => removeNotification(notification.id)}
-              className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted transition-colors"
+              className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted/50 transition-luxury border border-border/30"
             >
-              <X className="w-4 h-4 text-muted-foreground" />
+              <X className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
-            
-            <div className="flex items-start gap-3 pr-6">
-              {notification.type === "success" && <CheckCircle className="w-5 h-5 text-green-500" />}
-              {notification.type === "error" && <AlertCircle className="w-5 h-5 text-red-500" />}
-              {notification.type === "warning" && <AlertTriangle className="w-5 h-5 text-yellow-500" />}
-              {notification.type === "info" && <Info className="w-5 h-5 text-blue-500" />}
 
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-foreground">{notification.title}</div>
+            {/* Content */}
+            <div className="flex items-start gap-3 pr-8">
+              <div className={`p-2 rounded-xl ${
+                notification.type === "success" ? "bg-success/20" :
+                notification.type === "error" ? "bg-destructive/20" :
+                notification.type === "warning" ? "bg-warning/20" :
+                "bg-primary/20"
+              }`}>
+                {notification.type === "success" && <CheckCircle className="w-5 h-5 text-success" />}
+                {notification.type === "error" && <AlertCircle className="w-5 h-5 text-destructive" />}
+                {notification.type === "warning" && <AlertTriangle className="w-5 h-5 text-warning" />}
+                {notification.type === "info" && <Info className="w-5 h-5 text-primary" />}
+              </div>
+
+              <div className="flex-1 pt-0.5">
+                <div className="text-sm font-semibold text-foreground mb-0.5">{notification.title}</div>
                 {notification.message && (
-                  <div className="text-xs text-muted-foreground mt-0.5">{notification.message}</div>
+                  <div className="text-xs text-muted-foreground leading-relaxed">{notification.message}</div>
                 )}
               </div>
             </div>

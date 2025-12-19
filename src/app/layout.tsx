@@ -1,12 +1,20 @@
 import "./globals.css";
 import Providers from "./providers";
 import { ClerkProvider } from '@clerk/nextjs';
-import { Poppins } from 'next/font/google';
+import { Inter, Playfair_Display } from 'next/font/google';
 
-const poppins = Poppins({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-poppins',
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-playfair',
+  display: 'swap',
 });
 
 export const metadata = {
@@ -22,7 +30,7 @@ export default function RootLayout({
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   return (
     <html lang="en">
-      <body className={poppins.variable}>
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         {publishableKey ? (
           <ClerkProvider publishableKey={publishableKey}>
             <Providers>
