@@ -66,6 +66,18 @@ export const socialConnectionsSchema = z
   .object({
     facebook: facebookConnectionSchema.nullable().optional(),
     instagram: instagramConnectionSchema.nullable().optional(),
+    telegram: z
+      .object({
+        connectedAt: z.string().datetime().optional(),
+        chatId: z.string().optional(),
+        username: z.string().nullable().optional(),
+        // One-time code used to link Telegram chat -> Uplora user (set by /api/telegram/connect)
+        pendingCode: z.string().nullable().optional(),
+        pendingExpiresAt: z.string().datetime().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
     youtube: z
       .object({
         connectedAt: z.string().datetime().optional(),

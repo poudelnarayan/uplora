@@ -81,8 +81,21 @@ export async function POST(
         return NextResponse.json({ error: "Team not found" }, { status: 404 });
       }
       team = t;
+      // Allow Owner, Admin, and Manager to approve/publish for the team.
+      // Owner is determined by teams.ownerId, others by team_members.role.
       if (team.ownerId !== me.id) {
-        return NextResponse.json({ error: "Only team owner can approve videos" }, { status: 403 });
+        const { data: membership } = await supabaseAdmin
+          .from("team_members")
+          .select("role,status")
+          .eq("teamId", team.id)
+          .eq("userId", me.id)
+          .single();
+        const role = (membership as any)?.role;
+        const status = (membership as any)?.status;
+        const canApprove = status === "ACTIVE" && (role === "ADMIN" || role === "MANAGER");
+        if (!canApprove) {
+          return NextResponse.json({ error: "Only team owner/admin/manager can approve videos" }, { status: 403 });
+        }
       }
     } else {
       // personal video: only the owner/uploader can publish

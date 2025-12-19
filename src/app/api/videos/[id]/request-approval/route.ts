@@ -6,6 +6,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { sendMail } from "@/lib/email";
 import { broadcast } from "@/lib/realtime";
+import { sendTelegramMessageToChat } from "@/lib/notify";
+import { normalizeSocialConnections } from "@/types/socialConnections";
 
 export async function POST(
   req: NextRequest,
@@ -84,7 +86,7 @@ export async function POST(
       return NextResponse.json({ error: "Failed to update video status" }, { status: 500 });
     }
 
-    // Send email notification to team owner if video belongs to a team
+    // Send notification to team owner (email always; Telegram optional if owner connected Telegram)
     if (video.teamId) {
       try {
         const { data: team, error: teamError } = await supabaseAdmin
@@ -93,7 +95,8 @@ export async function POST(
             *,
             users!teams_ownerId_fkey (
               name,
-              email
+              email,
+              socialConnections
             )
           `)
           .eq('id', video.teamId)
@@ -135,6 +138,22 @@ export async function POST(
             html: emailContent.html,
             text: emailContent.text
           });
+
+          // Optional: Telegram message to owner (best-effort, per-user chat)
+          const msg = [
+            `📝 Approval Request`,
+            `Team: ${team.name}`,
+            `Editor: ${me.name || me.email}`,
+            `Video: ${videoTitle}`,
+            `Link: ${videoUrl}`,
+          ].join("\n");
+          try {
+            const sc = normalizeSocialConnections(team.users.socialConnections);
+            const ownerChatId = sc.telegram?.chatId;
+            if (ownerChatId) await sendTelegramMessageToChat(ownerChatId, msg);
+          } catch (e) {
+            console.warn("Telegram notify failed:", e);
+          }
         }
       } catch (emailError) {
         console.error("Failed to send notification email:", emailError);

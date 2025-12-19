@@ -17,6 +17,7 @@ import {
   LogOut, 
   ChevronDown,
   Video,
+  FileText,
   Crown,
   Target,
   Plus,
@@ -44,6 +45,12 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     icon: <Home className="w-5 h-5" />,
     href: '/dashboard'
+  },
+  {
+    id: 'videos',
+    label: 'Videos',
+    icon: <FileText className="w-5 h-5" />,
+    href: '/videos'
   },
   {
     id: 'upload',
