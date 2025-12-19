@@ -42,7 +42,7 @@ export default function QuickActions({ teams }: QuickActionsProps) {
       description: "Create and share content",
       icon: <Upload className="w-5 h-5" />,
       action: () => router.push('/upload'),
-      color: "from-blue-500 to-purple-600"
+      color: "from-primary to-accent"
     },
     {
       id: "invite",
@@ -56,7 +56,7 @@ export default function QuickActions({ teams }: QuickActionsProps) {
           router.push('/teams/create');
         }
       },
-      color: "from-green-500 to-emerald-600"
+      color: "from-accent to-primary"
     },
     {
       id: "analytics",
@@ -64,7 +64,7 @@ export default function QuickActions({ teams }: QuickActionsProps) {
       description: "Track your performance",
       icon: <BarChart3 className="w-5 h-5" />,
       action: () => router.push('/analytics'),
-      color: "from-orange-500 to-red-600"
+      color: "from-warning to-primary"
     },
     {
       id: "schedule",
@@ -78,7 +78,7 @@ export default function QuickActions({ teams }: QuickActionsProps) {
           message: "Content scheduling will be available soon"
         });
       },
-      color: "from-purple-500 to-pink-600"
+      color: "from-primary via-accent to-warning"
     }
   ];
 

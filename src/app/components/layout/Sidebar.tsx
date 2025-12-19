@@ -144,9 +144,9 @@ export default function Sidebar() {
       <div key={item.id}>
         <Link href={item.href}>
           <MotionDiv
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
-              active 
-                ? 'bg-primary text-primary-foreground shadow-lg' 
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-luxury cursor-pointer group ${
+              active
+                ? 'bg-primary text-primary-foreground shadow-sage border border-primary/20'
                 : 'hover:bg-muted text-muted-foreground hover:text-foreground'
             } ${level > 0 ? 'ml-4' : ''}`}
             whileHover={{ x: 4 }}
@@ -218,7 +218,7 @@ export default function Sidebar() {
       <MotionAside
         initial={{ x: -300 }}
         animate={{ x: isMobileOpen ? 0 : -300 }}
-        className={`fixed left-0 top-0 h-full w-80 bg-card shadow-xl z-50 lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-full w-80 bg-card border-r border-border shadow-xl z-50 lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -227,11 +227,11 @@ export default function Sidebar() {
           <div className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <Video className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-sage">
+                  <Video className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gradient">Uplora</h1>
+                  <h1 className="text-xl font-bold gradient-text">Uplora</h1>
                   <p className="text-sm text-muted-foreground">Team Management</p>
                 </div>
               </div>
@@ -247,8 +247,8 @@ export default function Sidebar() {
           {/* User Profile */}
           <div className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-sage">
+                <span className="text-sm font-medium text-primary-foreground">
                   {user?.fullName?.[0] || user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || "U"}
                 </span>
               </div>
@@ -257,7 +257,7 @@ export default function Sidebar() {
                 <p className="text-xs text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress}</p>
               </div>
               <div className="flex items-center gap-1">
-                <Crown className="w-4 h-4 text-yellow-500" />
+                <Crown className="w-4 h-4 text-warning" />
                 <span className="text-xs text-muted-foreground">Owner</span>
               </div>
             </div>
@@ -275,15 +275,15 @@ export default function Sidebar() {
                 </div>
                 <Link href="/admin">
                   <MotionDiv
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer group ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-luxury cursor-pointer group ${
                       pathname === '/admin'
-                        ? 'bg-red-500/10 text-red-600 border border-red-200 dark:border-red-800' 
-                        : 'hover:bg-red-500/10 text-muted-foreground hover:text-red-600'
+                        ? 'bg-warning/10 text-warning border border-warning/20 shadow-orange'
+                        : 'hover:bg-warning/10 text-muted-foreground hover:text-warning'
                     }`}
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className={`${pathname === '/admin' ? 'text-red-600' : 'text-muted-foreground group-hover:text-red-600'}`}>
+                    <div className={`${pathname === '/admin' ? 'text-warning' : 'text-muted-foreground group-hover:text-warning'}`}>
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <span className="font-medium">Admin Dashboard</span>
@@ -294,10 +294,10 @@ export default function Sidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-4">
+          <div className="p-4 border-t border-border">
             <button
               onClick={() => setShowSignOutConfirm(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-500/10 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 transition-luxury"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Sign Out</span>

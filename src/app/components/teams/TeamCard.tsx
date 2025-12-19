@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { 
-  Users, 
+import {
+  Users,
   MoreVertical,
   Edit,
   Trash2,
   Eye,
-  UserPlus
+  UserPlus,
+  Loader2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -39,15 +40,25 @@ interface TeamCardProps {
   onDelete: (teamId: number) => void;
   onInviteMember: (teamId: number) => void;
   onViewTeam: (team: Team) => void;
+  isDeleting?: boolean;
 }
 
-export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onViewTeam }: TeamCardProps) => {
+export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onViewTeam, isDeleting = false }: TeamCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
+      className="relative"
     >
+      {isDeleting && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+          <div className="flex items-center gap-3 bg-background border border-border rounded-lg px-6 py-4 shadow-lg">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-sm font-medium">Deleting team...</span>
+          </div>
+        </div>
+      )}
       <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 group">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
@@ -96,8 +107,13 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onDelete(team.id)}
+                  disabled={isDeleting}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
                   Delete Team
                 </DropdownMenuItem>
               </DropdownMenuContent>

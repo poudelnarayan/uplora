@@ -83,15 +83,15 @@ const getContentIcon = (type: ContentType) => {
 const getContentTypeColor = (type: ContentType) => {
   switch (type) {
     case 'video':
-      return 'bg-red-100 text-red-700 border-red-200';
+      return 'bg-primary/10 text-primary border-primary/20';
     case 'image':
-      return 'bg-blue-100 text-blue-700 border-blue-200';
+      return 'bg-accent/10 text-accent-foreground border-accent/20';
     case 'text':
-      return 'bg-green-100 text-green-700 border-green-200';
+      return 'bg-success/10 text-success border-success/20';
     case 'reel':
-      return 'bg-purple-100 text-purple-700 border-purple-200';
+      return 'bg-warning/10 text-warning border-warning/20';
     default:
-      return 'bg-gray-100 text-gray-700 border-gray-200';
+      return 'bg-muted text-muted-foreground border-border';
   }
 };
 

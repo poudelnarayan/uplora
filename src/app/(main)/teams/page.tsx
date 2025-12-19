@@ -40,12 +40,12 @@ interface Team {
 }
 
 const teamColors = [
-  "from-blue-500 to-cyan-500",
-  "from-purple-500 to-pink-500",
-  "from-green-500 to-emerald-500",
-  "from-orange-500 to-red-500",
-  "from-indigo-500 to-purple-500",
-  "from-pink-500 to-rose-500"
+  "from-primary to-accent",
+  "from-accent to-primary",
+  "from-primary via-accent to-warning",
+  "from-warning to-primary",
+  "from-accent to-warning",
+  "from-primary to-warning"
 ];
 
 const Teams = () => {
@@ -57,6 +57,7 @@ const Teams = () => {
   const [viewingTeam, setViewingTeam] = useState<Team | null>(null);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingTeamId, setDeletingTeamId] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Transform context teams to local Team format - newest first
@@ -127,6 +128,7 @@ const Teams = () => {
   const handleDeleteTeam = useCallback(async (teamId: number) => {
     const team = teams.find(t => t.id === teamId);
     if (!team) return;
+    setDeletingTeamId(teamId);
     try {
       const res = await fetch(`/api/teams/${team.backendId}`, { method: 'DELETE' });
       const js = await res.json().catch(() => ({}));
@@ -135,6 +137,8 @@ const Teams = () => {
       toast({ title: 'Team Deleted', description: `${team.name} has been deleted` });
     } catch (e) {
       toast({ title: 'Delete failed', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });
+    } finally {
+      setDeletingTeamId(null);
     }
   }, [teams, refreshTeams, toast]);
 
@@ -316,8 +320,13 @@ const Teams = () => {
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => handleDeleteTeam(teams[0].id)}
+                        disabled={deletingTeamId === teams[0].id}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deletingTeamId === teams[0].id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 mr-2" />
+                        )}
                         Delete Team
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -411,6 +420,7 @@ const Teams = () => {
               onDelete={handleDeleteTeam}
               onInviteMember={openInviteDialog}
               onViewTeam={(t) => setViewingTeam(t)}
+              isDeleting={deletingTeamId === team.id}
             />
           ))
         )}
