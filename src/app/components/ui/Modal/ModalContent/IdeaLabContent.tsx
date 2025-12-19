@@ -11,24 +11,9 @@ interface IdeaLabContentProps {
 }
 
 const priorities = [
-  { 
-    priority: "low", 
-    label: "Nice to have", 
-    color: "from-gray-500/20 to-slate-500/20",
-    description: "Would be a nice addition"
-  },
-  { 
-    priority: "medium", 
-    label: "Would help", 
-    color: "from-blue-500/20 to-indigo-500/20",
-    description: "Would improve the experience"
-  },
-  { 
-    priority: "high", 
-    label: "Game changer", 
-    color: "from-amber-500/20 to-orange-500/20",
-    description: "Would transform how we work"
-  }
+  { priority: "low", label: "Nice to have", description: "Would be a nice addition" },
+  { priority: "medium", label: "Would help", description: "Would improve the experience" },
+  { priority: "high", label: "Game changer", description: "Would transform how we work" },
 ] as const;
 
 export default function IdeaLabContent({ 
@@ -53,16 +38,16 @@ export default function IdeaLabContent({
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      <div className="rounded-xl p-4 bg-gradient-to-r from-amber-50 to-yellow-50/50 border border-amber-200/60">
+      <div className="rounded-xl p-4 bg-orange/10 border border-orange/20">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center flex-shrink-0">
             <Lightbulb className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium mb-1" style={{ color: 'hsl(210, 40%, 25%)' }}>
+            <p className="text-sm font-medium mb-1 text-foreground">
               Feature Request
             </p>
-            <p className="text-xs" style={{ color: 'hsl(176, 20%, 16%)' }}>
+            <p className="text-xs text-muted-foreground">
               Share your ideas to help us build features that matter to you and your team.
             </p>
           </div>
@@ -85,11 +70,11 @@ export default function IdeaLabContent({
 
         {/* Priority Selector */}
         <div className="space-y-3">
-          <label className="text-sm font-medium" style={{ color: 'hsl(210, 40%, 25%)' }}>
+          <label className="text-sm font-medium text-foreground">
             Priority Level
           </label>
           <div className="grid grid-cols-3 gap-3">
-            {priorities.map(({ priority, label, color, description }) => (
+            {priorities.map(({ priority, label }) => (
               <button
                 key={priority}
                 type="button"
@@ -97,13 +82,10 @@ export default function IdeaLabContent({
                 className={`
                   flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all
                   ${formData.priority === priority
-                    ? `border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-sm`
-                    : "border-slate-200 bg-slate-50/50 hover:border-amber-300 hover:bg-amber-50/30"
+                    ? `border-primary bg-primary/5 shadow-sm`
+                    : "border-border bg-secondary/30 hover:border-primary/50"
                   }
                 `}
-                style={{ 
-                  color: formData.priority === priority ? 'hsl(210, 40%, 25%)' : 'hsl(176, 20%, 16%)'
-                }}
               >
                 <div className="text-xs font-bold uppercase tracking-wider">
                   {priority}
@@ -114,14 +96,14 @@ export default function IdeaLabContent({
               </button>
             ))}
           </div>
-          <p className="text-xs" style={{ color: 'hsl(176, 20%, 16%)' }}>
+          <p className="text-xs text-muted-foreground">
             {priorities.find(p => p.priority === formData.priority)?.description}
           </p>
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <label className="text-sm font-medium" style={{ color: 'hsl(210, 40%, 25%)' }}>
+          <label className="text-sm font-medium text-foreground">
             Tell us more
           </label>
           <textarea
@@ -131,24 +113,17 @@ export default function IdeaLabContent({
               description: e.target.value 
             })}
             placeholder="How would this feature work? What problem would it solve?"
-            className="
-              w-full min-h-[120px] p-3 rounded-lg border border-slate-200 
-              bg-slate-50/50 placeholder:opacity-60
-              focus:border-amber-400 focus:ring-2 focus:ring-amber-200/50
-              transition-all resize-vertical
-            "
-            style={{ color: 'hsl(176, 20%, 16%)', '::placeholder': { color: 'hsl(176, 20%, 16%)' } }}
+            className="w-full min-h-[120px] p-3 rounded-lg border border-border bg-secondary/30 placeholder:text-muted-foreground/70 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 transition-all resize-vertical text-foreground"
             required
           />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-slate-200/80">
+        <div className="flex gap-3 pt-4 border-t border-border">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 transition-all"
-            style={{ color: 'hsl(176, 20%, 16%)' }}
+            className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-all text-foreground"
             disabled={isLoading}
           >
             Cancel
@@ -156,10 +131,7 @@ export default function IdeaLabContent({
           <button
             type="submit"
             disabled={isLoading || !formData.title.trim() || !formData.description.trim()}
-            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2 hover:shadow-lg"
-            style={{ backgroundColor: 'hsl(210, 55%, 45%)' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(210, 40%, 25%)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(210, 55%, 45%)'}
+            className="flex-1 px-4 py-2 rounded-lg text-primary-foreground transition-all flex items-center justify-center gap-2 hover:shadow-lg bg-primary hover:bg-primary-hover disabled:opacity-60"
           >
             {isLoading ? (
               <>

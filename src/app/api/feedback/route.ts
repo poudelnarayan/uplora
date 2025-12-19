@@ -55,32 +55,8 @@ export async function POST(req: NextRequest) {
           `--- End of Idea ---`
         ].join("\n");
         
-        html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.6;">
-          <div style="max-width:600px;margin:0 auto;padding:20px;">
-            <div style="background:linear-gradient(135deg,#f59e0b,#f97316);color:white;padding:20px;border-radius:12px 12px 0 0;">
-              <h1 style="margin:0;font-size:24px;">💡 New Idea Submission</h1>
-              <p style="margin:8px 0 0;opacity:0.9;">Brainstorm • Uplora</p>
-            </div>
-            <div style="background:#fff;border:1px solid #e5e7eb;border-top:none;padding:24px;border-radius:0 0 12px 12px;">
-              <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:16px;margin-bottom:20px;">
-                <h2 style="margin:0 0 12px;color:#92400e;font-size:20px;">${escapeHtml(title || "Untitled Idea")}</h2>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px;">
-                  <div><strong>Priority:</strong> ${priority || "Medium"}</div>
-                  <div><strong>Submitted:</strong> ${new Date().toLocaleString()}</div>
-                  <div><strong>From:</strong> ${userName}</div>
-                  <div><strong>Team:</strong> ${teamName || "Personal"}</div>
-                </div>
-              </div>
-              <div style="background:#f8fafc;border-radius:8px;padding:20px;">
-                <h3 style="margin:0 0 12px;color:#374151;">Idea Description:</h3>
-                <div style="white-space:pre-wrap;color:#4b5563;">${escapeHtml(message)}</div>
-              </div>
-              <div style="margin-top:20px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;">
-                <p>This idea was submitted via Uplora's Idea Lab from: ${path || "unknown"}</p>
-              </div>
-            </div>
-          </div>
-        </body></html>`;
+        // Avoid hardcoded color styles in emails: keep HTML minimal and rely on text.
+        html = `<pre>${escapeHtml(text)}</pre>`;
       } else {
         // Feedback submission format
         text = [
@@ -98,32 +74,8 @@ export async function POST(req: NextRequest) {
           `--- End of Feedback ---`
         ].join("\n");
         
-        html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.6;">
-          <div style="max-width:600px;margin:0 auto;padding:20px;">
-            <div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;padding:20px;border-radius:12px 12px 0 0;">
-              <h1 style="margin:0;font-size:24px;">📝 Feedback Submission</h1>
-              <p style="margin:8px 0 0;opacity:0.9;">Support • Uplora</p>
-            </div>
-            <div style="background:#fff;border:1px solid #e5e7eb;border-top:none;padding:24px;border-radius:0 0 12px 12px;">
-              <div style="background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;padding:16px;margin-bottom:20px;">
-                <h2 style="margin:0 0 12px;color:#1e40af;font-size:20px;">${category || "General"} Feedback</h2>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px;">
-                  <div><strong>Category:</strong> ${category || "General"}</div>
-                  <div><strong>Submitted:</strong> ${new Date().toLocaleString()}</div>
-                  <div><strong>From:</strong> ${userName}</div>
-                  <div><strong>Team:</strong> ${teamName || "Personal"}</div>
-                </div>
-              </div>
-              <div style="background:#f8fafc;border-radius:8px;padding:20px;">
-                <h3 style="margin:0 0 12px;color:#374151;">Feedback Message:</h3>
-                <div style="white-space:pre-wrap;color:#4b5563;">${escapeHtml(message)}</div>
-              </div>
-              <div style="margin-top:20px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;">
-                <p>This feedback was submitted via Uplora from: ${path || "unknown"}</p>
-              </div>
-            </div>
-          </div>
-        </body></html>`;
+        // Avoid hardcoded color styles in emails: keep HTML minimal and rely on text.
+        html = `<pre>${escapeHtml(text)}</pre>`;
       }
 
       let emailSent = false;

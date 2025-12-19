@@ -262,68 +262,15 @@ export async function sendInvitationEmail(token: string, email: string, teamId: 
       `The Uplora Team`
     ].join("\n");
 
-    const html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>You're invited to join ${team.name} • Uplora</title>
-  </head>
-  <body style="margin:0;padding:0;background-color:#f6f8fb;color:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f8fb;">
-      <tr>
-        <td align="center" style="padding:32px 16px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
-            <tr>
-              <td style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);padding:24px 24px;">
-                <h1 style="margin:0;font-size:22px;line-height:28px;color:#ffffff;">You're invited to join ${team.name}</h1>
-                <p style="margin:6px 0 0 0;font-size:13px;line-height:18px;color:rgba(255,255,255,.9);">Uplora Team Workspace</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:24px 24px 8px 24px;">
-                <p style="margin:0 0 16px 0;font-size:15px;line-height:22px;color:#1f2937;">You have been invited to collaborate on Uplora.</p>
-                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 20px 0;">
-                  <tr>
-                    <td style="padding:16px;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="font-size:14px;color:#334155;">
-                        <tr>
-                          <td style="padding:4px 0;"><strong style="color:#111827;">Team:</strong> ${team.name}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding:4px 0;"><strong style="color:#111827;">Role:</strong> ${role}</td>
-                        </tr>
-                        ${team.description ? `<tr><td style="padding:4px 0;"><strong style="color:#111827;">Description:</strong> ${team.description}</td></tr>` : ''}
-                        <tr>
-                          <td style="padding:4px 0;"><strong style="color:#111827;">Expires:</strong> in 7 days</td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-                <div style="text-align:center;margin:20px 0 8px 0;">
-                  <a href="${inviteUrl}" style="background-color:#3b82f6;border-radius:8px;color:#ffffff;display:inline-block;font-weight:600;padding:12px 20px;text-decoration:none;">Accept Invitation</a>
-                </div>
-                <p style="margin:16px 0 0 0;font-size:12px;line-height:18px;color:#64748b;">If the button doesn’t work, copy and paste this URL into your browser:</p>
-                <p style="margin:6px 0 0 0;font-size:12px;line-height:18px;color:#2563eb;word-break:break-all;">${inviteUrl}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 24px 24px 24px;border-top:1px solid #e5e7eb;">
-                <p style="margin:0;font-size:12px;line-height:18px;color:#94a3b8;">You received this email because someone invited you to a team on Uplora. If you weren’t expecting this, you can safely ignore it.</p>
-              </td>
-            </tr>
-          </table>
-          <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin-top:12px;">
-            <tr>
-              <td align="center" style="font-size:11px;line-height:16px;color:#94a3b8;">© ${new Date().getFullYear()} Uplora • Team Video Management</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+    // Avoid hardcoded color styles in emails: keep HTML minimal and rely on text.
+    const escapeHtml = (s: string) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    const html = `<pre>${escapeHtml(text)}</pre>`;
 
     console.log(`📧 Sending invitation email to: ${email}`);
     console.log(`📬 Subject: ${subject}`);

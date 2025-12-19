@@ -117,12 +117,12 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
       <div className="space-y-4">
         {isConnected ? (
           <div className="space-y-4">
-            <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(0, 173, 181, 0.1)', borderColor: 'rgba(0, 173, 181, 0.3)' }}>
-              <div className="flex items-center gap-2" style={{ color: 'rgb(0, 173, 181)' }}>
+            <div className="p-3 rounded-lg border bg-primary/10 border-primary/30">
+              <div className="flex items-center gap-2 text-primary">
                 <CheckCircle className="w-4 h-4" />
                 <span className="text-sm font-medium">Connected to YouTube</span>
               </div>
-              <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
+              <p className="text-sm mt-1 text-muted-foreground">
                 Channel: {channelTitle || "(no title)"}
               </p>
             </div>
@@ -148,12 +148,12 @@ export default function YouTubeConnection({ isConnected, channelTitle, onConnect
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(255, 193, 7, 0.1)', borderColor: 'rgba(255, 193, 7, 0.3)' }}>
-              <div className="flex items-center gap-2" style={{ color: 'rgb(255, 193, 7)' }}>
+            <div className="p-3 rounded-lg border bg-warning-muted border-warning/30">
+              <div className="flex items-center gap-2 text-warning">
                 <Youtube className="w-4 h-4" />
                 <span className="text-sm font-medium">YouTube Not Connected</span>
               </div>
-              <p className="text-sm mt-1" style={{ color: 'rgb(57, 62, 70)' }}>
+              <p className="text-sm mt-1 text-muted-foreground">
                 Connect your YouTube account to upload videos directly
               </p>
             </div>

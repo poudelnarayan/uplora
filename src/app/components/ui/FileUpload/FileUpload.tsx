@@ -247,14 +247,14 @@ export default function FileUpload({
           transition-all duration-200 ease-out
           ${getVariantClasses()}
           ${disabled 
-            ? 'opacity-50 cursor-not-allowed border-gray-300 bg-gray-50' 
+            ? 'opacity-50 cursor-not-allowed border-border bg-muted/30' 
             : state.isDragOver
-              ? 'border-[#00ADB5] bg-gradient-to-br from-[#00ADB5]/5 to-[#00ADB5]/10 scale-[1.02] shadow-lg'
+              ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg'
               : state.success
-                ? 'border-green-500 bg-gradient-to-br from-green-50 to-emerald-50'
+                ? 'border-success bg-success-muted'
                 : state.error
-                  ? 'border-red-500 bg-gradient-to-br from-red-50 to-pink-50'
-                  : 'border-[#393E46] bg-gradient-to-br from-[#EEEEEE] to-white hover:border-[#00ADB5] hover:shadow-md hover:scale-[1.01]'
+                  ? 'border-destructive bg-destructive-muted'
+                  : 'border-border bg-gradient-to-br from-background to-card hover:border-primary hover:shadow-md hover:scale-[1.01]'
           }
         `}
         whileHover={!disabled ? { scale: 1.01 } : {}}
@@ -291,12 +291,12 @@ export default function FileUpload({
             className={`
               w-16 h-16 rounded-2xl mb-4 flex items-center justify-center
               ${state.success 
-                ? 'bg-green-500 text-white' 
+                ? 'bg-success text-success-foreground' 
                 : state.error
-                  ? 'bg-red-500 text-white'
+                  ? 'bg-destructive text-destructive-foreground'
                   : state.isDragOver
-                    ? 'bg-[#00ADB5] text-white'
-                    : 'bg-[#393E46] text-white'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
               }
             `}
           >
@@ -359,12 +359,12 @@ export default function FileUpload({
             <h3 className={`
               text-xl font-bold
               ${state.success 
-                ? 'text-green-700' 
+                ? 'text-success' 
                 : state.error
-                  ? 'text-red-700'
+                  ? 'text-destructive'
                   : state.isDragOver
-                    ? 'text-[#00ADB5]'
-                    : 'text-[#222831]'
+                    ? 'text-primary'
+                    : 'text-foreground'
               }
             `}>
               {state.isUploading 
@@ -382,10 +382,10 @@ export default function FileUpload({
             <p className={`
               text-sm
               ${state.success 
-                ? 'text-green-600' 
+                ? 'text-success' 
                 : state.error
-                  ? 'text-red-600'
-                  : 'text-[#393E46]'
+                  ? 'text-destructive'
+                  : 'text-muted-foreground'
               }
             `}>
               {state.isUploading 
@@ -410,11 +410,11 @@ export default function FileUpload({
               className="flex items-center gap-3 mt-6"
             >
               <div className="flex items-center gap-2">
-                <Image className="w-5 h-5 text-[#00ADB5]" />
-                <Video className="w-5 h-5 text-[#393E46]" />
-                <FileText className="w-5 h-5 text-[#222831]" />
+                <Image className="w-5 h-5 text-primary" />
+                <Video className="w-5 h-5 text-muted-foreground" />
+                <FileText className="w-5 h-5 text-foreground" />
               </div>
-              <span className="text-xs text-[#393E46] font-medium">
+              <span className="text-xs text-muted-foreground font-medium">
                 Images, Videos, Documents
               </span>
             </MotionDiv>
@@ -426,7 +426,7 @@ export default function FileUpload({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.3 }}
-              className="mt-6 text-xs text-[#393E46] space-y-1"
+              className="mt-6 text-xs text-muted-foreground space-y-1"
             >
               <p>Maximum file size: {formatFileSize(maxFileSize)}</p>
               <p>Maximum files: {maxFiles}</p>
@@ -442,13 +442,13 @@ export default function FileUpload({
               initial={{ opacity: 0, scaleX: 0 }}
               animate={{ opacity: 1, scaleX: 1 }}
               exit={{ opacity: 0, scaleX: 0 }}
-              className="absolute bottom-0 left-0 right-0 h-1 bg-[#EEEEEE] rounded-b-2xl overflow-hidden"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-muted rounded-b-2xl overflow-hidden"
             >
               <MotionDiv
                 initial={{ width: 0 }}
                 animate={{ width: `${state.progress}%` }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-[#00ADB5] to-[#393E46]"
+                className="h-full bg-gradient-to-r from-primary to-accent"
               />
             </MotionDiv>
           )}
@@ -461,15 +461,15 @@ export default function FileUpload({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-[#00ADB5]/10 rounded-2xl border-2 border-[#00ADB5] flex items-center justify-center"
+              className="absolute inset-0 bg-primary/10 rounded-2xl border-2 border-primary flex items-center justify-center"
             >
               <MotionDiv
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 className="text-center"
               >
-                <Cloud className="w-12 h-12 text-[#00ADB5] mx-auto mb-2" />
-                <p className="text-lg font-bold text-[#00ADB5]">Drop files here</p>
+                <Cloud className="w-12 h-12 text-primary mx-auto mb-2" />
+                <p className="text-lg font-bold text-primary">Drop files here</p>
               </MotionDiv>
             </MotionDiv>
           )}
@@ -486,7 +486,7 @@ export default function FileUpload({
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="mt-4 space-y-3"
           >
-            <h4 className="text-sm font-semibold text-[#222831] flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <File className="w-4 h-4" />
               Selected Files ({state.files.length})
             </h4>
@@ -498,17 +498,17 @@ export default function FileUpload({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1, duration: 0.2 }}
-                  className="flex items-center justify-between p-3 bg-white border border-[#EEEEEE] rounded-lg hover:border-[#00ADB5] transition-colors"
+                  className="flex items-center justify-between p-3 bg-card border border-border rounded-lg hover:border-primary transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#EEEEEE] flex items-center justify-center text-[#393E46]">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
                       {getFileIcon(file)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#222831] truncate max-w-[200px]">
+                      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">
                         {file.name}
                       </p>
-                      <p className="text-xs text-[#393E46]">
+                      <p className="text-xs text-muted-foreground">
                         {formatFileSize(file.size)} • {file.type.split('/')[1]?.toUpperCase() || 'FILE'}
                       </p>
                     </div>
@@ -519,7 +519,7 @@ export default function FileUpload({
                       e.stopPropagation();
                       removeFile(index);
                     }}
-                    className="p-1 rounded-full hover:bg-red-100 text-red-500 transition-colors"
+                    className="p-1 rounded-full hover:bg-destructive-muted text-destructive transition-colors"
                     aria-label={`Remove ${file.name}`}
                   >
                     <X className="w-4 h-4" />
@@ -538,10 +538,10 @@ export default function FileUpload({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+            className="mt-4 p-3 bg-destructive-muted border border-destructive/30 rounded-lg flex items-center gap-2"
           >
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <p className="text-sm text-red-700">{state.error}</p>
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+            <p className="text-sm text-destructive">{state.error}</p>
           </MotionDiv>
         )}
       </AnimatePresence>
@@ -553,10 +553,10 @@ export default function FileUpload({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+            className="mt-4 p-3 bg-success-muted border border-success/30 rounded-lg flex items-center gap-2"
           >
-            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <p className="text-sm text-green-700">
+            <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
+            <p className="text-sm text-success">
               Files ready for upload! Click submit to continue.
             </p>
           </MotionDiv>

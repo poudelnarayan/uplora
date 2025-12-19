@@ -6,12 +6,12 @@
   gap: 0.75rem;
   padding: 1rem;
   border-radius: 0.75rem;
-  background-color: rgba(var(--muted), 0.3);
+  background-color: hsl(var(--muted) / 0.3);
   transition: background-color 0.2s;
 }
 
 .container:hover {
-  background-color: rgba(var(--muted), 0.5);
+  background-color: hsl(var(--muted) / 0.5);
 }
 
 .indicator {
@@ -23,19 +23,19 @@
 }
 
 .indicator.success {
-  background-color: rgb(34, 197, 94);
+  background-color: hsl(var(--success));
 }
 
 .indicator.error {
-  background-color: rgb(239, 68, 68);
+  background-color: hsl(var(--destructive));
 }
 
 .indicator.warning {
-  background-color: rgb(245, 158, 11);
+  background-color: hsl(var(--warning));
 }
 
 .indicator.info {
-  background-color: rgb(59, 130, 246);
+  background-color: hsl(var(--primary));
 }
 
 .content {
@@ -46,12 +46,12 @@
 .title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgb(var(--foreground));
+  color: hsl(var(--foreground));
 }
 
 .message {
   font-size: 0.75rem;
-  color: rgb(var(--muted-foreground));
+  color: hsl(var(--muted-foreground));
   margin-top: 0.25rem;
 }
 
@@ -67,5 +67,5 @@
 }
 
 .removeButton:hover {
-  background-color: rgb(var(--muted));
+  background-color: hsl(var(--muted));
 }

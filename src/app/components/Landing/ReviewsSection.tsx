@@ -9,12 +9,12 @@ const platformIcons = {
   Twitter: Camera
 };
 
-// Platform colors mapping
+// Use theme tokens (no hardcoded brand colors)
 const platformColors = {
-  YouTube: "bg-red-500",
-  Instagram: "bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400",
-  TikTok: "bg-black",
-  Twitter: "bg-blue-400"
+  YouTube: "bg-primary",
+  Instagram: "gradient-primary",
+  TikTok: "bg-foreground",
+  Twitter: "bg-accent"
 };
 
 const reviews = [
@@ -48,7 +48,7 @@ const reviews = [
     rating: 5,
     review: "Ok this is actually insane how much time it saves. I have 3 people helping with content and before it was so confusing who was posting what. Now everyone knows their role - they create, I approve, it publishes. Simple. Wish I found this years ago tbh.",
     avatar: "J",
-    bgColor: "bg-purple-500",
+    bgColor: "bg-accent",
     followers: "1.2M"
   },
   {
@@ -59,7 +59,7 @@ const reviews = [
     rating: 5,
     review: "Tried literally every scheduling tool out there and none handled approvals properly. This one actually gets it. My team can draft reviews, I check them before they go live, and everything posts on time across all platforms. Finally something that works how teams actually work.",
     avatar: "D",
-    bgColor: "bg-green-500",
+    bgColor: "bg-primary",
     followers: "500K"
   },
   {
@@ -70,7 +70,7 @@ const reviews = [
     rating: 5,
     review: "The approval thing is chef's kiss perfect. My assistant preps all the recipe posts during the day, I review them at night, and they go out next morning. No more staying up late to post or forgetting platforms. Plus it handles my big cooking videos without issues.",
     avatar: "A",
-    bgColor: "bg-orange-500",
+    bgColor: "bg-orange",
     followers: "3.1M"
   },
   {
@@ -81,7 +81,7 @@ const reviews = [
     rating: 5,
     review: "Game changer for sure. My content team is in different time zones and this keeps us all synced. They create workout posts, I approve them before my morning coffee, and everything goes live perfectly. Went from content chaos to actually having a system that works.",
     avatar: "R",
-    bgColor: "bg-blue-500",
+    bgColor: "bg-accent",
     followers: "890K"
   }
 ];
@@ -102,7 +102,7 @@ const ReviewsSection = () => {
           <div className="flex items-center justify-center mt-8 space-x-2">
             <div className="flex items-center space-x-1">
               {[1,2,3,4,5].map((star) => (
-                <Star key={star} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                <Star key={star} className="h-5 w-5 fill-orange text-orange" />
               ))}
             </div>
             <span className="text-lg font-semibold">4.9/5</span>
@@ -172,7 +172,7 @@ const ReviewsSection = () => {
                     <div className="flex-1">
                       <div className="font-semibold text-foreground text-sm">{review.name}</div>
                       <div className="text-xs text-muted-foreground">{review.role}</div>
-                      <div className="text-xs font-medium" style={{color: review.platform === 'YouTube' ? '#ff0000' : review.platform === 'Instagram' ? '#e4405f' : review.platform === 'TikTok' ? '#000000' : '#1da1f2'}}>
+                      <div className="text-xs font-medium text-muted-foreground">
                         {review.handle}
                       </div>
                     </div>

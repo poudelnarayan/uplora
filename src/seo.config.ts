@@ -16,9 +16,7 @@ const defaultSeo: DefaultSeoProps = {
   twitter: {
     cardType: "summary_large_image",
   },
-  additionalMetaTags: [
-    { name: "theme-color", content: "#0ea5e9" },
-  ],
+  additionalMetaTags: [],
   additionalLinkTags: [
     { rel: "icon", href: "/favicon.ico" },
   ],

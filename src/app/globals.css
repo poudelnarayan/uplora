@@ -16,7 +16,7 @@
  *
  * - Tailwind utility classes: bg-primary, text-warning, border-accent
  * - CSS variables: var(--primary), var(--warning), var(--accent)
- * - For JavaScript: import from src/config/colors.ts (mirrors these values)
+ * - Use CSS variables + Tailwind tokens for all UI colors (no hex/rgb in components)
  *
  * DO NOT use hardcoded hex colors, rgb values, or color names anywhere!
  *

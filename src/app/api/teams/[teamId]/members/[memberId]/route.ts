@@ -141,13 +141,14 @@ export async function DELETE(
             '',
             `If you believe this was a mistake, please contact the team administrator.`,
           ].join("\n");
-          const html = `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.6;">
-            <div style="max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;">
-              <h2 style="margin:0 0 12px;color:#111827;">Team Membership Update</h2>
-              <p style="margin:0 0 8px;color:#334155;">You have been removed from <strong>${team.name}</strong>.</p>
-              <p style="margin:0 0 12px;color:#64748b;font-size:14px;">If you believe this was a mistake, please contact the team administrator.</p>
-            </div>
-          </body></html>`;
+          const escapeHtml = (s: string) =>
+            s
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+          const html = `<pre>${escapeHtml(text)}</pre>`;
           await sendMail({ to: removedUser.email, subject, text, html });
         }
       } catch (e) {

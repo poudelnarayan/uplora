@@ -27,33 +27,33 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     title: "Invite Team Member",
     subtitle: "Add someone to collaborate with your team",
     icon: <Users className="w-6 h-6 text-white" />,
-    iconColor: "bg-[#3F72AF]",
+    iconColor: "bg-primary",
     maxWidth: "max-w-md",
-    headerGradient: "bg-[#DBE2EF]"
+    headerGradient: "bg-accent/20"
   },
   "create-team": {
     title: "Create New Team",
     subtitle: "Start collaborating with your team",
     icon: <Plus className="w-6 h-6 text-white" />,
-    iconColor: "bg-[#3F72AF]",
+    iconColor: "bg-primary",
     maxWidth: "max-w-lg",
-    headerGradient: "bg-[#DBE2EF]"
+    headerGradient: "bg-accent/20"
   },
   "feedback-studio": {
     title: "Feedback Studio",
     subtitle: "Help us improve Uplora",
     icon: <MessageCircle className="w-6 h-6 text-white" />,
-    iconColor: "bg-[#3F72AF]",
+    iconColor: "bg-primary",
     maxWidth: "max-w-lg",
-    headerGradient: "bg-[#DBE2EF]"
+    headerGradient: "bg-accent/20"
   },
   "idea-lab": {
     title: "Idea Lab",
     subtitle: "Share your brilliant ideas",
     icon: <Lightbulb className="w-6 h-6 text-white" />,
-    iconColor: "bg-[#3F72AF]",
+    iconColor: "bg-primary",
     maxWidth: "max-w-xl",
-    headerGradient: "bg-[#DBE2EF]"
+    headerGradient: "bg-accent/20"
   }
 };
 
@@ -144,11 +144,7 @@ export default function UniversalModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{
-              background: "rgba(0, 0, 0, 0.4)",
-              backdropFilter: "blur(4px)"
-            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-sm"
             onClick={(e: ReactMouseEvent<HTMLDivElement>) => {
               // Only close if clicking the backdrop, not the modal content
               if (e.target === e.currentTarget) {
@@ -170,14 +166,10 @@ export default function UniversalModal({
               }}
               className={`
                 relative w-full ${config.maxWidth} 
-                bg-gradient-to-br from-slate-50 to-blue-50/30 border border-slate-200/60 rounded-2xl 
+                bg-card border border-border rounded-2xl 
                 shadow-2xl overflow-hidden
                 max-h-[90vh] flex flex-col
               `}
-              style={{
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                backgroundColor: "rgb(248, 250, 252)"
-              }}
               tabIndex={-1}
               role="dialog"
               aria-modal="true"
@@ -187,15 +179,15 @@ export default function UniversalModal({
               {/* Header Section */}
               {showHeader && (
                 <div className={`
-                  bg-gradient-to-r from-slate-100 to-blue-100/50
-                  border-b border-slate-200/80 p-6
+                  ${config.headerGradient}
+                  border-b border-border p-6
                 `}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {/* Icon with gradient background */}
                       <div className={`
                         w-12 h-12 rounded-xl 
-                        bg-gradient-to-br from-emerald-600 to-teal-700 shadow-lg
+                        ${config.iconColor} shadow-lg
                         flex items-center justify-center
                       `}>
                         {config.icon}
@@ -205,16 +197,14 @@ export default function UniversalModal({
                       <div>
                         <h2 
                           id="modal-title"
-                          className="text-xl font-bold"
-                          style={{ color: 'hsl(210, 40%, 25%)' }}
+                          className="text-xl font-bold text-foreground"
                         >
                           {customTitle || config.title}
                         </h2>
                         {(customSubtitle || config.subtitle) && (
                           <p 
                             id="modal-description"
-                            className="text-sm mt-1"
-                            style={{ color: 'hsl(176, 20%, 16%)' }}
+                            className="text-sm mt-1 text-muted-foreground"
                           >
                             {customSubtitle || config.subtitle}
                           </p>
@@ -228,13 +218,13 @@ export default function UniversalModal({
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
                       className="
-                        p-2 rounded-lg hover:bg-slate-200/60 
+                        p-2 rounded-lg hover:bg-muted 
                         transition-colors duration-200
-                        focus:outline-none focus:ring-2 focus:ring-emerald-500/30
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30
                       "
                       aria-label="Close modal"
                     >
-                      <X className="w-5 h-5" style={{ color: 'hsl(176, 20%, 16%)' }} />
+                      <X className="w-5 h-5 text-foreground" />
                     </MotionButton>
                   </div>
                 </div>

@@ -152,7 +152,7 @@
 /* ===== CTA BUTTONS ===== */
 .cta {
   width: 100%;
-  background-color: var(--color-teal);
+  background-color: hsl(var(--primary));
   color: white;
   border: none;
   border-radius: 8px;
@@ -166,9 +166,9 @@
 }
 
 .cta:hover {
-  background-color: #009AA1;
+  background-color: hsl(var(--primary-hover));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.25);
+  box-shadow: var(--shadow-soft);
 }
 
 .ctaCurrent {

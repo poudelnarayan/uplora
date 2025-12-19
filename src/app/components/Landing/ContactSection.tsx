@@ -108,7 +108,7 @@ const ContactSection = () => {
                       onFocus={() => setFocusedField('email')}
                       onBlur={() => setFocusedField(null)}
                       placeholder="john@example.com" 
-                      className={`bg-secondary/30 border-border/50 hover:border-primary/50 focus:outline-none focus:border-primary focus:shadow-[0_0_20px_rgba(139,92,246,0.15)] focus:bg-background transform transition-all duration-300 ${
+                      className={`bg-secondary/30 border-border/50 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:bg-background transform transition-all duration-300 ${
                         focusedField === 'email' ? 'scale-[1.02] border-primary' : ''
                       }`}
                     />
@@ -130,7 +130,7 @@ const ContactSection = () => {
                     onFocus={() => setFocusedField('subject')}
                     onBlur={() => setFocusedField(null)}
                     placeholder="How can we help you?" 
-                    className={`bg-secondary/30 border-border/50 hover:border-primary/50 focus:outline-none focus:border-primary focus:shadow-[0_0_20px_rgba(139,92,246,0.15)] focus:bg-background transform transition-all duration-300 ${
+                    className={`bg-secondary/30 border-border/50 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:bg-background transform transition-all duration-300 ${
                       focusedField === 'subject' ? 'scale-[1.02] border-primary' : ''
                     }`}
                   />
@@ -149,7 +149,7 @@ const ContactSection = () => {
                     onBlur={() => setFocusedField(null)}
                     placeholder="Tell us more about your needs..." 
                     rows={4}
-                    className={`bg-secondary/30 border-border/50 hover:border-primary/50 focus:outline-none focus:border-primary focus:shadow-[0_0_20px_rgba(139,92,246,0.15)] focus:bg-background transform transition-all duration-300 resize-none ${
+                    className={`bg-secondary/30 border-border/50 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:bg-background transform transition-all duration-300 resize-none ${
                       focusedField === 'message' ? 'scale-[1.02] border-primary' : ''
                     }`}
                   />

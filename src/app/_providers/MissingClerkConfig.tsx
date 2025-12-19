@@ -4,30 +4,20 @@ import React from "react";
 
 export function MissingClerkConfig() {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "system-ui",
-        padding: "2rem",
-        textAlign: "center",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-8 text-center bg-background text-foreground">
       <div>
-        <h1 style={{ marginBottom: "1rem", color: "#ef4444" }}>Clerk Configuration Required</h1>
-        <p style={{ marginBottom: "1rem", color: "#6b7280" }}>
+        <h1 className="mb-4 text-xl font-semibold text-destructive">Clerk Configuration Required</h1>
+        <p className="mb-4 text-muted-foreground">
           Please add your Clerk publishable key to continue.
         </p>
-        <ol style={{ textAlign: "left", color: "#374151", lineHeight: "1.6" }}>
+        <ol className="text-left text-foreground/90 leading-relaxed space-y-1">
           <li>
             Go to{" "}
             <a
               href="https://dashboard.clerk.com/last-active?path=api-keys"
               target="_blank"
               rel="noreferrer"
-              style={{ color: "#3b82f6" }}
+              className="text-primary underline underline-offset-4"
             >
               Clerk Dashboard
             </a>

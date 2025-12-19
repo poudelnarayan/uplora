@@ -77,7 +77,7 @@ export default function IdeaLab({ isOpen, onClose, onSubmit }: IdeaLabProps) {
                 {/* Content */}
                 <div className={styles.content}>
                   {error && (
-                    <div className="mb-3 p-2 rounded text-sm" style={{ background: '#fee2e2', color: '#991b1b' }}>
+                    <div className="mb-3 p-2 rounded text-sm bg-destructive-muted text-destructive">
                       {error}
                     </div>
                   )}

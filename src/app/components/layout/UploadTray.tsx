@@ -62,11 +62,11 @@ export default function UploadTray() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   {u.status === "completed" ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-success" />
                   ) : u.status === "failed" ? (
-                    <AlertCircle className="w-5 h-5 text-red-500" />
+                    <AlertCircle className="w-5 h-5 text-destructive" />
                   ) : u.status === "cancelled" ? (
-                    <X className="w-5 h-5 text-orange-500" />
+                    <X className="w-5 h-5 text-orange" />
                   ) : u.status === "uploading" ? (
                     <InlineSpinner size="sm" className="text-primary" />
                   ) : (
@@ -88,23 +88,23 @@ export default function UploadTray() {
                 ) : u.status === "uploading" || u.status === "queued" ? (
                   <button
                     aria-label="Cancel upload"
-                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors pointer-events-auto"
+                    className="p-1 rounded-full hover:bg-destructive-muted transition-colors pointer-events-auto"
                     onClick={(e) => { e.stopPropagation(); cancelUpload(u.id); }}
                   >
-                    <X className="w-4 h-4 text-red-500" strokeWidth={2.5} />
+                    <X className="w-4 h-4 text-destructive" strokeWidth={2.5} />
                   </button>
                 ) : null}
               </div>
               {u.status === "uploading" && (
                 <div className="mt-2 w-full h-2 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#00ADB5] to-[#00ADB5]/80 transition-[width] duration-200"
+                    className="h-full bg-gradient-to-r from-primary to-primary/80 transition-[width] duration-200"
                     style={{ width: `${u.progress}%` }}
                   />
                 </div>
               )}
               {u.status === "failed" && u.error && (
-                <div className="text-xs text-red-500 mt-1">{u.error}</div>
+                <div className="text-xs text-destructive mt-1">{u.error}</div>
               )}
             </div>
           )})}

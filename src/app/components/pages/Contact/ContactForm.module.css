@@ -1,11 +1,11 @@
 /* ===== CONTACT FORM STYLES ===== */
 
 .container {
-  background: white;
-  border: 1px solid var(--color-light);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 1px 3px rgba(34, 40, 49, 0.08);
+  box-shadow: var(--shadow-soft);
 }
 
 .form {
@@ -30,7 +30,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: var(--color-teal);
+  background-color: hsl(var(--primary));
   color: white;
   border: none;
   border-radius: 8px;
@@ -42,9 +42,9 @@
 }
 
 .submitButton:hover:not(:disabled) {
-  background-color: #009AA1;
+  background-color: hsl(var(--primary-hover));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.25);
+  box-shadow: var(--shadow-soft);
 }
 
 .submitButton:disabled {
@@ -74,11 +74,11 @@
 
 /* Success State */
 .successContainer {
-  background: white;
-  border: 1px solid var(--color-light);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 1px 3px rgba(34, 40, 49, 0.08);
+  box-shadow: var(--shadow-soft);
 }
 
 .successContent {
@@ -89,7 +89,7 @@
 .successIcon {
   width: 4rem;
   height: 4rem;
-  background: rgba(0, 173, 181, 0.1);
+  background: hsl(var(--primary) / 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -100,14 +100,14 @@
 .successIconSvg {
   width: 2rem;
   height: 2rem;
-  color: var(--color-teal);
+  color: hsl(var(--primary));
 }
 
 .successTitle {
   font-family: 'Google Sans', sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-brand-dark);
+  color: hsl(var(--foreground));
   margin-bottom: 0.5rem;
 }
 
@@ -115,12 +115,12 @@
   font-family: 'Google Sans', sans-serif;
   font-size: 1rem;
   font-weight: 400;
-  color: var(--color-dark-secondary);
+  color: hsl(var(--muted-foreground));
   margin-bottom: 1.5rem;
 }
 
 .resetButton {
-  background-color: var(--color-teal);
+  background-color: hsl(var(--primary));
   color: white;
   border: none;
   border-radius: 8px;
@@ -133,7 +133,7 @@
 }
 
 .resetButton:hover {
-  background-color: #009AA1;
+  background-color: hsl(var(--primary-hover));
   transform: translateY(-1px);
 }
 

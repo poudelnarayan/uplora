@@ -21,7 +21,7 @@
   font-family: 'Google Sans', sans-serif;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-brand-dark);
+  color: hsl(var(--foreground));
   margin: 0;
   letter-spacing: -0.025em;
 }
@@ -31,7 +31,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: var(--color-teal);
+  background-color: hsl(var(--primary));
   color: white;
   border: none;
   border-radius: 8px;
@@ -43,9 +43,9 @@
 }
 
 .createButton:hover {
-  background-color: #009AA1;
+  background-color: hsl(var(--primary-hover));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 173, 181, 0.25);
+  box-shadow: var(--shadow-soft);
 }
 
 .buttonIcon {

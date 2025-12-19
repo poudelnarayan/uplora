@@ -44,7 +44,7 @@
   position: absolute;
   top: -0.5rem;
   right: -0.5rem;
-  background-color: #FF5722;
+  background-color: hsl(var(--orange));
   color: white;
   font-size: 0.625rem;
   font-weight: 700;

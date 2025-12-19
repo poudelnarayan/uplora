@@ -1,8 +1,8 @@
 /* ===== EMAIL VERIFICATION BANNER STYLES ===== */
 
 .banner {
-  background-color: #FFF8E1;
-  border-bottom: 1px solid #FFE082;
+  background-color: hsl(var(--warning-muted));
+  border-bottom: 1px solid hsl(var(--orange));
   font-family: 'Google Sans', sans-serif;
 }
 
@@ -30,7 +30,7 @@
 .icon {
   width: 1.25rem;
   height: 1.25rem;
-  color: #F57C00;
+  color: hsl(var(--warning));
   flex-shrink: 0;
 }
 
@@ -42,12 +42,12 @@
 }
 
 .title {
-  color: #E65100;
+  color: hsl(var(--warning));
   font-weight: 500;
 }
 
 .subtitle {
-  color: #FF8F00;
+  color: hsl(var(--muted-foreground));
 }
 
 .actions {
@@ -58,8 +58,8 @@
 
 .resendButton {
   background-color: transparent;
-  color: #FF8F00;
-  border: 1px solid #FFE082;
+  color: hsl(var(--warning));
+  border: 1px solid hsl(var(--orange));
   border-radius: 6px;
   padding: 0.5rem 1rem;
   font-family: 'Google Sans', sans-serif;
@@ -70,8 +70,8 @@
 }
 
 .resendButton:hover:not(:disabled) {
-  background-color: #FFF3E0;
-  border-color: #FFB74D;
+  background-color: hsl(var(--warning-muted));
+  border-color: hsl(var(--orange));
 }
 
 .resendButton:disabled {
@@ -114,7 +114,7 @@
 .dismissButton {
   background: none;
   border: none;
-  color: #F57C00;
+  color: hsl(var(--warning));
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 4px;
@@ -122,7 +122,7 @@
 }
 
 .dismissButton:hover {
-  color: #E65100;
+  color: hsl(var(--warning));
 }
 
 .dismissIcon {

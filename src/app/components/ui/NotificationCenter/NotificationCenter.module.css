@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: hsl(var(--foreground) / 0.3);
   z-index: 50;
 }
 
@@ -14,22 +14,18 @@
   right: 1rem;
   width: 24rem;
   max-width: calc(100vw - 2rem);
-  background-color: rgb(var(--card));
-  border: 1px solid rgb(var(--border));
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 1rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-strong);
   z-index: 50;
   overflow: hidden;
 }
 
 .header {
-  background: linear-gradient(
-    to right,
-    rgba(59, 130, 246, 0.1),
-    rgba(99, 102, 241, 0.1)
-  );
+  background: hsl(var(--primary) / 0.08);
   padding: 1.5rem;
-  border-bottom: 1px solid rgb(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -45,11 +41,7 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.75rem;
-  background: linear-gradient(
-    to bottom right,
-    rgb(59, 130, 246),
-    rgb(99, 102, 241)
-  );
+  background: hsl(var(--primary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,12 +50,12 @@
 .title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: rgb(var(--foreground));
+  color: hsl(var(--foreground));
 }
 
 .subtitle {
   font-size: 0.75rem;
-  color: rgb(var(--muted-foreground));
+  color: hsl(var(--muted-foreground));
 }
 
 .closeButton {
@@ -73,7 +65,7 @@
 }
 
 .closeButton:hover {
-  background-color: rgb(var(--muted));
+  background-color: hsl(var(--muted));
 }
 
 .content {
@@ -93,10 +85,10 @@
   margin-top: 1rem;
   padding: 0.5rem;
   font-size: 0.75rem;
-  color: rgb(var(--muted-foreground));
+  color: hsl(var(--muted-foreground));
   transition: color 0.2s;
 }
 
 .clearButton:hover {
-  color: rgb(var(--foreground));
+  color: hsl(var(--foreground));
 }

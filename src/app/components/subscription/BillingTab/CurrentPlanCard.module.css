@@ -121,8 +121,8 @@
 
 /* ===== TRIAL NOTICES ===== */
 .trialNotice {
-  background-color: #FFF8E1;
-  border: 1px solid #FFE082;
+  background-color: hsl(var(--warning-muted));
+  border: 1px solid hsl(var(--orange));
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 2rem;
@@ -132,8 +132,8 @@
 }
 
 .expiredNotice {
-  background-color: #FFEBEE;
-  border: 1px solid #FFCDD2;
+  background-color: hsl(var(--destructive-muted));
+  border: 1px solid hsl(var(--destructive) / 0.3);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 2rem;
@@ -184,7 +184,7 @@
 }
 
 .btnPrimary:hover {
-  background-color: #1A1F26;
+  background-color: hsl(var(--muted));
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(34, 40, 49, 0.25);
 }
@@ -203,14 +203,14 @@
 }
 
 .btnSecondary:hover {
-  background-color: #2F353D;
+  background-color: hsl(var(--muted));
   transform: translateY(-1px);
 }
 
 .btnDanger {
   background-color: transparent;
   color: var(--color-error);
-  border: 1px solid #FFCDD2;
+  border: 1px solid hsl(var(--destructive) / 0.3);
   border-radius: 8px;
   padding: 0.75rem 1.5rem;
   font-family: 'Google Sans', sans-serif;
@@ -221,8 +221,8 @@
 }
 
 .btnDanger:hover {
-  background-color: #FFEBEE;
-  border-color: #EF5350;
+  background-color: hsl(var(--destructive-muted));
+  border-color: hsl(var(--destructive));
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

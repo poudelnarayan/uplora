@@ -62,16 +62,16 @@ export default function InviteMemberContent({
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      <div className="rounded-xl p-4 bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-200/60">
+      <div className="rounded-xl p-4 bg-primary/10 border border-primary/20">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <Mail className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-medium mb-1" style={{ color: 'hsl(210, 40%, 25%)' }}>
+            <p className="text-sm font-medium mb-1 text-foreground">
               Email Invitation
             </p>
-            <p className="text-xs" style={{ color: 'hsl(176, 20%, 16%)' }}>
+            <p className="text-xs text-muted-foreground">
               They'll receive a secure invitation link to join {teamName || "your team"}. 
               The link expires in 7 days.
             </p>
@@ -102,7 +102,7 @@ export default function InviteMemberContent({
             required
           />
           {error && (
-            <p className="text-sm" style={{ color: '#ef4444' }} aria-live="polite">{error}</p>
+            <p className="text-sm text-destructive" aria-live="polite">{error}</p>
           )}
         </div>
 
@@ -122,10 +122,10 @@ export default function InviteMemberContent({
           </SelectField>
 
           {/* Role Description */}
-          <div className="p-3 rounded-lg bg-gradient-to-r from-slate-50 to-blue-50/30 border border-slate-200/60">
+          <div className="p-3 rounded-lg bg-secondary/30 border border-border">
             <div className="text-xs">
-              <span className="font-medium" style={{ color: 'hsl(210, 40%, 25%)' }}>Role Permissions: </span>
-              <span style={{ color: 'hsl(176, 20%, 16%)' }}>
+              <span className="font-medium text-foreground">Role Permissions: </span>
+              <span className="text-muted-foreground">
                 {getRoleDescription(formData.role)}
               </span>
             </div>
@@ -133,12 +133,11 @@ export default function InviteMemberContent({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-slate-200/80">
+        <div className="flex gap-3 pt-4 border-t border-border">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 transition-all"
-            style={{ color: 'hsl(176, 20%, 16%)' }}
+            className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-all text-foreground"
             disabled={isLoading}
           >
             Cancel
@@ -146,7 +145,7 @@ export default function InviteMemberContent({
           <button
             type="submit"
             disabled={isLoading || !formData.email.trim() || isSelf}
-            className="flex-1 px-4 py-2 rounded-lg text-white transition-all flex items-center justify-center gap-2 bg-[hsl(210,55%,45%)] hover:bg-[hsl(210,40%,25%)] disabled:opacity-60"
+            className="flex-1 px-4 py-2 rounded-lg text-primary-foreground transition-all flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-60"
           >
             {isLoading ? (
               <>

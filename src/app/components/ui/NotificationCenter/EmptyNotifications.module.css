@@ -11,8 +11,8 @@
   border-radius: 1rem;
   background: linear-gradient(
     to bottom right,
-    rgba(59, 130, 246, 0.2),
-    rgba(99, 102, 241, 0.2)
+    hsl(var(--primary) / 0.2),
+    hsl(var(--accent) / 0.2)
   );
   display: flex;
   align-items: center;
@@ -22,11 +22,11 @@
 
 .title {
   font-weight: 600;
-  color: rgb(var(--foreground));
+  color: hsl(var(--foreground));
   margin-bottom: 0.5rem;
 }
 
 .message {
   font-size: 0.875rem;
-  color: rgb(var(--muted-foreground));
+  color: hsl(var(--muted-foreground));
 }

@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: hsl(var(--foreground) / 0.4);
   z-index: 50;
 }
 
@@ -15,10 +15,10 @@
   transform: translate(-50%, -50%);
   width: 24rem;
   max-width: calc(100vw - 2rem);
-  background-color: rgb(var(--card));
-  border: 1px solid rgb(var(--border));
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 1rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-strong);
   z-index: 50;
   overflow: hidden;
 }
@@ -41,23 +41,23 @@
 }
 
 .iconContainer.danger {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: rgb(239, 68, 68);
+  background-color: hsl(var(--destructive-muted));
+  color: hsl(var(--destructive));
 }
 
 .iconContainer.warning {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: rgb(245, 158, 11);
+  background-color: hsl(var(--warning-muted));
+  color: hsl(var(--warning));
 }
 
 .iconContainer.success {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: rgb(34, 197, 94);
+  background-color: hsl(var(--success-muted));
+  color: hsl(var(--success));
 }
 
 .iconContainer.info {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: rgb(59, 130, 246);
+  background-color: hsl(var(--info-muted));
+  color: hsl(var(--primary));
 }
 
 .content {
@@ -67,13 +67,13 @@
 .title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: rgb(var(--foreground));
+  color: hsl(var(--foreground));
   margin-bottom: 0.5rem;
 }
 
 .message {
   font-size: 0.875rem;
-  color: rgb(var(--muted-foreground));
+  color: hsl(var(--muted-foreground));
   line-height: 1.5;
 }
 
@@ -88,13 +88,13 @@
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 600;
-  background-color: rgb(var(--muted));
-  color: rgb(var(--foreground));
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
   transition: background-color 0.2s;
 }
 
 .cancelButton:hover {
-  background-color: rgb(var(--muted-foreground));
+  background-color: hsl(var(--muted));
 }
 
 .confirmButton {
@@ -107,33 +107,33 @@
 }
 
 .confirmButton.danger {
-  background-color: rgb(239, 68, 68);
+  background-color: hsl(var(--destructive));
 }
 
 .confirmButton.danger:hover {
-  background-color: rgb(220, 38, 38);
+  background-color: hsl(var(--destructive));
 }
 
 .confirmButton.warning {
-  background-color: rgb(245, 158, 11);
+  background-color: hsl(var(--warning));
 }
 
 .confirmButton.warning:hover {
-  background-color: rgb(217, 119, 6);
+  background-color: hsl(var(--warning));
 }
 
 .confirmButton.success {
-  background-color: rgb(34, 197, 94);
+  background-color: hsl(var(--success));
 }
 
 .confirmButton.success:hover {
-  background-color: rgb(22, 163, 74);
+  background-color: hsl(var(--success));
 }
 
 .confirmButton.info {
-  background-color: rgb(59, 130, 246);
+  background-color: hsl(var(--primary));
 }
 
 .confirmButton.info:hover {
-  background-color: rgb(37, 99, 235);
+  background-color: hsl(var(--primary));
 }
