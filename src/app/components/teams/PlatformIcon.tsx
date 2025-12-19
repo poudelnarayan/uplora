@@ -1,10 +1,11 @@
-import { 
+import {
   Facebook,
   Instagram,
   Twitter,
   Linkedin,
   Youtube
 } from "lucide-react";
+import { PLATFORM_BRAND_COLORS } from '@/config/colors';
 
 export const platformIcons = {
   facebook: Facebook,
@@ -15,11 +16,11 @@ export const platformIcons = {
 };
 
 export const platformColors = {
-  facebook: "text-blue-600",
-  instagram: "text-pink-600", 
-  twitter: "text-sky-500",
-  linkedin: "text-blue-700",
-  youtube: "text-red-600"
+  facebook: PLATFORM_BRAND_COLORS.facebook,
+  instagram: PLATFORM_BRAND_COLORS.instagram,
+  twitter: PLATFORM_BRAND_COLORS.twitter,
+  linkedin: PLATFORM_BRAND_COLORS.linkedin,
+  youtube: PLATFORM_BRAND_COLORS.youtube
 };
 
 interface PlatformIconProps {
@@ -41,7 +42,7 @@ export const PlatformIcon = ({ platform, size = "md" }: PlatformIconProps) => {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
-      <Icon className={`${sizeClasses[size]} ${color}`} />
+      <Icon className={`${sizeClasses[size]}`} style={{ color }} />
       <span className="text-xs font-medium capitalize">{platform}</span>
     </div>
   );

@@ -133,7 +133,7 @@ const Teams = () => {
       const res = await fetch(`/api/teams/${team.backendId}`, { method: 'DELETE' });
       const js = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(js?.error || 'Failed to delete team');
-      await refreshTeams();
+      await refreshTeams(true);
       toast({ title: 'Team Deleted', description: `${team.name} has been deleted` });
     } catch (e) {
       toast({ title: 'Delete failed', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' as any });

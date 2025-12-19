@@ -2,13 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Uplora Design System - 6-Color Palette
-#97A87A - Sage Green (Primary)
-#A8BBA3 - Light Sage (Accent)
-#FCF9EA - Cream (Background)
-#FFA239 - Orange (Highlight)
-+ Black & White
-*/
+/**
+ * ═══════════════════════════════════════════════════════════════
+ *                   SINGLE SOURCE OF TRUTH
+ *                    FOR ALL APPLICATION COLORS
+ * ═══════════════════════════════════════════════════════════════
+ *
+ * THIS FILE IS THE ONLY PLACE WHERE COLORS ARE DEFINED!
+ *
+ * ALL components, pages, modals, notifications, buttons, text,
+ * backgrounds, gradients, icons, shadows, and any visual element
+ * in the application MUST use colors from this file via:
+ *
+ * - Tailwind utility classes: bg-primary, text-warning, border-accent
+ * - CSS variables: var(--primary), var(--warning), var(--accent)
+ * - For JavaScript: import from src/config/colors.ts (mirrors these values)
+ *
+ * DO NOT use hardcoded hex colors, rgb values, or color names anywhere!
+ *
+ * Uplora Design System - 6-Color Palette:
+ * ────────────────────────────────────────
+ * #97A87A - Sage Green (Primary)
+ * #A8BBA3 - Light Sage (Accent)
+ * #FCF9EA - Cream (Background)
+ * #FFA239 - Orange (Highlight/Warning)
+ * #000000 - Black
+ * #FFFFFF - White
+ *
+ * ═══════════════════════════════════════════════════════════════
+ */
 
 @layer base {
   :root {

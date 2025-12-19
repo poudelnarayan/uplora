@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
+import { BRAND_COLORS, withOpacity } from '@/config/colors';
 
 interface Particle {
   x: number;
@@ -41,9 +42,9 @@ export const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     window.addEventListener('resize', resizeCanvas);
 
     const colors = [
-      'rgba(151, 168, 122, 0.3)',
-      'rgba(168, 187, 163, 0.3)',
-      'rgba(255, 162, 57, 0.25)',
+      withOpacity(BRAND_COLORS.sageGreen, 0.3),
+      withOpacity(BRAND_COLORS.lightSage, 0.3),
+      withOpacity(BRAND_COLORS.orange, 0.25),
     ];
 
     const initParticles = () => {
@@ -85,7 +86,7 @@ export const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
 
           if (distance < 150) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(151, 168, 122, ${0.1 * (1 - distance / 150)})`;
+            ctx.strokeStyle = withOpacity(BRAND_COLORS.sageGreen, 0.1 * (1 - distance / 150));
             ctx.lineWidth = 0.5;
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(otherParticle.x, otherParticle.y);
