@@ -23,6 +23,7 @@ import {
   Calendar,
   CheckCircle,
   FileText,
+  ShieldCheck,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/app/components/ui/NotificationCenter/NotificationCenter";
