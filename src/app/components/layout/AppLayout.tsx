@@ -42,16 +42,16 @@ import { useNotifications } from "@/app/components/ui/Notification";
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
   { href: "/make-post", label: "Make Post", icon: Upload },
-  { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/social", label: "Social", icon: Plus },
 ];
 
 const postRoutes = [
-  { href: "/posts/timeline", label: "Timeline", icon: Clock },
   { href: "/posts/all", label: "All", icon: FileText },
-  { href: "/posts/scheduled", label: "Scheduled", icon: Calendar },
+  { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/posts/posted", label: "Posted", icon: CheckCircle },
+  { href: "/posts/scheduled", label: "Scheduled", icon: Calendar },
+  { href: "/posts/timeline", label: "Timeline", icon: Clock },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

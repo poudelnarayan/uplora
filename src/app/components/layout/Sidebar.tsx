@@ -23,7 +23,11 @@ import {
   Mail,
   Menu,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Calendar,
+  Clock,
+  CheckCircle,
+  FileText
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -46,10 +50,17 @@ const navItems: NavItem[] = [
     href: '/dashboard'
   },
   {
-    id: 'approvals',
-    label: 'Approvals',
-    icon: <ShieldCheck className="w-5 h-5" />,
-    href: '/approvals'
+    id: 'posts',
+    label: 'Posts',
+    icon: <FileText className="w-5 h-5" />,
+    href: '/posts/all',
+    children: [
+      { id: 'posts-all', label: 'All', icon: <FileText className="w-4 h-4" />, href: '/posts/all' },
+      { id: 'posts-approvals', label: 'Approvals', icon: <ShieldCheck className="w-4 h-4" />, href: '/approvals' },
+      { id: 'posts-posted', label: 'Posted', icon: <CheckCircle className="w-4 h-4" />, href: '/posts/posted' },
+      { id: 'posts-scheduled', label: 'Scheduled', icon: <Calendar className="w-4 h-4" />, href: '/posts/scheduled' },
+      { id: 'posts-timeline', label: 'Timeline', icon: <Clock className="w-4 h-4" />, href: '/posts/timeline' },
+    ]
   },
   {
     id: 'upload',
