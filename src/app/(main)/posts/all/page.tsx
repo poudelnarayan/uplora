@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { FileText, Video, Image as ImageIcon, Filter, Search, Grid, List, Eye, Edit, Trash2, Calendar, Clock, Sparkles, Plus, MoreVertical, Send } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -20,7 +20,7 @@ import { useSearchParams } from "next/navigation";
 
 const MotionDiv = motion.div as any;
 
-const AllPosts = () => {
+function AllPostsInner() {
   const { selectedTeamId, selectedTeam } = useTeam();
   const { getCachedContent, setCachedContent, isStale } = useContentCache();
   const notifications = useNotifications();
@@ -519,6 +519,13 @@ const AllPosts = () => {
       </Dialog>
     </AppShell>
   );
-};
+}
 
-export default AllPosts;
+export default function AllPostsPage() {
+  // Next.js requires Suspense boundary when using useSearchParams() in app router pages.
+  return (
+    <Suspense fallback={<div />}>
+      <AllPostsInner />
+    </Suspense>
+  );
+}
