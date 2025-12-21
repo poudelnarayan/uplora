@@ -42,7 +42,6 @@ import { useNotifications } from "@/app/components/ui/Notification";
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
   { href: "/make-post", label: "Make Post", icon: Upload },
-  { href: "/posts/all?type=video", label: "Videos", icon: FileText },
   { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/teams", label: "Teams", icon: Users },
   { href: "/social", label: "Social", icon: Plus },

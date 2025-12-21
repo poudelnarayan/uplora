@@ -17,7 +17,6 @@ import {
   LogOut, 
   ChevronDown,
   Video,
-  FileText,
   Crown,
   Target,
   Plus,
@@ -51,12 +50,6 @@ const navItems: NavItem[] = [
     label: 'Approvals',
     icon: <ShieldCheck className="w-5 h-5" />,
     href: '/approvals'
-  },
-  {
-    id: 'videos',
-    label: 'Videos',
-    icon: <FileText className="w-5 h-5" />,
-    href: '/posts/all?type=video'
   },
   {
     id: 'upload',
