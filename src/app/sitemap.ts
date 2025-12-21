@@ -10,7 +10,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
     "/privacy",
     "/terms",
-    "/videos",
   ].map((path) => ({ url: `${siteUrl}${path}`, lastModified: new Date() }));
 
   let videoRoutes: MetadataRoute.Sitemap = [];

@@ -214,7 +214,7 @@ export default function VideosList({
       </div>
       {!showAll && videos.length > 3 && (
         <div className="mt-4 text-center">
-          <button className="btn btn-ghost w-full" onClick={() => router.push('/videos')}>
+          <button className="btn btn-ghost w-full" onClick={() => router.push('/posts/all?type=video')}>
             View all
           </button>
         </div>

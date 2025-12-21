@@ -248,7 +248,7 @@ export default function VideoPreviewPage() {
               title: "Video deleted",
               message: "This video has been deleted by another user"
             });
-            router.push("/videos");
+            router.push("/posts/all?type=video");
             return;
           }
           
@@ -777,7 +777,7 @@ export default function VideoPreviewPage() {
       });
       
       // Redirect to videos page
-      router.push("/videos");
+      router.push("/posts/all?type=video");
     } catch (error) {
       notifications.addNotification({
         type: "error",
