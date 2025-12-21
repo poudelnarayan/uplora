@@ -60,6 +60,20 @@ const Teams = () => {
   const [deletingTeamId, setDeletingTeamId] = useState<number | null>(null);
   const { toast } = useToast();
 
+  // Support deep-linking into the Create Team dialog (e.g. /teams?create=1)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("create") === "1") {
+      setIsCreateTeamOpen(true);
+      // Clean the URL so refreshes/bookmarks don't keep re-opening the modal
+      params.delete("create");
+      const next = params.toString();
+      const newUrl = `${window.location.pathname}${next ? `?${next}` : ""}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
+
   // Transform context teams to local Team format - newest first
   const teams = contextTeams.slice().reverse().map((t, i) => ({
     id: i + 1,

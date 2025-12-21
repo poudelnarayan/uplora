@@ -75,7 +75,7 @@ const navItems: NavItem[] = [
     href: '/teams',
     children: [
       { id: 'teams-overview', label: 'Overview', icon: <Users className="w-4 h-4" />, href: '/teams' },
-      { id: 'teams-create', label: 'Create Team', icon: <Plus className="w-4 h-4" />, href: '/teams/create' },
+      { id: 'teams-create', label: 'Create Team', icon: <Plus className="w-4 h-4" />, href: '/teams?create=1' },
       { id: 'teams-invites', label: 'Invitations', icon: <Mail className="w-4 h-4" />, href: '/teams/invites' }
     ]
   },

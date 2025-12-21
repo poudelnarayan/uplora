@@ -53,7 +53,7 @@ export default function QuickActions({ teams }: QuickActionsProps) {
         if (teams.length > 0) {
           router.push('/teams');
         } else {
-          router.push('/teams/create');
+          router.push('/teams?create=1');
         }
       },
       color: "from-accent to-primary"
