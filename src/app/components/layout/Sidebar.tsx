@@ -56,7 +56,7 @@ const navItems: NavItem[] = [
     id: 'videos',
     label: 'Videos',
     icon: <FileText className="w-5 h-5" />,
-    href: '/videos'
+    href: '/posts/all?type=video'
   },
   {
     id: 'upload',

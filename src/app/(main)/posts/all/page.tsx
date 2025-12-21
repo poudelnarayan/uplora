@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/app/components/ui/label";
 import AppShell from "@/app/components/layout/AppLayout";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const MotionDiv = motion.div as any;
 
@@ -23,6 +24,7 @@ const AllPosts = () => {
   const { selectedTeamId, selectedTeam } = useTeam();
   const { getCachedContent, setCachedContent, isStale } = useContentCache();
   const notifications = useNotifications();
+  const searchParams = useSearchParams();
 
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,14 @@ const AllPosts = () => {
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
+
+  // Allow deep-linking: /posts/all?type=video&status=PENDING
+  useEffect(() => {
+    const t = searchParams.get("type");
+    const s = searchParams.get("status");
+    if (t && ["all", "text", "image", "reel", "video"].includes(t)) setFilterType(t);
+    if (s && ["all", "DRAFT", "PENDING", "SCHEDULED", "PUBLISHED", "PROCESSING"].includes(s)) setFilterStatus(s);
+  }, [searchParams]);
 
   const fetchContent = useCallback(async () => {
     if (!selectedTeamId) {
