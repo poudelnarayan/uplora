@@ -17,12 +17,12 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: 'text-gray-600',
-  primary: 'text-blue-600',
-  secondary: 'text-gray-500',
-  success: 'text-green-600',
-  warning: 'text-yellow-600',
-  error: 'text-red-600'
+  default: 'text-muted-foreground',
+  primary: 'text-primary',
+  secondary: 'text-muted-foreground',
+  success: 'text-success',
+  warning: 'text-warning',
+  error: 'text-destructive'
 };
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
@@ -36,14 +36,11 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
       <div
         className={cn(
-          'animate-spin rounded-full border-2 border-gray-200',
+          'animate-spin rounded-full border-2 border-border',
           sizeClasses[size],
           variantClasses[variant],
           'border-t-current'
         )}
-        style={{
-          animation: 'spin 1s linear infinite'
-        }}
       />
       {text && (
         <p className={cn('text-sm font-medium', variantClasses[variant])}>
@@ -71,7 +68,7 @@ export const InlineSpinner: React.FC<{ size?: 'sm' | 'md'; className?: string }>
 }) => (
   <div
     className={cn(
-      'animate-spin rounded-full border-2 border-gray-200 border-t-blue-600',
+      'animate-spin rounded-full border-2 border-border border-t-primary',
       size === 'sm' ? 'w-4 h-4' : 'w-5 h-5',
       className
     )}
@@ -80,18 +77,29 @@ export const InlineSpinner: React.FC<{ size?: 'sm' | 'md'; className?: string }>
 
 // Page loading component
 export const PageLoader: React.FC<{ text?: string }> = ({ text = 'Loading...' }) => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50">
-    <LoadingSpinner size="xl" variant="primary" text={text} />
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-full max-w-sm px-6">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-4">
+          <InlineSpinner size="md" />
+          <div className="flex-1">
+            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+            <div className="mt-2 h-3 w-48 bg-muted/70 rounded animate-pulse" />
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">{text}</p>
+      </div>
+    </div>
   </div>
 );
 
 // Card loading skeleton
 export const CardSkeleton: React.FC<{ className?: string }> = ({ className }) => (
   <div className={cn('animate-pulse', className)}>
-    <div className="bg-gray-200 rounded-lg h-48 w-full mb-4"></div>
+    <div className="bg-muted rounded-lg h-48 w-full mb-4"></div>
     <div className="space-y-2">
-      <div className="bg-gray-200 rounded h-4 w-3/4"></div>
-      <div className="bg-gray-200 rounded h-4 w-1/2"></div>
+      <div className="bg-muted rounded h-4 w-3/4"></div>
+      <div className="bg-muted rounded h-4 w-1/2"></div>
     </div>
   </div>
 );
@@ -104,10 +112,10 @@ export const ListSkeleton: React.FC<{ count?: number; className?: string }> = ({
   <div className={cn('space-y-4', className)}>
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className="animate-pulse flex items-center space-x-4">
-        <div className="bg-gray-200 rounded-full h-12 w-12"></div>
+        <div className="bg-muted rounded-full h-12 w-12"></div>
         <div className="flex-1 space-y-2">
-          <div className="bg-gray-200 rounded h-4 w-3/4"></div>
-          <div className="bg-gray-200 rounded h-3 w-1/2"></div>
+          <div className="bg-muted rounded h-4 w-3/4"></div>
+          <div className="bg-muted rounded h-3 w-1/2"></div>
         </div>
       </div>
     ))}
@@ -127,7 +135,7 @@ export const TableSkeleton: React.FC<{ rows?: number; cols?: number; className?:
           {Array.from({ length: cols }).map((_, colIndex) => (
             <div
               key={colIndex}
-              className="bg-gray-200 rounded h-4 flex-1"
+              className="bg-muted rounded h-4 flex-1"
               style={{ width: `${Math.random() * 40 + 60}%` }}
             ></div>
           ))}

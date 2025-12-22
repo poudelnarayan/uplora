@@ -37,6 +37,7 @@ function AllPostsInner() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
+  const canSchedule = ["OWNER", "ADMIN", "MANAGER"].includes(String((selectedTeam as any)?.role || ""));
 
   // Allow deep-linking: /posts/all?type=video&status=PENDING
   useEffect(() => {
@@ -95,6 +96,14 @@ function AllPostsInner() {
   }, [fetchContent]);
 
   const handleSchedulePost = async () => {
+    if (!canSchedule) {
+      notifications.addNotification({
+        type: "error",
+        title: "Not allowed",
+        message: "Only owner/admin/manager can schedule posts."
+      });
+      return;
+    }
     if (!selectedPost || !scheduleDate || !scheduleTime) {
       notifications.addNotification({
         type: "error",
@@ -410,7 +419,7 @@ function AllPostsInner() {
                                     <Edit className="h-4 w-4 mr-2" />
                                     Edit
                                   </DropdownMenuItem>
-                                  {post.status === 'DRAFT' && (
+                                  {canSchedule && post.status === 'DRAFT' && (
                                     <DropdownMenuItem
                                       onClick={() => {
                                         setSelectedPost(post);

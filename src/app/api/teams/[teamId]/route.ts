@@ -21,7 +21,11 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const name = typeof body.name === "string" ? body.name.trim() : undefined;
     const description = typeof body.description === "string" ? body.description.trim() : undefined;
-    if (!name && !description) {
+    const platforms = Array.isArray(body.platforms)
+      ? body.platforms.filter((p: unknown) => typeof p === "string").map((p: string) => p.trim()).filter(Boolean)
+      : undefined;
+
+    if (!name && !description && platforms === undefined) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
@@ -52,12 +56,13 @@ export async function PATCH(
     const updateData: any = {};
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
+    if (platforms !== undefined) updateData.platforms = platforms;
     
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('teams')
       .update(updateData)
       .eq('id', team.id)
-      .select('id, name, description, updatedAt')
+      .select('id, name, description, platforms, updatedAt')
       .single();
     
     if (updateError) {

@@ -1,3 +1,6 @@
+ "use client";
+
+import { useEffect, useMemo, useState } from "react";
 import {
   Users,
   UserX,
@@ -71,6 +74,33 @@ export const TeamDetailsDialog = ({
   onUpdateTeam
 }: TeamDetailsDialogProps) => {
   const { toast } = useToast();
+  const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
+  const [loadingConnected, setLoadingConnected] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingConnected(true);
+      try {
+        const res = await fetch("/api/social-connections/status", { cache: "no-store" });
+        const js = await res.json().catch(() => ({}));
+        if (!cancelled) setConnectedPlatforms(Array.isArray(js?.connectedPlatforms) ? js.connectedPlatforms : []);
+      } catch {
+        if (!cancelled) setConnectedPlatforms([]);
+      } finally {
+        if (!cancelled) setLoadingConnected(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  const addablePlatforms = useMemo(() => {
+    const connected = connectedPlatforms.filter((p) => p && Object.prototype.hasOwnProperty.call(platformIcons, p));
+    return connected.filter((p) => !team?.platforms?.includes(p));
+  }, [connectedPlatforms, team?.platforms]);
 
   const handleRemoveMember = (memberId: number, memberName: string) => {
     if (team) {
@@ -185,7 +215,7 @@ export const TeamDetailsDialog = ({
             )}
 
             {/* Quick Add - Show available platforms */}
-            {team.platforms.length > 0 && Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).length > 0 && (
+            {team.platforms.length > 0 && (
               <div className="pt-2">
                 <details className="group">
                   <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
@@ -193,19 +223,28 @@ export const TeamDetailsDialog = ({
                     Add more platforms
                   </summary>
                   <div className="flex flex-wrap gap-1.5 mt-2 pt-2">
-                    {Object.keys(platformIcons).filter(platform => !team.platforms.includes(platform)).map((platform) => (
-                      <div
-                        key={platform}
-                        className="flex items-center gap-1 px-2 py-1 bg-muted/50 hover:bg-muted border border-dashed border-border hover:border-primary/50 rounded-md cursor-pointer transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
-                        onClick={() => handleAddPlatform(platform)}
-                      >
-                        {(() => {
-                          const Icon = platformIcons[platform as keyof typeof platformIcons];
-                          return <Icon className="h-3 w-3" />;
-                        })()}
-                        <span className="capitalize">{platform}</span>
+                    {loadingConnected ? (
+                      <div className="text-xs text-muted-foreground">Checking connected platforms…</div>
+                    ) : addablePlatforms.length > 0 ? (
+                      addablePlatforms.map((platform) => (
+                        <div
+                          key={platform}
+                          className="flex items-center gap-1 px-2 py-1 bg-muted/50 hover:bg-muted border border-dashed border-border hover:border-primary/50 rounded-md cursor-pointer transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
+                          onClick={() => handleAddPlatform(platform)}
+                        >
+                          {(() => {
+                            const Icon = platformIcons[platform as keyof typeof platformIcons] as any;
+                            return <Icon className="h-3 w-3" />;
+                          })()}
+                          <span className="capitalize">{platform}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>No more connected platforms to add.</span>
+                        <Link href="/social" className="text-primary hover:underline">Connect more</Link>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </details>
               </div>

@@ -192,11 +192,47 @@ const Teams = () => {
   };
 
   const handleUpdateTeam = (teamId: number, updates: Partial<Team>) => {
-    // Note: This is for local updates only. For server updates, use refreshTeams()
-    toast({
-      title: "Team Updated",
-      description: "Team information has been updated successfully"
-    });
+    // Optimistic local update for the open dialogs
+    setViewingTeam((prev) => (prev && prev.id === teamId ? ({ ...prev, ...updates } as any) : prev));
+    setEditingTeam((prev) => (prev && prev.id === teamId ? ({ ...prev, ...updates } as any) : prev));
+
+    (async () => {
+      const t = teams.find((x) => x.id === teamId);
+      if (!t?.backendId) {
+        toast({ title: "Update failed", description: "Team ID missing. Please refresh.", variant: "destructive" });
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/teams/${t.backendId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: updates.name,
+            description: updates.description,
+            platforms: updates.platforms,
+          }),
+        });
+        const js = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(js?.error || "Failed to update team");
+
+        toast({
+          title: "Team Updated",
+          description: "Team information has been updated successfully",
+        });
+
+        // Refresh so UI + team selector stays consistent (bypass cache)
+        await refreshTeams(true);
+      } catch (e) {
+        toast({
+          title: "Update failed",
+          description: e instanceof Error ? e.message : "Please try again",
+          variant: "destructive",
+        });
+        // Re-sync from server on failure
+        await refreshTeams(true);
+      }
+    })();
   };
 
 
