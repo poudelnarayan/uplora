@@ -99,12 +99,12 @@ const HeroSection = () => {
             <div className="mt-12">
               <p className="text-sm text-muted-foreground mb-4">Publish to all major platforms</p>
               <div className="flex flex-wrap gap-6 justify-center lg:justify-center items-center opacity-60">
-                <div className="text-red-500 font-bold">YouTube</div>
-                <div className="text-pink-500 font-bold">TikTok</div>
-                <div className="text-purple-500 font-bold">Instagram</div>
-                <div className="text-blue-600 font-bold">LinkedIn</div>
-                <div className="text-gray-800 font-bold">X</div>
-                <div className="text-blue-500 font-bold">Facebook</div>
+                <div className="text-destructive font-bold">YouTube</div>
+                <div className="text-accent font-bold">TikTok</div>
+                <div className="text-accent font-bold">Instagram</div>
+                <div className="text-primary font-bold">LinkedIn</div>
+                <div className="text-foreground font-bold">X</div>
+                <div className="text-primary font-bold">Facebook</div>
               </div>
             </div>
           </div>

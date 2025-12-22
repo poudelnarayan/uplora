@@ -26,7 +26,7 @@ const MotivationSection = () => {
               The Story Behind Uplora
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Born from a <span className="gradient-text">Real Problem</span>
+              Born from a <span className="text-destructive">Real Problem</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Every great solution starts with a pain point. Here's the moment that sparked Uplora's creation.

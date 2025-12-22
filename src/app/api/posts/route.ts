@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
     // Check if user has access to this team
     const isOwner = team.ownerId === user.id;
     let hasAccess = isOwner;
+    let membershipRole: string | null = null;
 
     if (!isOwner) {
       const { data: membership } = await supabaseAdmin
@@ -116,6 +117,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       hasAccess = !!membership;
+      membershipRole = (membership as any)?.role || null;
     }
 
     if (!hasAccess) {
@@ -124,6 +126,14 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
+
+    // Role-based workflow:
+    // - OWNER/ADMIN/MANAGER can schedule immediately
+    // - EDITOR (and other non-privileged roles) can only save drafts and must request approval
+    const role = isOwner ? "OWNER" : (membershipRole || "MEMBER");
+    const canAutoSchedule = ["OWNER", "ADMIN", "MANAGER"].includes(role);
+    const scheduledForValue = canAutoSchedule ? (scheduledFor || null) : null;
+    const initialStatus = scheduledForValue ? "SCHEDULED" : "DRAFT";
 
     // Create the post
     const postId = `post-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
@@ -153,8 +163,8 @@ export async function POST(request: NextRequest) {
           teamId: teamId,
           userId: user.id,
           platforms: platforms || [],
-          scheduledFor: scheduledFor || null,
-          status: scheduledFor ? 'SCHEDULED' : 'DRAFT',
+          scheduledFor: scheduledForValue,
+          status: initialStatus,
           metadata: metadata,
           createdAt: now,
           updatedAt: now
@@ -175,8 +185,8 @@ export async function POST(request: NextRequest) {
           teamId: teamId,
           userId: user.id,
           platforms: platforms || [],
-          scheduledFor: scheduledFor || null,
-          status: scheduledFor ? 'SCHEDULED' : 'DRAFT',
+          scheduledFor: scheduledForValue,
+          status: initialStatus,
           folderPath: folderPath,
           imageUrl: imageUrl || null,
           imageKey: imageKey || null,
@@ -201,8 +211,8 @@ export async function POST(request: NextRequest) {
           teamId: teamId,
           userId: user.id,
           platforms: platforms || [],
-          scheduledFor: scheduledFor || null,
-          status: scheduledFor ? 'SCHEDULED' : 'DRAFT',
+          scheduledFor: scheduledForValue,
+          status: initialStatus,
           folderPath: folderPath,
           videoUrl: videoUrl || null,
           videoKey: videoKey || null,

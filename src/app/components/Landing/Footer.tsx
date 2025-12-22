@@ -35,16 +35,16 @@ const Footer = () => {
               </span>
             </p>
             <div className="flex items-center space-x-4">
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-smooth" aria-label="YouTube">
+              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth" aria-label="YouTube">
                 <Youtube className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-gray-800 hover:bg-gray-100 transition-smooth" aria-label="X (Twitter)">
+              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth" aria-label="X (Twitter)">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-pink-500 hover:bg-pink-50 transition-smooth" aria-label="Instagram">
+              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-accent/10 transition-smooth" aria-label="Instagram">
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-blue-600 hover:bg-blue-50 transition-smooth" aria-label="LinkedIn">
+              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-smooth" aria-label="LinkedIn">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>

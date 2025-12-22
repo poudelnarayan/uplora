@@ -10,25 +10,29 @@ const features = [
     icon: Globe,
     title: "Multi-Platform Publishing",
     description: "Post once, publish everywhere. Reach your audience across YouTube, TikTok, Instagram, LinkedIn, X, and Facebook simultaneously.",
-    color: "text-blue-500"
+    color: "text-primary",
+    glow: "bg-primary/10",
   },
   {
     icon: Users,
     title: "Team Workspace",
     description: "Seamless collaboration where editors draft content and admins review and approve before publishing. Perfect role-based workflow.",
-    color: "text-purple-500"
+    color: "text-accent",
+    glow: "bg-accent/10",
   },
   {
     icon: Upload,
     title: "YouTube Long Video Support",
     description: "Upload and schedule large video files with ease. Built specifically to handle YouTube's long-form content requirements.",
-    color: "text-red-500"
+    color: "text-destructive",
+    glow: "bg-destructive/10",
   },
   {
     icon: Sparkles,
     title: "AI Assistance",
     description: "Future-ready automation for titles, thumbnails, and tags. Let AI optimize your content for maximum engagement.",
-    color: "text-teal-500"
+    color: "text-success",
+    glow: "bg-success/10",
   }
 ];
 
@@ -80,12 +84,9 @@ const FeatureCards = () => {
             >
               {/* Interactive background glow */}
               <div 
-                className={`absolute inset-0 transition-opacity duration-300 ${
+                className={`absolute inset-0 transition-opacity duration-300 ${feature.glow} ${
                   hoveredCard === index ? 'opacity-100' : 'opacity-0'
                 }`}
-                style={{
-                  background: `radial-gradient(circle at center, ${feature.color.replace('text-', 'var(--')}10 0%, transparent 70%)`
-                }}
               />
 
               <CardContent className="p-8 text-center relative z-10">

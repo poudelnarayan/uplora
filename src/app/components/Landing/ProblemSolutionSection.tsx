@@ -6,25 +6,25 @@ const problems = [
     icon: AlertTriangle,
     title: "Content Approval Bottlenecks",
     description: "Posts get stuck waiting for approval, missing optimal posting times",
-    color: "text-red-500",
-    bgColor: "bg-red-50",
-    borderColor: "border-red-200"
+    color: "text-destructive",
+    bgColor: "bg-destructive/5",
+    borderColor: "border-destructive/20"
   },
   {
     icon: Clock,
     title: "Manual Multi-Platform Posting",
     description: "Spending hours posting the same content across 6+ different platforms",
-    color: "text-orange-500",
-    bgColor: "bg-orange-50",
-    borderColor: "border-orange-200"
+    color: "text-warning",
+    bgColor: "bg-warning/5",
+    borderColor: "border-warning/20"
   },
   {
     icon: Users,
     title: "Team Coordination Chaos",
     description: "Confusion about who creates what, when it's approved, and what's published",
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50",
-    borderColor: "border-yellow-200"
+    color: "text-accent",
+    bgColor: "bg-accent/5",
+    borderColor: "border-accent/20"
   }
 ];
 
@@ -33,25 +33,25 @@ const solutions = [
     icon: Zap,
     title: "Streamlined Approval Workflow",
     description: "Clear pipeline: Editor creates → Admin approves → System publishes automatically",
-    color: "text-green-500",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200"
+    color: "text-success",
+    bgColor: "bg-success/5",
+    borderColor: "border-success/20"
   },
   {
     icon: Check,
     title: "One-Click Multi-Platform Publishing",
     description: "Create once, publish everywhere. YouTube, TikTok, Instagram, LinkedIn, X, Facebook",
-    color: "text-blue-500",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200"
+    color: "text-primary",
+    bgColor: "bg-primary/5",
+    borderColor: "border-primary/20"
   },
   {
     icon: Users,
     title: "Crystal Clear Team Collaboration",
     description: "Role-based access, live status updates, shared calendar - everyone knows their part",
-    color: "text-purple-500",
-    bgColor: "bg-purple-50",
-    borderColor: "border-purple-200"
+    color: "text-accent",
+    bgColor: "bg-accent/5",
+    borderColor: "border-accent/20"
   }
 ];
 
@@ -61,7 +61,7 @@ const ProblemSolutionSection = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-            Stop Fighting <span className="text-red-500">These Problems</span>
+            Stop Fighting <span className="text-destructive">These Problems</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Most teams struggle with chaotic content workflows. See if this sounds familiar...
@@ -85,7 +85,7 @@ const ProblemSolutionSection = () => {
                   {problem.description}
                 </p>
                 
-                <div className="mt-4 inline-flex items-center text-red-500 font-medium hidden lg:flex">
+                <div className="mt-4 inline-flex items-center text-destructive font-medium hidden lg:flex">
                   <X className="h-4 w-4 mr-2" />
                   Common Problem
                 </div>
@@ -118,7 +118,7 @@ const ProblemSolutionSection = () => {
                   {solution.description}
                 </p>
                 
-                <div className="mt-4 inline-flex items-center text-green-500 font-medium hidden lg:flex">
+                <div className="mt-4 inline-flex items-center text-success font-medium hidden lg:flex">
                   <Check className="h-4 w-4 mr-2" />
                   Solved by Uplora
                 </div>
@@ -145,7 +145,7 @@ const ProblemSolutionSection = () => {
                   <div className="text-muted-foreground">Missed deadlines or forgotten posts</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-500 mb-2">100%</div>
+                  <div className="text-3xl font-bold text-success mb-2">100%</div>
                   <div className="text-muted-foreground">Content approved before publishing</div>
                 </div>
               </div>

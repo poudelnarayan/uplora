@@ -41,8 +41,8 @@ const TeamCollaborationSection = () => {
               </div>
               
               <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <div className="flex-shrink-0 w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Approval Queue</h3>
@@ -85,7 +85,7 @@ const TeamCollaborationSection = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                      <Badge variant="secondary" className="bg-warning/15 text-warning border-warning/20">
                         <Clock className="w-3 h-3 mr-1" />
                         Pending
                       </Badge>
@@ -103,7 +103,7 @@ const TeamCollaborationSection = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                      <Badge variant="secondary" className="bg-success/15 text-success border-success/20">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Approved
                       </Badge>
@@ -112,8 +112,8 @@ const TeamCollaborationSection = () => {
 
                   <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-4 bg-red-500/60 rounded"></div>
+                      <div className="w-10 h-10 bg-destructive/20 rounded-lg flex items-center justify-center">
+                        <div className="w-6 h-4 bg-destructive/60 rounded"></div>
                       </div>
                       <div>
                         <p className="font-medium text-sm">Behind the Scenes - YouTube</p>
@@ -121,7 +121,7 @@ const TeamCollaborationSection = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                      <Badge variant="secondary" className="bg-primary/15 text-primary border-primary/20">
                         <AlertCircle className="w-3 h-3 mr-1" />
                         Processing
                       </Badge>
@@ -137,11 +137,11 @@ const TeamCollaborationSection = () => {
                       <div className="text-xs text-muted-foreground">Scheduled</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-600">3</div>
+                      <div className="text-2xl font-bold text-warning">3</div>
                       <div className="text-xs text-muted-foreground">Pending</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-500">47</div>
+                      <div className="text-2xl font-bold text-success">47</div>
                       <div className="text-xs text-muted-foreground">Published</div>
                     </div>
                   </div>

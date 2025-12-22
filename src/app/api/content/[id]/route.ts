@@ -49,6 +49,34 @@ async function ensureAccess(userId: string, row: any): Promise<boolean> {
   return false;
 }
 
+type Role = "OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | "MEMBER";
+async function getRole(userId: string, row: any): Promise<Role> {
+  if (!row) return "MEMBER";
+  // Personal content: creator can manage it.
+  if (!row.teamId) {
+    return row.userId === userId ? "OWNER" : "MEMBER";
+  }
+
+  const { data: team } = await supabaseAdmin
+    .from("teams")
+    .select("id, ownerId")
+    .eq("id", row.teamId)
+    .single();
+  if (team?.ownerId === userId) return "OWNER";
+
+  const { data: membership } = await supabaseAdmin
+    .from("team_members")
+    .select("role, status")
+    .eq("teamId", row.teamId)
+    .eq("userId", userId)
+    .eq("status", "ACTIVE")
+    .maybeSingle();
+
+  const r = (membership as any)?.role;
+  if (r === "ADMIN" || r === "MANAGER" || r === "EDITOR") return r;
+  return "MEMBER";
+}
+
 export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
@@ -89,6 +117,14 @@ export async function PATCH(
     if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { content, platforms, title, scheduledFor, status, imageKey, videoKey, metadata } = body || {};
+    const role = await getRole(userId, found.row);
+    const canManagePublishing = ["OWNER", "ADMIN", "MANAGER"].includes(role);
+
+    // Editors (and other non-privileged roles) must use the approval flow.
+    // Once a post is PENDING, editors should not be able to modify it until approved/sent back.
+    if (!canManagePublishing && String(found.row?.status || "").toUpperCase() === "PENDING") {
+      return NextResponse.json({ error: "Content is pending approval and is locked." }, { status: 423 });
+    }
 
     const updateData: any = { updatedAt: new Date().toISOString() };
     if (typeof content === 'string') updateData.content = content;
@@ -97,11 +133,12 @@ export async function PATCH(
     if (found.type === 'image' && (typeof imageKey === 'string' || imageKey === null)) updateData.imageKey = imageKey;
     if (found.type === 'reel' && (typeof videoKey === 'string' || videoKey === null)) updateData.videoKey = videoKey;
     if (scheduledFor !== undefined) updateData.scheduledFor = scheduledFor;
-    if (typeof status === 'string') updateData.status = status;
+    // Only privileged roles can change status directly.
+    if (canManagePublishing && typeof status === 'string') updateData.status = status;
     if (metadata && typeof metadata === 'object') updateData.metadata = metadata;
 
     // Auto set status to SCHEDULED when scheduling provided and not explicitly overridden
-    if (scheduledFor && !status) updateData.status = 'SCHEDULED';
+    if (canManagePublishing && scheduledFor && !status) updateData.status = 'SCHEDULED';
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from(found.table)

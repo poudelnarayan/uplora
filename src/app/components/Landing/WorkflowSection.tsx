@@ -11,32 +11,32 @@ const workflowSteps = [
     title: "Draft",
     description: "Editors create and upload content",
     status: "Editor creates posts, uploads videos, adds captions",
-    color: "bg-blue-500",
-    textColor: "text-blue-500"
+    color: "bg-primary text-primary-foreground",
+    textColor: "text-primary"
   },
   {
     icon: Eye,
     title: "Review",
     description: "Content awaits admin approval",
     status: "Admin reviews drafts for quality and brand compliance",
-    color: "bg-yellow-500",
-    textColor: "text-yellow-600"
+    color: "bg-warning text-warning-foreground",
+    textColor: "text-warning"
   },
   {
     icon: CheckCircle,
     title: "Approve",
     description: "Admin approves for publishing",
     status: "Content gets approved with scheduled publish time",
-    color: "bg-green-500",
-    textColor: "text-green-500"
+    color: "bg-success text-success-foreground",
+    textColor: "text-success"
   },
   {
     icon: Send,
     title: "Publish",
     description: "Automatic multi-platform publishing",
     status: "Content goes live across all selected platforms",
-    color: "bg-purple-500",
-    textColor: "text-purple-500"
+    color: "bg-accent text-accent-foreground",
+    textColor: "text-accent"
   }
 ];
 
@@ -57,12 +57,12 @@ const WorkflowSection = () => {
   }, [isVisible]);
 
   const platforms = [
-    { name: "YouTube", icon: Play, color: "bg-red-500", textColor: "text-red-500" },
-    { name: "TikTok", icon: Music, color: "bg-pink-500", textColor: "text-pink-500" },
-    { name: "Instagram", icon: Instagram, color: "bg-gradient-to-br from-purple-500 to-pink-500", textColor: "text-purple-500" },
-    { name: "LinkedIn", icon: Linkedin, color: "bg-blue-600", textColor: "text-blue-600" },
-    { name: "X", icon: Twitter, color: "bg-gray-800", textColor: "text-gray-800" },
-    { name: "Facebook", icon: Facebook, color: "bg-blue-500", textColor: "text-blue-500" }
+    { name: "YouTube", icon: Play, color: "bg-destructive", textColor: "text-destructive" },
+    { name: "TikTok", icon: Music, color: "bg-accent", textColor: "text-accent" },
+    { name: "Instagram", icon: Instagram, color: "bg-accent", textColor: "text-accent" },
+    { name: "LinkedIn", icon: Linkedin, color: "bg-primary", textColor: "text-primary" },
+    { name: "X", icon: Twitter, color: "bg-foreground", textColor: "text-foreground" },
+    { name: "Facebook", icon: Facebook, color: "bg-primary", textColor: "text-primary" }
   ];
   return (
     <section className="py-20 relative overflow-hidden">
@@ -124,7 +124,7 @@ const WorkflowSection = () => {
                       ? 'bg-gradient-to-br from-primary/5 to-accent/5' 
                       : 'hover:bg-gradient-to-br hover:from-secondary/20 hover:to-muted/10'
                   }`}>
-                    <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${step.color} text-white mb-4 transition-all duration-300 ${
+                    <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${step.color} mb-4 transition-all duration-300 ${
                       activeStep === index 
                         ? 'scale-105 shadow-md' 
                         : 'group-hover:scale-105 group-hover:shadow-md'

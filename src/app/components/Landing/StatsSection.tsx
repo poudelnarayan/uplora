@@ -11,32 +11,32 @@ const stats = [
     value: 100,
     label: "Happy Teams",
     suffix: "+",
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10"
+    color: "text-primary",
+    bgColor: "bg-primary/10"
   },
   {
     icon: Upload,
     value: 5000,
     label: "Posts Uploaded", 
     suffix: "+",
-    color: "text-green-500",
-    bgColor: "bg-green-500/10"
+    color: "text-success",
+    bgColor: "bg-success/10"
   },
   {
     icon: Shield,
     value: 99,
     label: "Uptime",
     suffix: "%",
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10"
+    color: "text-accent",
+    bgColor: "bg-accent/10"
   },
   {
     icon: Headphones,
     value: 24,
     label: "Support",
     suffix: "/7",
-    color: "text-orange-500",
-    bgColor: "bg-orange-500/10"
+    color: "text-warning",
+    bgColor: "bg-warning/10"
   }
 ];
 

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, Clock } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
 import { Input } from "@/app/components/ui/input";
@@ -218,58 +219,53 @@ const SocialConnections = () => {
       name: "Instagram",
       connected: fb.instagramConnected || (fb.isConnected && fb.instagramAccounts.length > 0),
       username: null,
-      bgColor: "bg-gradient-to-br from-purple-500/10 to-pink-500/10"
     },
     {
       id: "youtube",
       name: "YouTube", 
       connected: yt.isConnected,
       username: yt.channelTitle ? `@${yt.channelTitle}` : null,
-      bgColor: "bg-gradient-to-br from-red-500/10 to-red-600/10"
     },
     {
       id: "twitter",
       name: "X (Twitter)",
       connected: x.isConnected,
       username: x.username ? `@${x.username}` : null,
-      bgColor: "bg-gradient-to-br from-gray-800/10 to-black/10"
     },
     {
       id: "facebook",
       name: "Facebook",
       connected: fb.isConnected,
       username: fb.userName || null,
-      bgColor: "bg-gradient-to-br from-blue-500/10 to-blue-600/10"
     },
     {
       id: "linkedin",
       name: "LinkedIn",
       connected: li.isConnected,
       username: li.name || null,
-      bgColor: "bg-gradient-to-br from-blue-600/10 to-blue-700/10"
     },
     {
       id: "pinterest",
       name: "Pinterest",
       connected: pin.isConnected,
       username: pin.username ? `@${pin.username}` : null,
-      bgColor: "bg-gradient-to-br from-red-600/10 to-rose-600/10"
     },
     {
       id: "threads",
       name: "Threads",
       connected: th.isConnected,
       username: th.userId ? `ID: ${th.userId}` : null,
-      bgColor: "bg-gradient-to-br from-zinc-800/10 to-black/10"
     },
     {
       id: "tiktok",
       name: "TikTok",
       connected: tt.isConnected,
       username: tt.username ? `@${tt.username}` : null,
-      bgColor: "bg-gradient-to-br from-gray-900/10 to-black/10"
     }
   ];
+
+  const connectedPlatforms = platforms.filter((p) => p.connected);
+  const availablePlatforms = platforms.filter((p) => !p.connected);
 
   return (
     <AppShell>
@@ -280,193 +276,240 @@ const SocialConnections = () => {
           className="min-h-full"
         >
           {/* Header */}
-          <div className="px-6 py-4 border-b border-border">
-            <h1 className="text-2xl font-semibold text-foreground">Social Media Connections</h1>
-            <p className="text-muted-foreground text-sm mt-1">Connect your social media accounts</p>
+          <div className="px-6 py-5 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground">Social Media Connections</h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Connect accounts to publish content. Tokens are stored securely in your <span className="font-medium text-foreground">socialConnections</span>.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => setRequestOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Request a platform
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Content */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {platforms.map((platform) => (
-          <Card key={platform.id} className="hover:shadow-lg transition-all duration-300">
-            <CardContent className={`p-6 ${platform.bgColor}`}>
-              {platform.connected ? (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {getPlatformIcon(platform.id)}
-                      <div>
-                        <h3 className="font-semibold text-foreground">{platform.name}</h3>
-                        <p className="text-sm text-muted-foreground">{platform.username}</p>
-                      </div>
-                    </div>
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={async () => {
-                      try {
-                        let resp;
-                        if (platform.id === 'youtube') {
-                          resp = await fetch('/api/youtube/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'YouTube account disconnected' });
-                          setYt({ loading: false, isConnected: false });
-                        } else if (platform.id === 'facebook' || platform.id === 'instagram') {
-                          resp = await fetch('/api/facebook/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Facebook/Instagram disconnected' });
-                          setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
-                        } else if (platform.id === 'tiktok') {
-                          resp = await fetch('/api/tiktok/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'TikTok disconnected' });
-                          setTt({ loading: false, isConnected: false, username: null });
-                        } else if (platform.id === 'threads') {
-                          resp = await fetch('/api/threads/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Threads disconnected' });
-                          setTh({ loading: false, isConnected: false, userId: null });
-                        } else if (platform.id === 'pinterest') {
-                          resp = await fetch('/api/pinterest/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'Pinterest disconnected' });
-                          setPin({ loading: false, isConnected: false, username: null });
-                        } else if (platform.id === 'linkedin') {
-                          resp = await fetch('/api/linkedin/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'LinkedIn disconnected' });
-                          setLi({ loading: false, isConnected: false, name: null });
-                        } else if (platform.id === 'twitter') {
-                          resp = await fetch('/api/twitter/disconnect', { method: 'POST' });
-                          if (!resp.ok) throw new Error('Failed');
-                          notifications.addNotification({ type: 'success', title: 'Disconnected', message: 'X disconnected' });
-                          setX({ loading: false, isConnected: false, username: null });
-                        }
-                      } catch (e) {
-                        notifications.addNotification({ type: 'error', title: 'Disconnect failed', message: 'Try again' });
-                      }
-                    }}
-                  >
-                    Disconnect
-                  </Button>
+          <div className="p-6 space-y-10">
+            {/* Connected */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Connected</h2>
+                  <p className="text-sm text-muted-foreground">These accounts can publish once you take action.</p>
                 </div>
-              ) : (
-                <div className="text-center space-y-6">
-                  <div className="flex flex-col items-center gap-3">
-                    {getPlatformIcon(platform.id)}
-                    <div>
-                      <h3 className="font-semibold text-foreground">{platform.name}</h3>
-                      <p className="text-sm text-muted-foreground">Not connected</p>
-                    </div>
-                  </div>
+                <Badge className="bg-success/10 text-success border border-success/20">
+                  {connectedPlatforms.length} connected
+                </Badge>
+              </div>
 
-                  {platform.id === 'youtube' ? (
-                    <Button
-                      type="button"
-                      className="w-full gap-2"
-                      onClick={() => { window.location.href = '/api/youtube/start'; }}
-                      disabled={yt.loading}
-                    >
-                      <Link2 className="h-4 w-4" />
-                      {yt.loading ? 'Checking…' : 'Connect'}
-                    </Button>
-                  ) : platform.id === "tiktok" ? (
-                    <Button asChild className="w-full gap-2" disabled={tt.loading}>
-                      <a href="/api/tiktok/auth/connect">
-                        <Link2 className="h-4 w-4" />
-                        {tt.loading ? "Checking…" : "Connect TikTok"}
-                      </a>
-                    </Button>
-                  ) : platform.id === "threads" ? (
-                    <Button asChild className="w-full gap-2" disabled={th.loading}>
-                      <a href="/api/threads/auth/connect">
-                        <Link2 className="h-4 w-4" />
-                        {th.loading ? "Checking…" : "Connect Threads"}
-                      </a>
-                    </Button>
-                  ) : platform.id === "pinterest" ? (
-                    <Button asChild className="w-full gap-2" disabled={pin.loading}>
-                      <a href="/api/pinterest/auth/connect">
-                        <Link2 className="h-4 w-4" />
-                        {pin.loading ? "Checking…" : "Connect Pinterest"}
-                      </a>
-                    </Button>
-                  ) : platform.id === "linkedin" ? (
-                    <Button asChild className="w-full gap-2" disabled={li.loading}>
-                      <a href="/api/linkedin/connect">
-                        <Link2 className="h-4 w-4" />
-                        {li.loading ? "Checking…" : "Connect LinkedIn"}
-                      </a>
-                    </Button>
-                  ) : platform.id === "twitter" ? (
-                    <Button asChild className="w-full gap-2" disabled={x.loading}>
-                      <a href="/api/twitter/connect">
-                        <Link2 className="h-4 w-4" />
-                        {x.loading ? "Checking…" : "Connect X"}
-                      </a>
-                    </Button>
-                  ) : platform.id === 'facebook' || platform.id === 'instagram' ? (
-                    platform.id === "instagram" ? (
-                      <Button asChild className="w-full gap-2">
-                        <a href="/api/instagram/start">
-                          <Link2 className="h-4 w-4" />
-                          Connect Instagram
-                        </a>
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        className="w-full gap-2"
-                        onClick={() => {
-                          window.location.href = "/api/facebook/start?intent=facebook";
-                        }}
-                        disabled={fb.loading}
-                      >
-                        <Link2 className="h-4 w-4" />
-                        {fb.loading ? "Checking…" : "Connect"}
-                      </Button>
-                    )
-                  ) : (
-                    <Button type="button" className="w-full gap-2" disabled>
-                      <Clock className="h-4 w-4" />
-                      Coming Soon...
-                    </Button>
-                  )}
+              {connectedPlatforms.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-6 text-sm text-muted-foreground">
+                    No platforms connected yet. Connect one below to start publishing.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {connectedPlatforms.map((platform) => (
+                    <Card key={platform.id} className="hover:shadow-lg transition-all duration-200">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                              {getPlatformIcon(platform.id)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                                <Badge className="bg-success/10 text-success border border-success/20">Connected</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{platform.username || "Connected"}</p>
+                            </div>
+                          </div>
+                          <CheckCircle className="h-5 w-5 text-success" />
+                        </div>
+
+                        <div className="mt-6">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={async () => {
+                              try {
+                                let resp;
+                                if (platform.id === "youtube") {
+                                  resp = await fetch("/api/youtube/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "YouTube account disconnected" });
+                                  setYt({ loading: false, isConnected: false });
+                                } else if (platform.id === "facebook" || platform.id === "instagram") {
+                                  resp = await fetch("/api/facebook/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "Facebook/Instagram disconnected" });
+                                  setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
+                                } else if (platform.id === "tiktok") {
+                                  resp = await fetch("/api/tiktok/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "TikTok disconnected" });
+                                  setTt({ loading: false, isConnected: false, username: null });
+                                } else if (platform.id === "threads") {
+                                  resp = await fetch("/api/threads/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "Threads disconnected" });
+                                  setTh({ loading: false, isConnected: false, userId: null });
+                                } else if (platform.id === "pinterest") {
+                                  resp = await fetch("/api/pinterest/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "Pinterest disconnected" });
+                                  setPin({ loading: false, isConnected: false, username: null });
+                                } else if (platform.id === "linkedin") {
+                                  resp = await fetch("/api/linkedin/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "LinkedIn disconnected" });
+                                  setLi({ loading: false, isConnected: false, name: null });
+                                } else if (platform.id === "twitter") {
+                                  resp = await fetch("/api/twitter/disconnect", { method: "POST" });
+                                  if (!resp.ok) throw new Error("Failed");
+                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "X disconnected" });
+                                  setX({ loading: false, isConnected: false, username: null });
+                                }
+                              } catch {
+                                notifications.addNotification({ type: "error", title: "Disconnect failed", message: "Try again." });
+                              }
+                            }}
+                          >
+                            Disconnect
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Request Platform Card */}
-        <Card className="hover:shadow-lg transition-all duration-300 border-dashed border-2">
-          <CardContent className="p-6">
-            <div className="text-center space-y-4">
-              <div className="w-12 h-12 mx-auto bg-muted rounded-full flex items-center justify-center">
-                <Plus className="h-6 w-6 text-muted-foreground" />
-              </div>
-
-              <div>
-                <h3 className="font-semibold">Request Platform</h3>
-                <p className="text-sm text-muted-foreground">Don't see your platform?</p>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => setRequestOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Request Platform
-              </Button>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Available */}
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Available platforms</h2>
+                <p className="text-sm text-muted-foreground">Connect more accounts to publish everywhere.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {availablePlatforms.map((platform) => (
+                  <Card key={platform.id} className="hover:shadow-lg transition-all duration-200">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                            {getPlatformIcon(platform.id)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                              <Badge variant="outline" className="text-muted-foreground">Not connected</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">Connect to start publishing</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6">
+                        {platform.id === "youtube" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={yt.loading}>
+                            <a href="/api/youtube/start" className={yt.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {yt.loading ? "Checking…" : "Connect YouTube"}
+                            </a>
+                          </Button>
+                        ) : platform.id === "tiktok" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={tt.loading}>
+                            <a href="/api/tiktok/auth/connect" className={tt.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {tt.loading ? "Checking…" : "Connect TikTok"}
+                            </a>
+                          </Button>
+                        ) : platform.id === "threads" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={th.loading}>
+                            <a href="/api/threads/auth/connect" className={th.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {th.loading ? "Checking…" : "Connect Threads"}
+                            </a>
+                          </Button>
+                        ) : platform.id === "pinterest" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={pin.loading}>
+                            <a href="/api/pinterest/auth/connect" className={pin.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {pin.loading ? "Checking…" : "Connect Pinterest"}
+                            </a>
+                          </Button>
+                        ) : platform.id === "linkedin" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={li.loading}>
+                            <a href="/api/linkedin/connect" className={li.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {li.loading ? "Checking…" : "Connect LinkedIn"}
+                            </a>
+                          </Button>
+                        ) : platform.id === "twitter" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={x.loading}>
+                            <a href="/api/twitter/connect" className={x.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {x.loading ? "Checking…" : "Connect X"}
+                            </a>
+                          </Button>
+                        ) : platform.id === "instagram" ? (
+                          <Button asChild className="w-full gap-2">
+                            <a href="/api/instagram/start">
+                              <Link2 className="h-4 w-4" />
+                              Connect Instagram
+                            </a>
+                          </Button>
+                        ) : platform.id === "facebook" ? (
+                          <Button asChild className="w-full gap-2" aria-disabled={fb.loading}>
+                            <a href="/api/facebook/start?intent=facebook" className={fb.loading ? "pointer-events-none opacity-50" : ""}>
+                              <Link2 className="h-4 w-4" />
+                              {fb.loading ? "Checking…" : "Connect Facebook"}
+                            </a>
+                          </Button>
+                        ) : (
+                          <Button type="button" className="w-full gap-2" disabled>
+                            <Clock className="h-4 w-4" />
+                            Coming soon
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Request Platform Card */}
+                <Card className="hover:shadow-lg transition-all duration-200 border-dashed border-2">
+                  <CardContent className="p-6">
+                    <div className="h-full flex flex-col justify-between gap-6">
+                      <div className="space-y-2">
+                        <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                          <Plus className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Request a platform</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Don’t see your platform? Tell us what you need and we’ll prioritize it.
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button variant="outline" className="w-full gap-2" onClick={() => setRequestOpen(true)}>
+                        <Plus className="h-4 w-4" />
+                        Request platform
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
 

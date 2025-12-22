@@ -27,7 +27,8 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
   const themeStyles: Record<ThemeKey, { border: string; bg: string; text: string }> = {
     primary: { border: "border-primary/30", bg: "bg-primary", text: "text-primary" },
     accent: { border: "border-accent/30", bg: "bg-accent", text: "text-accent" },
-    orange: { border: "border-orange/30", bg: "bg-orange", text: "text-orange" },
+    // Use semantic tokens (defined in `globals.css` + `tailwind.config.ts`) to avoid hardcoded/undefined colors.
+    orange: { border: "border-success/30", bg: "bg-success", text: "text-success" },
   };
 
   const contentTypes = [
