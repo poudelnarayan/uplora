@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { filename, contentType, teamId } = body as { filename: string; contentType: string; teamId?: string | null };
+    let { filename, contentType, teamId, videoId } = body as { filename: string; contentType: string; teamId?: string | null; videoId?: string };
     if (!filename || !contentType) {
       return NextResponse.json({ error: "filename and contentType required" }, { status: 400 });
     }
@@ -93,8 +93,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate the video ID up front so the S3 layout is stable and shared with thumbnail keys
-    const videoId = crypto.randomUUID();
+    // Generate (or accept) a stable video ID so the S3 layout is predictable.
+    // When `videoId` is provided, this enables "replace video" flows for an existing post.
+    videoId = typeof videoId === "string" && videoId.length > 0 ? videoId : crypto.randomUUID();
 
     // Upload directly to the canonical final location using the original filename
     // teams/<teamId>/videos/<videoId>/<filename>

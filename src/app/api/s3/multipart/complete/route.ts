@@ -125,19 +125,30 @@ export async function POST(req: NextRequest) {
     // Create the video record only after successful upload completion
     // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
     const newVideoId = (lockMeta.videoId as string | undefined) || crypto.randomUUID();
+
+    // If replacing an existing video, preserve original ownership/team while updating media fields.
+    const { data: existingVideo } = await supabaseAdmin
+      .from("video_posts")
+      .select("id, userId, teamId")
+      .eq("id", newVideoId)
+      .maybeSingle();
+
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .insert({
-        id: newVideoId,
-        key,
-        filename: title,
-        contentType: inferredContentType,
-        sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
-        teamId: finalTeamId,
-        userId: user.id,
-        status: "PROCESSING",
-        updatedAt: new Date().toISOString(),
-      })
+      .from("video_posts")
+      .upsert(
+        {
+          id: newVideoId,
+          key,
+          filename: title,
+          contentType: inferredContentType,
+          sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
+          teamId: existingVideo?.teamId || finalTeamId,
+          userId: existingVideo?.userId || user.id,
+          status: "PROCESSING",
+          updatedAt: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      )
       .select()
       .single();
 

@@ -97,11 +97,14 @@ const MakePostVideos = () => {
   const [privacy, setPrivacy] = useState("public");
   const [isConnected, setIsConnected] = useState(false);
   const [channelTitle, setChannelTitle] = useState<string | null>(null);
+  const [subscriberCount, setSubscriberCount] = useState<string | null>(null);
   const [s3Key, setS3Key] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
   const [savedThumbnailKey, setSavedThumbnailKey] = useState<string | null>(null);
+
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
 
   const [activeUploadItemId, setActiveUploadItemId] = useState<string | null>(null);
   const activeUpload = activeUploadItemId ? uploads.find((u) => u.id === activeUploadItemId) || null : null;
@@ -241,10 +244,36 @@ const MakePostVideos = () => {
         if (data?.isConnected) {
           setIsConnected(true);
           setChannelTitle(data.channelTitle || null);
+          setSubscriberCount(data.subscriberCount || null);
         }
       } catch {}
     })();
   }, []);
+
+  useEffect(() => {
+    if (!s3Key) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`/api/video-url?key=${encodeURIComponent(s3Key)}`, { cache: "no-store" });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j?.error || "Failed to load preview");
+        if (!cancelled) setPreviewVideoUrl(j?.url || null);
+      } catch {
+        if (!cancelled) setPreviewVideoUrl(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [s3Key]);
+
+  const formatSubscriberCount = (v: string | null) => {
+    if (!v) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return v;
+    return Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+  };
 
   // Sync `videoId`/`s3Key` and notifications as UploadContext completes
   useEffect(() => {
@@ -704,7 +733,7 @@ const MakePostVideos = () => {
                       <img
                         src={selectedThumbnail}
                         alt="Thumbnail"
-                        className="w-full h-24 object-cover"
+                        className="w-full h-40 object-contain bg-black"
                       />
                       <Button 
                         variant="secondary"
@@ -749,21 +778,21 @@ const MakePostVideos = () => {
                   <div className="pt-4 pb-8 px-4 h-full overflow-y-auto bg-black">
                     {/* Video Player */}
                     <div className="relative rounded-lg overflow-hidden bg-gray-900 aspect-video mb-4">
-                      {selectedThumbnail ? (
-                        <img src={selectedThumbnail} alt="Preview" className="w-full h-full object-cover" />
+                      {selectedVideo || previewVideoUrl ? (
+                        <video
+                          src={selectedVideo || previewVideoUrl || undefined}
+                          controls
+                          playsInline
+                          poster={selectedThumbnail || undefined}
+                          className="w-full h-full object-contain bg-black"
+                        />
+                      ) : selectedThumbnail ? (
+                        <img src={selectedThumbnail} alt="Preview" className="w-full h-full object-contain bg-black" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
                           <Video className="h-12 w-12 text-white/50" />
                         </div>
                       )}
-                      <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                        10:32
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
-                          <Video className="h-8 w-8 text-white ml-0.5" />
-                        </div>
-                      </div>
                     </div>
                     
                     {/* Video Info */}
@@ -796,8 +825,10 @@ const MakePostVideos = () => {
                           <AvatarFallback className="bg-red-100 text-red-600 text-sm">YC</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-white">Your Channel</p>
-                          <p className="text-xs text-gray-400">125K subscribers</p>
+                          <p className="text-sm font-medium text-white">{channelTitle || "Your Channel"}</p>
+                          <p className="text-xs text-gray-400">
+                            {formatSubscriberCount(subscriberCount) ? `${formatSubscriberCount(subscriberCount)} subscribers` : "—"}
+                          </p>
                         </div>
                         <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full text-sm font-medium">
                           Subscribe

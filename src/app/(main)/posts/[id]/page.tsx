@@ -7,7 +7,7 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
-import { ArrowLeft, Calendar, Clock, FileText, Image as ImageIcon, Sparkles, Video } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Edit, FileText, Image as ImageIcon, Sparkles, Video } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 
 type ContentType = "video" | "image" | "text" | "reel";
@@ -159,6 +159,18 @@ export default function PostDetailsPage() {
                 ) : null}
               </div>
             </div>
+
+            {post ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => router.push(`/posts/${encodeURIComponent(String(id))}/edit`)}
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -209,6 +221,18 @@ export default function PostDetailsPage() {
                     <div className="text-sm text-foreground whitespace-pre-wrap break-words">
                       {post.content || post.description || "—"}
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Raw post data (everything) */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">All details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs whitespace-pre-wrap break-words rounded-lg border bg-muted/30 p-3 max-h-[420px] overflow-auto">
+                      {JSON.stringify(post, null, 2)}
+                    </pre>
                   </CardContent>
                 </Card>
               </div>

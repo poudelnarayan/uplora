@@ -89,6 +89,7 @@ export const socialConnectionsSchema = z
         // Channel info (for nicer UI)
         channelId: z.string().nullable().optional(),
         channelTitle: z.string().nullable().optional(),
+        subscriberCount: z.union([z.string(), z.number()]).transform((v) => String(v)).nullable().optional(),
       })
       .passthrough()
       .nullable()

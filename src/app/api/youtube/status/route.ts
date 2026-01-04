@@ -46,6 +46,7 @@ export async function GET(_req: NextRequest) {
     const now = Date.now();
     const needsRefresh = !expiresAt || expiresAt - now < 60_000; // less than 60s remaining
 
+    let effectiveAccessToken = yt!.accessToken!;
     if (needsRefresh) {
       try {
         const origin = process.env.NEXT_PUBLIC_SITE_URL || '';
@@ -65,6 +66,7 @@ export async function GET(_req: NextRequest) {
           },
         }));
 
+        effectiveAccessToken = tokenData.access_token || yt!.accessToken!;
         try { broadcast({ type: "youtube.refreshed", userId }); } catch {}
       } catch (e) {
         // Do not disconnect; just report connected with existing channel title
@@ -73,9 +75,52 @@ export async function GET(_req: NextRequest) {
       }
     }
 
+    // Fetch real channel info (title + subscriber count) for UI
+    // Note: subscriberCount can be hidden by the channel owner; handle missing gracefully.
+    try {
+      const channelsResp = await fetch(
+        "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true",
+        {
+          headers: { Authorization: `Bearer ${effectiveAccessToken}` },
+          cache: "no-store",
+        }
+      );
+      if (channelsResp.ok) {
+        const channelsJson = await channelsResp.json().catch(() => ({}));
+        const item = Array.isArray(channelsJson?.items) ? channelsJson.items[0] : null;
+        const channelId = item?.id || yt?.channelId || null;
+        const channelTitle = item?.snippet?.title || yt?.channelTitle || null;
+        const subscriberCount = item?.statistics?.subscriberCount ?? (yt as any)?.subscriberCount ?? null;
+
+        // Cache channel info back into socialConnections for faster UI later
+        try {
+          await updateUserSocialConnections(userId, current => ({
+            ...current,
+            youtube: {
+              ...(current.youtube || {}),
+              channelId,
+              channelTitle,
+              subscriberCount: subscriberCount !== null && subscriberCount !== undefined ? String(subscriberCount) : null,
+            },
+          }));
+        } catch {}
+
+        return NextResponse.json({
+          isConnected: true,
+          channelId,
+          channelTitle,
+          subscriberCount: subscriberCount !== null && subscriberCount !== undefined ? String(subscriberCount) : null,
+        });
+      }
+    } catch (e) {
+      console.error("YouTube channel info fetch failed:", e);
+    }
+
     return NextResponse.json({
       isConnected: true,
+      channelId: yt?.channelId || null,
       channelTitle: yt?.channelTitle || null,
+      subscriberCount: (yt as any)?.subscriberCount ? String((yt as any).subscriberCount) : null,
     });
   } catch (e) {
     return NextResponse.json({ isConnected: false });

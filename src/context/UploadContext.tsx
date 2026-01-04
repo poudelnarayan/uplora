@@ -16,9 +16,14 @@ export interface UploadItem {
   error?: string;
 }
 
+type EnqueueUploadOptions = {
+  /** When provided, uploads into the canonical S3 folder for this existing video id (enables "replace video"). */
+  videoId?: string;
+};
+
 interface UploadContextValue {
   uploads: UploadItem[];
-  enqueueUpload: (file: File, teamId?: string | null) => string;
+  enqueueUpload: (file: File, teamId?: string | null, options?: EnqueueUploadOptions) => string;
   dismiss: (id: string) => void;
   cancelUpload: (id: string) => void;
   hasActive: boolean;
@@ -76,7 +81,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const uploadFile = async (itemId: string, file: File, teamId?: string | null) => {
+  const uploadFile = async (itemId: string, file: File, teamId?: string | null, options?: EnqueueUploadOptions) => {
     const LARGE_THRESHOLD = 80 * 1024 * 1024; // 80 MB
     const update = (patch: Partial<UploadItem>) => {
       setUploads((list) => list.map((u) => (u.id === itemId ? { ...u, ...patch } : u)));
@@ -107,7 +112,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         const presignResponse = await fetch("/api/s3/presign", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size, teamId }),
+          body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size, teamId, videoId: options?.videoId }),
         });
         
         if (!presignResponse.ok) {
@@ -175,7 +180,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       const initResponse = await fetch("/api/s3/multipart/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", teamId }),
+        body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", teamId, videoId: options?.videoId }),
       });
       
       if (!initResponse.ok) {
@@ -281,12 +286,12 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const enqueueUpload = (file: File, teamId?: string | null) => {
+  const enqueueUpload = (file: File, teamId?: string | null, options?: EnqueueUploadOptions) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const item: UploadItem = { id, fileName: file.name, fileSize: file.size, progress: 0, status: "queued" };
     setUploads((l) => [item, ...l]);
     // kick off in background
-    void uploadFile(id, file, teamId);
+    void uploadFile(id, file, teamId, options);
     return id;
   };
 

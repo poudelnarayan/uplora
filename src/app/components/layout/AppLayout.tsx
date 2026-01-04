@@ -346,8 +346,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         {/* Page content */}
         <div className="flex flex-col">
-          {/* Trial Banner - Show on all pages except subscription */}
-          {(isTrialActive || isTrialExpired) && path !== "/subscription" && (
+          {/* Trial Banner - Hide on make-post flow to keep creation UI clean */}
+          {(isTrialActive || isTrialExpired) && path !== "/subscription" && !path.startsWith("/make-post") && (
             <div className="px-4 lg:px-8 pt-6">
               <div className="max-w-6xl mx-auto">
                 <TrialBanner onUpgrade={() => window.location.href = "/subscription?tab=plans"} />
