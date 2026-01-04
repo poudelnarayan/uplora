@@ -10,11 +10,13 @@ import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner"
 import { ArrowLeft, Edit, Film, Shield, Users } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CopyField, formatDate, getStatusColor } from "@/app/(main)/posts/_components/detail-utils";
+import { useTeam } from "@/context/TeamContext";
 
 export default function VideoPostDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const notifications = useNotifications();
+  const { teams, personalTeam } = useTeam();
 
   const [loading, setLoading] = useState(true);
   const [post, setPost] = useState<any>(null);
@@ -23,6 +25,13 @@ export default function VideoPostDetailsPage() {
 
   const title = useMemo(() => post?.filename || post?.title || "Video", [post]);
   const status = useMemo(() => String(post?.status || "—"), [post]);
+  const teamName = useMemo(() => {
+    const tid = post?.teamId ? String(post.teamId) : null;
+    if (!tid) return null;
+    if (personalTeam?.id === tid) return personalTeam.name || "Personal workspace";
+    const t = (teams || []).find((x) => x.id === tid);
+    return t?.name || null;
+  }, [post?.teamId, teams, personalTeam]);
 
   useEffect(() => {
     if (!id) return;
@@ -161,7 +170,7 @@ export default function VideoPostDetailsPage() {
                         <Users className="h-3.5 w-3.5" />
                         Team
                       </div>
-                      <div className="text-sm font-medium text-foreground">{post.teamId ? String(post.teamId) : "—"}</div>
+                      <div className="text-sm font-medium text-foreground">{teamName || "—"}</div>
                     </div>
                     <div className="pt-2 grid grid-cols-1 gap-2 text-xs text-muted-foreground">
                       <div className="rounded-lg border bg-card p-3">

@@ -10,11 +10,13 @@ import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner"
 import { ArrowLeft, Edit, Sparkles } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CopyField, formatDate, getStatusColor, MetadataTable } from "@/app/(main)/posts/_components/detail-utils";
+import { useTeam } from "@/context/TeamContext";
 
 export default function ReelPostDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const notifications = useNotifications();
+  const { teams, personalTeam } = useTeam();
 
   const [loading, setLoading] = useState(true);
   const [post, setPost] = useState<any>(null);
@@ -23,6 +25,13 @@ export default function ReelPostDetailsPage() {
 
   const title = useMemo(() => post?.title || "Reel", [post]);
   const status = useMemo(() => String(post?.status || "—"), [post]);
+  const teamName = useMemo(() => {
+    const tid = post?.teamId ? String(post.teamId) : null;
+    if (!tid) return null;
+    if (personalTeam?.id === tid) return personalTeam.name || "Personal workspace";
+    const t = (teams || []).find((x) => x.id === tid);
+    return t?.name || null;
+  }, [post?.teamId, teams, personalTeam]);
 
   useEffect(() => {
     if (!id) return;
@@ -186,7 +195,7 @@ export default function ReelPostDetailsPage() {
                     <CopyField label="Video key" value={post.videoKey} />
                     <CopyField label="Thumbnail key" value={post.thumbnailKey} />
                     <CopyField label="Folder path" value={post.folderPath} />
-                    <CopyField label="Team id" value={post.teamId ? String(post.teamId) : null} />
+                    <CopyField label="Team" value={teamName || null} />
                     <CopyField label="User id" value={post.userId ? String(post.userId) : null} />
                   </CardContent>
                 </Card>

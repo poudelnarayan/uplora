@@ -10,17 +10,26 @@ import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner"
 import { ArrowLeft, Edit, FileText } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CopyField, formatDate, getStatusColor, MetadataTable } from "@/app/(main)/posts/_components/detail-utils";
+import { useTeam } from "@/context/TeamContext";
 
 export default function TextPostDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const notifications = useNotifications();
+  const { teams, personalTeam } = useTeam();
 
   const [loading, setLoading] = useState(true);
   const [post, setPost] = useState<any>(null);
 
   const title = useMemo(() => post?.title || "Text post", [post]);
   const status = useMemo(() => String(post?.status || "—"), [post]);
+  const teamName = useMemo(() => {
+    const tid = post?.teamId ? String(post.teamId) : null;
+    if (!tid) return null;
+    if (personalTeam?.id === tid) return personalTeam.name || "Personal workspace";
+    const t = (teams || []).find((x) => x.id === tid);
+    return t?.name || null;
+  }, [post?.teamId, teams, personalTeam]);
 
   useEffect(() => {
     if (!id) return;
@@ -151,7 +160,7 @@ export default function TextPostDetailsPage() {
                     <CardTitle className="text-base">Storage</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <CopyField label="Team id" value={post.teamId ? String(post.teamId) : null} />
+                    <CopyField label="Team" value={teamName || null} />
                     <CopyField label="User id" value={post.userId ? String(post.userId) : null} />
                   </CardContent>
                 </Card>
