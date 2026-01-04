@@ -16,7 +16,7 @@ export default function SettingsHeader() {
       <div className={styles.content}>
         <div className={styles.textContent}>
           <h1 className={styles.title}>Account Settings</h1>
-          <p className={styles.subtitle}>Manage your account, integrations, and preferences</p>
+          <p className={styles.subtitle}>Manage your account settings and preferences</p>
         </div>
         <div className={styles.iconContainer}>
           <Settings className={styles.icon} />

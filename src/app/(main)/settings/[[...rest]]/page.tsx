@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
-import { User, CreditCard, Bell, Shield, Globe, Save, Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { User, CreditCard, Bell, Shield, Globe, Save } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
 import { Button } from "@/app/components/ui/button";
@@ -13,26 +14,42 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge";
 import { Separator } from "@/app/components/ui/separator";
 import AppShell from "@/app/components/layout/AppLayout";
+import { useTheme } from "@/context/ThemeContext";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
-  const [xStatus, setXStatus] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
-    loading: true,
-    isConnected: false,
-    username: null,
+  const { user, isLoaded } = useUser();
+  const { theme, toggleTheme, mounted: themeMounted } = useTheme();
+
+  const primaryEmail = useMemo(() => user?.primaryEmailAddress?.emailAddress || "", [user]);
+  const initials = useMemo(() => {
+    const first = user?.firstName?.[0] || "";
+    const last = user?.lastName?.[0] || "";
+    const fallback = user?.fullName?.split(" ").map(p => p[0]).slice(0, 2).join("") || "";
+    return (first + last || fallback || "U").toUpperCase();
+  }, [user]);
+
+  const [profileForm, setProfileForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    bio: "",
   });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSaved, setProfileSaved] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/twitter/status", { cache: "no-store" });
-        const data = await res.json();
-        setXStatus({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
-      } catch {
-        setXStatus({ loading: false, isConnected: false, username: null });
-      }
-    })();
-  }, []);
+    if (!isLoaded || !user) return;
+    // Hydrate editable fields from Clerk
+    const unsafe = (user.unsafeMetadata || {}) as Record<string, unknown>;
+    setProfileForm({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      phone: typeof unsafe.phone === "string" ? unsafe.phone : "",
+      bio: typeof unsafe.bio === "string" ? unsafe.bio : "",
+    });
+  }, [isLoaded, user]);
 
   return (
     <AppShell>
@@ -47,7 +64,7 @@ const Settings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5">
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -68,10 +85,6 @@ const Settings = () => {
             <Globe className="h-4 w-4" />
             <span className="hidden sm:inline">Preferences</span>
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="gap-2">
-            <Globe className="h-4 w-4" />
-            <span className="hidden sm:inline">Integrations</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -87,42 +100,56 @@ const Settings = () => {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src={user?.imageUrl || undefined} />
+                    <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="space-y-2">
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-foreground">John Doe</p>
-                    <p className="text-xs text-muted-foreground">john@acme.com</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {isLoaded ? (user?.fullName || "Your profile") : "Loading…"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{isLoaded ? primaryEmail : ""}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="gap-2">
-                      <Upload className="h-4 w-4" />
-                      Change Avatar
-                    </Button>
-                    <Button variant="outline">Remove</Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max size 5MB.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Avatar + email are managed in Clerk.
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
+                  <Input
+                    id="firstName"
+                    value={profileForm.firstName}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, firstName: e.target.value }))}
+                    disabled={!isLoaded || !user || profileSaving}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Doe" />
+                  <Input
+                    id="lastName"
+                    value={profileForm.lastName}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, lastName: e.target.value }))}
+                    disabled={!isLoaded || !user || profileSaving}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="john@acme.com" />
+                  <Input id="email" type="email" value={primaryEmail} readOnly disabled />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, phone: e.target.value }))}
+                    disabled={!isLoaded || !user || profileSaving}
+                    placeholder="(optional)"
+                  />
                 </div>
               </div>
 
@@ -131,13 +158,49 @@ const Settings = () => {
                 <Textarea
                   id="bio"
                   placeholder="Tell us about yourself..."
-                  defaultValue="Social media manager passionate about creating engaging content and building communities."
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, bio: e.target.value }))}
+                  disabled={!isLoaded || !user || profileSaving}
                 />
               </div>
 
-              <Button className="gap-2">
+              {profileError ? (
+                <p className="text-sm text-destructive">{profileError}</p>
+              ) : null}
+              {profileSaved ? (
+                <p className="text-sm text-green-600">Saved.</p>
+              ) : null}
+
+              <Button
+                className="gap-2"
+                disabled={!isLoaded || !user || profileSaving}
+                onClick={async () => {
+                  if (!user) return;
+                  setProfileSaving(true);
+                  setProfileError(null);
+                  setProfileSaved(false);
+                  try {
+                    const existingUnsafe = (user.unsafeMetadata || {}) as Record<string, unknown>;
+                    await user.update({
+                      firstName: profileForm.firstName,
+                      lastName: profileForm.lastName,
+                      unsafeMetadata: {
+                        ...existingUnsafe,
+                        phone: profileForm.phone,
+                        bio: profileForm.bio,
+                      },
+                    });
+                    setProfileSaved(true);
+                    window.setTimeout(() => setProfileSaved(false), 2500);
+                  } catch (e) {
+                    setProfileError(e instanceof Error ? e.message : "Failed to update profile");
+                  } finally {
+                    setProfileSaving(false);
+                  }
+                }}
+              >
                 <Save className="h-4 w-4" />
-                Save Changes
+                {profileSaving ? "Saving…" : "Save Changes"}
               </Button>
             </CardContent>
           </Card>
@@ -154,17 +217,17 @@ const Settings = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between p-6 border rounded-lg">
                 <div>
-                  <h3 className="text-lg font-semibold">Pro Plan</h3>
-                  <p className="text-sm text-muted-foreground">$29/month • Billed monthly</p>
+                  <h3 className="text-lg font-semibold">Subscription</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Manage plan, invoices, and payment methods from the Subscription page.
+                  </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge>Current Plan</Badge>
-                    <Badge variant="outline">Auto-renews Jan 15, 2025</Badge>
+                    <Badge variant="outline">Powered by Stripe</Badge>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">$29</p>
-                  <p className="text-sm text-muted-foreground">per month</p>
-                </div>
+                <Button asChild>
+                  <a href="/subscription">Open Subscription</a>
+                </Button>
               </div>
 
               <div className="space-y-4">
@@ -175,17 +238,48 @@ const Settings = () => {
                       <CreditCard className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium">•••• •••• •••• 4242</p>
-                      <p className="text-sm text-muted-foreground">Expires 12/2027</p>
+                      <p className="font-medium">Manage in Stripe portal</p>
+                      <p className="text-sm text-muted-foreground">View / update your payment method</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">Update</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch("/api/stripe/billing-portal", { method: "POST" });
+                        if (!response.ok) throw new Error("Failed to open billing portal");
+                        const { url } = await response.json();
+                        window.open(url, "_blank", "noopener,noreferrer");
+                      } catch {
+                        // no-op
+                      }
+                    }}
+                  >
+                    Open Portal
+                  </Button>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline">Change Plan</Button>
-                <Button variant="outline">Billing History</Button>
+                <Button variant="outline" asChild>
+                  <a href="/subscription">Change Plan</a>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch("/api/stripe/billing-portal", { method: "POST" });
+                      if (!response.ok) throw new Error("Failed to open billing portal");
+                      const { url } = await response.json();
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    } catch {
+                      // no-op
+                    }
+                  }}
+                >
+                  Billing History
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -350,7 +444,11 @@ const Settings = () => {
                       <Label>Dark Mode</Label>
                       <p className="text-sm text-muted-foreground">Use dark theme</p>
                     </div>
-                    <Switch />
+                    <Switch
+                      checked={themeMounted ? theme === "dark" : true}
+                      onCheckedChange={() => toggleTheme()}
+                      disabled={!themeMounted}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -366,49 +464,6 @@ const Settings = () => {
                 <Save className="h-4 w-4" />
                 Save Preferences
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="integrations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Integrations</CardTitle>
-              <CardDescription>Connect social accounts for publishing</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <p className="font-medium">X (Twitter)</p>
-                  <p className="text-sm text-muted-foreground">
-                    {xStatus.loading
-                      ? "Checking connection…"
-                      : xStatus.isConnected
-                        ? `Connected${xStatus.username ? ` as @${xStatus.username}` : ""}`
-                        : "Not connected"}
-                  </p>
-                </div>
-                {xStatus.isConnected ? (
-                  <Button
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        const resp = await fetch("/api/twitter/disconnect", { method: "POST" });
-                        if (!resp.ok) throw new Error("Failed");
-                        setXStatus({ loading: false, isConnected: false, username: null });
-                      } catch {
-                        // no-op: keep current UI state
-                      }
-                    }}
-                  >
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button asChild disabled={xStatus.loading}>
-                    <a href="/api/twitter/connect">Connect X</a>
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
