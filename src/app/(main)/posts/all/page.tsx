@@ -16,11 +16,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/app/components/ui/label";
 import AppShell from "@/app/components/layout/AppLayout";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const MotionDiv = motion.div as any;
 
 function AllPostsInner() {
+  const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
   const { getCachedContent, setCachedContent, isStale, removeContentItem } = useContentCache();
   const notifications = useNotifications();
@@ -42,15 +43,6 @@ function AllPostsInner() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [detailsLoading, setDetailsLoading] = useState(false);
-  const [detailsPost, setDetailsPost] = useState<any>(null);
-  const [detailsMedia, setDetailsMedia] = useState<{
-    videoUrl?: string | null;
-    imageUrl?: string | null;
-    thumbnailUrl?: string | null;
-  }>({});
 
   // Allow deep-linking: /posts/all?type=video&status=PENDING
   useEffect(() => {
@@ -169,64 +161,10 @@ function AllPostsInner() {
     setDeleteDialogOpen(true);
   };
 
-  const openPostDetails = async (postOrId: any) => {
+  const openPostDetails = (postOrId: any) => {
     const id = typeof postOrId === "string" ? postOrId : String(postOrId?.id || "");
     if (!id) return;
-
-    setDetailsDialogOpen(true);
-    setDetailsLoading(true);
-    setDetailsPost(null);
-    setDetailsMedia({});
-
-    const fetchSignedUrl = async (key: string, contentType?: string) => {
-      const params = new URLSearchParams({ key });
-      if (contentType) params.set("contentType", contentType);
-      const r = await fetch(`/api/s3/get-url?${params.toString()}`, { cache: "no-store" });
-      if (!r.ok) throw new Error("Failed to fetch media URL");
-      const j = await r.json().catch(() => ({}));
-      return j?.url as string | undefined;
-    };
-
-    const fetchVideoUrl = async (key: string) => {
-      const r = await fetch(`/api/video-url?key=${encodeURIComponent(key)}`, { cache: "no-store" });
-      if (!r.ok) throw new Error("Failed to fetch video URL");
-      const j = await r.json().catch(() => ({}));
-      return j?.url as string | undefined;
-    };
-
-    try {
-      const resp = await fetch(`/api/content/${encodeURIComponent(id)}`, { cache: "no-store" });
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(data?.error || "Failed to load post details");
-      setDetailsPost(data);
-
-      const type = String(data?.type || "");
-      if (type === "video") {
-        const [thumb, video] = await Promise.all([
-          data?.thumbnailKey ? fetchSignedUrl(String(data.thumbnailKey)) : Promise.resolve(undefined),
-          data?.key ? fetchVideoUrl(String(data.key)) : Promise.resolve(undefined),
-        ]);
-        setDetailsMedia({ thumbnailUrl: thumb, videoUrl: video });
-      } else if (type === "reel") {
-        const [thumb, video] = await Promise.all([
-          data?.thumbnailKey ? fetchSignedUrl(String(data.thumbnailKey)) : Promise.resolve(undefined),
-          data?.videoKey ? fetchVideoUrl(String(data.videoKey)) : Promise.resolve(undefined),
-        ]);
-        setDetailsMedia({ thumbnailUrl: thumb, videoUrl: video });
-      } else if (type === "image") {
-        const img = data?.imageKey ? await fetchSignedUrl(String(data.imageKey)) : undefined;
-        setDetailsMedia({ imageUrl: img });
-      }
-    } catch (e) {
-      notifications.addNotification({
-        type: "error",
-        title: "Failed to load details",
-        message: e instanceof Error ? e.message : "Please try again",
-      });
-      setDetailsDialogOpen(false);
-    } finally {
-      setDetailsLoading(false);
-    }
+    router.push(`/posts/${encodeURIComponent(id)}`);
   };
 
   const confirmDeletePost = async () => {
@@ -491,11 +429,11 @@ function AllPostsInner() {
                             className="hover:shadow-lg transition-all duration-300 group cursor-pointer"
                             role="button"
                             tabIndex={0}
-                            onClick={() => void openPostDetails(post)}
+                            onClick={() => openPostDetails(post)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                void openPostDetails(post);
+                                openPostDetails(post);
                               }
                             }}
                           >
@@ -529,7 +467,7 @@ function AllPostsInner() {
                                       <DropdownMenuItem
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          void openPostDetails(post);
+                                          openPostDetails(post);
                                         }}
                                       >
                                         <Eye className="h-4 w-4 mr-2" />
@@ -692,102 +630,6 @@ function AllPostsInner() {
             >
               <Trash2 className="h-4 w-4" />
               {isDeleting ? "Deleting…" : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Details Dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="truncate">
-              {detailsLoading ? "Loading…" : (detailsPost?.title || detailsPost?.filename || "Post details")}
-            </DialogTitle>
-            <DialogDescription>
-              {detailsPost ? (
-                <span className="capitalize">
-                  {String(detailsPost.type || "")} • {String(detailsPost.status || "")}
-                </span>
-              ) : (
-                "View the full post details"
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {detailsLoading ? (
-            <div className="py-8 flex items-center justify-center">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : detailsPost ? (
-            <div className="space-y-4">
-              {/* Media preview */}
-              {detailsMedia.videoUrl ? (
-                <div className="rounded-xl overflow-hidden border bg-black">
-                  <video src={detailsMedia.videoUrl} controls className="w-full max-h-[360px] object-contain" />
-                </div>
-              ) : detailsMedia.imageUrl ? (
-                <div className="rounded-xl overflow-hidden border bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={detailsMedia.imageUrl} alt="Post media" className="w-full max-h-[360px] object-contain" />
-                </div>
-              ) : detailsMedia.thumbnailUrl ? (
-                <div className="rounded-xl overflow-hidden border bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={detailsMedia.thumbnailUrl} alt="Thumbnail" className="w-full max-h-[360px] object-contain" />
-                </div>
-              ) : null}
-
-              {/* Metadata */}
-              <div className="flex flex-wrap gap-2">
-                {detailsPost.status ? (
-                  <Badge className={`${getStatusColor(String(detailsPost.status))} text-xs border`}>
-                    {String(detailsPost.status)}
-                  </Badge>
-                ) : null}
-                {detailsPost.type ? (
-                  <Badge variant="outline" className="text-xs capitalize">
-                    {String(detailsPost.type)}
-                  </Badge>
-                ) : null}
-                {Array.isArray(detailsPost.platforms) && detailsPost.platforms.length > 0 ? (
-                  detailsPost.platforms.map((p: string) => (
-                    <Badge key={p} variant="outline" className="text-xs">
-                      {p}
-                    </Badge>
-                  ))
-                ) : null}
-              </div>
-
-              {/* Content */}
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-foreground">Content</div>
-                <div className="rounded-lg border bg-card p-3 max-h-[240px] overflow-auto">
-                  <div className="text-sm text-foreground whitespace-pre-wrap break-words">
-                    {detailsPost.content || detailsPost.description || "—"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Timestamps */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
-                <div className="rounded-lg border bg-card p-3">
-                  <div className="font-medium text-foreground mb-1">Created</div>
-                  <div className="break-words">{detailsPost.createdAt ? formatDate(String(detailsPost.createdAt)) : "—"}</div>
-                </div>
-                <div className="rounded-lg border bg-card p-3">
-                  <div className="font-medium text-foreground mb-1">Scheduled</div>
-                  <div className="break-words">{detailsPost.scheduledFor ? formatDate(String(detailsPost.scheduledFor)) : "—"}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">No post selected.</div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
-              Close
             </Button>
           </DialogFooter>
         </DialogContent>
