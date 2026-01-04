@@ -57,7 +57,7 @@ const postRoutes = [
 export default function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const pathForFeedback = usePathnameForFeedback();
-  const { teams, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
+  const { teams, personalTeam, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
   const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
   const notifications = useNotifications();
 
@@ -218,7 +218,29 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* Team Selector removed in sidebar; using top-bar compact switcher */}
+        {/* Workspace switcher (team/personal) */}
+        <div className="px-3 py-4 border-b border-sidebar-border bg-sidebar">
+          <div className="text-[11px] font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-1 mb-2">
+            Workspace
+          </div>
+          <select
+            value={selectedTeamId || ""}
+            onChange={(e) => setSelectedTeamId(e.target.value || null)}
+            className="w-full h-10 rounded-lg border border-sidebar-border bg-sidebar-accent px-3 text-sm text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+          >
+            {personalTeam && (
+              <option value={personalTeam.id}>{personalTeam.name || "Personal Workspace"}</option>
+            )}
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 text-xs text-sidebar-foreground/60 truncate">
+            Showing content for: <span className="text-sidebar-foreground/90">{selectedTeam?.name || "—"}</span>
+          </div>
+        </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4 bg-sidebar">
           {/* Main Navigation */}
@@ -324,23 +346,47 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 ml-0">
         {/* Mobile Top Bar - Only for mobile */}
-        <div className="lg:hidden sticky top-0 z-30 bg-card backdrop-blur-sm">
-          <div className="flex items-center justify-between px-4 py-3">
-            {/* Mobile menu button */}
-            <button
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setMobileNavOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+        <div className="lg:hidden sticky top-0 z-30 bg-card backdrop-blur-sm border-b border-border">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              {/* Mobile menu button */}
+              <button
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
 
-            {/* Mobile logo */}
-            <div>
-              <Image src="/text-logo.png" alt="Uplora" width={180} height={45} className="h-14 w-auto" />
+              {/* Mobile logo */}
+              <div className="flex-1 flex justify-center">
+                <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-10 w-auto" />
+              </div>
+
+              {/* spacer to balance center logo */}
+              <div className="w-9" />
             </div>
 
-            {/* Empty right side */}
-            <div className="w-10"></div>
+            {/* Mobile workspace selector (full width, comfortable) */}
+            <div className="mt-3">
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Workspace
+              </div>
+              <select
+                value={selectedTeamId || ""}
+                onChange={(e) => setSelectedTeamId(e.target.value || null)}
+                className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+              >
+                {personalTeam && (
+                  <option value={personalTeam.id}>{personalTeam.name || "Personal Workspace"}</option>
+                )}
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

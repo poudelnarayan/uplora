@@ -125,8 +125,11 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       
       if (existing) {
         setSelectedTeamIdState(existing);
+      } else if (regularTeams.length === 1) {
+        // If user only has one team workspace, default to it (common for invited members).
+        setSelectedTeamIdState(regularTeams[0].id);
       } else if (personalWorkspace) {
-        // Default to personal workspace (use its ID)
+        // Otherwise default to personal workspace (use its ID)
         setSelectedTeamIdState(personalWorkspace.id);
       } else if (regularTeams.length > 0) {
         setSelectedTeamIdState(regularTeams[0].id);
