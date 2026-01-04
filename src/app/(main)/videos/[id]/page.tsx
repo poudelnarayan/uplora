@@ -1322,8 +1322,9 @@ export default function VideoPreviewPage() {
                         src={playUrl}
                         onError={(e) => {
                           console.error("Video error:", e);
-                          console.log("Video streaming failed, trying blob download...");
-                          downloadAsBlob();
+                          // Don't auto-download the whole file; let the browser stream/range-request.
+                          // If streaming fails (rare), user can click "Force download & play".
+                          setUrlError("Video preview failed to stream. Try again, or use “Force download & play”.");
                         }}
                         onLoadStart={() => console.log("Video started loading")}
                         onCanPlay={() => console.log("Video can play")}

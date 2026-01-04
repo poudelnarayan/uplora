@@ -143,6 +143,18 @@ const MakePostVideosInner = () => {
     }
   }, []);
 
+  // Use object URLs for local previews (fast, no full-file base64 conversion)
+  const localPreviewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrlRef.current) {
+        URL.revokeObjectURL(localPreviewUrlRef.current);
+        localPreviewUrlRef.current = null;
+      }
+    };
+  }, []);
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -154,11 +166,12 @@ const MakePostVideosInner = () => {
       // Reset previous upload identifiers when selecting a new file
       setS3Key(null);
       setVideoId(isEditMode && editId ? editId : null);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedVideo(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (localPreviewUrlRef.current) {
+        URL.revokeObjectURL(localPreviewUrlRef.current);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      localPreviewUrlRef.current = objectUrl;
+      setSelectedVideo(objectUrl);
       // Start uploading immediately (multipart/direct handled by UploadContext)
       const uploadTeamId = editTeamId ?? selectedTeamId;
       const id = enqueueUpload(
@@ -184,11 +197,12 @@ const MakePostVideosInner = () => {
       // Reset previous upload identifiers when selecting a new file
       setS3Key(null);
       setVideoId(isEditMode && editId ? editId : null);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedVideo(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (localPreviewUrlRef.current) {
+        URL.revokeObjectURL(localPreviewUrlRef.current);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      localPreviewUrlRef.current = objectUrl;
+      setSelectedVideo(objectUrl);
       // Start uploading immediately (multipart/direct handled by UploadContext)
       const uploadTeamId = editTeamId ?? selectedTeamId;
       const id = enqueueUpload(
@@ -594,6 +608,10 @@ const MakePostVideosInner = () => {
                       onClick={() => {
                         setSelectedVideo(null);
                         fileRef.current = null;
+                        if (localPreviewUrlRef.current) {
+                          URL.revokeObjectURL(localPreviewUrlRef.current);
+                          localPreviewUrlRef.current = null;
+                        }
                         // If we were editing an existing video, revert to the original uploaded video.
                         if (isEditMode && editId && originalS3Key) {
                           setS3Key(originalS3Key);
