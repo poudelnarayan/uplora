@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import * as React from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Video, 
   ArrowLeft, 
@@ -33,7 +33,7 @@ import { useRouter } from "next/navigation";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { InlineSpinner } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
-import { useUploads, type UploadItem } from "@/context/UploadContext";
+import { useUploads } from "@/context/UploadContext";
 import { useTeam } from "@/context/TeamContext";
     
 interface ExpandableDescriptionProps {
@@ -104,57 +104,8 @@ const MakePostVideos = () => {
   const [savedThumbnailKey, setSavedThumbnailKey] = useState<string | null>(null);
 
   const [activeUploadItemId, setActiveUploadItemId] = useState<string | null>(null);
-  const [showUploadOverlay, setShowUploadOverlay] = useState(false);
-  const [uploadStageText, setUploadStageText] = useState<string>("Preparing upload…");
-  const uploadWaiters = useRef<Map<string, { resolve: (u: UploadItem) => void; reject: (e: Error) => void }>>(new Map());
-  const lastBackWarnAt = useRef<number>(0);
-
-  const activeUpload: UploadItem | null =
-    (activeUploadItemId ? uploads.find((u) => u.id === activeUploadItemId) || null : null) ||
-    (showUploadOverlay ? uploads.find((u) => u.status === "uploading" || u.status === "queued") || null : null);
-
-  // Resolve upload waiters when UploadContext progresses
-  useEffect(() => {
-    uploads.forEach((u) => {
-      const waiter = uploadWaiters.current.get(u.id);
-      if (!waiter) return;
-      if (u.status === "completed") {
-        uploadWaiters.current.delete(u.id);
-        waiter.resolve(u);
-      } else if (u.status === "failed" || u.status === "cancelled") {
-        uploadWaiters.current.delete(u.id);
-        waiter.reject(new Error(u.error || (u.status === "cancelled" ? "Upload cancelled" : "Upload failed")));
-      }
-    });
-  }, [uploads]);
-
-  const waitForUpload = (id: string) =>
-    new Promise<UploadItem>((resolve, reject) => {
-      const existing = uploads.find((u) => u.id === id);
-      if (existing?.status === "completed") return resolve(existing);
-      if (existing?.status === "failed" || existing?.status === "cancelled") {
-        return reject(new Error(existing.error || (existing.status === "cancelled" ? "Upload cancelled" : "Upload failed")));
-      }
-      uploadWaiters.current.set(id, { resolve, reject });
-    });
-
-  const startUploadAndWait = async () => {
-    const file = fileRef.current;
-    if (!file) {
-      notifications.addNotification({ type: "error", title: "No video selected", message: "Select a video file first." });
-      throw new Error("No file");
-    }
-
-    setUploadStageText("Uploading to cloud storage…");
-    setShowUploadOverlay(true);
-    const id = enqueueUpload(file, selectedTeamId);
-    setActiveUploadItemId(id);
-    const done = await waitForUpload(id);
-
-    if (done.s3Key) setS3Key(done.s3Key);
-    if (done.videoId) setVideoId(done.videoId);
-    return done;
-  };
+  const activeUpload = activeUploadItemId ? uploads.find((u) => u.id === activeUploadItemId) || null : null;
+  const lastNotifiedStatus = useRef<Record<string, string>>({});
 
   const categories = [
     { value: "education", label: "Education" },
@@ -199,8 +150,16 @@ const MakePostVideos = () => {
         setSelectedVideo(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+      // Start uploading immediately (multipart/direct handled by UploadContext)
+      const id = enqueueUpload(file, selectedTeamId);
+      setActiveUploadItemId(id);
+      notifications.addNotification({
+        type: "success",
+        title: "Upload started",
+        message: "You can navigate anywhere—upload will continue in the background.",
+      });
     }
-  }, []);
+  }, [enqueueUpload, selectedTeamId, notifications]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -214,6 +173,14 @@ const MakePostVideos = () => {
         setSelectedVideo(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+      // Start uploading immediately (multipart/direct handled by UploadContext)
+      const id = enqueueUpload(file, selectedTeamId);
+      setActiveUploadItemId(id);
+      notifications.addNotification({
+        type: "success",
+        title: "Upload started",
+        message: "You can navigate anywhere—upload will continue in the background.",
+      });
     }
   };
 
@@ -279,39 +246,34 @@ const MakePostVideos = () => {
     })();
   }, []);
 
-  // Prevent leaving / going back while we show the upload overlay
+  // Sync `videoId`/`s3Key` and notifications as UploadContext completes
   useEffect(() => {
-    const isBlocking =
-      !!showUploadOverlay && !!activeUpload && (activeUpload.status === "uploading" || activeUpload.status === "queued");
-    if (!isBlocking) return;
+    if (!activeUpload) return;
+    if (lastNotifiedStatus.current[activeUpload.id] === activeUpload.status) return;
+    lastNotifiedStatus.current[activeUpload.id] = activeUpload.status;
 
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    // Keep user on this page if they hit browser back during upload
-    const onPopState = () => {
-      history.pushState(null, "", window.location.href);
-      const now = Date.now();
-      if (now - lastBackWarnAt.current > 1200) {
-        lastBackWarnAt.current = now;
-        notifications.addNotification({
-          type: "warning",
-          title: "Upload in progress",
-          message: "Please wait until the upload completes.",
-        });
-      }
-    };
-
-    history.pushState(null, "", window.location.href);
-    window.addEventListener("beforeunload", onBeforeUnload);
-    window.addEventListener("popstate", onPopState);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      window.removeEventListener("popstate", onPopState);
-    };
-  }, [showUploadOverlay, activeUpload, notifications]);
+    if (activeUpload.status === "completed") {
+      if (activeUpload.s3Key) setS3Key(activeUpload.s3Key);
+      if (activeUpload.videoId) setVideoId(activeUpload.videoId);
+      notifications.addNotification({
+        type: "success",
+        title: "Upload complete",
+        message: "Your video is uploaded. You can now save details or publish.",
+      });
+    } else if (activeUpload.status === "failed") {
+      notifications.addNotification({
+        type: "error",
+        title: "Upload failed",
+        message: activeUpload.error || "Please try again.",
+      });
+    } else if (activeUpload.status === "cancelled") {
+      notifications.addNotification({
+        type: "warning",
+        title: "Upload cancelled",
+        message: "Upload was cancelled.",
+      });
+    }
+  }, [activeUpload, notifications]);
 
   const persistVideoMeta = async () => {
     if (!videoId) {
@@ -363,13 +325,13 @@ const MakePostVideos = () => {
       return;
     }
     if (!s3Key) {
-      try {
-        await startUploadAndWait();
-      } catch {
-        return;
-      }
+      notifications.addNotification({
+        type: "warning",
+        title: "Upload not finished",
+        message: "Please wait for the upload to complete before publishing.",
+      });
+      return;
     }
-    if (!s3Key) return;
     try {
       setIsPublishing(true);
       const resp = await fetch('/api/youtube/upload', {
@@ -419,66 +381,7 @@ const MakePostVideos = () => {
   return (
     <AppShell>
 
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Full-screen upload overlay */}
-      <AnimatePresence>
-        {showUploadOverlay && activeUpload && (activeUpload.status === "uploading" || activeUpload.status === "queued") && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ y: 20, opacity: 0, scale: 0.98 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 10, opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="absolute inset-0 flex items-center justify-center p-6"
-            >
-              <div className="w-full max-w-2xl rounded-2xl border bg-card shadow-2xl p-8">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center">
-                      <Upload className="h-6 w-6 text-red-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xl font-semibold text-foreground">Uploading video</div>
-                      <div className="text-sm text-muted-foreground truncate">
-                        {activeUpload.fileName}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => cancelUpload(activeUpload.id)}
-                    className="gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Cancel
-                  </Button>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{uploadStageText}</span>
-                    <span className="font-semibold text-foreground">{activeUpload.progress}%</span>
-                  </div>
-                  <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-red-500 to-red-600 transition-[width] duration-200"
-                      style={{ width: `${activeUpload.progress}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Don’t close this tab. We’ll notify you when it’s done.
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-44 z-40 lg:left-64">
         <div className="max-w-5xl mx-auto px-6 py-4">
@@ -489,7 +392,6 @@ const MakePostVideos = () => {
                 size="sm" 
                 onClick={() => router.push("/make-post")}
                 className="gap-2"
-                disabled={showUploadOverlay}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -511,39 +413,15 @@ const MakePostVideos = () => {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={async () => {
-                  try {
-                    // Ensure upload happens first (fullscreen), then save metadata
-                    if (!videoId) {
-                      await startUploadAndWait();
-                      notifications.addNotification({
-                        type: "success",
-                        title: "Upload complete",
-                        message: "Your video is uploaded. Saving details…",
-                      });
-                    }
-                    await persistVideoMeta();
-                    setShowUploadOverlay(false);
-                  } catch (e) {
-                    setShowUploadOverlay(false);
-                    // persistVideoMeta already shows its own errors; only show upload errors here
-                    if (!videoId) {
-                      notifications.addNotification({
-                        type: "error",
-                        title: "Upload failed",
-                        message: e instanceof Error ? e.message : "Try again",
-                      });
-                    }
-                  }
-                }}
-                disabled={savingMeta || (!fileRef.current && !videoId)}
+                onClick={persistVideoMeta}
+                disabled={savingMeta || !videoId}
               >
                 {savingMeta ? (
                   <InlineSpinner size="sm" />
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {savingMeta ? 'Saving…' : (videoId ? 'Save' : 'Save & Upload')}
+                {savingMeta ? 'Saving…' : 'Save'}
               </Button>
             </div>
           </div>
@@ -558,7 +436,18 @@ const MakePostVideos = () => {
             {/* Video Upload */}
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Upload Video</CardTitle>
+                <div className="flex items-start justify-between gap-4">
+                  <CardTitle className="text-base">Upload Video</CardTitle>
+                  {activeUpload ? (
+                    <div className="text-xs text-muted-foreground truncate max-w-[12rem]">
+                      {activeUpload.status === "uploading" || activeUpload.status === "queued"
+                        ? `Uploading • ${activeUpload.progress}%`
+                        : activeUpload.status === "completed"
+                          ? "Uploaded"
+                          : activeUpload.status}
+                    </div>
+                  ) : null}
+                </div>
               </CardHeader>
               <CardContent>
                 {!selectedVideo ? (
@@ -611,6 +500,72 @@ const MakePostVideos = () => {
                     </Button>
                   </div>
                 )}
+
+                {/* Inline upload status panel */}
+                {activeUpload ? (
+                  <div className="mt-4 rounded-lg border bg-card p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-foreground truncate">
+                          {activeUpload.fileName}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {activeUpload.status === "uploading" || activeUpload.status === "queued"
+                            ? "Uploading in background (safe to navigate)"
+                            : activeUpload.status === "completed"
+                              ? "Upload finished"
+                              : activeUpload.status === "failed"
+                                ? "Upload failed"
+                                : "Upload cancelled"}
+                        </div>
+                      </div>
+                      {(activeUpload.status === "uploading" || activeUpload.status === "queued") ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => cancelUpload(activeUpload.id)}
+                          className="shrink-0 gap-2"
+                        >
+                          <X className="h-4 w-4" />
+                          Cancel
+                        </Button>
+                      ) : activeUpload.status === "failed" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const f = fileRef.current;
+                            if (!f) return;
+                            const id = enqueueUpload(f, selectedTeamId);
+                            setActiveUploadItemId(id);
+                          }}
+                          className="shrink-0"
+                        >
+                          Retry
+                        </Button>
+                      ) : null}
+                    </div>
+
+                    {(activeUpload.status === "uploading" || activeUpload.status === "queued") && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Progress</span>
+                          <span className="font-medium text-foreground">{activeUpload.progress}%</span>
+                        </div>
+                        <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-red-500 to-red-600 transition-[width] duration-200"
+                            style={{ width: `${activeUpload.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {activeUpload.status === "failed" && activeUpload.error && (
+                      <div className="mt-2 text-xs text-destructive break-words">{activeUpload.error}</div>
+                    )}
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
 

@@ -15,24 +15,20 @@ export default function UploadTray() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Hide tray on the upload page to avoid duplicate UI
-  if (pathname && pathname.startsWith('/make-post/video')) {
-    return null;
-  }
-
   // Auto-dismiss rules:
-  // - completed: 1.5s (faster to reduce UI residue)
-  // - cancelled: 1.5s
-  // - failed: 4s
+  // Keep items visible long enough for users to notice status while allowing manual dismiss.
+  // - completed: 6s
+  // - cancelled: 4s
+  // - failed: 10s
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
     uploads.forEach((u) => {
       if (u.status === "completed") {
-        timers.push(setTimeout(() => dismiss(u.id), 1500));
+        timers.push(setTimeout(() => dismiss(u.id), 6000));
       } else if (u.status === "cancelled") {
-        timers.push(setTimeout(() => dismiss(u.id), 1500));
-      } else if (u.status === "failed") {
         timers.push(setTimeout(() => dismiss(u.id), 4000));
+      } else if (u.status === "failed") {
+        timers.push(setTimeout(() => dismiss(u.id), 10000));
       }
     });
     return () => timers.forEach(clearTimeout);
