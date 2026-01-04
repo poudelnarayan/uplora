@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { 
@@ -31,7 +31,7 @@ import { Separator } from "@/app/components/ui/separator";
 import RichTextEditor from "@/app/components/editor/RichTextEditor";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { InlineSpinner } from "@/app/components/ui/loading-spinner";
+import { InlineSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useUploads } from "@/context/UploadContext";
 import { useTeam } from "@/context/TeamContext";
@@ -79,7 +79,7 @@ const ExpandableDescription = ({ description, formatContent }: ExpandableDescrip
   );
 };
 
-const MakePostVideos = () => {
+const MakePostVideosInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -948,4 +948,10 @@ const MakePostVideos = () => {
   );
 };
 
-export default MakePostVideos;
+export default function MakePostVideosPage() {
+  return (
+    <Suspense fallback={<PageLoader text="Loading editor..." />}>
+      <MakePostVideosInner />
+    </Suspense>
+  );
+}
