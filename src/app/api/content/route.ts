@@ -31,12 +31,30 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-      const teamId = searchParams.get('teamId');
+      let teamId = searchParams.get('teamId');
       const types = searchParams.get('types')?.split(',') || ['video', 'image', 'text', 'reel'];
       const status = searchParams.get('status') || 'ALL';
       const sortBy = searchParams.get('sortBy') || 'newest';
       const limit = parseInt(searchParams.get('limit') || '50');
       const offset = parseInt(searchParams.get('offset') || '0');
+
+      // Default to personal workspace when teamId is omitted
+      if (!teamId) {
+        const { data: pTeam } = await supabaseAdmin
+          .from('teams')
+          .select('id')
+          .eq('ownerId', user.id)
+          .eq('isPersonal', true)
+          .single();
+        teamId = pTeam?.id || null;
+      }
+
+      if (!teamId) {
+        return NextResponse.json(
+          createErrorResponse('TEAM_NOT_FOUND', 'No team found for this user'),
+          { status: 400 }
+        );
+      }
 
       // Validate team access
       if (teamId) {

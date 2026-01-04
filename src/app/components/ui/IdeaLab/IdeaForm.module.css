@@ -27,7 +27,7 @@
   padding: 0.75rem;
   border: 1px solid rgb(var(--border));
   border-radius: 0.5rem;
-  background-color: rgb(var(--input));
+  background-color: rgb(var(--background));
   color: rgb(var(--foreground));
   font-size: 0.875rem;
   transition: border-color 0.2s;
@@ -49,7 +49,8 @@
   padding: 0.75rem;
   border: 1px solid rgb(var(--border));
   border-radius: 0.5rem;
-  background-color: rgb(var(--input));
+  /* Use page background for a cleaner, less dull feel inside the modal */
+  background-color: rgb(var(--background));
   color: rgb(var(--foreground));
   font-size: 0.875rem;
   resize: vertical;

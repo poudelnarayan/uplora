@@ -136,6 +136,27 @@ export async function DELETE(
         return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to remove member");
       }
 
+      // Also remove any invites for this user/email (cleanup Supabase invite records)
+      try {
+        // By inviteeId (accepted invites) and by email (pending invites)
+        await supabaseAdmin
+          .from("team_invites")
+          .delete()
+          .eq("teamId", teamId)
+          .eq("inviteeId", member.userId);
+
+        if (removedUser?.email) {
+          await supabaseAdmin
+            .from("team_invites")
+            .delete()
+            .eq("teamId", teamId)
+            .eq("email", String(removedUser.email).toLowerCase());
+        }
+      } catch (e) {
+        // best-effort cleanup only
+        console.error("Invite cleanup failed during member removal:", e);
+      }
+
       // Send notification email (best-effort)
       try {
         if (removedUser?.email) {
