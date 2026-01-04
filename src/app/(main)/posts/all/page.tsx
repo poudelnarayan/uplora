@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FileText, Video, Image as ImageIcon, Filter, Search, Grid, List, Eye, Edit, Trash2, Calendar, Clock, Sparkles, Plus, MoreVertical, Send } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
@@ -22,7 +22,7 @@ const MotionDiv = motion.div as any;
 
 function AllPostsInner() {
   const { selectedTeamId, selectedTeam } = useTeam();
-  const { getCachedContent, setCachedContent, isStale } = useContentCache();
+  const { getCachedContent, setCachedContent, isStale, removeContentItem } = useContentCache();
   const notifications = useNotifications();
   const searchParams = useSearchParams();
 
@@ -38,6 +38,10 @@ function AllPostsInner() {
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
   const canSchedule = ["OWNER", "ADMIN", "MANAGER"].includes(String((selectedTeam as any)?.role || ""));
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Allow deep-linking: /posts/all?type=video&status=PENDING
   useEffect(() => {
@@ -151,30 +155,46 @@ function AllPostsInner() {
     }
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) return;
+  const requestDeletePost = (post: any) => {
+    setPostToDelete(post);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!postToDelete || !selectedTeamId) return;
+    const id = String(postToDelete.id);
+
+    setIsDeleting(true);
+    // Optimistic removal for snappy UX + animation
+    setPosts((prev) => prev.filter((p) => String(p.id) !== id));
+    setDeleteDialogOpen(false);
 
     try {
-      const response = await fetch(`/api/content/${postId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        notifications.addNotification({
-          type: "success",
-          title: "Post deleted",
-          message: "Post has been removed"
-        });
-        fetchContent();
-      } else {
-        throw new Error('Failed to delete post');
+      const response = await fetch(`/api/content/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error || "Failed to delete post");
       }
+
+      // Remove from any cached views for this team (ALL/SCHEDULED/PUBLISHED/etc.)
+      removeContentItem(selectedTeamId, id);
+
+      notifications.addNotification({
+        type: "success",
+        title: "Deleted",
+        message: "Post removed from database and storage",
+      });
     } catch (error) {
       notifications.addNotification({
         type: "error",
         title: "Delete failed",
-        message: "Please try again"
+        message: error instanceof Error ? error.message : "Please try again",
       });
+      // Restore correct state/order from source of truth
+      fetchContent();
+    } finally {
+      setIsDeleting(false);
+      setPostToDelete(null);
     }
   };
 
@@ -387,91 +407,103 @@ function AllPostsInner() {
                   </Card>
                 ) : (
                   <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-                    {filteredPosts.map((post) => (
-                      <Card key={post.id} className="hover:shadow-lg transition-all duration-300 group">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className={`p-2 rounded-lg ${getTypeColor(post.type)} flex-shrink-0`}>
-                                {getTypeIcon(post.type)}
+                    <AnimatePresence initial={false}>
+                      {filteredPosts.map((post) => (
+                        <motion.div
+                          key={post.id}
+                          layout
+                          initial={{ opacity: 0, y: 10, scale: 0.99 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.96, height: 0, marginBottom: 0 }}
+                          transition={{ duration: 0.22, ease: "easeOut" }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <Card className="hover:shadow-lg transition-all duration-300 group">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <div className={`p-2 rounded-lg ${getTypeColor(post.type)} flex-shrink-0`}>
+                                    {getTypeIcon(post.type)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold truncate text-lg">{post.title || 'Untitled Post'}</h3>
+                                    <p className="text-sm text-muted-foreground capitalize">{post.type}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={`${getStatusColor(post.status)} text-xs border`}>
+                                    {post.status}
+                                  </Badge>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                        <MoreVertical className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem>
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      {canSchedule && post.status === 'DRAFT' && (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedPost(post);
+                                            setScheduleDialogOpen(true);
+                                          }}
+                                        >
+                                          <Calendar className="h-4 w-4 mr-2" />
+                                          Schedule
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() => requestDeletePost(post)}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold truncate text-lg">{post.title || 'Untitled Post'}</h3>
-                                <p className="text-sm text-muted-foreground capitalize">{post.type}</p>
+                            </CardHeader>
+                            <CardContent className="pt-0 space-y-4">
+                              <p className="text-muted-foreground text-sm line-clamp-3">
+                                {post.content || post.description || 'No description provided'}
+                              </p>
+
+                              {post.platforms && post.platforms.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {post.platforms.map((platform: string) => (
+                                    <Badge key={platform} variant="outline" className="text-xs">
+                                      {platform}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between text-sm text-muted-foreground pt-3 border-t">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{formatDate(post.scheduledFor || post.createdAt)}</span>
+                                </div>
+                                {post.status === 'SCHEDULED' && post.scheduledFor && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Scheduled
+                                  </Badge>
+                                )}
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className={`${getStatusColor(post.status)} text-xs border`}>
-                                {post.status}
-                              </Badge>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  {canSchedule && post.status === 'DRAFT' && (
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedPost(post);
-                                        setScheduleDialogOpen(true);
-                                      }}
-                                    >
-                                      <Calendar className="h-4 w-4 mr-2" />
-                                      Schedule
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => handleDeletePost(post.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0 space-y-4">
-                          <p className="text-muted-foreground text-sm line-clamp-3">
-                            {post.content || post.description || 'No description provided'}
-                          </p>
-
-                          {post.platforms && post.platforms.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {post.platforms.map((platform: string) => (
-                                <Badge key={platform} variant="outline" className="text-xs">
-                                  {platform}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between text-sm text-muted-foreground pt-3 border-t">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatDate(post.scheduledFor || post.createdAt)}</span>
-                            </div>
-                            {post.status === 'SCHEDULED' && post.scheduledFor && (
-                              <Badge variant="outline" className="text-xs">
-                                Scheduled
-                              </Badge>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )}
               </>
@@ -522,6 +554,51 @@ function AllPostsInner() {
             </Button>
             <Button onClick={handleSchedulePost} disabled={isScheduling}>
               {isScheduling ? 'Scheduling...' : 'Schedule Post'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Delete post
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently delete this post from the database and remove its media from storage. This action can’t be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {postToDelete ? (
+            <div className="rounded-lg border bg-muted/40 p-3">
+              <div className="text-sm font-semibold text-foreground truncate">
+                {postToDelete.title || "Untitled Post"}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Type: <span className="capitalize">{String(postToDelete.type || "")}</span> • Status: {String(postToDelete.status || "")}
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeletePost}
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {isDeleting ? "Deleting…" : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
