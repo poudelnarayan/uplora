@@ -19,6 +19,8 @@ export interface UploadItem {
 type EnqueueUploadOptions = {
   /** When provided, uploads into the canonical S3 folder for this existing video id (enables "replace video"). */
   videoId?: string;
+  /** When provided, use this object name in S3 instead of the local file name (enables overwriting the existing key). */
+  objectName?: string;
 };
 
 interface UploadContextValue {
@@ -112,7 +114,14 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         const presignResponse = await fetch("/api/s3/presign", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size, teamId, videoId: options?.videoId }),
+          body: JSON.stringify({
+            filename: file.name,
+            objectName: options?.objectName,
+            contentType: file.type || "application/octet-stream",
+            sizeBytes: file.size,
+            teamId,
+            videoId: options?.videoId,
+          }),
         });
         
         if (!presignResponse.ok) {
@@ -180,7 +189,13 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       const initResponse = await fetch("/api/s3/multipart/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type || "application/octet-stream", teamId, videoId: options?.videoId }),
+        body: JSON.stringify({
+          filename: file.name,
+          objectName: options?.objectName,
+          contentType: file.type || "application/octet-stream",
+          teamId,
+          videoId: options?.videoId,
+        }),
       });
       
       if (!initResponse.ok) {

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     // Read full body once
     const body = await req.json();
-    let { filename, contentType, sizeBytes, teamId, videoId } = body as { filename: string; contentType: string; sizeBytes?: number; teamId?: string | null; videoId?: string };
+    let { filename, objectName, contentType, sizeBytes, teamId, videoId } = body as { filename: string; objectName?: string; contentType: string; sizeBytes?: number; teamId?: string | null; videoId?: string };
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
 
     // Ensure user exists early
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build safe file name
-    const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
+    const safeName = String(typeof objectName === "string" && objectName.length > 0 ? objectName : filename).replace(/[^\w.\- ]+/g, "_");
 
     // Resolve/validate teamId: fallback to personal team when not provided
     if (!teamId) {

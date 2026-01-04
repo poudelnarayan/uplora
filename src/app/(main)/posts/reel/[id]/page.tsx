@@ -91,7 +91,7 @@ export default function ReelPostDetailsPage() {
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => router.push(`/posts/${encodeURIComponent(String(id))}/edit`)}>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => router.push(`/make-post/reel?edit=${encodeURIComponent(String(id))}`)}>
               <Edit className="h-4 w-4" />
               Edit
             </Button>

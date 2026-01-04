@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     // If replacing an existing video, preserve original ownership/team while updating media fields.
     const { data: existingVideo } = await supabaseAdmin
       .from("video_posts")
-      .select("id, userId, teamId")
+      .select("id, userId, teamId, filename")
       .eq("id", newVideoId)
       .maybeSingle();
 
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
         {
           id: newVideoId,
           key,
-          filename: title,
+          filename: existingVideo?.filename || title,
           contentType: inferredContentType,
           sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
           teamId: existingVideo?.teamId || finalTeamId,

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { filename, contentType, teamId, videoId } = body as { filename: string; contentType: string; teamId?: string | null; videoId?: string };
+    let { filename, contentType, teamId, videoId, objectName } = body as { filename: string; contentType: string; teamId?: string | null; videoId?: string; objectName?: string };
     if (!filename || !contentType) {
       return NextResponse.json({ error: "filename and contentType required" }, { status: 400 });
     }
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "S3 is not configured (S3_BUCKET/AWS_REGION)" }, { status: 500 });
     }
 
-    const safeName = String(filename).replace(/[^\w.\- ]+/g, "_");
+    const safeName = String(typeof objectName === "string" && objectName.length > 0 ? objectName : filename).replace(/[^\w.\- ]+/g, "_");
 
     // Get user details from Clerk and sync with Supabase
     const client = await clerkClient();

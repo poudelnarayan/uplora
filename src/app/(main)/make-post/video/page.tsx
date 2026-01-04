@@ -29,7 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
 import { Separator } from "@/app/components/ui/separator";
 import RichTextEditor from "@/app/components/editor/RichTextEditor";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { InlineSpinner } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
@@ -81,6 +81,9 @@ const ExpandableDescription = ({ description, formatContent }: ExpandableDescrip
 
 const MakePostVideos = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditMode = Boolean(editId);
   const notifications = useNotifications();
   const { selectedTeamId } = useTeam();
   const { uploads, enqueueUpload, cancelUpload } = useUploads();
@@ -100,6 +103,9 @@ const MakePostVideos = () => {
   const [subscriberCount, setSubscriberCount] = useState<string | null>(null);
   const [s3Key, setS3Key] = useState<string | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [originalS3Key, setOriginalS3Key] = useState<string | null>(null);
+  const [editObjectName, setEditObjectName] = useState<string | null>(null);
+  const [editTeamId, setEditTeamId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
   const [savedThumbnailKey, setSavedThumbnailKey] = useState<string | null>(null);
@@ -147,14 +153,21 @@ const MakePostVideos = () => {
       fileRef.current = file;
       // Reset previous upload identifiers when selecting a new file
       setS3Key(null);
-      setVideoId(null);
+      setVideoId(isEditMode && editId ? editId : null);
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedVideo(e.target?.result as string);
       };
       reader.readAsDataURL(file);
       // Start uploading immediately (multipart/direct handled by UploadContext)
-      const id = enqueueUpload(file, selectedTeamId);
+      const uploadTeamId = editTeamId ?? selectedTeamId;
+      const id = enqueueUpload(
+        file,
+        uploadTeamId,
+        isEditMode && editId
+          ? { videoId: editId, objectName: editObjectName || undefined }
+          : undefined
+      );
       setActiveUploadItemId(id);
       notifications.addNotification({
         type: "success",
@@ -162,7 +175,7 @@ const MakePostVideos = () => {
         message: "You can navigate anywhere—upload will continue in the background.",
       });
     }
-  }, [enqueueUpload, selectedTeamId, notifications]);
+  }, [enqueueUpload, selectedTeamId, editId, isEditMode, editObjectName, editTeamId, notifications]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -170,14 +183,21 @@ const MakePostVideos = () => {
       fileRef.current = file;
       // Reset previous upload identifiers when selecting a new file
       setS3Key(null);
-      setVideoId(null);
+      setVideoId(isEditMode && editId ? editId : null);
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedVideo(e.target?.result as string);
       };
       reader.readAsDataURL(file);
       // Start uploading immediately (multipart/direct handled by UploadContext)
-      const id = enqueueUpload(file, selectedTeamId);
+      const uploadTeamId = editTeamId ?? selectedTeamId;
+      const id = enqueueUpload(
+        file,
+        uploadTeamId,
+        isEditMode && editId
+          ? { videoId: editId, objectName: editObjectName || undefined }
+          : undefined
+      );
       setActiveUploadItemId(id);
       notifications.addNotification({
         type: "success",
@@ -296,13 +316,66 @@ const MakePostVideos = () => {
         message: activeUpload.error || "Please try again.",
       });
     } else if (activeUpload.status === "cancelled") {
+      if (isEditMode && editId && originalS3Key) {
+        setS3Key(originalS3Key);
+        setVideoId(editId);
+      }
       notifications.addNotification({
         type: "warning",
         title: "Upload cancelled",
         message: "Upload was cancelled.",
       });
     }
-  }, [activeUpload, notifications]);
+  }, [activeUpload, notifications, editId, isEditMode, originalS3Key]);
+
+  // Edit mode: preload existing video + metadata into the same editor used on Dashboard
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch(`/api/videos/${encodeURIComponent(String(editId))}`, { cache: "no-store" });
+        const v = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(v?.error || "Failed to load video");
+        if (cancelled) return;
+
+        const currentKey = typeof v?.key === "string" ? v.key : null;
+        const currentFilename = typeof v?.filename === "string" ? v.filename : "";
+        const cleanTitle = currentFilename.replace(/\s*\[WEB:[^\]]+\]/, "").replace(/\.[^/.]+$/, "");
+
+        setVideoId(String(editId));
+        setS3Key(currentKey);
+        setOriginalS3Key(currentKey);
+        setEditTeamId(typeof v?.teamId === "string" ? v.teamId : null);
+        setEditObjectName(currentKey ? String(currentKey).split("/").pop() || null : null);
+        setTitle(cleanTitle || "");
+        setDescription(typeof v?.description === "string" ? v.description : "");
+        setPrivacy(typeof v?.visibility === "string" ? v.visibility : "public");
+
+        // Thumbnail: show existing thumbnail if present
+        if (typeof v?.thumbnailKey === "string" && v.thumbnailKey) {
+          try {
+            const thumbRes = await fetch(`/api/s3/get-url?key=${encodeURIComponent(v.thumbnailKey)}`, { cache: "no-store" });
+            const thumbJson = await thumbRes.json().catch(() => ({}));
+            if (!cancelled && thumbRes.ok && thumbJson?.url) {
+              setSelectedThumbnail(thumbJson.url);
+            }
+          } catch {}
+        }
+      } catch (e) {
+        if (!cancelled) {
+          notifications.addNotification({
+            type: "error",
+            title: "Failed to load edit data",
+            message: e instanceof Error ? e.message : "Please try again",
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, notifications]);
 
   const persistVideoMeta = async () => {
     if (!videoId) {
@@ -479,7 +552,7 @@ const MakePostVideos = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {!selectedVideo ? (
+                {!(selectedVideo || previewVideoUrl) ? (
                   <div
                     className={`border-2 border-dashed rounded-lg h-48 flex flex-col items-center justify-center transition-all ${
                       dragActive 
@@ -510,7 +583,7 @@ const MakePostVideos = () => {
                 ) : (
                   <div className="bg-black rounded-lg overflow-hidden group relative">
                     <video
-                      src={selectedVideo}
+                      src={selectedVideo || previewVideoUrl || undefined}
                       controls
                       className="w-full h-40 object-contain"
                     />
@@ -521,8 +594,14 @@ const MakePostVideos = () => {
                       onClick={() => {
                         setSelectedVideo(null);
                         fileRef.current = null;
-                        setS3Key(null);
-                        setVideoId(null);
+                        // If we were editing an existing video, revert to the original uploaded video.
+                        if (isEditMode && editId && originalS3Key) {
+                          setS3Key(originalS3Key);
+                          setVideoId(editId);
+                        } else {
+                          setS3Key(null);
+                          setVideoId(null);
+                        }
                       }}
                     >
                       <X className="h-4 w-4" />

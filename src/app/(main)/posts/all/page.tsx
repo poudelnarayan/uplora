@@ -473,7 +473,12 @@ function AllPostsInner() {
                                         <Eye className="h-4 w-4 mr-2" />
                                         View
                                       </DropdownMenuItem>
-                                      <DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          router.push(`/make-post/${encodeURIComponent(String(post.type))}?edit=${encodeURIComponent(String(post.id))}`);
+                                        }}
+                                      >
                                         <Edit className="h-4 w-4 mr-2" />
                                         Edit
                                       </DropdownMenuItem>
