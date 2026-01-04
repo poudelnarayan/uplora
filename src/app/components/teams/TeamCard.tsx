@@ -4,14 +4,11 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Eye,
-  UserPlus,
   Loader2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu";
 import { Separator } from "@/app/components/ui/separator";
 import { PlatformIcon } from "./PlatformIcon";
@@ -23,7 +20,7 @@ interface Team {
   description: string;
   platforms: string[];
   members_data: Array<{
-    id: number;
+    id: string;
     name: string;
     email: string;
     role: string;
@@ -38,12 +35,11 @@ interface TeamCardProps {
   index: number;
   onEdit: (team: Team) => void;
   onDelete: (teamId: number) => void;
-  onInviteMember: (teamId: number) => void;
   onViewTeam: (team: Team) => void;
   isDeleting?: boolean;
 }
 
-export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onViewTeam, isDeleting = false }: TeamCardProps) => {
+export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting = false }: TeamCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -59,7 +55,18 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
           </div>
         </div>
       )}
-      <Card className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 group">
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={() => onViewTeam(team)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onViewTeam(team);
+          }
+        }}
+        className="h-full bg-card/50 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300 group cursor-pointer"
+      >
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
@@ -73,33 +80,21 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
                 <CardDescription className="text-sm">
                   {team.members_data.length} member{team.members_data.length !== 1 ? 's' : ''}
                 </CardDescription>
-                {team.members_data && team.members_data.length > 0 && (
-                  <div className="flex -space-x-2 mt-2">
-                    {team.members_data.slice(0, 5).map((member) => (
-                      <Avatar key={member.id} className="border-2 border-background h-7 w-7" title={member.name}>
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback className="text-xs bg-muted">
-                          {member.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {team.members_data.length > 5 && (
-                      <div className="h-7 w-7 rounded-full border-2 border-background bg-muted flex items-center justify-center" title={`+${team.members_data.length - 5} more`}>
-                        <span className="text-xs font-medium">+{team.members_data.length - 5}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem onClick={() => onEdit(team)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Team
@@ -142,13 +137,6 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onInviteMember, onView
           </div>
 
           <Separator />
-
-          <div className="flex justify-center">
-            <Button size="sm" variant="outline" className="gap-2" onClick={() => onViewTeam(team)}>
-              <Eye className="h-4 w-4" />
-              View Team
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </motion.div>

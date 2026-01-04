@@ -38,11 +38,12 @@ export async function PATCH(
         return createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found");
       }
 
-      // Load member
+      // Load member (memberId is userId in the UI)
       const { data: member, error: memErr } = await supabaseAdmin
         .from('team_members')
         .select('id, userId, teamId')
-        .eq('id', memberId)
+        .eq('teamId', teamId)
+        .eq('userId', memberId)
         .single();
       if (memErr || !member || member.teamId !== teamId) {
         return createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found");
@@ -56,17 +57,18 @@ export async function PATCH(
       const { error: updErr } = await supabaseAdmin
         .from('team_members')
         .update({ status: requestedStatus, updatedAt: new Date().toISOString() })
-        .eq('id', memberId);
+        .eq('teamId', teamId)
+        .eq('userId', memberId);
       if (updErr) {
         return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to update member status");
       }
 
       broadcast({
         type: "team.member.updated",
-        payload: { memberId, status: requestedStatus, teamId }
+        payload: { userId: memberId, status: requestedStatus, teamId }
       });
 
-      return createSuccessResponse({ id: memberId, status: requestedStatus });
+      return createSuccessResponse({ userId: memberId, status: requestedStatus });
     });
 
     const httpStatus = result.ok ? 200 : 403;
@@ -101,11 +103,12 @@ export async function DELETE(
         return createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found");
       }
 
-      // Load member
+      // Load member (memberId is userId in the UI)
       const { data: member, error: memErr } = await supabaseAdmin
         .from('team_members')
         .select('id, userId, teamId')
-        .eq('id', memberId)
+        .eq('teamId', teamId)
+        .eq('userId', memberId)
         .single();
       if (memErr || !member || member.teamId !== teamId) {
         return createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found");
@@ -127,7 +130,8 @@ export async function DELETE(
       const { error: delErr } = await supabaseAdmin
         .from('team_members')
         .delete()
-        .eq('id', memberId);
+        .eq('teamId', teamId)
+        .eq('userId', memberId);
       if (delErr) {
         return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to remove member");
       }
@@ -159,7 +163,7 @@ export async function DELETE(
       // Broadcast member removal
       broadcast({
         type: "team.member.removed",
-        payload: { memberId, teamId }
+        payload: { userId: memberId, teamId }
       });
 
       return createSuccessResponse({ ok: true });

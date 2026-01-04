@@ -30,7 +30,7 @@ import { PlatformIcon, platformIcons } from "./PlatformIcon";
 import { useToast } from "@/hooks/use-toast";
 
 interface TeamMember {
-  id: number;
+  id: string; // userId
   name: string;
   email: string;
   role: string;
@@ -40,6 +40,7 @@ interface TeamMember {
 
 interface Team {
   id: number;
+  backendId?: string;
   name: string;
   description: string;
   platforms: string[];
@@ -51,7 +52,7 @@ interface TeamDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   team: Team | null;
-  onRemoveMember: (teamId: number, memberId: number) => void;
+  onRemoveMember: (teamId: number, memberUserId: string) => void;
   onEditTeam: (team: Team) => void;
   onInviteMember: (teamId: number) => void;
   onUpdateTeam: (teamId: number, updates: Partial<Team>) => void;
@@ -102,9 +103,9 @@ export const TeamDetailsDialog = ({
     return connected.filter((p) => !team?.platforms?.includes(p));
   }, [connectedPlatforms, team?.platforms]);
 
-  const handleRemoveMember = (memberId: number, memberName: string) => {
+  const handleRemoveMember = (memberUserId: string, memberName: string) => {
     if (team) {
-      onRemoveMember(team.id, memberId);
+      onRemoveMember(team.id, memberUserId);
       toast({
         title: "Member Removed",
         description: `${memberName} has been removed from ${team.name}`

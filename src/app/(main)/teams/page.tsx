@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Eye, Loader2 } from "lucide-react";
+import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 import { Separator } from "@/app/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +20,7 @@ import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
 
 interface TeamMember {
-  id: number;
+  id: string; // userId
   name: string;
   email: string;
   role: string;
@@ -82,7 +81,7 @@ const Teams = () => {
     description: t.description || '',
     platforms: (t as any).platforms || [],
     members_data: ((t as any).members_data || []).map((m: any, idx: number) => ({
-      id: idx + 1,
+      id: String(m?.id || ''),
       name: m?.name || '',
       email: m?.email || '',
       role: m?.role || 'MEMBER',
@@ -236,13 +235,40 @@ const Teams = () => {
   };
 
 
-  const handleRemoveMember = useCallback((teamId: number, memberId: number) => {
-    // Note: This is for local updates only. For server updates, use refreshTeams()
-    toast({
-      title: "Member Removed",
-      description: "Member has been removed from the team"
-    });
-  }, [toast]);
+  const handleRemoveMember = useCallback(async (teamId: number, memberUserId: string) => {
+    const t = teams.find((x) => x.id === teamId);
+    if (!t?.backendId) {
+      toast({ title: "Remove failed", description: "Team ID missing. Please refresh.", variant: "destructive" });
+      return;
+    }
+    if (!memberUserId) {
+      toast({ title: "Remove failed", description: "Member ID missing.", variant: "destructive" });
+      return;
+    }
+    try {
+      const res = await fetch(`/api/teams/${encodeURIComponent(String(t.backendId))}/members/${encodeURIComponent(String(memberUserId))}`, {
+        method: "DELETE",
+      });
+      const js = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(js?.message || js?.error || "Failed to remove member");
+      toast({ title: "Member removed", description: "User has been removed from the team." });
+      await refreshTeams(true);
+    } catch (e) {
+      toast({
+        title: "Remove failed",
+        description: e instanceof Error ? e.message : "Please try again",
+        variant: "destructive",
+      });
+      await refreshTeams(true);
+    }
+  }, [teams, toast, refreshTeams]);
+
+  // If a team is being viewed while data refreshes, keep the dialog in sync with the latest team object.
+  useEffect(() => {
+    if (!viewingTeam?.backendId) return;
+    const next = teams.find((t) => t.backendId === viewingTeam.backendId);
+    if (next && next !== viewingTeam) setViewingTeam(next);
+  }, [contextTeams, viewingTeam?.backendId]);
 
   const openInviteDialog = (teamId?: number) => {
     setSelectedTeamForInvite(teamId);
@@ -314,7 +340,18 @@ const Teams = () => {
             ) : teams.length === 1 ? (
           // Special expanded layout for single team
           <div className="col-span-full">
-            <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300">
+            <Card
+              role="button"
+              tabIndex={0}
+              onClick={() => setViewingTeam(teams[0])}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setViewingTeam(teams[0]);
+                }
+              }}
+              className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50 hover:shadow-xl transition-all duration-300 cursor-pointer"
+            >
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4 flex-1">
@@ -338,33 +375,17 @@ const Teams = () => {
                           </span>
                         </div>
                       </div>
-                      {teams[0].members_data && teams[0].members_data.length > 0 && (
-                        <div className="flex -space-x-2 mt-3">
-                          {teams[0].members_data.slice(0, 6).map((member: TeamMember) => (
-                            <Avatar key={member.id} className="border-2 border-background h-8 w-8" title={member.name}>
-                              <AvatarImage src={member.avatar} />
-                              <AvatarFallback className="text-xs bg-muted">
-                                {member.name.split(' ').map((n: string) => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                          ))}
-                          {teams[0].members_data.length > 6 && (
-                            <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center" title={`+${teams[0].members_data.length - 6} more`}>
-                              <span className="text-xs font-medium">+{teams[0].members_data.length - 6}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {/* Member details are shown in Team Details only */}
                     </div>
                   </div>
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem onClick={() => setEditingTeam(teams[0])}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Team
@@ -414,51 +435,10 @@ const Teams = () => {
                     </div>
                   </div>
 
-                  {/* Team Members */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
-                      <Users className="h-4 w-4 text-primary" />
-                      Team Members
-                    </h3>
-                    {teams[0].members_data.length > 0 ? (
-                      <div className="space-y-2">
-                        {teams[0].members_data.slice(0, 3).map((member: TeamMember) => (
-                          <div key={member.id} className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={member.avatar} />
-                              <AvatarFallback className="text-xs">
-                                {member.name.split(' ').map((n: string) => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{member.name}</p>
-                              <p className="text-xs text-muted-foreground">{member.role}</p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              {member.platforms.length} platforms
-                            </Badge>
-                          </div>
-                        ))}
-                        {teams[0].members_data.length > 3 && (
-                          <p className="text-xs text-muted-foreground">
-                            +{teams[0].members_data.length - 3} more members
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No members yet</p>
-                    )}
-                  </div>
+                  {/* Team Members details are shown in Team Details only */}
                 </div>
 
                 <Separator />
-
-                <div className="flex justify-center">
-                  <Button variant="outline" className="gap-2" onClick={() => setViewingTeam(teams[0])}>
-                    <Eye className="h-4 w-4" />
-                    View Team Details
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -470,7 +450,6 @@ const Teams = () => {
               index={index}
               onEdit={(t) => setEditingTeam(t)}
               onDelete={handleDeleteTeam}
-              onInviteMember={openInviteDialog}
               onViewTeam={(t) => setViewingTeam(t)}
               isDeleting={deletingTeamId === team.id}
             />
