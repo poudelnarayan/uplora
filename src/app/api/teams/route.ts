@@ -302,8 +302,8 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('team_members.userId', user.id)
-      // Be tolerant of legacy casing/nulls so non-admin members still see their teams.
-      .in('team_members.status', ['ACTIVE', 'active', ''])
+      // Do NOT filter by status at the SQL level using string values (status is an enum).
+      // We'll filter ACTIVE rows safely in JS below to avoid enum cast errors.
       .order('createdAt', { ascending: false });
 
     if (memberError) {
@@ -335,13 +335,15 @@ export async function GET(request: NextRequest) {
             image
           )
         `)
-        .in("teamId", teamIds)
-        .in("status", ["ACTIVE", "active", ""]);
+        .in("teamId", teamIds);
 
       if (membersError) {
         console.error("Team members fetch error:", membersError);
       } else {
         for (const row of memberRows || []) {
+          // Only count ACTIVE members in members_data
+          const status = String((row as any).status || "").toUpperCase();
+          if (status !== "ACTIVE") continue;
           const teamId = (row as any).teamId as string;
           const u = (row as any).users || {};
           const list = membersByTeamId.get(teamId) || [];
@@ -359,6 +361,9 @@ export async function GET(request: NextRequest) {
 
     const formattedTeams = uniqueTeams.map(team => {
       const members_data = membersByTeamId.get(team.id) || [];
+      const activeMembership = Array.isArray((team as any).team_members)
+        ? (team as any).team_members.find((m: any) => String(m?.status || "").toUpperCase() === "ACTIVE")
+        : null;
       return {
         id: team.id,
         name: team.name,
@@ -370,7 +375,7 @@ export async function GET(request: NextRequest) {
         ownerId: team.ownerId,
         isOwner: team.ownerId === user.id,
         role: team.ownerId === user.id ? 'OWNER' :
-          (team as any).team_members?.[0]?.role || 'MEMBER',
+          activeMembership?.role || (team as any).team_members?.[0]?.role || 'MEMBER',
         members_data,
         memberCount: members_data.length,
       };
