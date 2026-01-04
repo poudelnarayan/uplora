@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useCallback, useEffect, useRef } from "react";
+import { Suspense, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { 
@@ -85,8 +85,9 @@ const MakePostVideosInner = () => {
   const editId = searchParams.get("edit");
   const isEditMode = Boolean(editId);
   const notifications = useNotifications();
-  const { selectedTeamId } = useTeam();
+  const { teams, personalTeam, selectedTeamId, setSelectedTeamId } = useTeam();
   const { uploads, enqueueUpload, cancelUpload } = useUploads();
+  const [uploadTeamId, setUploadTeamId] = useState<string | null>(selectedTeamId);
   const [dragActive, setDragActive] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const fileRef = useRef<File | null>(null);
@@ -115,6 +116,25 @@ const MakePostVideosInner = () => {
   const [activeUploadItemId, setActiveUploadItemId] = useState<string | null>(null);
   const activeUpload = activeUploadItemId ? uploads.find((u) => u.id === activeUploadItemId) || null : null;
   const lastNotifiedStatus = useRef<Record<string, string>>({});
+
+  const selectableTeams = useMemo(() => {
+    const list = [];
+    if (personalTeam) list.push(personalTeam);
+    for (const t of teams || []) list.push(t);
+    return list;
+  }, [teams, personalTeam]);
+
+  const effectiveTeamId = editTeamId ?? uploadTeamId ?? selectedTeamId;
+  const effectiveTeam = useMemo(() => {
+    if (!effectiveTeamId) return null;
+    if (personalTeam?.id === effectiveTeamId) return personalTeam;
+    return (teams || []).find((t) => t.id === effectiveTeamId) || null;
+  }, [effectiveTeamId, personalTeam, teams]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    setUploadTeamId(selectedTeamId);
+  }, [selectedTeamId, isEditMode]);
 
   const categories = [
     { value: "education", label: "Education" },
@@ -173,7 +193,15 @@ const MakePostVideosInner = () => {
       localPreviewUrlRef.current = objectUrl;
       setSelectedVideo(objectUrl);
       // Start uploading immediately (multipart/direct handled by UploadContext)
-      const uploadTeamId = editTeamId ?? selectedTeamId;
+      const uploadTeamId = editTeamId ?? effectiveTeamId;
+      if (!uploadTeamId) {
+        notifications.addNotification({
+          type: "error",
+          title: "Select a team",
+          message: "Please select a team/workspace before uploading.",
+        });
+        return;
+      }
       const id = enqueueUpload(
         file,
         uploadTeamId,
@@ -188,7 +216,7 @@ const MakePostVideosInner = () => {
         message: "You can navigate anywhere—upload will continue in the background.",
       });
     }
-  }, [enqueueUpload, selectedTeamId, editId, isEditMode, editObjectName, editTeamId, notifications]);
+  }, [enqueueUpload, effectiveTeamId, editId, isEditMode, editObjectName, editTeamId, notifications]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -204,7 +232,15 @@ const MakePostVideosInner = () => {
       localPreviewUrlRef.current = objectUrl;
       setSelectedVideo(objectUrl);
       // Start uploading immediately (multipart/direct handled by UploadContext)
-      const uploadTeamId = editTeamId ?? selectedTeamId;
+      const uploadTeamId = editTeamId ?? effectiveTeamId;
+      if (!uploadTeamId) {
+        notifications.addNotification({
+          type: "error",
+          title: "Select a team",
+          message: "Please select a team/workspace before uploading.",
+        });
+        return;
+      }
       const id = enqueueUpload(
         file,
         uploadTeamId,
@@ -525,6 +561,29 @@ const MakePostVideosInner = () => {
             </div>
             
             <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Uploading to</span>
+                <Select
+                  value={effectiveTeamId || undefined}
+                  onValueChange={(v) => {
+                    if (isEditMode) return;
+                    setUploadTeamId(v);
+                    setSelectedTeamId(v);
+                  }}
+                  disabled={isEditMode}
+                >
+                  <SelectTrigger className="h-9 w-[220px]">
+                    <SelectValue placeholder="Select team/workspace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectableTeams.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -662,7 +721,22 @@ const MakePostVideosInner = () => {
                           onClick={() => {
                             const f = fileRef.current;
                             if (!f) return;
-                            const id = enqueueUpload(f, selectedTeamId);
+                            const uploadTeamId = editTeamId ?? effectiveTeamId;
+                            if (!uploadTeamId) {
+                              notifications.addNotification({
+                                type: "error",
+                                title: "Select a team",
+                                message: "Please select a team/workspace before uploading.",
+                              });
+                              return;
+                            }
+                            const id = enqueueUpload(
+                              f,
+                              uploadTeamId,
+                              isEditMode && editId
+                                ? { videoId: editId, objectName: editObjectName || undefined }
+                                : undefined
+                            );
                             setActiveUploadItemId(id);
                           }}
                           className="shrink-0"

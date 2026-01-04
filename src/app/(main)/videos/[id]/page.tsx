@@ -260,6 +260,7 @@ export default function VideoPreviewPage() {
             const statusMessages = {
               'PROCESSING': 'Video is back in editing mode',
               'PENDING': 'Video is awaiting approval',
+              'APPROVED': 'Video is approved and ready to publish',
               'PUBLISHED': 'Video has been published'
             } as const;
             const key = evt?.payload?.status as keyof typeof statusMessages | undefined;
@@ -699,8 +700,8 @@ export default function VideoPreviewPage() {
         setVideo({ ...video, status: "PENDING" });
         notifications.addNotification({
           type: "success",
-          title: "✅ Publish request sent!",
-          message: "The team owner will be notified via email"
+          title: "✅ Approval request sent!",
+          message: "Owner/admins have been notified."
         });
       } else {
         throw new Error("Failed to send request");
@@ -716,7 +717,7 @@ export default function VideoPreviewPage() {
     }
   };
 
-  const approveVideo = async () => {
+  const approveOrPublish = async () => {
     if (!video) return;
     setSubmitting(true);
     try {
@@ -733,14 +734,23 @@ export default function VideoPreviewPage() {
       });
       
       if (response.ok) {
-        const result = await response.json();
-        setVideo({ ...video, status: "PUBLISHED" });
-        notifications.addNotification({
-          type: "success",
-          title: "✅ Video published to YouTube!",
-          message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
-        });
-        router.push("/dashboard");
+        const result = await response.json().catch(() => ({}));
+        if (result?.status === "APPROVED") {
+          setVideo({ ...video, status: "APPROVED" });
+          notifications.addNotification({
+            type: "success",
+            title: "Approved",
+            message: "This video is approved. A manager can now publish it to YouTube.",
+          });
+        } else {
+          setVideo({ ...video, status: "PUBLISHED" });
+          notifications.addNotification({
+            type: "success",
+            title: "✅ Video published to YouTube!",
+            message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
+          });
+          router.push("/dashboard");
+        }
       } else {
         const error = await response.json();
         throw new Error(error.error || "Failed to approve");
@@ -748,7 +758,7 @@ export default function VideoPreviewPage() {
     } catch (error) {
       notifications.addNotification({
         type: "error",
-        title: "❌ Publishing failed", 
+        title: "❌ Action failed", 
         message: error instanceof Error ? error.message : "Could not publish video to YouTube"
       });
     } finally {
@@ -1255,14 +1265,15 @@ export default function VideoPreviewPage() {
                       'Saved'
                     )}
                   </button>
-                  {role === "EDITOR" && (video.status === "PROCESSING" || !video.status) && (
+                  {(role === "EDITOR" || role === "MANAGER") && (video.status === "PROCESSING" || !video.status) && (
                     <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                      {submitting ? "Sending Request..." : "📧 Request for Publish"}
+                      {submitting ? "Sending Request..." : "📧 Request approval"}
                     </button>
                   )}
-                  {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                    <button className="btn btn-primary" disabled={submitting} onClick={approveVideo}>
-                      {submitting ? 'Publishing...' : 'Publish to YouTube'}
+                  {/* Owner/Admin can publish anytime; Manager can publish only when APPROVED */}
+                  {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
+                    <button className="btn btn-primary" disabled={submitting} onClick={approveOrPublish}>
+                      {submitting ? 'Working...' : 'Publish to YouTube'}
                     </button>
                   )}
                 </div>
@@ -1389,7 +1400,18 @@ export default function VideoPreviewPage() {
                     {role === "EDITOR" ? (
                       <span>Awaiting publish — edits are locked. The owner can send this back for editing.</span>
                     ) : (
-                      <span>Approve and publish, or send back for editing to unlock editor changes.</span>
+                      <span>Approve this request to allow a manager to publish. Or send back for editing to unlock editor changes.</span>
+                    )}
+                  </div>
+                )}
+                {video.status === "APPROVED" && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {role === "MANAGER" ? (
+                      <span>Approved — you can publish to YouTube now.</span>
+                    ) : role === "OWNER" || role === "ADMIN" ? (
+                      <span>Approved — a manager can publish now (or you can publish anytime).</span>
+                    ) : (
+                      <span>Approved — waiting for a manager to publish.</span>
                     )}
                   </div>
                 )}
@@ -1397,30 +1419,35 @@ export default function VideoPreviewPage() {
                 {/* Row 3: Actions */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     {/* Editor: request publish for team videos */}
-                    {role === "EDITOR" && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                        {submitting ? "Sending Request..." : "📧 Request for Publish"}
+                        {submitting ? "Sending Request..." : "📧 Request approval"}
                       </button>
                     )}
                     
                     {/* Personal workspace: direct publish (treat OWNER as personal owner) */}
                     {!video.teamId && role === "OWNER" && (video.status === "PROCESSING" || !video.status) && (
-                      <button className="btn btn-success" disabled={submitting} onClick={() => approveVideo()}>
-                        {submitting ? "Publishing..." : "🚀 Publish to YouTube"}
+                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
+                        {submitting ? "Working..." : "🚀 Publish to YouTube"}
                       </button>
                     )}
                     {/* Team video: allow Owner/Admin/Manager to publish directly while PROCESSING */}
-                    {video.teamId && (role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (video.status === "PROCESSING" || !video.status) && (
-                      <button className="btn btn-success" disabled={submitting} onClick={() => approveVideo()}>
-                        {submitting ? "Publishing..." : "🚀 Publish to YouTube"}
+                    {video.teamId && (role === "OWNER" || role === "ADMIN") && (video.status === "PROCESSING" || !video.status || video.status === "APPROVED") && (
+                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
+                        {submitting ? "Working..." : "🚀 Publish to YouTube"}
+                      </button>
+                    )}
+                    {video.teamId && role === "MANAGER" && video.status === "APPROVED" && (
+                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
+                        {submitting ? "Working..." : "🚀 Publish to YouTube"}
                       </button>
                     )}
                     
                     {/* Owner/Admin/Manager actions for team videos while pending */}
-                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && video.teamId && video.status === "PENDING" && (
+                    {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === "PENDING" && (
                       <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <button className="btn btn-success sm:order-1" disabled={submitting} onClick={() => approveVideo()}>
-                          {submitting ? "Approving..." : "✅ Approve & Publish"}
+                        <button className="btn btn-success sm:order-1" disabled={submitting} onClick={() => approveOrPublish()}>
+                          {submitting ? "Approving..." : "✅ Approve"}
                         </button>
                         {role === "OWNER" && (
                           <button

@@ -1,8 +1,8 @@
 "use client";
 
-import { CheckCircle, Clock, AlertCircle, Loader } from "lucide-react";
+import { CheckCircle, Clock, Check, Loader } from "lucide-react";
 
-type Status = "PROCESSING" | "PENDING" | "PUBLISHED";
+type Status = "PROCESSING" | "PENDING" | "APPROVED" | "PUBLISHED";
 
 export function StatusChip({ status }: { status: Status }) {
   const baseClasses = "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition-all duration-200";
@@ -22,6 +22,15 @@ export function StatusChip({ status }: { status: Status }) {
       <span className={`${baseClasses} bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700`} style={fontStyle}>
         <Clock className="w-4 h-4" />
         Awaiting Approval
+      </span>
+    );
+  }
+
+  if (status === "APPROVED") {
+    return (
+      <span className={`${baseClasses} bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700`} style={fontStyle}>
+        <Check className="w-4 h-4" />
+        Approved
       </span>
     );
   }

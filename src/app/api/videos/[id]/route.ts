@@ -188,8 +188,8 @@ export async function PATCH(
     
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // If video is awaiting publish, only owner can edit (uploader for personal, team owner for team videos)
-    if (video.status === 'PENDING') {
+    // If video is awaiting approval/publish, lock edits for non-owners (uploader for personal, team owner for team videos)
+    if (String(video.status || "").toUpperCase() === 'PENDING' || String(video.status || "").toUpperCase() === 'APPROVED') {
       let isOwner = video.userId === user.id;
       if (video.teamId && !isOwner) {
         // use previously fetched team when available
@@ -204,7 +204,7 @@ export async function PATCH(
         if (team?.ownerId === user.id) isOwner = true;
       }
       if (!isOwner) {
-        return NextResponse.json({ error: "Awaiting publish. Only the owner can edit." }, { status: 403 });
+        return NextResponse.json({ error: "Video is locked for review/publish. Only the owner can edit." }, { status: 403 });
       }
     }
 

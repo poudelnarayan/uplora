@@ -69,8 +69,9 @@ export async function POST(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Authorization: allow team owner for team videos, and owner for personal videos
+    // Authorization + workflow rules (team vs personal)
     let team: any = null;
+    let callerRole: "OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | "MEMBER" | null = null;
     if (video.teamId) {
       const { data: t, error: teamError } = await supabaseAdmin
         .from('teams')
@@ -81,21 +82,96 @@ export async function POST(
         return NextResponse.json({ error: "Team not found" }, { status: 404 });
       }
       team = t;
-      // Allow Owner, Admin, and Manager to approve/publish for the team.
-      // Owner is determined by teams.ownerId, others by team_members.role.
-      if (team.ownerId !== me.id) {
+      if (team.ownerId === me.id) {
+        callerRole = "OWNER";
+      } else {
         const { data: membership } = await supabaseAdmin
           .from("team_members")
           .select("role,status")
           .eq("teamId", team.id)
           .eq("userId", me.id)
           .single();
-        const role = (membership as any)?.role;
-        const status = (membership as any)?.status;
-        const canApprove = status === "ACTIVE" && (role === "ADMIN" || role === "MANAGER");
-        if (!canApprove) {
-          return NextResponse.json({ error: "Only team owner/admin/manager can approve videos" }, { status: 403 });
+        const role = (membership as any)?.role as string | undefined;
+        const mStatus = (membership as any)?.status as string | undefined;
+        if (mStatus !== "ACTIVE") {
+          return NextResponse.json({ error: "Not an active member of this team" }, { status: 403 });
         }
+        callerRole = (role as any) || "MEMBER";
+      }
+
+      // PENDING -> APPROVED (approve step) by owner/admin only; no publishing at this stage.
+      if (String(video.status || "").toUpperCase() === "PENDING") {
+        if (callerRole !== "OWNER" && callerRole !== "ADMIN") {
+          return NextResponse.json({ error: "Only owner/admin can approve a pending video" }, { status: 403 });
+        }
+        const { data: approved, error: approveErr } = await supabaseAdmin
+          .from('video_posts')
+          .update({
+            status: "APPROVED",
+            approvedByUserId: me.id,
+            updatedAt: new Date().toISOString(),
+          })
+          .eq('id', video.id)
+          .select()
+          .single();
+        if (approveErr) {
+          return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
+        }
+        // Notify requester (best-effort)
+        try {
+          if (video.requestedByUserId) {
+            const { data: requester } = await supabaseAdmin
+              .from('users')
+              .select('email,name')
+              .eq('id', video.requestedByUserId)
+              .single();
+            if (requester?.email) {
+              const videoTitle = String(video.filename || "").replace(/\.[^/.]+$/, '');
+              const videoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/videos/${video.id}`;
+              await sendMail({
+                to: requester.email,
+                subject: `✅ Approved: ${videoTitle}`,
+                text: [
+                  `Your video has been approved.`,
+                  ``,
+                  `Video: ${videoTitle}`,
+                  `Link: ${videoUrl}`,
+                  ``,
+                  `Next step: a manager can publish this video to YouTube.`,
+                ].join("\n"),
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>✅ Video Approved</h2>
+                    <p><strong>Video:</strong> ${videoTitle}</p>
+                    <p><strong>Link:</strong> <a href="${videoUrl}">${videoUrl}</a></p>
+                    <p>Next step: a manager can publish this video to YouTube.</p>
+                  </div>
+                `,
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Failed to notify requester about approval:", e);
+        }
+        broadcast({ type: "video.status", teamId: video.teamId || null, payload: { id: video.id, status: "APPROVED" } });
+        return NextResponse.json({ ok: true, status: "APPROVED", video: approved });
+      }
+
+      // Publishing permissions (team):
+      // - Owner/Admin: can publish anytime (no approval required)
+      // - Manager: can publish only after approval (status APPROVED)
+      // - Editor: cannot publish
+      const upperStatus = String(video.status || "PROCESSING").toUpperCase();
+      const canPublishAsOwnerAdmin = callerRole === "OWNER" || callerRole === "ADMIN";
+      const canPublishAsManager = callerRole === "MANAGER" && upperStatus === "APPROVED";
+      if (!canPublishAsOwnerAdmin && !canPublishAsManager) {
+        if (callerRole === "EDITOR") {
+          return NextResponse.json({ error: "Editors must request approval; they cannot publish to YouTube." }, { status: 403 });
+        }
+        if (callerRole === "MANAGER") {
+          return NextResponse.json({ error: "Managers can publish only after owner/admin approval." }, { status: 403 });
+        }
+        return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
       }
     } else {
       // personal video: only the owner/uploader can publish
@@ -107,12 +183,20 @@ export async function POST(
     // Parse YouTube metadata from request
     const { title, description, privacyStatus, madeForKids } = await req.json().catch(() => ({ }));
 
+    // Choose which YouTube account to publish with:
+    // - Personal videos: current user
+    // - Team videos: team owner (centralized team account)
+    const publisherUserId = video.teamId ? String(team?.ownerId || "") : userId;
+    if (!publisherUserId) {
+      return NextResponse.json({ error: "Team owner missing for publishing" }, { status: 400 });
+    }
+
     // Ensure YouTube connection exists (unified social connections)
-    const social = await getUserSocialConnections(userId);
+    const social = await getUserSocialConnections(publisherUserId);
     const yt = social.youtube;
     if (!yt?.accessToken || !yt?.refreshToken) {
       return NextResponse.json(
-        { error: "YouTube not connected. Please connect your YouTube account in settings." },
+        { error: video.teamId ? "Team owner YouTube not connected. Owner must connect YouTube." : "YouTube not connected. Please connect your YouTube account in settings." },
         { status: 403 }
       );
     }
@@ -136,7 +220,7 @@ export async function POST(
       const { credentials } = await oauth2Client.refreshAccessToken();
       if (credentials?.access_token) {
         try {
-          await updateUserSocialConnections(userId, current => ({
+          await updateUserSocialConnections(publisherUserId, current => ({
             ...current,
             youtube: {
               ...(current.youtube || {}),
@@ -184,7 +268,7 @@ export async function POST(
           const { credentials } = await oauth2Client.refreshAccessToken();
           if (credentials?.access_token) {
             try {
-              await updateUserSocialConnections(userId, current => ({
+              await updateUserSocialConnections(publisherUserId, current => ({
                 ...current,
                 youtube: {
                   ...(current.youtube || {}),
@@ -220,7 +304,8 @@ export async function POST(
       .from('video_posts')
       .update({ 
         status: "PUBLISHED", 
-        approvedByUserId: me.id,
+        // Keep the approver if the video was already approved; otherwise mark this caller.
+        approvedByUserId: (video as any).approvedByUserId || me.id,
         updatedAt: new Date().toISOString()
       })
       .eq('id', video.id)
@@ -255,26 +340,26 @@ export async function POST(
         const videoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/videos/${video.id}`;
         
         const emailContent = {
-          subject: `✅ Video Approved: ${videoTitle}`,
+          subject: `✅ Video Published: ${videoTitle}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>✅ Video Approved!</h2>
+              <h2>✅ Video Published!</h2>
               <p><strong>Video:</strong> ${videoTitle}</p>
               ${team ? `<p><strong>Team:</strong> ${team.name}</p>` : ''}
-              <p><strong>Approved by:</strong> ${me.name || me.email}</p>
+              <p><strong>Published by:</strong> ${me.name || me.email}</p>
               <p><strong>Video URL:</strong> <a href="${videoUrl}">${videoUrl}</a></p>
-              <p>Your video has been approved and is now published!</p>
+              <p>Your video has been published to YouTube.</p>
             </div>
           `,
           text: `
-            Video Approved!
+            Video Published!
             
             Video: ${videoTitle}
             ${team ? `Team: ${team.name}` : ''}
-            Approved by: ${me.name || me.email}
+            Published by: ${me.name || me.email}
             Video URL: ${videoUrl}
             
-            Your video has been approved and is now published!
+            Your video has been published to YouTube.
           `
         };
 
