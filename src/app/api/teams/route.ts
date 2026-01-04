@@ -302,7 +302,8 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('team_members.userId', user.id)
-      .eq('team_members.status', 'ACTIVE')
+      // Be tolerant of legacy casing/nulls so non-admin members still see their teams.
+      .in('team_members.status', ['ACTIVE', 'active', ''])
       .order('createdAt', { ascending: false });
 
     if (memberError) {
@@ -335,7 +336,7 @@ export async function GET(request: NextRequest) {
           )
         `)
         .in("teamId", teamIds)
-        .eq("status", "ACTIVE");
+        .in("status", ["ACTIVE", "active", ""]);
 
       if (membersError) {
         console.error("Team members fetch error:", membersError);
