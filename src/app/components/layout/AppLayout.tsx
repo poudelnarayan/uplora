@@ -274,9 +274,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
             <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
           </Button>
-          <div className="mt-2 text-xs text-sidebar-foreground/60 truncate">
-            Showing content for: <span className="text-sidebar-foreground/90">{selectedTeam?.name || "—"}</span>
-          </div>
+          
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4 bg-sidebar">
