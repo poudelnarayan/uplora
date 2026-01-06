@@ -271,7 +271,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"
             onClick={() => setWorkspaceDialogOpen(true)}
           >
-            <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
+            <span className="truncate">{selectedTeam?.name?.includes("Personal") ? "Personal Workspace" : selectedTeam?.name || "Select workspace"}</span>
             <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
           </Button>
            
