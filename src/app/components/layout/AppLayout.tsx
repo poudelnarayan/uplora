@@ -61,6 +61,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const pathForFeedback = usePathnameForFeedback();
   const { teams, personalTeam, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
+  const showWorkspaceSwitcher = (teams?.length ?? 0) > 0;
   const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
   const notifications = useNotifications();
 
@@ -74,6 +75,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
   const [switchingWorkspace, setSwitchingWorkspace] = useState(false);
   const [switchTargetId, setSwitchTargetId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!showWorkspaceSwitcher && workspaceDialogOpen) setWorkspaceDialogOpen(false);
+  }, [showWorkspaceSwitcher, workspaceDialogOpen]);
 
   const workspaces = useMemo(() => {
     const list: Array<{ id: string; name: string }> = [];
@@ -261,21 +266,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* Workspace switcher (team/personal) */}
-        <div className="px-3 py-4 border-b border-sidebar-border bg-sidebar">
-          <div className="text-[11px] font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-1 mb-2">
-            Workspace
+        {/* Workspace switcher (only if user has/joined at least one team workspace) */}
+        {showWorkspaceSwitcher && (
+          <div className="px-3 py-4 border-b border-sidebar-border bg-sidebar">
+            <div className="text-[11px] font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-1 mb-2">
+              Workspace
+            </div>
+            <Button
+              variant="outline"
+              className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"
+              onClick={() => setWorkspaceDialogOpen(true)}
+            >
+              <span className="truncate">
+                {selectedTeam?.name?.includes("Personal Workspace") ? "Personal Workspace" : selectedTeam?.name || "Select workspace"}
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"
-            onClick={() => setWorkspaceDialogOpen(true)}
-          >
-            <span className="truncate">{selectedTeam?.name?.includes("Personal") ? "Personal Workspace" : selectedTeam?.name || "Select workspace"}</span>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
-          </Button>
-           
-        </div>
+        )}
 
         <nav className="flex-1 space-y-1 px-3 py-4 bg-sidebar">
           {/* Main Navigation */}
@@ -400,42 +408,46 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </div>
 
             {/* Mobile workspace switcher */}
-            <div className="mt-3">
-              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Workspace
+            {showWorkspaceSwitcher && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  Workspace
+                </div>
+                <Button variant="outline" className="w-full justify-between" onClick={() => setWorkspaceDialogOpen(true)}>
+                  <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+                </Button>
               </div>
-              <Button variant="outline" className="w-full justify-between" onClick={() => setWorkspaceDialogOpen(true)}>
-                <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
-                <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
-              </Button>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Workspace selection dialog */}
-        <Dialog open={workspaceDialogOpen} onOpenChange={setWorkspaceDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Switch workspace</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2">
-              {workspaces.map((w) => (
-                <button
-                  key={w.id}
-                  className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
-                    selectedTeamId === w.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"
-                  }`}
-                  onClick={() => startWorkspaceSwitch(w.id)}
-                >
-                  <div className="font-medium text-foreground truncate">{w.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {selectedTeamId === w.id ? "Current workspace" : "Tap to switch"}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        {showWorkspaceSwitcher && (
+          <Dialog open={workspaceDialogOpen} onOpenChange={setWorkspaceDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Switch workspace</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2">
+                {workspaces.map((w) => (
+                  <button
+                    key={w.id}
+                    className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
+                      selectedTeamId === w.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"
+                    }`}
+                    onClick={() => startWorkspaceSwitch(w.id)}
+                  >
+                    <div className="font-medium text-foreground truncate">{w.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {selectedTeamId === w.id ? "Current workspace" : "Tap to switch"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Switching overlay */}
         <AnimatePresence>
