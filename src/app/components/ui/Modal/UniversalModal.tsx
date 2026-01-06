@@ -10,7 +10,7 @@ import { useEffect, useRef, ReactNode, MouseEvent as ReactMouseEvent } from "rea
 const MotionButton = motion.button as React.ComponentType<React.ButtonHTMLAttributes<HTMLButtonElement> & any>;
 
 // Modal content type definitions
-export type ModalType = "invite-member" | "create-team" | "feedback-studio" | "idea-lab";
+export type ModalType = "invite-member" | "create-team" | "feedback-hub" | "feedback-studio" | "idea-lab";
 
 interface ModalConfig {
   title: string;
@@ -35,6 +35,14 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     title: "Create New Team",
     subtitle: "Start collaborating with your team",
     icon: <Plus className="w-6 h-6 text-white" />,
+    iconColor: "bg-primary",
+    maxWidth: "max-w-lg",
+    headerGradient: "bg-accent/20"
+  },
+  "feedback-hub": {
+    title: "Feedback",
+    subtitle: "Send feedback or request a feature",
+    icon: <MessageCircle className="w-6 h-6 text-white" />,
     iconColor: "bg-primary",
     maxWidth: "max-w-lg",
     headerGradient: "bg-accent/20"

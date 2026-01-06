@@ -45,21 +45,27 @@ export function TextField(props: TextFieldProps) {
   return (
     <div className={containerClassName}>
       {label && (
-        <label className="block text-sm font-medium mb-2" style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(210, 40%, 25%)' }}>
+        <label className="block text-sm font-medium mb-2 text-foreground">
           {label}
         </label>
       )}
       <div className={`relative ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
         {isMultiline ? (
-          <textarea {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)} className={`w-full p-3 rounded-lg border border-slate-200 bg-slate-50/50 placeholder:opacity-60 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 transition-all ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(176, 20%, 16%)', '::placeholder': { color: 'hsl(176, 20%, 16%)' } }} />
+          <textarea
+            {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+            className={`w-full p-3 rounded-lg border border-border/60 bg-background placeholder:text-muted-foreground/70 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-colors text-foreground shadow-none ${controlClassName ?? ""}`.trim()}
+          />
         ) : (
-          <input {...(rest as React.InputHTMLAttributes<HTMLInputElement>)} className={`w-full p-3 rounded-lg border border-slate-200 bg-slate-50/50 placeholder:opacity-60 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 transition-all ${controlClassName ?? ""}`.trim()} style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(176, 20%, 16%)', '::placeholder': { color: 'hsl(176, 20%, 16%)' } }} />
+          <input
+            {...(rest as React.InputHTMLAttributes<HTMLInputElement>)}
+            className={`w-full p-3 rounded-lg border border-border/60 bg-background placeholder:text-muted-foreground/70 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-colors text-foreground shadow-none ${controlClassName ?? ""}`.trim()}
+          />
         )}
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
       {error && (
-        <div className="flex items-center gap-1 mt-1 text-sm" style={{ fontFamily: 'Inter, Open Sans, sans-serif', color: 'hsl(0, 65%, 45%)' }}>
+        <div className="flex items-center gap-1 mt-1 text-sm text-destructive">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -75,17 +81,22 @@ export function SelectField({ label, icon, rightIcon, containerClassName, classN
   return (
     <div className={containerClassName}>
       {label && (
-        <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(210, 40%, 25%)' }}>
+        <label className="block text-sm font-medium mb-2 text-foreground">
           {label}
         </label>
       )}
       <div className={`relative ${error ? 'field-error' : ''} ${className ?? ""}`.trim()}>
         {icon && <span className="field-addon">{icon}</span>}
-        <select {...props} className={`w-full p-3 rounded-lg border border-slate-200 bg-slate-50/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 transition-all appearance-none pr-10 ${controlClassName ?? ""}`.trim()} style={{ color: 'hsl(176, 20%, 16%)' }}>{children}</select>
+        <select
+          {...props}
+          className={`w-full p-3 rounded-lg border border-border/60 bg-background focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-colors appearance-none pr-10 text-foreground shadow-none ${controlClassName ?? ""}`.trim()}
+        >
+          {children}
+        </select>
         {rightIcon && <span className="field-addon-right">{rightIcon}</span>}
       </div>
       {error && (
-        <div className="flex items-center gap-1 mt-1 text-sm" style={{ color: 'hsl(0, 65%, 45%)' }}>
+        <div className="flex items-center gap-1 mt-1 text-sm text-destructive">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{error}</span>
         </div>

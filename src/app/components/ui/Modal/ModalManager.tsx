@@ -6,7 +6,8 @@ import {
   InviteMemberContent, 
   CreateTeamContent, 
   FeedbackContent, 
-  IdeaLabContent 
+  IdeaLabContent,
+  FeedbackHubContent
 } from "./ModalContent";
 
 // Modal context for global state management
@@ -84,6 +85,40 @@ export function ModalProvider({ children }: ModalProviderProps) {
     }
   };
 
+  // Dedicated handlers for Feedback Hub (two different submit signatures)
+  const handleSubmitFeedback = async (type: string, message: string) => {
+    setIsLoading(true);
+    try {
+      if (modalProps.onSubmitFeedback) {
+        const result = await modalProps.onSubmitFeedback(type, message);
+        // Treat any truthy object with success===true as success; otherwise assume success and close.
+        if (result && typeof result === "object" && (result as any).success === false) {
+          throw new Error((result as any).error || "Failed to submit");
+        }
+      }
+      closeModal();
+      return { success: true };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmitIdea = async (title: string, description: string, priority: string) => {
+    setIsLoading(true);
+    try {
+      if (modalProps.onSubmitIdea) {
+        const result = await modalProps.onSubmitIdea(title, description, priority);
+        if (result && typeof result === "object" && (result as any).success === false) {
+          throw new Error((result as any).error || "Failed to submit");
+        }
+      }
+      closeModal();
+      return { success: true };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderModalContent = () => {
     if (!currentType) return null;
 
@@ -113,6 +148,17 @@ export function ModalProvider({ children }: ModalProviderProps) {
             onSubmit={handleSubmit}
             onCancel={closeModal}
             isLoading={isLoading}
+          />
+        );
+
+      case "feedback-hub":
+        return (
+          <FeedbackHubContent
+            onSubmitFeedback={handleSubmitFeedback}
+            onSubmitIdea={handleSubmitIdea}
+            onCancel={closeModal}
+            isLoading={isLoading}
+            defaultTab={modalProps.defaultTab}
           />
         );
 

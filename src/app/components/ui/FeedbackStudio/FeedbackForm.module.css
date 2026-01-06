@@ -33,7 +33,6 @@
 .textarea:focus {
   outline: none;
   border-color: rgb(var(--ring));
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .textarea::placeholder {
@@ -57,6 +56,19 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+@media (max-width: 640px) {
+  .textarea {
+    min-height: 5rem;
+  }
+  .actions {
+    justify-content: stretch;
+  }
+  .submitButton {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .submitButton:hover:not(:disabled) {

@@ -45,10 +45,10 @@ export default function FeedbackContent({
               type="button"
               onClick={() => setFeedbackType(type as any)}
               className={`
-                flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors
                 ${feedbackType === type
-                  ? `border-primary bg-primary/5 shadow-sm text-foreground`
-                  : "border-border bg-secondary/30 hover:border-primary/50 text-muted-foreground"
+                  ? "border-primary bg-primary/10 text-foreground"
+                  : "border-border/60 bg-background hover:bg-muted/30 hover:border-border text-muted-foreground"
                 }
               `}
             >
@@ -72,7 +72,7 @@ export default function FeedbackContent({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Tell us what you think..."
-            className="w-full min-h-[120px] p-3 rounded-lg border border-border bg-secondary/30 placeholder:text-muted-foreground/70 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 transition-all resize-vertical text-foreground"
+            className="w-full min-h-[120px] p-3 rounded-lg border border-border/60 bg-background placeholder:text-muted-foreground/70 focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-colors resize-vertical text-foreground shadow-none"
             required
           />
         </div>
@@ -90,7 +90,7 @@ export default function FeedbackContent({
           <button
             type="submit"
             disabled={isLoading || !message.trim()}
-            className="flex-1 px-4 py-2 rounded-lg text-primary-foreground transition-all flex items-center justify-center gap-2 hover:shadow-lg bg-primary hover:bg-primary-hover disabled:opacity-60"
+            className="flex-1 px-4 py-2 rounded-lg text-primary-foreground transition-colors flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-60"
           >
             {isLoading ? (
               <>

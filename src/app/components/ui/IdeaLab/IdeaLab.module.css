@@ -15,8 +15,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 32rem;
-  max-width: calc(100vw - 2rem);
+  /* Smaller on laptops, still fluid on mobile */
+  width: min(calc(100vw - 2rem), 28rem);
   background-color: rgb(var(--card));
   border: 1px solid rgb(var(--border));
   border-radius: 1rem;
@@ -24,7 +24,8 @@
   z-index: 50;
   overflow: hidden;
   max-height: calc(100vh - 2rem);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -33,7 +34,7 @@
     rgba(16, 185, 129, 0.1),
     rgba(52, 211, 153, 0.1)
   );
-  padding: 1.5rem;
+  padding: 1.1rem;
   border-bottom: 1px solid rgb(var(--border));
   display: flex;
   align-items: center;
@@ -82,5 +83,13 @@
 }
 
 .content {
-  padding: 1.5rem;
+  padding: 1.1rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    width: 30rem;
+  }
 }

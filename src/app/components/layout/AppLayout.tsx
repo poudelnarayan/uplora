@@ -274,7 +274,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
             <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
           </Button>
-          
+           
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4 bg-sidebar">
@@ -323,26 +323,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
           {/* Creative Action Buttons */}
           <div className="my-6 mx-3 border-t border-sidebar-border pt-4" />
           
-          {/* Feedback Studio */}
+          {/* Feedback / Feature Requests */}
           <button
-            onClick={() => openModal("feedback-studio", {
-              onSubmit: submitFeedback
-            })}
+            onClick={() =>
+              openModal("feedback-hub", {
+                onSubmitFeedback: submitFeedback,
+                onSubmitIdea: submitIdea,
+                defaultTab: "feedback",
+              })
+            }
             className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           >
             <MessageCircle className="h-5 w-5 shrink-0" />
-            <span className="truncate">Feedback Studio</span>
-          </button>
-
-          {/* Idea Lab */}
-          <button
-            onClick={() => openModal("idea-lab", {
-              onSubmit: submitIdea
-            })}
-            className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Lightbulb className="h-5 w-5 shrink-0" />
-            <span className="truncate">Idea Lab</span>
+            <span className="truncate">Feedback</span>
           </button>
         </nav>
 
@@ -354,11 +347,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
           
           <div style={{ position: 'relative', zIndex: 50 }}>
-            <UserMenu 
+            <UserMenu
               dropdownPosition="top"
-              onFeedbackClick={() => openModal("feedback-studio", {
-                onSubmit: submitFeedback
-              })} 
+              onFeedbackClick={() =>
+                openModal("feedback-hub", {
+                  onSubmitFeedback: submitFeedback,
+                  onSubmitIdea: submitIdea,
+                  defaultTab: "feedback",
+                })
+              }
             />
           </div>
         </div>
@@ -555,21 +552,27 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   );
                 })}
 
-                {/* Mobile: Feedback Studio & Idea Lab */}
+                {/* Mobile: Feedback / Feature Requests */}
                 <div className="my-4 border-t border-sidebar-border pt-3" />
                 <button
-                  onClick={() => { setMobileNavOpen(false); openModal("feedback-studio", { onSubmit: submitFeedback }); }}
+                  onClick={() => {
+                    setMobileNavOpen(false);
+                    openModal("feedback-hub", { onSubmitFeedback: submitFeedback, onSubmitIdea: submitIdea, defaultTab: "feedback" });
+                  }}
                   className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 >
                   <MessageCircle className="h-5 w-5 shrink-0" />
-                  <span className="truncate">Feedback Studio</span>
+                  <span className="truncate">Feedback</span>
                 </button>
                 <button
-                  onClick={() => { setMobileNavOpen(false); openModal("idea-lab", { onSubmit: submitIdea }); }}
+                  onClick={() => {
+                    setMobileNavOpen(false);
+                    openModal("feedback-hub", { onSubmitFeedback: submitFeedback, onSubmitIdea: submitIdea, defaultTab: "idea" });
+                  }}
                   className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 >
                   <Lightbulb className="h-5 w-5 shrink-0" />
-                  <span className="truncate">Idea Lab</span>
+                  <span className="truncate">Feature request</span>
                 </button>
               </nav>
               {/* Mobile Footer Links */}
