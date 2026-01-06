@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, Clock } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
@@ -11,11 +11,26 @@ import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Label } from "@/app/components/ui/label";
 import AppShell from "@/app/components/layout/AppLayout";
+import { useTeam } from "@/context/TeamContext";
 
 const MotionDiv = motion.div as any;
 
 const SocialConnections = () => {
   const notifications = useNotifications();
+  const { selectedTeamId, selectedTeam, teams } = useTeam();
+
+  const isTeamWorkspace = useMemo(() => {
+    if (!selectedTeamId) return false;
+    return Array.isArray(teams) && teams.some((t) => t.id === selectedTeamId);
+  }, [teams, selectedTeamId]);
+
+  const isTeamOwner = isTeamWorkspace && selectedTeam?.role === "OWNER";
+
+  const [teamOwnerPlatforms, setTeamOwnerPlatforms] = useState<{
+    loading: boolean;
+    connectedPlatforms: string[];
+    ownerName?: string | null;
+  }>({ loading: false, connectedPlatforms: [], ownerName: null });
   const [yt, setYt] = useState<{ loading: boolean; isConnected: boolean; channelTitle?: string | null }>({ loading: true, isConnected: false });
   const [fb, setFb] = useState<{ loading: boolean; isConnected: boolean; instagramConnected: boolean; userName?: string | null; pages: any[]; instagramAccounts: any[] }>({ 
     loading: true, 
@@ -57,6 +72,28 @@ const SocialConnections = () => {
     platformUrl: "",
     details: "",
   });
+
+  useEffect(() => {
+    (async () => {
+      if (!isTeamWorkspace || isTeamOwner || !selectedTeamId) {
+        setTeamOwnerPlatforms({ loading: false, connectedPlatforms: [], ownerName: null });
+        return;
+      }
+      setTeamOwnerPlatforms((p) => ({ ...p, loading: true }));
+      try {
+        const res = await fetch(`/api/social-connections/status?teamId=${encodeURIComponent(selectedTeamId)}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Failed to load team connections");
+        setTeamOwnerPlatforms({
+          loading: false,
+          connectedPlatforms: Array.isArray(data?.connectedPlatforms) ? data.connectedPlatforms : [],
+          ownerName: data?.ownerName || null,
+        });
+      } catch {
+        setTeamOwnerPlatforms({ loading: false, connectedPlatforms: [], ownerName: null });
+      }
+    })();
+  }, [isTeamWorkspace, isTeamOwner, selectedTeamId]);
 
   useEffect(() => {
     // Show one-time success/error banners based on query params (useful after OAuth redirects).
@@ -295,6 +332,45 @@ const SocialConnections = () => {
 
           {/* Content */}
           <div className="p-6 space-y-10">
+            {/* Workspace-aware hint (team workspaces publish using owner connections) */}
+            {isTeamWorkspace && !isTeamOwner && (
+              <Card className="border border-border/60">
+                <CardContent className="p-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Badge variant="outline" className="text-xs shrink-0">Team workspace</Badge>
+                      <div className="text-sm font-medium text-foreground truncate">
+                        {selectedTeam?.name || "Team"}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Publishing for this workspace uses the <span className="font-medium text-foreground">team owner&apos;s</span> connected accounts.
+                      The connections shown below are <span className="font-medium text-foreground">your personal</span> connections.
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-xs text-muted-foreground">
+                        {teamOwnerPlatforms.loading ? "Checking team connections…" : "Team owner connected:"}
+                      </div>
+                      {teamOwnerPlatforms.loading ? null : (
+                        teamOwnerPlatforms.connectedPlatforms.length > 0 ? (
+                          teamOwnerPlatforms.connectedPlatforms.map((p) => (
+                            <Badge key={p} className="bg-primary/10 text-foreground border border-border/60">
+                              {p}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline">None</Badge>
+                        )
+                      )}
+                      {teamOwnerPlatforms.ownerName && !teamOwnerPlatforms.loading && (
+                        <span className="text-xs text-muted-foreground">({teamOwnerPlatforms.ownerName})</span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Connected */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
