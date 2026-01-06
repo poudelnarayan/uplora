@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MotionDiv = motion.div as any;
@@ -38,6 +38,9 @@ import { usePathname as usePathnameForFeedback } from "next/navigation";
 import { useModalManager } from "@/app/components/ui/Modal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/app/components/ui/Notification";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
+import { Button } from "@/app/components/ui/button";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
@@ -67,6 +70,46 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [showFeedbackStudio, setShowFeedbackStudio] = useState(false);
   const [showIdeaLab, setShowIdeaLab] = useState(false);
   const { openModal } = useModalManager();
+
+  const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
+  const [switchingWorkspace, setSwitchingWorkspace] = useState(false);
+  const [switchTargetId, setSwitchTargetId] = useState<string | null>(null);
+
+  const workspaces = useMemo(() => {
+    const list: Array<{ id: string; name: string }> = [];
+    if (personalTeam?.id) list.push({ id: personalTeam.id, name: personalTeam.name || "Personal Workspace" });
+    for (const t of teams || []) list.push({ id: t.id, name: t.name });
+    return list;
+  }, [teams, personalTeam]);
+
+  const switchTargetName = useMemo(() => {
+    const id = switchTargetId || selectedTeamId;
+    const w = workspaces.find((x) => x.id === id);
+    return w?.name || "workspace";
+  }, [switchTargetId, selectedTeamId, workspaces]);
+
+  const startWorkspaceSwitch = (nextId: string) => {
+    if (!nextId || nextId === selectedTeamId) {
+      setWorkspaceDialogOpen(false);
+      return;
+    }
+    setSwitchTargetId(nextId);
+    setSwitchingWorkspace(true);
+    setWorkspaceDialogOpen(false);
+    setSelectedTeamId(nextId);
+  };
+
+  // Hide the switching overlay once the selection is applied (small delay for nicer UX)
+  useEffect(() => {
+    if (!switchingWorkspace) return;
+    if (!switchTargetId) return;
+    if (selectedTeamId !== switchTargetId) return;
+    const t = window.setTimeout(() => {
+      setSwitchingWorkspace(false);
+      setSwitchTargetId(null);
+    }, 450);
+    return () => window.clearTimeout(t);
+  }, [switchingWorkspace, switchTargetId, selectedTeamId]);
 
   // Feedback handlers with proper notifications
   const submitFeedback = async (type: string, message: string) => {
@@ -223,20 +266,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="text-[11px] font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-1 mb-2">
             Workspace
           </div>
-          <select
-            value={selectedTeamId || ""}
-            onChange={(e) => setSelectedTeamId(e.target.value || null)}
-            className="w-full h-10 rounded-lg border border-sidebar-border bg-sidebar-accent px-3 text-sm text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+          <Button
+            variant="outline"
+            className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"
+            onClick={() => setWorkspaceDialogOpen(true)}
           >
-            {personalTeam && (
-              <option value={personalTeam.id}>{personalTeam.name || "Personal Workspace"}</option>
-            )}
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+            <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+          </Button>
           <div className="mt-2 text-xs text-sidebar-foreground/60 truncate">
             Showing content for: <span className="text-sidebar-foreground/90">{selectedTeam?.name || "—"}</span>
           </div>
@@ -367,28 +404,70 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <div className="w-9" />
             </div>
 
-            {/* Mobile workspace selector (full width, comfortable) */}
+            {/* Mobile workspace switcher */}
             <div className="mt-3">
               <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                 Workspace
               </div>
-              <select
-                value={selectedTeamId || ""}
-                onChange={(e) => setSelectedTeamId(e.target.value || null)}
-                className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
-              >
-                {personalTeam && (
-                  <option value={personalTeam.id}>{personalTeam.name || "Personal Workspace"}</option>
-                )}
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              <Button variant="outline" className="w-full justify-between" onClick={() => setWorkspaceDialogOpen(true)}>
+                <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
+                <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+              </Button>
             </div>
           </div>
         </div>
+
+        {/* Workspace selection dialog */}
+        <Dialog open={workspaceDialogOpen} onOpenChange={setWorkspaceDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Switch workspace</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              {workspaces.map((w) => (
+                <button
+                  key={w.id}
+                  className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
+                    selectedTeamId === w.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"
+                  }`}
+                  onClick={() => startWorkspaceSwitch(w.id)}
+                >
+                  <div className="font-medium text-foreground truncate">{w.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {selectedTeamId === w.id ? "Current workspace" : "Tap to switch"}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Switching overlay */}
+        <AnimatePresence>
+          {switchingWorkspace && (
+            <MotionDiv
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-background/60 backdrop-blur-sm"
+            >
+              <MotionDiv
+                initial={{ scale: 0.96, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.98, opacity: 0 }}
+                className="w-[calc(100vw-2rem)] max-w-sm rounded-2xl border bg-card p-6 shadow-2xl text-center"
+              >
+                <div className="flex justify-center">
+                  <LoadingSpinner size="lg" />
+                </div>
+                <div className="mt-4 text-base font-semibold text-foreground">Changing workspace…</div>
+                <div className="mt-1 text-sm text-muted-foreground truncate">
+                  Switching to <span className="font-medium text-foreground">{switchTargetName}</span>
+                </div>
+              </MotionDiv>
+            </MotionDiv>
+          )}
+        </AnimatePresence>
 
         {/* Page content */}
         <div className="flex flex-col">
