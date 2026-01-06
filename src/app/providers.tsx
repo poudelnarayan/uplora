@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 import { MissingClerkConfig } from "./_providers/MissingClerkConfig";
 import { PublicProviders } from "./_providers/PublicProviders";
 import { ProtectedProviders } from "./_providers/ProtectedProviders";
-// import OnboardingGuard from "@/components/OnboardingGuard";
+import OnboardingGuard from "@/app/components/OnboardingGuard";
 
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -37,10 +37,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           // Public pages
           <PublicProviders siteUrl={siteUrl}>{children}</PublicProviders>
         ) : (
-          // Protected pages (onboarding guard intentionally left commented to preserve current behavior)
-          // <OnboardingGuard>
-          <ProtectedProviders siteUrl={siteUrl}>{children}</ProtectedProviders>
-          // </OnboardingGuard>
+          // Protected pages (first-time users are redirected into onboarding)
+          <OnboardingGuard>
+            <ProtectedProviders siteUrl={siteUrl}>{children}</ProtectedProviders>
+          </OnboardingGuard>
         )
       ) : (
         <MissingClerkConfig />
