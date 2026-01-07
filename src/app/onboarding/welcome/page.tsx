@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import OnboardingLayout from "../layout";
 
-const MotionDiv = motion.div as any;
-const MotionCard = motion.div as any;
+const MotionDiv = motion.div;
+const MotionCard = motion.div;
 
 const userTypes = [
   {
@@ -25,35 +25,35 @@ const userTypes = [
     title: 'Creator',
     description: 'Growing my personal brand and audience',
     icon: User,
-    color: 'bg-blue-100 text-blue-700'
+    color: 'bg-primary/10 text-primary'
   },
   {
     id: 'business',
     title: 'Small Business',
     description: 'Running a small business or startup',
     icon: Building2,
-    color: 'bg-green-100 text-green-700'
+    color: 'bg-success/10 text-success'
   },
   {
     id: 'agency',
     title: 'Agency',
     description: 'Managing multiple client accounts',
     icon: Briefcase,
-    color: 'bg-purple-100 text-purple-700'
+    color: 'bg-accent/10 text-accent'
   },
   {
     id: 'enterprise',
     title: 'Enterprise',
     description: 'Large company with multiple teams',
     icon: Users,
-    color: 'bg-orange-100 text-orange-700'
+    color: 'bg-warning/15 text-warning'
   },
   {
     id: 'personal',
     title: 'Personal',
     description: 'Just for my personal social media',
     icon: Home,
-    color: 'bg-gray-100 text-gray-700'
+    color: 'bg-muted text-foreground'
   }
 ];
 
@@ -80,7 +80,7 @@ export default function WelcomePage() {
   };
 
   return (
-    <OnboardingLayout currentStep={1} totalSteps={4}>
+    <OnboardingLayout currentStep={1} totalSteps={5}>
       <div className="text-center space-y-8">
         {/* Header */}
         <MotionDiv
@@ -89,16 +89,16 @@ export default function WelcomePage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="space-y-4"
         >
-          <div className="flex items-center justify-center gap-2 text-blue-600 font-medium">
+          <div className="flex items-center justify-center gap-2 text-primary font-medium">
             <Sparkles className="w-5 h-5" />
             Welcome to Uplora
           </div>
           
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 mb-4">
+            <h1 className="text-3xl font-semibold text-foreground mb-4">
               What best describes you?
             </h1>
-            <p className="text-lg text-gray-600 max-w-lg mx-auto">
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
               Help us personalize your experience by telling us a bit about yourself
             </p>
           </div>
@@ -125,8 +125,8 @@ export default function WelcomePage() {
                 <Card
                   className={`cursor-pointer transition-all duration-200 ${
                     selectedType === type.id
-                      ? 'ring-2 ring-blue-500 shadow-md'
-                      : 'hover:shadow-sm border-gray-200'
+                      ? 'ring-2 ring-primary/30 shadow-medium border-primary/20'
+                      : 'hover:shadow-soft border-border'
                   }`}
                   onClick={() => setSelectedType(type.id)}
                 >
@@ -136,15 +136,15 @@ export default function WelcomePage() {
                         <Icon className="w-6 h-6" />
                       </div>
                       <div className="flex-1 text-left">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                        <h3 className="font-semibold text-foreground mb-1">
                           {type.title}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {type.description}
                         </p>
                       </div>
                       {selectedType === type.id && (
-                        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                           <div className="w-2 h-2 rounded-full bg-white" />
                         </div>
                       )}
@@ -167,7 +167,7 @@ export default function WelcomePage() {
             onClick={handleNext}
             disabled={!selectedType}
             size="lg"
-            className="px-8 py-3 text-lg font-medium bg-blue-600 hover:bg-blue-700"
+            className="px-8 py-3 text-lg font-medium bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             Continue
             <ArrowRight className="w-5 h-5 ml-2" />

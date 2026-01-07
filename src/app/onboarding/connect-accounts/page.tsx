@@ -17,43 +17,43 @@ import {
 } from "lucide-react";
 import OnboardingLayout from "../layout";
 
-const MotionDiv = motion.div as any;
-const MotionCard = motion.div as any;
+const MotionDiv = motion.div;
+const MotionCard = motion.div;
 
 const socialPlatforms = [
   {
     id: 'instagram',
     name: 'Instagram',
     icon: Instagram,
-    color: 'bg-pink-100 text-pink-700',
+    color: 'bg-accent/10 text-accent',
     connected: false
   },
   {
     id: 'twitter',
     name: 'Twitter/X',
     icon: Twitter,
-    color: 'bg-blue-100 text-blue-700',
+    color: 'bg-muted text-foreground',
     connected: false
   },
   {
     id: 'youtube',
     name: 'YouTube',
     icon: Youtube,
-    color: 'bg-red-100 text-red-700',
+    color: 'bg-destructive/10 text-destructive',
     connected: false
   },
   {
     id: 'facebook',
     name: 'Facebook',
     icon: Facebook,
-    color: 'bg-blue-100 text-blue-800',
+    color: 'bg-primary/10 text-primary',
     connected: false
   },
   {
     id: 'linkedin',
     name: 'LinkedIn',
     icon: Linkedin,
-    color: 'bg-blue-100 text-blue-900',
+    color: 'bg-success/10 text-success',
     connected: false
   }
 ];
@@ -97,7 +97,7 @@ export default function ConnectAccountsPage() {
   return (
     <OnboardingLayout 
       currentStep={2} 
-      totalSteps={4} 
+      totalSteps={5} 
       onBack={handleBack}
     >
       <div className="text-center space-y-8">
@@ -108,16 +108,16 @@ export default function ConnectAccountsPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="space-y-4"
         >
-          <div className="flex items-center justify-center gap-2 text-blue-600 font-medium">
+          <div className="flex items-center justify-center gap-2 text-primary font-medium">
             <Plus className="w-5 h-5" />
             Connect your accounts
           </div>
           
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 mb-4">
+            <h1 className="text-3xl font-semibold text-foreground mb-4">
               Connect your social media
             </h1>
-            <p className="text-lg text-gray-600 max-w-lg mx-auto">
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
               Connect your social media accounts to start creating and scheduling content
             </p>
           </div>
@@ -147,8 +147,8 @@ export default function ConnectAccountsPage() {
                   <Card
                     className={`cursor-pointer transition-all duration-200 ${
                       isConnected
-                        ? 'ring-2 ring-green-500 shadow-md'
-                        : 'hover:shadow-sm border-gray-200'
+                        ? 'ring-2 ring-success/30 shadow-medium border-success/20'
+                        : 'hover:shadow-soft border-border'
                     }`}
                     onClick={() => handleConnect(platform.id)}
                   >
@@ -159,21 +159,21 @@ export default function ConnectAccountsPage() {
                             <Icon className="w-6 h-6" />
                           </div>
                           <div className="text-left">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-foreground">
                               {platform.name}
                             </h3>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                               {isConnected ? 'Connected' : 'Click to connect'}
                             </p>
                           </div>
                         </div>
                         {isConnected ? (
-                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
                             <Check className="w-5 h-5 text-white" />
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                            <Plus className="w-5 h-5 text-gray-500" />
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                            <Plus className="w-5 h-5 text-muted-foreground" />
                           </div>
                         )}
                       </div>
@@ -197,7 +197,7 @@ export default function ConnectAccountsPage() {
               variant="outline"
               onClick={handleSkip}
               size="lg"
-              className="w-full sm:w-auto px-8 py-3 text-lg font-medium border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+              className="w-full sm:w-auto px-8 py-3 text-lg font-medium border-border text-foreground hover:bg-muted transition-all duration-200"
             >
               Skip for now
             </Button>
@@ -205,7 +205,7 @@ export default function ConnectAccountsPage() {
             <Button
               onClick={handleNext}
               size="lg"
-              className="w-full sm:w-auto px-8 py-3 text-lg font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+              className="w-full sm:w-auto px-8 py-3 text-lg font-medium gradient-primary text-primary-foreground shadow-medium hover:shadow-strong transition-all duration-200 transform hover:scale-[1.02]"
             >
               Continue
               <ArrowRight className="w-5 h-5 ml-2" />

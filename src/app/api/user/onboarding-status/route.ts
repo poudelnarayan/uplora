@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { safeAuth } from "@/lib/clerk-supabase-utils";
+import { getAuthenticatedUserSafe } from "@/lib/clerk-supabase-utils";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = await safeAuth();
-    if (!userId) {
-      console.log("❌ No userId found in GET request");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.log(`🔍 Fetching onboarding status for user: ${userId}`);
+    const { clerkUserId, supabaseUser } = await getAuthenticatedUserSafe();
+    const userId = clerkUserId;
 
     // Get user's onboarding status from database - using correct column name
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('onboardingCompleted') // camelCase column name
+      .select('id, createdAt, onboardingCompleted, onboardingSkipped, onboardingSeenAt') // camelCase column names
       .eq('clerkId', userId)
       .single();
 
@@ -26,17 +21,54 @@ export async function GET(req: NextRequest) {
       // If user doesn't exist, they haven't completed onboarding
       if (error.code === 'PGRST116') {
         return NextResponse.json({ 
-          onboardingCompleted: false 
+          onboardingCompleted: false,
+          onboardingSkipped: false,
+          onboardingSeenAt: null,
+          shouldShowOnboarding: true
         });
       }
       return NextResponse.json({ error: "Failed to fetch onboarding status" }, { status: 500 });
     }
 
     const onboardingCompleted = user?.onboardingCompleted || false;
+    const onboardingSkipped = user?.onboardingSkipped || false;
+    const onboardingSeenAt = user?.onboardingSeenAt || null;
+
+    // Only auto-show onboarding for truly new users:
+    // - Not completed
+    // - Not skipped
+    // - Never seen
+    // - AND they haven't created any content/teams yet
+    const internalUserId = user?.id ?? supabaseUser?.id;
+
+    let hasAnyContent = false;
+    if (internalUserId) {
+      const [content, teams, videos, images, reels] = await Promise.all([
+        supabaseAdmin.from('text_posts').select('id').eq('userId', internalUserId).limit(1),
+        supabaseAdmin.from('teams').select('id').eq('ownerId', internalUserId).neq('isPersonal', true).limit(1),
+        supabaseAdmin.from('video_posts').select('id').eq('userId', internalUserId).limit(1),
+        supabaseAdmin.from('image_posts').select('id').eq('userId', internalUserId).limit(1),
+        supabaseAdmin.from('reel_posts').select('id').eq('userId', internalUserId).limit(1),
+      ]);
+
+      hasAnyContent =
+        (content.data?.length ?? 0) > 0 ||
+        (teams.data?.length ?? 0) > 0 ||
+        (videos.data?.length ?? 0) > 0 ||
+        (images.data?.length ?? 0) > 0 ||
+        (reels.data?.length ?? 0) > 0;
+    }
+
+    const shouldShowOnboarding =
+      !onboardingCompleted && !onboardingSkipped && !onboardingSeenAt && !hasAnyContent;
+
     console.log(`📊 User ${userId} onboarding status:`, onboardingCompleted);
 
     return NextResponse.json({ 
-      onboardingCompleted 
+      onboardingCompleted,
+      onboardingSkipped,
+      onboardingSeenAt,
+      shouldShowOnboarding
     });
 
   } catch (error) {
@@ -47,27 +79,48 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await safeAuth();
-    if (!userId) {
-      console.log("❌ No userId found in POST request");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { clerkUserId } = await getAuthenticatedUserSafe();
+    const userId = clerkUserId;
+
+    const body = await req.json().catch(() => ({}));
+    const action = body?.action as "seen" | "complete" | "skip" | undefined;
+    const onboardingCompleted = body?.onboardingCompleted as boolean | undefined;
+    const onboardingSkipped = body?.onboardingSkipped as boolean | undefined;
+
+    // Backwards compatible:
+    // - { onboardingCompleted: true } => complete
+    // - { action: "skip" } => skip
+    // - { action: "seen" } => mark seen
+    let update: Record<string, any> = { updatedAt: new Date().toISOString() };
+
+    if (action === "seen") {
+      update.onboardingSeenAt = new Date().toISOString();
+    } else if (action === "skip") {
+      update.onboardingSeenAt = new Date().toISOString();
+      update.onboardingSkipped = true;
+      update.onboardingCompleted = false;
+    } else if (action === "complete") {
+      update.onboardingSeenAt = new Date().toISOString();
+      update.onboardingCompleted = true;
+      update.onboardingSkipped = false;
+    } else if (typeof onboardingCompleted === "boolean") {
+      update.onboardingSeenAt = new Date().toISOString();
+      update.onboardingCompleted = onboardingCompleted;
+      if (onboardingCompleted) update.onboardingSkipped = false;
+    } else if (typeof onboardingSkipped === "boolean") {
+      update.onboardingSeenAt = new Date().toISOString();
+      update.onboardingSkipped = onboardingSkipped;
+      if (onboardingSkipped) update.onboardingCompleted = false;
+    } else {
+      return NextResponse.json(
+        { error: "Invalid request body. Provide { action } or { onboardingCompleted }." },
+        { status: 400 }
+      );
     }
 
-    const { onboardingCompleted } = await req.json();
-    console.log(`🔄 Updating onboarding status for user ${userId} to:`, onboardingCompleted);
-
-    if (typeof onboardingCompleted !== 'boolean') {
-      console.log("❌ Invalid onboardingCompleted type:", typeof onboardingCompleted);
-      return NextResponse.json({ error: "onboardingCompleted must be a boolean" }, { status: 400 });
-    }
-
-    // Update user's onboarding status - using correct column name
     const { error } = await supabaseAdmin
       .from('users')
-      .update({ 
-        onboardingCompleted: onboardingCompleted, // camelCase column name
-        updatedAt: new Date().toISOString()
-      })
+      .update(update)
       .eq('clerkId', userId);
 
     if (error) {
@@ -78,7 +131,7 @@ export async function POST(req: NextRequest) {
     console.log("✅ Successfully updated onboarding status in database");
     return NextResponse.json({ 
       success: true, 
-      onboardingCompleted 
+      ...update
     });
 
   } catch (error) {

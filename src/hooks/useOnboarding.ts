@@ -24,13 +24,13 @@ export function useOnboarding() {
       
       if (response.ok) {
         const data = await response.json();
-        const onboardingCompleted = data.onboardingCompleted;
+        const shouldShow = Boolean(data.shouldShowOnboarding);
         
-        console.log('📊 Onboarding status from database:', onboardingCompleted);
+        console.log('📊 Onboarding status from database:', data);
         
-        setShouldShowOnboarding(!onboardingCompleted);
+        setShouldShowOnboarding(shouldShow);
         
-        if (!onboardingCompleted) {
+        if (shouldShow) {
           console.log('➡️ User needs to complete onboarding');
         } else {
           console.log('✅ User has completed onboarding');
@@ -59,6 +59,20 @@ export function useOnboarding() {
     checkOnboardingStatus();
   }, [user, isLoaded]);
 
+  const markOnboardingSeen = async () => {
+    try {
+      await fetch('/api/user/onboarding-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'seen' }),
+      });
+      setShouldShowOnboarding(false);
+    } catch {
+      // best-effort
+      setShouldShowOnboarding(false);
+    }
+  };
+
   const redirectToOnboarding = () => {
     router.push('/onboarding/welcome');
   };
@@ -71,7 +85,7 @@ export function useOnboarding() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ onboardingCompleted: true }),
+        body: JSON.stringify({ action: 'complete' }),
       });
       
       const responseData = await response.json();
@@ -102,10 +116,27 @@ export function useOnboarding() {
     }
   };
 
+  const skipOnboarding = async () => {
+    try {
+      await fetch('/api/user/onboarding-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'skip' }),
+      });
+    } finally {
+      setShouldShowOnboarding(false);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 100);
+    }
+  };
+
   return {
     shouldShowOnboarding,
     redirectToOnboarding,
     completeOnboarding,
+    skipOnboarding,
+    markOnboardingSeen,
     isLoading
   };
 }

@@ -26,8 +26,8 @@ import OnboardingLayout from "../layout";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useNotifications } from "@/app/components/ui/Notification";
 
-const MotionDiv = motion.div as any;
-const MotionCard = motion.div as any;
+const MotionDiv = motion.div;
+const MotionCard = motion.div;
 
 const plans = [
   {
@@ -171,8 +171,8 @@ export default function SubscriptionOnboardingPage() {
 
   return (
     <OnboardingLayout 
-      currentStep={3} 
-      totalSteps={4} 
+      currentStep={4} 
+      totalSteps={5} 
       onBack={handleBack}
       showClose={false}
     >
@@ -184,16 +184,16 @@ export default function SubscriptionOnboardingPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center space-y-4"
         >
-          <div className="flex items-center justify-center gap-2 text-blue-600 font-medium">
+          <div className="flex items-center justify-center gap-2 text-primary font-medium">
             <Crown className="w-5 h-5" />
             Choose Your Plan
           </div>
           
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl font-bold text-foreground mb-4">
               Unlock the full power of Uplora
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Start with a 7-day free trial. No credit card required. Cancel anytime.
             </p>
           </div>
@@ -204,18 +204,18 @@ export default function SubscriptionOnboardingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-          className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6"
+          className="bg-gradient-to-r from-background to-muted border border-border rounded-lg p-6"
         >
           <div className="flex items-center justify-center gap-3">
             <div className="flex items-center gap-2">
               <Switch
                 checked={freeTrialEnabled}
                 onCheckedChange={setFreeTrialEnabled}
-                className="data-[state=checked]:bg-green-600"
+                className="data-[state=checked]:bg-primary"
               />
-              <span className="font-medium text-gray-900">7-day free trial</span>
+              <span className="font-medium text-foreground">7-day free trial</span>
             </div>
-            <Badge className="bg-green-100 text-green-800 border-green-200">
+            <Badge className="bg-primary/10 text-primary border-primary/20">
               <Clock className="w-3 h-3 mr-1" />
               No credit card required
             </Badge>
@@ -233,8 +233,8 @@ export default function SubscriptionOnboardingPage() {
             onClick={() => setIsYearly(false)}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${
               !isYearly 
-                ? 'bg-blue-600 text-white shadow-md' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-primary-foreground shadow-soft' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
           >
             Monthly
@@ -243,13 +243,13 @@ export default function SubscriptionOnboardingPage() {
             onClick={() => setIsYearly(true)}
             className={`px-6 py-3 rounded-lg font-medium transition-all relative ${
               isYearly 
-                ? 'bg-blue-600 text-white shadow-md' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-primary-foreground shadow-soft' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
           >
             Yearly
             {isYearly && (
-              <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1">
+              <Badge className="absolute -top-2 -right-2 bg-warning text-warning-foreground text-xs px-2 py-1">
                 40% OFF
               </Badge>
             )}
@@ -275,16 +275,16 @@ export default function SubscriptionOnboardingPage() {
               <Card
                 className={`h-full cursor-pointer transition-all duration-200 ${
                   selectedPlan === plan.id
-                    ? 'ring-2 ring-blue-500 shadow-lg'
+                    ? 'ring-2 ring-primary/30 shadow-strong border-primary/20'
                     : plan.popular
-                      ? 'border-blue-200 hover:border-blue-300'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-primary/20 hover:border-primary/30'
+                      : 'border-border hover:border-primary/20'
                 }`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-blue-600 text-white px-4 py-1">
+                    <Badge className="gradient-primary text-primary-foreground px-4 py-1 shadow-medium">
                       Most Popular
                     </Badge>
                   </div>
@@ -292,17 +292,17 @@ export default function SubscriptionOnboardingPage() {
 
                 <CardHeader className="text-center pb-4">
                   <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                  <p className="text-sm text-gray-600">{plan.description}</p>
+                  <p className="text-sm text-muted-foreground">{plan.description}</p>
                   
                   <div className="mt-4">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-3xl font-bold">
                         ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                       </span>
-                      <span className="text-gray-600">/month</span>
+                      <span className="text-muted-foreground">/month</span>
                     </div>
                     {isYearly && (
-                      <p className="text-sm text-green-600 font-medium mt-1">
+                      <p className="text-sm text-primary font-medium mt-1">
                         Billed annually (${plan.yearlyPrice}/year)
                       </p>
                     )}
@@ -313,8 +313,8 @@ export default function SubscriptionOnboardingPage() {
                   <ul className="space-y-3 mb-6">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center gap-3">
-                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{feature}</span>
+                        <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                        <span className="text-sm text-foreground">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -326,10 +326,10 @@ export default function SubscriptionOnboardingPage() {
                     }}
                     className={`w-full ${
                       selectedPlan === plan.id
-                        ? 'bg-blue-600 hover:bg-blue-700'
+                        ? 'bg-primary text-primary-foreground hover:bg-primary-hover'
                         : plan.popular
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground hover:bg-primary-hover'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/70'
                     }`}
                     variant={selectedPlan === plan.id || plan.popular ? 'default' : 'outline'}
                   >
@@ -352,7 +352,7 @@ export default function SubscriptionOnboardingPage() {
             onClick={handleSubscribe}
             disabled={isProcessing}
             size="lg"
-            className="px-8 py-3 text-lg font-medium bg-blue-600 hover:bg-blue-700"
+            className="px-8 py-3 text-lg font-medium gradient-primary text-primary-foreground shadow-medium hover:shadow-strong"
           >
             {isProcessing ? (
               <>
@@ -372,7 +372,7 @@ export default function SubscriptionOnboardingPage() {
             onClick={handleSkip}
             variant="outline"
             size="lg"
-            className="px-8 py-3 text-lg font-medium"
+            className="px-8 py-3 text-lg font-medium border-border text-foreground hover:bg-muted"
           >
             Skip for now
           </Button>
@@ -383,7 +383,7 @@ export default function SubscriptionOnboardingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.7 }}
-          className="flex flex-wrap justify-center gap-6 text-sm text-gray-500"
+          className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
         >
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4" />

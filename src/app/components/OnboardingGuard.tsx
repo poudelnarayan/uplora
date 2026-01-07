@@ -49,13 +49,24 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     }
   }, [isLoaded, user, shouldSkipOnboarding, isLoading]);
 
+  // Redirect in an effect to avoid push() during render (prevents loops/jank)
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    if (shouldSkipOnboarding) return;
+    if (isLoading) return;
+    if (!shouldShowOnboarding) return;
+    if (pathname.startsWith('/onboarding')) return;
+
+    router.push('/onboarding/welcome');
+  }, [isLoaded, user, shouldSkipOnboarding, isLoading, shouldShowOnboarding, pathname, router]);
+
   // Show loading spinner while checking (only for authenticated users on protected pages)
   if (isChecking || (isLoaded && user && !shouldSkipOnboarding && isLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <InlineSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -66,13 +77,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   // 2. Not on an excluded page
   // 3. Onboarding is not completed
   // 4. Not already on onboarding page
-  if (isLoaded && user && !shouldSkipOnboarding && shouldShowOnboarding && !pathname.startsWith('/onboarding')) {
-    router.push('/onboarding/welcome');
+  if (isLoaded && user && !shouldSkipOnboarding && !isLoading && shouldShowOnboarding && !pathname.startsWith('/onboarding')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <InlineSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Redirecting to onboarding...</p>
+          <p className="mt-4 text-muted-foreground">Redirecting to onboarding...</p>
         </div>
       </div>
     );

@@ -2,12 +2,13 @@
 
 import React, { ReactNode, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, X, User, LogOut } from "lucide-react";
+import { ArrowLeft, User, LogOut } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
-const MotionDiv = motion.div as any;
+const MotionDiv = motion.div;
 
 interface OnboardingLayoutProps {
   children: ReactNode;
@@ -27,6 +28,7 @@ export default function OnboardingLayout({
   const router = useRouter();
   const { signOut } = useClerk();
   const { user } = useUser();
+  const { markOnboardingSeen, skipOnboarding } = useOnboarding();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -44,8 +46,16 @@ export default function OnboardingLayout({
     };
   }, []);
 
+  // Mark onboarding as "seen" as soon as user lands anywhere in onboarding.
+  // Requirement: once seen, do not auto-show again.
+  useEffect(() => {
+    markOnboardingSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleClose = () => {
-    router.push('/dashboard');
+    // Close = explicit skip (never show again automatically)
+    skipOnboarding();
   };
 
   const handleLogout = async () => {
@@ -60,14 +70,14 @@ export default function OnboardingLayout({
   return (
     <>
       {/* Progress Bar at Very Top - Sticky */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 py-4">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b border-border py-4">
         <div className={`max-w-4xl mx-auto px-6 flex items-center ${onBack ? 'justify-between' : 'justify-center'} pr-[30px]`}>
           {/* Back Button */}
           {onBack && (
             <Button
               variant="ghost"
               onClick={onBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -81,8 +91,8 @@ export default function OnboardingLayout({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                     i + 1 <= currentStep
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-500'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {i + 1}
@@ -90,7 +100,7 @@ export default function OnboardingLayout({
                 {i < totalSteps - 1 && (
                   <div
                     className={`w-8 h-0.5 transition-colors ${
-                      i + 1 < currentStep ? 'bg-green-600' : 'bg-gray-200'
+                      i + 1 < currentStep ? 'bg-primary' : 'bg-border'
                     }`}
                   />
                 )}
@@ -104,7 +114,7 @@ export default function OnboardingLayout({
               variant="ghost"
               size="sm"
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-8 h-8 p-0 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center overflow-hidden"
+              className="w-8 h-8 p-0 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center overflow-hidden"
             >
               {user?.imageUrl ? (
                 <img 
@@ -113,16 +123,16 @@ export default function OnboardingLayout({
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <User className="w-4 h-4 text-gray-600" />
+                <User className="w-4 h-4 text-muted-foreground" />
               )}
             </Button>
             
             {/* Dropdown Menu */}
             {showProfileDropdown && (
-              <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+              <div className="absolute right-0 top-10 bg-popover border border-border rounded-lg shadow-medium py-1 min-w-[140px] z-50">
                 <button
                   onClick={handleLogout}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
@@ -133,7 +143,7 @@ export default function OnboardingLayout({
         </div>
       </div>
 
-      <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="min-h-screen bg-background pt-20">
 
       {/* Main Content */}
       <main className="flex-1 py-8">

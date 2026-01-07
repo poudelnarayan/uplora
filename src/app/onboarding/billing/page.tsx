@@ -6,7 +6,7 @@ import OnboardingLayout from "../layout";
 import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 
-const MotionDiv = motion.div as any;
+const MotionDiv = motion.div;
 
 export default function BillingPage() {
   const router = useRouter();
@@ -87,7 +87,7 @@ export default function BillingPage() {
   return (
     <OnboardingLayout 
       currentStep={3} 
-      totalSteps={4} 
+      totalSteps={5} 
       onBack={handleBack}
       showClose={false}
     >
@@ -99,10 +99,10 @@ export default function BillingPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center space-y-4"
         >
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Choose your plan
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-muted-foreground">
             Try for free for 7 days - cancel anytime
           </p>
         </MotionDiv>
@@ -118,8 +118,8 @@ export default function BillingPage() {
             onClick={() => setIsYearly(false)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               !isYearly 
-                ? 'bg-green-600 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
           >
             Monthly
@@ -128,13 +128,13 @@ export default function BillingPage() {
             onClick={() => setIsYearly(true)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors relative ${
               isYearly 
-                ? 'bg-green-600 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
           >
             Yearly
             {isYearly && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="absolute -top-2 -right-2 bg-warning text-warning-foreground text-xs px-2 py-1 rounded-full">
                 40% OFF
               </span>
             )}
@@ -148,11 +148,11 @@ export default function BillingPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="flex items-center justify-center gap-3"
         >
-          <span className="text-sm text-gray-600">Free trial</span>
+          <span className="text-sm text-muted-foreground">Free trial</span>
           <button
             onClick={() => setFreeTrialEnabled(!freeTrialEnabled)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              freeTrialEnabled ? 'bg-green-600' : 'bg-gray-200'
+              freeTrialEnabled ? 'bg-primary' : 'bg-border'
             }`}
           >
             <span
@@ -175,16 +175,16 @@ export default function BillingPage() {
               key={plan.name}
               className={`relative p-8 rounded-2xl border-2 transition-all cursor-pointer ${
                 selectedPlan === index
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-primary/40 bg-primary/5'
                   : plan.popular
-                    ? 'border-green-200 bg-white hover:border-green-300'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    ? 'border-primary/20 bg-card hover:border-primary/30'
+                    : 'border-border bg-card hover:border-primary/20'
               }`}
               onClick={() => setSelectedPlan(index)}
             >
               {plan.popular && (
                 <div className="absolute -top-3 right-6">
-                  <span className="bg-green-600 text-white text-sm font-medium px-3 py-1 rounded-full">
+                  <span className="gradient-primary text-primary-foreground text-sm font-medium px-3 py-1 rounded-full shadow-medium">
                     Most popular
                   </span>
                 </div>
@@ -193,24 +193,24 @@ export default function BillingPage() {
               <div className="text-center space-y-6">
                 {/* Plan Header */}
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <p className="text-gray-600">{plan.description}</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                  <p className="text-muted-foreground">{plan.description}</p>
                 </div>
 
                 {/* Price */}
                 <div>
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-4xl font-bold text-foreground">
                     ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
-                  <span className="text-gray-600 ml-1">/month</span>
+                  <span className="text-muted-foreground ml-1">/month</span>
                 </div>
 
                 {/* Features */}
                 <div className="space-y-3 text-left">
                   {plan.features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-center gap-3">
-                      <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className={`text-gray-700 ${featureIndex === 0 ? 'font-semibold' : ''}`}>
+                      <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className={`text-foreground ${featureIndex === 0 ? 'font-semibold' : ''}`}>
                         {feature}
                       </span>
                     </div>
@@ -221,8 +221,8 @@ export default function BillingPage() {
                 <button
                   className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
                     selectedPlan === index
-                      ? 'bg-green-600 text-white hover:bg-green-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary-hover'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/70'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -233,8 +233,8 @@ export default function BillingPage() {
                 </button>
 
                 {/* Fine Print */}
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <Check className="h-4 w-4 text-green-500" />
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Check className="h-4 w-4 text-primary" />
                   <span>
                     {freeTrialEnabled ? '$0.00 due today, cancel anytime' : 'Start immediately, cancel anytime'}
                   </span>
@@ -253,7 +253,7 @@ export default function BillingPage() {
         >
           <button
             onClick={handleGetStarted}
-            className="bg-green-600 text-white py-4 px-8 rounded-lg font-medium hover:bg-green-700 transition-colors text-lg"
+            className="gradient-primary text-primary-foreground py-4 px-8 rounded-lg font-medium shadow-medium hover:shadow-strong transition-all text-lg"
           >
             Continue with {plans[selectedPlan].name} Plan
           </button>
