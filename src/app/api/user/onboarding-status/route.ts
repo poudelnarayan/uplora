@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { clerkUserId } = await getAuthenticatedUserSafe();
+    const { clerkUserId, clerkUser } = await getAuthenticatedUserSafe();
     const userId = clerkUserId;
 
     const body = await req.json().catch(() => ({}));
@@ -120,12 +120,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // IMPORTANT: your schema has NOT NULL constraints (at least `id` and `email`).
+    // Postgres validates NOT NULL fields even for `INSERT .. ON CONFLICT DO UPDATE`,
+    // so we must always supply them in the upsert payload.
+    const clerkEmail =
+      clerkUser?.emailAddresses?.[0]?.emailAddress ||
+      clerkUser?.primaryEmailAddress?.emailAddress ||
+      null;
+
+    const { data: existingUser, error: existingError } = await supabaseAdmin
+      .from("users")
+      .select("email")
+      .eq("clerkId", userId)
+      .maybeSingle();
+
+    if (existingError && existingError.code !== "PGRST116") {
+      console.error("❌ Error reading existing user email:", existingError);
+      return NextResponse.json({ error: "Failed to update onboarding status" }, { status: 500 });
+    }
+
+    const emailToUse = clerkEmail || existingUser?.email || null;
+    if (!emailToUse) {
+      return NextResponse.json(
+        { error: 'User email is missing; cannot satisfy users.email NOT NULL constraint.' },
+        { status: 400 }
+      );
+    }
+
     const { error } = await supabaseAdmin
       .from("users")
-      // NOTE: id is NOT NULL in your schema.
-      // Postgres validates NOT NULL constraints even for `INSERT .. ON CONFLICT DO UPDATE`,
-      // so we must always supply `id` here to avoid "null value in column id".
-      .upsert({ id: userId, clerkId: userId, ...update }, { onConflict: "clerkId" });
+      .upsert(
+        {
+          id: userId,
+          clerkId: userId,
+          email: emailToUse, // NOT NULL
+          name: clerkUser?.fullName || null,
+          image: clerkUser?.imageUrl || null,
+          ...update,
+        },
+        { onConflict: "clerkId" }
+      );
 
     if (error) {
       console.error("❌ Error updating onboarding status:", error);
