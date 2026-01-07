@@ -118,10 +118,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // IMPORTANT:
+    // - We must guarantee the row exists (new user) so onboarding doesn't loop.
+    // - But we must NOT overwrite `users.id` if your schema uses UUIDs.
+    //   So we only include `id` when the row doesn't exist yet.
+    const { data: existing, error: existingError } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("clerkId", userId)
+      .maybeSingle();
+
+    if (existingError && existingError.code !== "PGRST116") {
+      console.error("❌ Error checking existing user row:", existingError);
+      return NextResponse.json({ error: "Failed to update onboarding status" }, { status: 500 });
+    }
+
+    const insertOrUpdate = existing?.id
+      ? { clerkId: userId, ...update }
+      : { id: userId, clerkId: userId, ...update };
+
     const { error } = await supabaseAdmin
-      .from('users')
-      .update(update)
-      .eq('clerkId', userId);
+      .from("users")
+      .upsert(insertOrUpdate, { onConflict: "clerkId" });
 
     if (error) {
       console.error("❌ Error updating onboarding status:", error);

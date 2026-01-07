@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Check if user exists in our database and their onboarding status
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, createdAt, onboardingCompleted') // Use correct column name
+      .select('id, createdAt, onboardingCompleted, onboardingSkipped, onboardingSeenAt') // Use correct column names
       .eq('clerkId', userId)
       .single();
 
@@ -35,10 +35,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ isNew: true });
     }
 
-    // Check onboarding status - if not completed, they're considered new
-    if (!user.onboardingCompleted) {
-      return NextResponse.json({ isNew: true });
-    }
+    const onboardingCompleted = Boolean(user.onboardingCompleted);
+    const onboardingSkipped = Boolean((user as any).onboardingSkipped);
+    const onboardingSeenAt = (user as any).onboardingSeenAt ?? null;
 
     // Check if user has any content
     const { data: content, error: contentError } = await supabaseAdmin
@@ -96,14 +95,16 @@ export async function POST(req: NextRequest) {
       console.error('Error checking reels:', reelsError);
     }
 
-    // User is considered new if they haven't completed onboarding OR have no content
+    // User is considered new only if they are truly new AND have never seen onboarding.
+    // This aligns with OnboardingGuard requirements: show once, never loop.
     const hasContent = content && content.length > 0;
     const hasTeams = teams && teams.length > 0;
     const hasVideos = videos && videos.length > 0;
     const hasImages = images && images.length > 0;
     const hasReels = reels && reels.length > 0;
 
-    const isNew = !user.onboardingCompleted || (!hasContent && !hasTeams && !hasVideos && !hasImages && !hasReels);
+    const hasAnyContent = hasContent || hasTeams || hasVideos || hasImages || hasReels;
+    const isNew = !onboardingCompleted && !onboardingSkipped && !onboardingSeenAt && !hasAnyContent;
 
     return NextResponse.json({ isNew });
 
