@@ -59,8 +59,10 @@ export async function GET(req: NextRequest) {
         (reels.data?.length ?? 0) > 0;
     }
 
-    const shouldShowOnboarding =
-      !onboardingCompleted && !onboardingSkipped && !onboardingSeenAt && !hasAnyContent;
+    // Standard SaaS behavior:
+    // Keep showing onboarding until the user either completes OR explicitly skips.
+    // `onboardingSeenAt` is analytics only and must not block onboarding.
+    const shouldShowOnboarding = !onboardingCompleted && !onboardingSkipped;
 
     console.log(`📊 User ${userId} onboarding status:`, onboardingCompleted);
 

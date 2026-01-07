@@ -104,7 +104,8 @@ export async function POST(req: NextRequest) {
     const hasReels = reels && reels.length > 0;
 
     const hasAnyContent = hasContent || hasTeams || hasVideos || hasImages || hasReels;
-    const isNew = !onboardingCompleted && !onboardingSkipped && !onboardingSeenAt && !hasAnyContent;
+    // Align with onboarding guard behavior: onboarding continues until completed or skipped.
+    const isNew = !onboardingCompleted && !onboardingSkipped;
 
     return NextResponse.json({ isNew });
 

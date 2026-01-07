@@ -66,10 +66,8 @@ export function useOnboarding() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'seen' }),
       });
-      setShouldShowOnboarding(false);
     } catch {
       // best-effort
-      setShouldShowOnboarding(false);
     }
   };
 
