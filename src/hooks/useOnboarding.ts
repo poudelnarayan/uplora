@@ -76,57 +76,51 @@ export function useOnboarding() {
   };
 
   const completeOnboarding = async () => {
-    try {
-      console.log('🔄 Starting onboarding completion...');
-      const response = await fetch('/api/user/onboarding-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'complete' }),
-      });
-      
-      const responseData = await response.json();
-      console.log('📡 API Response:', responseData);
-      
-      if (response.ok) {
-        console.log('✅ Onboarding marked as completed in database');
-        setShouldShowOnboarding(false);
-        // Add a small delay to ensure state is updated
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 100);
-      } else {
-        console.error('❌ Failed to update onboarding status:', responseData);
-        // Still redirect to dashboard
-        setShouldShowOnboarding(false);
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 100);
-      }
-    } catch (error) {
-      console.error('❌ Error completing onboarding:', error);
-      // Still redirect to dashboard
-      setShouldShowOnboarding(false);
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 100);
+    console.log('🔄 Starting onboarding completion...');
+    const response = await fetch('/api/user/onboarding-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'complete' }),
+    });
+
+    const responseData = await response.json().catch(() => ({}));
+    console.log('📡 API Response:', responseData);
+
+    if (!response.ok) {
+      throw new Error(
+        (responseData as any)?.details?.message ||
+          (responseData as any)?.error ||
+          'Failed to mark onboarding completed'
+      );
     }
+
+    // Verify persistence (debugging + safety)
+    const persisted = (responseData as any)?.persisted;
+    if (!persisted?.onboardingCompleted) {
+      throw new Error('Onboarding completion did not persist (onboardingCompleted is still false).');
+    }
+
+    setShouldShowOnboarding(false);
+    router.replace('/dashboard');
   };
 
   const skipOnboarding = async () => {
-    try {
-      await fetch('/api/user/onboarding-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'skip' }),
-      });
-    } finally {
-      setShouldShowOnboarding(false);
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 100);
+    const response = await fetch('/api/user/onboarding-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'skip' }),
+    });
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        (responseData as any)?.details?.message ||
+          (responseData as any)?.error ||
+          'Failed to skip onboarding'
+      );
     }
+
+    setShouldShowOnboarding(false);
+    router.replace('/dashboard');
   };
 
   return {

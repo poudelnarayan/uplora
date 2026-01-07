@@ -145,13 +145,32 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("❌ Error updating onboarding status:", error);
-      return NextResponse.json({ error: "Failed to update onboarding status" }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: "Failed to update onboarding status",
+          details: {
+            message: (error as any)?.message,
+            code: (error as any)?.code,
+            hint: (error as any)?.hint,
+            details: (error as any)?.details,
+          },
+        },
+        { status: 500 }
+      );
     }
+
+    // Re-read after write so the client can verify persistence.
+    const { data: updatedUser } = await supabaseAdmin
+      .from("users")
+      .select("onboardingCompleted, onboardingSkipped, onboardingSeenAt")
+      .eq("clerkId", userId)
+      .maybeSingle();
 
     console.log("✅ Successfully updated onboarding status in database");
     return NextResponse.json({ 
       success: true, 
-      ...update
+      ...update,
+      persisted: updatedUser ?? null,
     });
 
   } catch (error) {

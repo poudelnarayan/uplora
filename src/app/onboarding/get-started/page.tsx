@@ -114,8 +114,7 @@ export default function GetStartedPage() {
       await completeOnboarding();
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      // Still try to complete onboarding
-      await completeOnboarding();
+      alert(error instanceof Error ? error.message : 'Failed to complete onboarding. Please try again.');
     }
   };
 
