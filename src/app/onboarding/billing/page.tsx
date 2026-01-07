@@ -72,11 +72,11 @@ export default function BillingPage() {
         freeTrialEnabled
       }));
       
-      // Redirect to subscription page
-      router.push('/onboarding/subscription');
+      // Continue to final step
+      router.push('/onboarding/get-started');
     } catch (error) {
       console.error('Error saving plan:', error);
-      router.push('/onboarding/subscription');
+      router.push('/onboarding/get-started');
     }
   };
 
@@ -87,7 +87,7 @@ export default function BillingPage() {
   return (
     <OnboardingLayout 
       currentStep={3} 
-      totalSteps={5} 
+      totalSteps={4} 
       onBack={handleBack}
       showClose={false}
     >

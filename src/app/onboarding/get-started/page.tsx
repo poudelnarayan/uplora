@@ -106,6 +106,9 @@ export default function GetStartedPage() {
       localStorage.removeItem('onboarding_team_name');
       localStorage.removeItem('onboarding_team_type');
       localStorage.removeItem('onboarding_connected_accounts');
+      localStorage.removeItem('onboarding_selected_plan');
+      // Legacy key from older onboarding versions (safe to clear)
+      localStorage.removeItem('onboarding_subscription');
       
       // Mark onboarding as completed in database and redirect
       await completeOnboarding();
@@ -117,13 +120,13 @@ export default function GetStartedPage() {
   };
 
   const handleBack = () => {
-    router.push('/onboarding/subscription');
+    router.push('/onboarding/billing');
   };
 
   return (
     <OnboardingLayout 
-      currentStep={5} 
-      totalSteps={5} 
+      currentStep={4} 
+      totalSteps={4} 
       onBack={handleBack}
     >
       <div className="text-center space-y-8">

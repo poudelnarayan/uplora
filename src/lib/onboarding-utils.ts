@@ -6,6 +6,9 @@ export const resetOnboarding = () => {
   localStorage.removeItem('onboarding_team_name');
   localStorage.removeItem('onboarding_team_type');
   localStorage.removeItem('onboarding_connected_accounts');
+  localStorage.removeItem('onboarding_selected_plan');
+  // Legacy key from older onboarding versions
+  localStorage.removeItem('onboarding_subscription');
   
   // Also clear user visited flags for testing
   const keys = Object.keys(localStorage);

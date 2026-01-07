@@ -80,7 +80,7 @@ export default function WelcomePage() {
   };
 
   return (
-    <OnboardingLayout currentStep={1} totalSteps={5}>
+    <OnboardingLayout currentStep={1} totalSteps={4}>
       <div className="text-center space-y-8">
         {/* Header */}
         <MotionDiv

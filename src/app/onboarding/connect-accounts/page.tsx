@@ -97,7 +97,7 @@ export default function ConnectAccountsPage() {
   return (
     <OnboardingLayout 
       currentStep={2} 
-      totalSteps={5} 
+      totalSteps={4} 
       onBack={handleBack}
     >
       <div className="text-center space-y-8">
