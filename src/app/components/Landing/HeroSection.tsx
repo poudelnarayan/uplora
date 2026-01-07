@@ -66,7 +66,7 @@ const HeroSection = () => {
                 <SignUpButton mode="redirect" forceRedirectUrl="/subscription">
                   <Button 
                     size="lg" 
-                    className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
+                    className="gradient-cta text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
                   >
                     Get Started Free
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -77,7 +77,7 @@ const HeroSection = () => {
                 <Link href="/subscription">
                   <Button 
                     size="lg" 
-                    className="gradient-primary text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
+                    className="gradient-cta text-primary-foreground hover-glow text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
                   >
                     Get Started Free
                     <ArrowRight className="ml-2 h-5 w-5" />

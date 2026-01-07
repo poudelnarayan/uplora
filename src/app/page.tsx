@@ -15,18 +15,20 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   return (
-    <DashboardLayout>
-      <HeroSection />
-      <MotivationSection />
-      <WorkflowSection />
-      <FeatureCards />
-      <ProblemSolutionSection />
-      <TeamCollaborationSection />
-      <ReviewsSection />
-      <StatsSection />
-      <PricingSection />
-      <FAQSection />
-      <ContactSection />
-    </DashboardLayout>
+    <div className="theme-landing">
+      <DashboardLayout>
+        <HeroSection />
+        <MotivationSection />
+        <WorkflowSection />
+        <FeatureCards />
+        <ProblemSolutionSection />
+        <TeamCollaborationSection />
+        <ReviewsSection />
+        <StatsSection />
+        <PricingSection />
+        <FAQSection />
+        <ContactSection />
+      </DashboardLayout>
+    </div>
   );
 }

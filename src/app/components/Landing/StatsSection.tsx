@@ -120,7 +120,7 @@ const StatsSection = () => {
           </p>
           <Button 
             size="lg" 
-            className="gradient-primary text-primary-foreground hover-glow text-lg px-8 py-4 group"
+            className="gradient-cta text-primary-foreground hover-glow text-lg px-8 py-4 group"
           >
             Get Started Free
             <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />

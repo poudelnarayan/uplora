@@ -162,7 +162,7 @@ const ContactSection = () => {
                   className={`w-full text-lg py-4 transition-all duration-300 group relative overflow-hidden ${
                     isSubmitting 
                       ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                      : 'gradient-primary text-primary-foreground hover:shadow-xl hover:scale-[1.02]'
+                      : 'gradient-cta text-primary-foreground hover:shadow-xl hover:scale-[1.02]'
                   }`}
                 >
                   {isSubmitting ? (

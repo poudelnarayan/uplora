@@ -51,7 +51,7 @@ const TeamCollaborationSection = () => {
               </div>
             </div>
 
-            <Button size="lg" className="gradient-primary text-primary-foreground hover-glow">
+            <Button size="lg" className="gradient-cta text-primary-foreground hover-glow">
               Start Collaborating Today
             </Button>
           </div>

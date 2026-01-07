@@ -121,7 +121,7 @@ const Navbar = () => {
                   <Link href="/sign-up?redirect_url=/dashboard">
                     <Button
                       size="sm"
-                      className="gradient-primary text-primary-foreground font-medium px-4 py-2 text-sm rounded-lg"
+                      className="gradient-cta text-primary-foreground font-medium px-4 py-2 text-sm rounded-lg"
                     >
                       Start Free
                     </Button>
@@ -131,7 +131,7 @@ const Navbar = () => {
                   <Link href="/dashboard">
                     <Button
                       size="sm"
-                      className="gradient-primary text-primary-foreground font-medium px-4 py-2 text-sm rounded-lg"
+                      className="gradient-cta text-primary-foreground font-medium px-4 py-2 text-sm rounded-lg"
                     >
                       Dashboard
                     </Button>

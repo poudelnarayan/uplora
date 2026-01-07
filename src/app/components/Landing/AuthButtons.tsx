@@ -23,7 +23,7 @@ export default function AuthButtons() {
           <Link href="/sign-up?redirect_url=/dashboard">
             <Button
               size="sm"
-              className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
+              className="gradient-cta text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
             >
               Start Free Trial
               <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -34,7 +34,7 @@ export default function AuthButtons() {
           <Link href="/dashboard">
             <Button
               size="sm"
-              className="gradient-primary text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
+              className="gradient-cta text-primary-foreground hover-glow shadow-medium font-medium px-6 group"
             >
               Go to Dashboard
               <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -49,7 +49,7 @@ export default function AuthButtons() {
           <Link href="/sign-up?redirect_url=/dashboard">
             <Button
               size="sm"
-              className="gradient-primary text-primary-foreground font-medium px-4"
+              className="gradient-cta text-primary-foreground font-medium px-4"
             >
               Get Started Free
             </Button>
@@ -59,7 +59,7 @@ export default function AuthButtons() {
           <Link href="/dashboard">
             <Button
               size="sm"
-              className="gradient-primary text-primary-foreground font-medium px-4"
+              className="gradient-cta text-primary-foreground font-medium px-4"
             >
               Go to Dashboard
             </Button>
