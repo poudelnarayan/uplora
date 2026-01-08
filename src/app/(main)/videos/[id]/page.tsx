@@ -1039,7 +1039,13 @@ export default function VideoPreviewPage() {
                 </div>
               </div>
 
-              <div id="edit-section" className="order-2 lg:order-none lg:col-span-10 space-y-6 -mx-2 sm:mx-0">
+              <div id="edit-section" className="order-2 lg:order-none lg:col-span-7 space-y-3 -mx-2 sm:mx-0">
+                {/* Processing chip (requested: above content div, left side) */}
+                {(!video.status || String(video.status).toUpperCase() === "PROCESSING") && (
+                  <div className="px-2 sm:px-0">
+                    <StatusChip status={"PROCESSING" as any} />
+                  </div>
+                )}
               
                 <div className={`card p-4 sm:p-6 space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 {/* Save status + action (moved away from under-video controls) */}
@@ -1314,9 +1320,9 @@ export default function VideoPreviewPage() {
               </div>
             </div>
 
-            {/* Right: sticky small player + status/timeline (desktop) */}
-            <div className="hidden lg:block lg:col-span-2 space-y-4 lg:sticky lg:top-4 self-start">
-              <div className="card p-2">
+            {/* Right: bigger player + actions (desktop) */}
+            <div className="hidden lg:block lg:col-span-5 space-y-3 lg:sticky lg:top-4 self-start">
+              <div className="card p-3">
                 <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
                   {urlError ? (
                     <div className="w-full h-full flex flex-col items-center justify-center text-red-400 p-4">
@@ -1331,14 +1337,12 @@ export default function VideoPreviewPage() {
                         className="w-full h-full object-contain"
                         preload="metadata"
                         src={webOptimizedUrl}
-                        onError={(e) => {
-                          console.error("Web-optimized video error:", e);
+                        onError={() => {
+                          console.error("Web-optimized video error");
                           setUrlError("Web-optimized video failed");
                         }}
                       />
-                      <div className="p-2 text-xs text-blue-400">
-                        ⚡ Web-optimized for fast streaming
-                      </div>
+                      <div className="p-2 text-xs text-blue-400">⚡ Web-optimized for fast streaming</div>
                     </div>
                   ) : blobUrl ? (
                     <div className="w-full h-full">
@@ -1347,14 +1351,12 @@ export default function VideoPreviewPage() {
                         controls
                         className="w-full h-full object-contain"
                         src={blobUrl}
-                        onError={(e) => {
-                          console.error("Blob video error:", e);
+                        onError={() => {
+                          console.error("Blob video error");
                           setUrlError("Blob video failed to load");
                         }}
                       />
-                      <div className="p-2 text-xs text-green-400">
-                        ✓ Playing from downloaded blob
-                      </div>
+                      <div className="p-2 text-xs text-green-400">✓ Playing from downloaded blob</div>
                     </div>
                   ) : playUrl ? (
                     <div className="w-full h-full">
@@ -1365,112 +1367,61 @@ export default function VideoPreviewPage() {
                         preload="metadata"
                         playsInline
                         src={playUrl}
-                        onError={(e) => {
-                          console.error("Video error:", e);
-                          // Don't auto-download the whole file; let the browser stream/range-request.
-                          // If streaming fails (rare), user can click "Force download & play".
+                        onError={() => {
+                          console.error("Video error");
                           setUrlError("Video preview failed to stream. Try again, or use “Force download & play”.");
-                        }}
-                        onLoadStart={() => console.log("Video started loading")}
-                        onCanPlay={() => console.log("Video can play")}
-                        onLoadedMetadata={() => console.log("Video metadata loaded")}
-                        onProgress={(e) => {
-                          if (e.target) {
-                            const video = e.target as HTMLVideoElement;
-                            const buffered = video.buffered;
-                            if (buffered.length > 0) {
-                              const percent = (buffered.end(0) / video.duration) * 100;
-                              console.log(`Video buffered: ${percent.toFixed(1)}%`);
-                            }
-                          }
                         }}
                       />
                       <div className="p-2 text-xs text-gray-400 space-x-2">
                         <a href={playUrl} target="_blank" rel="noopener" className="text-blue-400 underline">Direct link</a>
-                        <button 
-                          onClick={downloadAsBlob} 
-                          disabled={isDownloading}
-                          className="text-yellow-400 underline hover:text-yellow-300"
-                        >
+                        <button onClick={downloadAsBlob} disabled={isDownloading} className="text-yellow-400 underline hover:text-yellow-300">
                           {isDownloading ? "Downloading..." : "Force download & play"}
                         </button>
-                        <button 
-                          onClick={processForWeb} 
-                          disabled={isProcessing}
-                          className="text-green-400 underline hover:text-green-300"
-                        >
+                        <button onClick={processForWeb} disabled={isProcessing} className="text-green-400 underline hover:text-green-300">
                           {isProcessing ? "Optimizing..." : "⚡ Optimize for web"}
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      Generating preview...
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">Generating preview...</div>
                   )}
                 </div>
               </div>
-              {/* Edit button between player and status card */}
-              <div className="px-2">
-                <button
-                  className="btn btn-ghost w-full"
-                  onClick={() => {
-                    const el = document.getElementById('edit-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
-                >
-                  <Edit3 className="w-4 h-4 mr-1" /> Edit Video
-                </button>
-              </div>
-              <div className="card p-4">
-                {/* Row 1: Status pill */}
-                <div className="flex items-center justify-between gap-3">
-                  <StatusChip status={(video.status || 'PROCESSING') as any} />
-                </div>
 
-                {/* Row 2: Subtitle */}
-                {video.status === "PENDING" && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {role === "EDITOR" ? (
-                      <span>Awaiting publish — edits are locked. The owner can send this back for editing.</span>
-                    ) : (
-                      <span>Approve this request to allow a manager to publish. Or send back for editing to unlock editor changes.</span>
-                    )}
-                  </div>
-                )}
-                {video.status === "APPROVED" && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {role === "MANAGER" ? (
-                      <span>Approved — you can publish to YouTube now.</span>
-                    ) : role === "OWNER" || role === "ADMIN" ? (
-                      <span>Approved — a manager can publish now (or you can publish anytime).</span>
-                    ) : (
-                      <span>Approved — waiting for a manager to publish.</span>
-                    )}
-                  </div>
-                )}
-
-                {/* Row 3: Actions (below video) */}
-                <div className="mt-3 space-y-2">
+              {/* Buttons BELOW video on the right side */}
+              <div className="card p-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  {/* Workflow (left) */}
                   <div className="flex items-center gap-2 flex-wrap">
-
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                        {submitting ? "Working…" : "Mark ready to publish"}
+                        {submitting ? "Working…" : "Mark ready"}
                       </button>
                     )}
-
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
                       <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
                         {submitting ? "Working…" : "Request approval"}
                       </button>
                     )}
-
                     {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === "PENDING" && (
                       <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
                         {submitting ? "Approving…" : "Approve"}
                       </button>
                     )}
+                  </div>
+
+                  {/* Primary actions (right) */}
+                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        const el = document.getElementById('edit-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      <Edit3 className="w-4 h-4 mr-1" />
+                      Edit video
+                    </button>
 
                     {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
                       <button
@@ -1479,50 +1430,46 @@ export default function VideoPreviewPage() {
                         onClick={approveOrPublish}
                       >
                         <Youtube className="h-5 w-5" />
-                        {submitting ? 'Working…' : 'Publish to YouTube'}
+                        {submitting ? 'Working…' : 'Publish'}
                       </button>
                     )}
 
                     {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                      <button
-                        className="btn btn-warning"
-                        onClick={() => setDeleteModalOpen(true)}
-                        title="Delete video permanently"
-                      >
+                      <button className="btn btn-warning" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
                         <Trash2 className="w-4 h-4 mr-1" />
-                        Delete video
+                        Delete
                       </button>
                     )}
                   </div>
-
-                  {(role === "OWNER") && video.teamId && video.status === "PENDING" && (
-                    <button
-                      className="btn btn-ghost w-full"
-                      disabled={submitting}
-                      title="Revert to Processing so editors can continue editing"
-                      onClick={async () => {
-                        try {
-                          setSubmitting(true);
-                          const res = await fetch(`/api/videos/${video.id}`, {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ status: "PROCESSING" })
-                          });
-                          if (!res.ok) throw new Error();
-                          await res.json();
-                          setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
-                          notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
-                        } catch {
-                          notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
-                        } finally {
-                          setSubmitting(false);
-                        }
-                      }}
-                    >
-                      ↩ Send back for editing
-                    </button>
-                  )}
                 </div>
+
+                {(role === "OWNER") && video.teamId && video.status === "PENDING" && (
+                  <button
+                    className="btn btn-ghost w-full mt-2"
+                    disabled={submitting}
+                    title="Revert to Processing so editors can continue editing"
+                    onClick={async () => {
+                      try {
+                        setSubmitting(true);
+                        const res = await fetch(`/api/videos/${video.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ status: "PROCESSING" })
+                        });
+                        if (!res.ok) throw new Error();
+                        await res.json();
+                        setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
+                        notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
+                      } catch {
+                        notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
+                      } finally {
+                        setSubmitting(false);
+                      }
+                    }}
+                  >
+                    ↩ Send back for editing
+                  </button>
+                )}
               </div>
               {/* Upload timeline removed per request */}
             </div>
