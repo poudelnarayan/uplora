@@ -1032,9 +1032,15 @@ export default function VideoPreviewPage() {
                   <div className="rounded-xl border bg-background/60 backdrop-blur p-3">
                     <div className="flex items-center gap-2 flex-wrap">
 
-                      {(role === "EDITOR" || role === "MANAGER" || role === "OWNER" || role === "ADMIN") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                         <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
                           {submitting ? "Working…" : "Mark ready to upload"}
+                        </button>
+                      )}
+
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "READY" && (
+                        <button className="btn btn-outline" disabled={submitting} onClick={undoReadyToProcessing}>
+                          {submitting ? "Working…" : "Undo ready (back to processing)"}
                         </button>
                       )}
 
@@ -1431,16 +1437,6 @@ export default function VideoPreviewPage() {
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   {/* Workflow (left) */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                      <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                        {submitting ? "Working…" : "Mark ready to upload"}
-                      </button>
-                    )}
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "READY" && (
-                      <button className="btn btn-outline" disabled={submitting} onClick={undoReadyToProcessing}>
-                        {submitting ? "Working…" : "Undo ready (back to processing)"}
-                      </button>
-                    )}
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
                         {submitting ? "Working…" : "Mark ready to upload"}
