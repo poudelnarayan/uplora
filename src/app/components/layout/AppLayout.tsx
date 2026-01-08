@@ -481,7 +481,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               >
                 <div className="flex items-center gap-4">
                   {/* Spinner ring outside the settings icon */}
-                  <div className="relative h-14 w-14">
+                  <div className="relative h-14 w-14 shrink-0">
                     <div className="absolute inset-0 rounded-full border-4 border-muted" />
                     <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                     <div className="absolute inset-0 flex items-center justify-center">
