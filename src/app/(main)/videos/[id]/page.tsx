@@ -729,7 +729,7 @@ export default function VideoPreviewPage() {
       setVideo({ ...video, status: "READY" });
       notifications.addNotification({
         type: "success",
-        title: "Ready to publish",
+        title: "Ready to upload",
         message: "Marked as ready. You can now request approval.",
       });
     } catch (e) {
@@ -754,7 +754,7 @@ export default function VideoPreviewPage() {
           notifications.addNotification({
             type: "error",
             title: "Not ready to post",
-            message: "This video is not ready yet. Ask editors to mark it 'Ready to post' before publishing.",
+            message: "This video is not ready yet. Ask editors to mark it 'Ready to upload' before publishing.",
           });
           setSubmitting(false);
           return;
@@ -1008,9 +1008,9 @@ export default function VideoPreviewPage() {
                   <div className="rounded-xl border bg-background/60 backdrop-blur p-3">
                     <div className="flex items-center gap-2 flex-wrap">
 
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                      {(role === "EDITOR" || role === "MANAGER" || role === "OWNER" || role === "ADMIN") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                         <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                          {submitting ? "Working…" : "Mark ready to publish"}
+                          {submitting ? "Working…" : "Mark ready to upload"}
                         </button>
                       )}
 
@@ -1407,9 +1407,9 @@ export default function VideoPreviewPage() {
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   {/* Workflow (left) */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                    {(role === "EDITOR" || role === "MANAGER" || role === "OWNER" || role === "ADMIN") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                        {submitting ? "Working…" : "Mark ready"}
+                        {submitting ? "Working…" : "Mark ready to upload"}
                       </button>
                     )}
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
@@ -1424,10 +1424,11 @@ export default function VideoPreviewPage() {
                     )}
                   </div>
 
-                  {/* Primary actions (right) - vertical stack */}
-                  <div className="flex flex-col items-stretch gap-2 w-full sm:w-auto sm:min-w-[220px]">
+                  {/* Primary actions (right) - wide, centered, spaced */}
+                  <div className="w-full sm:w-auto">
+                    <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
                     <button
-                      className="btn btn-primary w-full"
+                      className="btn btn-primary w-full py-3 text-base"
                       onClick={() => {
                         const el = document.getElementById('edit-section');
                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1439,21 +1440,22 @@ export default function VideoPreviewPage() {
 
                     {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
                       <button
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-base font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         disabled={submitting}
                         onClick={approveOrPublish}
                       >
                         <Youtube className="h-5 w-5" />
-                        {submitting ? 'Working…' : 'Publish'}
+                        {submitting ? 'Working…' : 'Publish to YouTube'}
                       </button>
                     )}
 
                     {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                      <button className="btn btn-warning w-full" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
+                      <button className="btn btn-warning w-full py-3 text-base" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
                         <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
+                        Delete video
                       </button>
                     )}
+                    </div>
                   </div>
                 </div>
 

@@ -71,7 +71,7 @@ export async function POST(
         return NextResponse.json({ error: "Not allowed" }, { status: 403 });
       }
     } else {
-      // Team video: only editor/manager can mark ready (owner can publish/approve anyway)
+      // Team video: editor/manager (and owner/admin) can mark ready
       const { data: team, error: teamError } = await supabaseAdmin
         .from("teams")
         .select("id, ownerId")
@@ -81,23 +81,24 @@ export async function POST(
         return NextResponse.json({ error: "Team not found" }, { status: 404 });
       }
       if (team.ownerId === me.id) {
-        return NextResponse.json({ error: "Owner doesn't need to mark ready. You can approve/publish." }, { status: 400 });
+        // Owner can mark ready too (useful for solo workflows)
+      } else {
+        const { data: membership } = await supabaseAdmin
+          .from("team_members")
+          .select("role,status")
+          .eq("teamId", team.id)
+          .eq("userId", me.id)
+          .single();
+        const role = String((membership as any)?.role || "");
+        const mStatus = String((membership as any)?.status || "");
+        if (mStatus !== "ACTIVE") {
+          return NextResponse.json({ error: "Not an active member of this team" }, { status: 403 });
+        }
+        if (role !== "MANAGER" && role !== "EDITOR" && role !== "ADMIN") {
+          return NextResponse.json({ error: "Not allowed to mark ready" }, { status: 403 });
+        }
       }
 
-      const { data: membership } = await supabaseAdmin
-        .from("team_members")
-        .select("role,status")
-        .eq("teamId", team.id)
-        .eq("userId", me.id)
-        .single();
-      const role = String((membership as any)?.role || "");
-      const mStatus = String((membership as any)?.status || "");
-      if (mStatus !== "ACTIVE") {
-        return NextResponse.json({ error: "Not an active member of this team" }, { status: 403 });
-      }
-      if (role !== "MANAGER" && role !== "EDITOR") {
-        return NextResponse.json({ error: "Only managers/editors can mark ready" }, { status: 403 });
-      }
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin

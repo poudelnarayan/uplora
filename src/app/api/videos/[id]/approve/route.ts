@@ -177,7 +177,7 @@ export async function POST(
       // Readiness gate: block publish until READY or APPROVED
       if (upperStatus !== "READY" && upperStatus !== "APPROVED") {
         return NextResponse.json(
-          { error: "This video is not ready to post yet. Ask your editors to mark it 'Ready to post' before publishing." },
+          { error: "This video is not ready to upload yet. Ask your editors to mark it 'Ready to upload' before publishing." },
           { status: 400 }
         );
       }
@@ -232,8 +232,8 @@ export async function POST(
             ...current,
             youtube: {
               ...(current.youtube || {}),
-              accessToken: credentials.access_token,
-              tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+              accessToken: String(credentials.access_token),
+              tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : undefined,
             },
           }));
         } catch {}
@@ -280,8 +280,8 @@ export async function POST(
                 ...current,
                 youtube: {
                   ...(current.youtube || {}),
-                  accessToken: credentials.access_token,
-                  tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : null,
+                  accessToken: String(credentials.access_token),
+                  tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : undefined,
                 },
               }));
             } catch {}

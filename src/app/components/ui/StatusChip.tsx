@@ -39,7 +39,7 @@ export function StatusChip({ status }: { status: Status }) {
     return (
       <span className={`${baseClasses} bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-700`} style={fontStyle}>
         <Check className="w-4 h-4" />
-        Ready to post
+        Ready to upload
       </span>
     );
   }
