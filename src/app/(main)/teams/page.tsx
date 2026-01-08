@@ -185,11 +185,10 @@ const Teams = () => {
       const result = await res.json().catch(() => ({}));
       
       if (res.ok) {
-        // Success - close any open modals and refresh UI
+        // Success - refresh UI (do NOT close Team Details; only the invite dialog should close)
         try { await refreshTeams(true); } catch {}
         setIsInviteOpen(false);
         setSelectedTeamForInvite(undefined);
-        setViewingTeam(null);
         return result;
       } else {
         const msg = result?.message || result?.error || "Failed to send invitation";

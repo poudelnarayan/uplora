@@ -88,6 +88,7 @@ export const TeamDetailsDialog = ({
   const [cancelInviteOpen, setCancelInviteOpen] = useState(false);
   const [cancelInviteTarget, setCancelInviteTarget] = useState<any | null>(null);
   const [cancelingInvite, setCancelingInvite] = useState(false);
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
 
   const canManageTeam = Boolean(team?.isOwner) || team?.role === "OWNER";
 
@@ -385,18 +386,59 @@ export const TeamDetailsDialog = ({
                               </div>
                             </div>
 
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive border-destructive/20 hover:bg-destructive/10"
-                              onClick={() => {
-                                setCancelInviteTarget(invite);
-                                setCancelInviteOpen(true);
-                              }}
-                            >
-                              Cancel
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                disabled={resendingInviteId === String(invite.id) || !team?.backendId}
+                                onClick={async () => {
+                                  if (!team?.backendId) return;
+                                  const inviteId = String(invite.id);
+                                  setResendingInviteId(inviteId);
+                                  try {
+                                    const res = await fetch(
+                                      `/api/teams/${encodeURIComponent(String(team.backendId))}/invite/${encodeURIComponent(inviteId)}`,
+                                      { method: "POST" }
+                                    );
+                                    const js = await res.json().catch(() => ({}));
+                                    if (!res.ok) throw new Error(js?.error || js?.message || "Failed to resend invitation");
+                                    toast({ title: "Invitation resent", description: `Resent to ${invite.email}` });
+                                  } catch (e) {
+                                    toast({
+                                      title: "Resend failed",
+                                      description: e instanceof Error ? e.message : "Please try again",
+                                      variant: "destructive",
+                                    });
+                                  } finally {
+                                    setResendingInviteId(null);
+                                  }
+                                }}
+                              >
+                                {resendingInviteId === String(invite.id) ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Resending…
+                                  </>
+                                ) : (
+                                  "Resend"
+                                )}
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                                onClick={() => {
+                                  setCancelInviteTarget(invite);
+                                  setCancelInviteOpen(true);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
