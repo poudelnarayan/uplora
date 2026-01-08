@@ -28,6 +28,8 @@ interface Team {
     platforms: string[];
   }>;
   color: string;
+  role?: string;
+  isOwner?: boolean;
 }
 
 interface TeamCardProps {
@@ -74,45 +76,58 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
                 <Users className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
-                  {team.name}
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
+                    {team.name}
+                  </CardTitle>
+                  {team.isOwner ? (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
+                      Created
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      Joined
+                    </Badge>
+                  )}
+                </div>
                 <CardDescription className="text-sm">
                   {team.members_data.length} member{team.members_data.length !== 1 ? 's' : ''}
                 </CardDescription>
               </div>
             </div>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => onEdit(team)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Team
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => onDelete(team.id)}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4 mr-2" />
-                  )}
-                  Delete Team
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {team.isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={() => onEdit(team)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Team
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onDelete(team.id)}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    Delete Team
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </CardHeader>
         

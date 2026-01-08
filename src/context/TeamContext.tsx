@@ -9,6 +9,9 @@ type TeamBasic = {
   description?: string;
   // Role of the current user in this team (returned by /api/teams)
   role?: "OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | "MEMBER";
+  // Owner metadata (returned by /api/teams)
+  ownerId?: string;
+  isOwner?: boolean;
   // Optional fields returned by /api/teams for richer UIs (Teams page member counts, avatars, etc.)
   members_data?: Array<{ id: string; name: string; email: string; role: string; avatar: string }>;
   memberCount?: number;

@@ -89,7 +89,8 @@ export async function DELETE(
     const result = await withAuth(async ({ supabaseUser }) => {
       // Check access for current user
       const access = await checkTeamAccess(teamId, supabaseUser.id);
-      if (!access.hasAccess || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
+        if (!access.hasAccess || access.role !== "OWNER") {
+      if (!access.hasAccess || access.role !== "OWNER") {
         return createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions");
       }
 

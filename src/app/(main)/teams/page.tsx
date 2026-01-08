@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, Users, Shield, Settings, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -36,6 +36,8 @@ interface Team {
   platforms: string[];
   members_data: TeamMember[];
   color: string;
+  role?: string;
+  isOwner?: boolean;
 }
 
 const teamColors = [
@@ -89,7 +91,12 @@ const Teams = () => {
       platforms: [],
     })),
     color: teamColors[i % teamColors.length],
+    role: (t as any).role || undefined,
+    isOwner: Boolean((t as any).isOwner) || (t as any).role === "OWNER",
   }));
+
+  const createdTeams = useMemo(() => teams.filter((t) => t.isOwner), [teams]);
+  const joinedTeams = useMemo(() => teams.filter((t) => !t.isOwner), [teams]);
 
   // Load teams data on mount
   useEffect(() => {
@@ -447,17 +454,73 @@ const Teams = () => {
             </Card>
           </div>
         ) : (
-          teams.map((team, index) => (
-            <TeamCard
-              key={team.id}
-              team={team}
-              index={index}
-              onEdit={(t) => setEditingTeam(t)}
-              onDelete={handleDeleteTeam}
-              onViewTeam={(t) => setViewingTeam(t)}
-              isDeleting={deletingTeamId === team.id}
-            />
-          ))
+          <div className="space-y-8">
+            {createdTeams.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-semibold text-foreground">Created by you</h2>
+                    <p className="text-xs text-muted-foreground">You can manage members, invites, and settings.</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {createdTeams.length} team{createdTeams.length !== 1 ? "s" : ""}
+                  </Badge>
+                </div>
+                <div className={`relative grid gap-6 ${
+                  createdTeams.length === 1
+                    ? "grid-cols-1"
+                    : createdTeams.length === 2
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+                }`}>
+                  {createdTeams.map((team, index) => (
+                    <TeamCard
+                      key={team.id}
+                      team={team}
+                      index={index}
+                      onEdit={(t) => setEditingTeam(t)}
+                      onDelete={handleDeleteTeam}
+                      onViewTeam={(t) => setViewingTeam(t)}
+                      isDeleting={deletingTeamId === team.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {joinedTeams.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-semibold text-foreground">Joined teams</h2>
+                    <p className="text-xs text-muted-foreground">Only the creator can edit/delete/remove members.</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {joinedTeams.length} team{joinedTeams.length !== 1 ? "s" : ""}
+                  </Badge>
+                </div>
+                <div className={`relative grid gap-6 ${
+                  joinedTeams.length === 1
+                    ? "grid-cols-1"
+                    : joinedTeams.length === 2
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+                }`}>
+                  {joinedTeams.map((team, index) => (
+                    <TeamCard
+                      key={team.id}
+                      team={team}
+                      index={index}
+                      onEdit={(t) => setEditingTeam(t)}
+                      onDelete={handleDeleteTeam}
+                      onViewTeam={(t) => setViewingTeam(t)}
+                      isDeleting={deletingTeamId === team.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
           </>
         )}

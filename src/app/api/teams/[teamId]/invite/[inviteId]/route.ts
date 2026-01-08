@@ -50,24 +50,10 @@ export async function DELETE(
       );
     }
 
-    // Check if user has permission to cancel invitations
-    let hasPermission = team.ownerId === user.id; // Owner always has permission
-    
-    if (!hasPermission) {
-      // Check if user is admin or manager
-      const { data: membership } = await supabaseAdmin
-        .from('team_members')
-        .select('role')
-        .eq('teamId', teamId)
-        .eq('userId', user.id)
-        .single();
-      
-      hasPermission = membership && ['ADMIN', 'MANAGER'].includes(membership.role);
-    }
-
-    if (!hasPermission) {
+    // Only team owner (creator) can manage invitations
+    if (team.ownerId !== user.id) {
       return NextResponse.json(
-        createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions to cancel invitations"),
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only the team owner can manage invitations"),
         { status: 403 }
       );
     }
@@ -169,23 +155,10 @@ export async function POST(
       );
     }
 
-    // Check if user has permission to resend invitations
-    let hasPermission = team.ownerId === user.id;
-    
-    if (!hasPermission) {
-      const { data: membership } = await supabaseAdmin
-        .from('team_members')
-        .select('role')
-        .eq('teamId', teamId)
-        .eq('userId', user.id)
-        .single();
-      
-      hasPermission = membership && ['ADMIN', 'MANAGER'].includes(membership.role);
-    }
-
-    if (!hasPermission) {
+    // Only team owner (creator) can manage invitations
+    if (team.ownerId !== user.id) {
       return NextResponse.json(
-        createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions to resend invitations"),
+        createErrorResponse(ErrorCodes.FORBIDDEN, "Only the team owner can manage invitations"),
         { status: 403 }
       );
     }

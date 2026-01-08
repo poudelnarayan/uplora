@@ -47,6 +47,8 @@ interface Team {
   platforms: string[];
   members_data: TeamMember[];
   color: string;
+  role?: string;
+  isOwner?: boolean;
 }
 
 interface TeamDetailsDialogProps {
@@ -81,6 +83,13 @@ export const TeamDetailsDialog = ({
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
   const [removingMember, setRemovingMember] = useState(false);
+  const [invites, setInvites] = useState<any[]>([]);
+  const [loadingInvites, setLoadingInvites] = useState(false);
+  const [cancelInviteOpen, setCancelInviteOpen] = useState(false);
+  const [cancelInviteTarget, setCancelInviteTarget] = useState<any | null>(null);
+  const [cancelingInvite, setCancelingInvite] = useState(false);
+
+  const canManageTeam = Boolean(team?.isOwner) || team?.role === "OWNER";
 
   useEffect(() => {
     if (!isOpen) return;
@@ -101,6 +110,38 @@ export const TeamDetailsDialog = ({
       cancelled = true;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!team?.backendId) return;
+    if (!canManageTeam) {
+      setInvites([]);
+      setLoadingInvites(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingInvites(true);
+      try {
+        const res = await fetch(`/api/teams/${encodeURIComponent(String(team.backendId))}/details`, { cache: "no-store" });
+        const js = await res.json().catch(() => ({}));
+        const payload = js?.data ?? js;
+        const nextInvites = Array.isArray(payload?.invites)
+          ? payload.invites
+          : Array.isArray(payload?.data?.invites)
+          ? payload.data.invites
+          : [];
+        if (!cancelled) setInvites(nextInvites);
+      } catch {
+        if (!cancelled) setInvites([]);
+      } finally {
+        if (!cancelled) setLoadingInvites(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, team?.backendId, canManageTeam]);
 
   const addablePlatforms = useMemo(() => {
     const connected = connectedPlatforms.filter((p) => p && Object.prototype.hasOwnProperty.call(platformIcons, p));
@@ -158,8 +199,11 @@ export const TeamDetailsDialog = ({
           setRemoveConfirmOpen(false);
           setRemoveTarget(null);
           setRemovingMember(false);
+          setCancelInviteOpen(false);
+          setCancelInviteTarget(null);
+          setCancelingInvite(false);
+          onClose();
         }
-        onClose();
       }}
     >
       <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-xl border border-border/50">
@@ -179,14 +223,18 @@ export const TeamDetailsDialog = ({
               </div>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" size="sm" className="gap-2 hover:scale-105 transition-transform" onClick={() => onEditTeam(team)}>
-                <Edit className="h-4 w-4" />
-                Edit Team
-              </Button>
-              <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:scale-105 transition-transform shadow-lg" onClick={() => onInviteMember(team.id)}>
-                <UserPlus className="h-4 w-4" />
-                Invite Member
-              </Button>
+              {canManageTeam && (
+                <>
+                  <Button variant="outline" size="sm" className="gap-2 hover:scale-105 transition-transform" onClick={() => onEditTeam(team)}>
+                    <Edit className="h-4 w-4" />
+                    Edit Team
+                  </Button>
+                  <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:scale-105 transition-transform shadow-lg" onClick={() => onInviteMember(team.id)}>
+                    <UserPlus className="h-4 w-4" />
+                    Invite Member
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -210,14 +258,16 @@ export const TeamDetailsDialog = ({
                       <span className="capitalize">{platform}</span>
                       <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute -top-1 -right-1 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm"
-                      onClick={() => handleRemovePlatform(platform)}
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </Button>
+                    {canManageTeam && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm"
+                        onClick={() => handleRemovePlatform(platform)}
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -237,7 +287,7 @@ export const TeamDetailsDialog = ({
             )}
 
             {/* Quick Add - Show available platforms */}
-            {team.platforms.length > 0 && (
+            {canManageTeam && team.platforms.length > 0 && (
               <div className="pt-2">
                 <details className="group">
                   <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
@@ -275,6 +325,71 @@ export const TeamDetailsDialog = ({
 
           <Separator />
 
+          {/* Pending invitations */}
+          {canManageTeam && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Pending invitations</h3>
+                <Badge variant="outline" className="text-xs">
+                  {invites.filter((i) => String(i?.status || "").toUpperCase() === "PENDING").length} pending
+                </Badge>
+              </div>
+
+              {loadingInvites ? (
+                <div className="text-sm text-muted-foreground">Loading invites…</div>
+              ) : invites.filter((i) => String(i?.status || "").toUpperCase() === "PENDING").length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-4 text-sm text-muted-foreground">
+                    No pending invitations.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {invites
+                    .filter((i) => String(i?.status || "").toUpperCase() === "PENDING")
+                    .map((invite) => (
+                      <Card key={invite.id} className="border-border/50">
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium truncate">{invite.email}</span>
+                                <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20">
+                                  Pending
+                                </Badge>
+                                {invite.role && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {String(invite.role)}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate">
+                                Invitation not accepted yet.
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                              onClick={() => {
+                                setCancelInviteTarget(invite);
+                                setCancelInviteOpen(true);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <Separator />
+
           {/* Team Members */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -293,10 +408,12 @@ export const TeamDetailsDialog = ({
                       <h4 className="text-sm font-medium">No members yet</h4>
                       <p className="text-xs text-muted-foreground">Invite team members to get started</p>
                     </div>
-                    <Button onClick={() => onInviteMember(team.id)} size="sm" className="mt-1">
-                      <UserPlus className="h-3 w-3 mr-1" />
-                      Invite Member
-                    </Button>
+                    {canManageTeam && (
+                      <Button onClick={() => onInviteMember(team.id)} size="sm" className="mt-1">
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Invite Member
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -340,14 +457,16 @@ export const TeamDetailsDialog = ({
                           </div>
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                          onClick={() => openRemoveMemberConfirm(member)}
-                        >
-                          <UserX className="h-3 w-3" />
-                        </Button>
+                        {canManageTeam && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                            onClick={() => openRemoveMemberConfirm(member)}
+                          >
+                            <UserX className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -408,6 +527,75 @@ export const TeamDetailsDialog = ({
                   </span>
                 ) : (
                   "Remove"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Confirm cancel invite */}
+        <Dialog
+          open={cancelInviteOpen}
+          onOpenChange={(next) => {
+            if (cancelingInvite) return;
+            setCancelInviteOpen(next);
+            if (!next) setCancelInviteTarget(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Cancel invitation?</DialogTitle>
+              <DialogDescription>
+                {cancelInviteTarget?.email ? (
+                  <>
+                    This will cancel the pending invitation for{" "}
+                    <span className="font-medium text-foreground">{cancelInviteTarget.email}</span>. They will not be able to join using the old invite link.
+                  </>
+                ) : (
+                  "This will cancel the pending invitation."
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" disabled={cancelingInvite} onClick={() => setCancelInviteOpen(false)}>
+                Keep
+              </Button>
+              <Button
+                type="button"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={cancelingInvite || !cancelInviteTarget?.id || !team?.backendId}
+                onClick={async () => {
+                  if (!team?.backendId || !cancelInviteTarget?.id) return;
+                  setCancelingInvite(true);
+                  try {
+                    const res = await fetch(
+                      `/api/teams/${encodeURIComponent(String(team.backendId))}/invite/${encodeURIComponent(String(cancelInviteTarget.id))}`,
+                      { method: "DELETE" }
+                    );
+                    const js = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(js?.error || js?.message || "Failed to cancel invite");
+                    setInvites((prev) => prev.filter((i) => i?.id !== cancelInviteTarget.id));
+                    toast({ title: "Invitation canceled", description: "The pending invite was canceled." });
+                    setCancelInviteOpen(false);
+                    setCancelInviteTarget(null);
+                  } catch (e) {
+                    toast({
+                      title: "Cancel failed",
+                      description: e instanceof Error ? e.message : "Please try again",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setCancelingInvite(false);
+                  }
+                }}
+              >
+                {cancelingInvite ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Canceling…
+                  </span>
+                ) : (
+                  "Cancel invite"
                 )}
               </Button>
             </DialogFooter>

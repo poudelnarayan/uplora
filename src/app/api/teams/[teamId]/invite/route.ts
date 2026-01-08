@@ -42,8 +42,8 @@ export async function POST(
 
       // Check if user has permission to invite (owner, admin, or manager)
       const access = await checkTeamAccess(teamId, supabaseUser.id);
-      if (!access.hasAccess || (access.role !== 'OWNER' && access.role !== 'ADMIN' && access.role !== 'MANAGER')) {
-        return createErrorResponse(ErrorCodes.FORBIDDEN, "Insufficient permissions to invite members");
+      if (!access.hasAccess || access.role !== "OWNER") {
+        return createErrorResponse(ErrorCodes.FORBIDDEN, "Only the team owner can invite members");
       }
 
       // Check if user is already a member by looking up the user first

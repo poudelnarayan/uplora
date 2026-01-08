@@ -52,7 +52,7 @@ export async function POST(
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
-    // Ensure current user is team owner or admin/manager
+    // Ensure current user is team owner (creator)
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
       .select('*')
@@ -64,17 +64,7 @@ export async function POST(
     }
 
     if (team.ownerId !== currentUser.id) {
-      const { data: isPrivileged, error: privilegeError } = await supabaseAdmin
-        .from('team_members')
-        .select('*')
-        .eq('teamId', teamId)
-        .eq('userId', currentUser.id)
-        .in('role', ['ADMIN', 'MANAGER'])
-        .single();
-
-      if (privilegeError || !isPrivileged) {
-        return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
-      }
+      return NextResponse.json({ error: "Only the team owner can cancel invitations" }, { status: 403 });
     }
 
     // Build query for finding the invitation
