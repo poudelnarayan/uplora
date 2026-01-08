@@ -13,6 +13,7 @@ import { NextSeoNoSSR, VideoJsonLdNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { videoCache } from "@/lib/videoCache";
 import { ThumbnailShimmer } from "@/app/components/ui/Shimmer";
 import { useTeam } from "@/context/TeamContext";
+import AppShell from "@/app/components/layout/AppLayout";
 export const dynamic = "force-dynamic";
 
 interface Video {
@@ -889,7 +890,8 @@ export default function VideoPreviewPage() {
   };
 
   return (
-    <>
+    <AppShell>
+      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
       <NextSeoNoSSR
         title={pageTitle}
         description={pageDescription}
@@ -1554,6 +1556,7 @@ export default function VideoPreviewPage() {
         variant="danger"
         isLoading={deleting}
       />
-    </>
+      </div>
+    </AppShell>
   );
 }

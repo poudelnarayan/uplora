@@ -164,7 +164,9 @@ function AllPostsInner() {
   const openPostDetails = (postOrId: any) => {
     const id = typeof postOrId === "string" ? postOrId : String(postOrId?.id || "");
     if (!id) return;
-    router.push(`/posts/${encodeURIComponent(id)}`);
+    const t = typeof postOrId === "string" ? "" : String(postOrId?.type || "");
+    if (t === "video") router.push(`/videos/${encodeURIComponent(id)}`);
+    else router.push(`/posts/${encodeURIComponent(id)}`);
   };
 
   const confirmDeletePost = async () => {

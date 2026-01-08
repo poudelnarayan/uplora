@@ -1,82 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import AppShell from "@/app/components/layout/AppLayout";
-import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Badge } from "@/app/components/ui/badge";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
-import { ArrowLeft, Edit, Film, Shield, Users } from "lucide-react";
-import { useNotifications } from "@/app/components/ui/Notification";
-import { CopyField, formatDate, getStatusColor } from "@/app/(main)/posts/_components/detail-utils";
-import { useTeam } from "@/context/TeamContext";
 
+// Legacy route -> canonical route
 export default function VideoPostDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const notifications = useNotifications();
-  const { teams, personalTeam } = useTeam();
-
-  const [loading, setLoading] = useState(true);
-  const [post, setPost] = useState<any>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
-
-  const title = useMemo(() => post?.filename || post?.title || "Video", [post]);
-  const status = useMemo(() => String(post?.status || "—"), [post]);
-  const teamName = useMemo(() => {
-    const tid = post?.teamId ? String(post.teamId) : null;
-    if (!tid) return null;
-    if (personalTeam?.id === tid) return personalTeam.name || "Personal workspace";
-    const t = (teams || []).find((x) => x.id === tid);
-    return t?.name || null;
-  }, [post?.teamId, teams, personalTeam]);
 
   useEffect(() => {
     if (!id) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setPost(null);
-      setVideoUrl(null);
-      setThumbUrl(null);
-      try {
-        // For video, use the dedicated endpoint so we get uploader + visibility fields reliably
-        const resp = await fetch(`/api/videos/${encodeURIComponent(String(id))}`, { cache: "no-store" });
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok) throw new Error(data?.error || "Failed to load video");
-        if (cancelled) return;
-        setPost({ ...data, type: "video" });
+    router.replace(`/videos/${encodeURIComponent(String(id))}`);
+  }, [id, router]);
 
-        // Video playback URL (auth-checked)
-        if (data?.key) {
-          const v = await fetch(`/api/video-url?key=${encodeURIComponent(String(data.key))}`, { cache: "no-store" });
-          const vj = await v.json().catch(() => ({}));
-          if (v.ok) setVideoUrl(vj?.url || null);
-        }
-        // Thumbnail signed URL
-        if (data?.thumbnailKey) {
-          const t = await fetch(`/api/s3/get-url?key=${encodeURIComponent(String(data.thumbnailKey))}`, { cache: "no-store" });
-          const tj = await t.json().catch(() => ({}));
-          if (t.ok) setThumbUrl(tj?.url || null);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          notifications.addNotification({
-            type: "error",
-            title: "Failed to load video",
-            message: e instanceof Error ? e.message : "Please try again",
-          });
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, notifications]);
+  return null;
+}
 
   if (!id) return <PageLoader />;
 

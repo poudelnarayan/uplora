@@ -23,7 +23,11 @@ export default function PostDetailsPage() {
         if (cancelled) return;
         const t = String(data?.type || "");
         if (!t) throw new Error("Missing type");
-        router.replace(`/posts/${encodeURIComponent(t)}/${encodeURIComponent(String(id))}`);
+        if (t === "video") {
+          router.replace(`/videos/${encodeURIComponent(String(id))}`);
+        } else {
+          router.replace(`/posts/${encodeURIComponent(t)}/${encodeURIComponent(String(id))}`);
+        }
       } catch (e) {
         if (!cancelled) {
           notifications.addNotification({
