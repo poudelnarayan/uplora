@@ -319,6 +319,7 @@ const Teams = () => {
 
           {/* Content */}
           <div className="p-6">
+            <div className="mx-auto w-full max-w-6xl">
             <div className={`relative grid gap-6 ${
         teams.length === 1 
           ? "grid-cols-1" 
@@ -521,9 +522,10 @@ const Teams = () => {
               </div>
             )}
           </div>
-        )}
+            )}
           </>
         )}
+            </div>
             </div>
           </div>
 
