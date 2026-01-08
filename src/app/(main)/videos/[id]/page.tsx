@@ -1410,10 +1410,10 @@ export default function VideoPreviewPage() {
                     )}
                   </div>
 
-                  {/* Primary actions (right) */}
-                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                  {/* Primary actions (right) - vertical stack */}
+                  <div className="flex flex-col items-stretch gap-2 w-full sm:w-auto sm:min-w-[220px]">
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary w-full"
                       onClick={() => {
                         const el = document.getElementById('edit-section');
                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1425,7 +1425,7 @@ export default function VideoPreviewPage() {
 
                     {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
                       <button
-                        className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         disabled={submitting}
                         onClick={approveOrPublish}
                       >
@@ -1435,7 +1435,7 @@ export default function VideoPreviewPage() {
                     )}
 
                     {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                      <button className="btn btn-warning" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
+                      <button className="btn btn-warning w-full" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete
                       </button>
