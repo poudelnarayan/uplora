@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Clock, Check, Loader } from "lucide-react";
+import { CheckCircle, Clock, Check } from "lucide-react";
 
 type Status = "PROCESSING" | "READY" | "PENDING" | "APPROVED" | "PUBLISHED";
 
@@ -46,7 +46,7 @@ export function StatusChip({ status }: { status: Status }) {
   
   return (
     <span className={`${baseClasses} bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700`} style={fontStyle}>
-      <Loader className="w-4 h-4 animate-spin" />
+      <Clock className="w-4 h-4" />
       Processing
     </span>
   );

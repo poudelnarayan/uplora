@@ -915,7 +915,7 @@ export default function VideoPreviewPage() {
           embedUrl={canonicalUrl}
         />
       )}
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mt-6">
           <h1 className="heading-2">Video Preview</h1>
           <button
@@ -968,7 +968,7 @@ export default function VideoPreviewPage() {
         ) : !video ? (
           <div className="text-muted-foreground">Video not found</div>
         ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* On mobile, video first; on desktop, editor left */}
               <div className="lg:hidden order-1">
                 <div className="card p-2">
@@ -989,6 +989,78 @@ export default function VideoPreviewPage() {
                     )}
                   </div>
                 </div>
+                {/* Mobile: status + workflow (below video) */}
+                <div className="mt-3 px-2">
+                  <div className="rounded-xl border bg-background/60 backdrop-blur p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs">
+                        {isSaving || submitting ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            <span className="text-blue-600 dark:text-blue-400">Working…</span>
+                          </>
+                        ) : hasUnsavedChanges ? (
+                          <>
+                            <AlertCircle className="w-4 h-4 text-amber-500" />
+                            <span className="text-amber-600 dark:text-amber-400">Unsaved</span>
+                          </>
+                        ) : lastSavedAt ? (
+                          <>
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span className="text-green-600 dark:text-green-400">
+                              Saved {new Date(lastSavedAt).toLocaleTimeString()}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Ready</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Status: <span className="font-medium text-foreground">{String(video.status || "PROCESSING")}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        className={`btn ${hasUnsavedChanges ? 'btn-primary' : 'btn-outline'}`}
+                        disabled={isSaving || !hasUnsavedChanges}
+                        onClick={() => autoSave(true)}
+                        title={hasUnsavedChanges ? 'Save changes' : 'No changes to save'}
+                      >
+                        {isSaving ? 'Working…' : hasUnsavedChanges ? 'Save changes' : 'Saved'}
+                      </button>
+
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                        <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
+                          {submitting ? "Working…" : "Mark ready to publish"}
+                        </button>
+                      )}
+
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
+                        <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
+                          {submitting ? "Working…" : "Request approval"}
+                        </button>
+                      )}
+
+                      {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === "PENDING" && (
+                        <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
+                          {submitting ? "Approving…" : "Approve"}
+                        </button>
+                      )}
+
+                      {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
+                        <button
+                          className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          disabled={submitting}
+                          onClick={approveOrPublish}
+                        >
+                          <Youtube className="h-5 w-5" />
+                          {submitting ? 'Working…' : 'Publish to YouTube'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 {/* Mobile: quick edit button just below the player */}
                 <div className="mt-2 px-2">
                   <button
@@ -1003,42 +1075,9 @@ export default function VideoPreviewPage() {
                 </div>
               </div>
 
-              <div id="edit-section" className="order-2 lg:order-none lg:col-span-2 space-y-6 -mx-2 sm:mx-0">
-              {/* Save Status Indicator */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm">
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      <span className="text-blue-600 dark:text-blue-400">Saving...</span>
-                    </>
-                  ) : hasUnsavedChanges ? (
-                    <>
-                      <AlertCircle className="w-4 h-4 text-amber-500" />
-                      <span className="text-amber-600 dark:text-amber-400">Unsaved changes</span>
-                    </>
-                  ) : lastSavedAt ? (
-                    <>
-                      <Check className="w-4 h-4 text-green-500" />
-                      <span className="text-green-600 dark:text-green-400">
-                        Saved {new Date(lastSavedAt).toLocaleTimeString()}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-muted-foreground">Ready to edit</span>
-                  )}
-                </div>
-                {hasUnsavedChanges && !isSaving && (
-                  <button 
-                    onClick={() => autoSave(true)}
-                    className="text-xs text-primary hover:text-primary/80 underline"
-                  >
-                    Save now
-                  </button>
-                )}
-              </div>
+              <div id="edit-section" className="order-2 lg:order-none lg:col-span-9 space-y-6 -mx-2 sm:mx-0">
               
-                <div className={`card p-4 sm:p-6 space-y-5 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
+                <div className={`card p-4 sm:p-6 space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 {video.status === "PENDING" && (
                   <div className="mb-3 text-sm flex items-center gap-2 p-3 rounded-md border bg-amber-50 text-amber-800 border-amber-200">
                     <Clock className="w-4 h-4" />
@@ -1051,7 +1090,7 @@ export default function VideoPreviewPage() {
                 )}
                 <div>
                   <label className="block text-sm font-medium mb-1">Title</label>
-                  <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Add a descriptive title" />
+                  <input className="input bg-background/60 border border-border/60" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Add a descriptive title" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 flex items-center gap-2">
@@ -1102,7 +1141,7 @@ export default function VideoPreviewPage() {
 
                   <textarea 
                     name="description"
-                    className="textarea h-40 font-mono text-sm" 
+                    className="textarea h-52 font-mono text-sm bg-background/60 border border-border/60" 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)} 
                     placeholder="📝 Add your video description here..."
@@ -1274,58 +1313,12 @@ export default function VideoPreviewPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    className={`btn ${hasUnsavedChanges ? 'btn-primary' : 'btn-outline'}`}
-                    disabled={isSaving || !hasUnsavedChanges}
-                    onClick={() => autoSave(true)}
-                    title={hasUnsavedChanges ? 'Save changes' : 'No changes to save'}
-                  >
-                    {isSaving ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                        Saving...
-                      </>
-                    ) : hasUnsavedChanges ? (
-                      'Save Changes'
-                    ) : (
-                      'Saved'
-                    )}
-                  </button>
-                  {(role === "EDITOR" || role === "MANAGER") && (video.status === "PROCESSING" || !video.status) && (
-                    <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                      {submitting ? "Sending Request..." : "📧 Request approval"}
-                    </button>
-                  )}
-                  {/* Editor/Manager workflow (simple, explicit): Ready -> Ask approval */}
-                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                    <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                      {submitting ? "Working..." : "Mark ready to publish"}
-                    </button>
-                  )}
-                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
-                    <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                      {submitting ? "Working..." : "Ask for approval"}
-                    </button>
-                  )}
-
-                  {/* Owner/Admin can publish anytime; Manager can publish only when APPROVED */}
-                  {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
-                    <button
-                      className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={submitting}
-                      onClick={approveOrPublish}
-                    >
-                      <Youtube className="h-5 w-5" />
-                      {submitting ? 'Working...' : 'Publish to YouTube'}
-                    </button>
-                  )}
-                </div>
+                <div className="flex justify-end" />
               </div>
             </div>
 
             {/* Right: sticky small player + status/timeline (desktop) */}
-            <div className="hidden lg:block space-y-4 lg:sticky lg:top-4 self-start">
+            <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4 self-start">
               <div className="card p-2">
                 <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
                   {urlError ? (
@@ -1460,80 +1453,114 @@ export default function VideoPreviewPage() {
                   </div>
                 )}
 
-                {/* Row 3: Actions */}
-                <div className="mt-3 flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    {/* Editor: request publish for team videos */}
+                {/* Row 3: Actions (below video) */}
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs">
+                      {isSaving || submitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          <span className="text-blue-600 dark:text-blue-400">Working…</span>
+                        </>
+                      ) : hasUnsavedChanges ? (
+                        <>
+                          <AlertCircle className="w-4 h-4 text-amber-500" />
+                          <span className="text-amber-600 dark:text-amber-400">Unsaved</span>
+                        </>
+                      ) : lastSavedAt ? (
+                        <>
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span className="text-green-600 dark:text-green-400">
+                            Saved {new Date(lastSavedAt).toLocaleTimeString()}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Ready</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Status: <span className="font-medium text-foreground">{String(video.status || "PROCESSING")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      className={`btn ${hasUnsavedChanges ? 'btn-primary' : 'btn-outline'}`}
+                      disabled={isSaving || !hasUnsavedChanges}
+                      onClick={() => autoSave(true)}
+                      title={hasUnsavedChanges ? 'Save changes' : 'No changes to save'}
+                    >
+                      {isSaving ? 'Working…' : hasUnsavedChanges ? 'Save changes' : 'Saved'}
+                    </button>
+
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                      <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
+                        {submitting ? "Working…" : "Mark ready to publish"}
+                      </button>
+                    )}
+
+                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
                       <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                        {submitting ? "Sending Request..." : "📧 Request approval"}
+                        {submitting ? "Working…" : "Request approval"}
                       </button>
                     )}
-                    
-                    {/* Personal workspace: direct publish (treat OWNER as personal owner) */}
-                    {!video.teamId && role === "OWNER" && (video.status === "PROCESSING" || !video.status) && (
-                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
-                        {submitting ? "Working..." : "🚀 Publish to YouTube"}
-                      </button>
-                    )}
-                    {/* Team video: allow Owner/Admin/Manager to publish directly while PROCESSING */}
-                    {video.teamId && (role === "OWNER" || role === "ADMIN") && (video.status === "PROCESSING" || !video.status || video.status === "APPROVED") && (
-                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
-                        {submitting ? "Working..." : "🚀 Publish to YouTube"}
-                      </button>
-                    )}
-                    {video.teamId && role === "MANAGER" && video.status === "APPROVED" && (
-                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
-                        {submitting ? "Working..." : "🚀 Publish to YouTube"}
-                      </button>
-                    )}
-                    
-                    {/* Owner/Admin/Manager actions for team videos while pending */}
+
                     {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === "PENDING" && (
-                      <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <button className="btn btn-success sm:order-1" disabled={submitting} onClick={() => approveOrPublish()}>
-                          {submitting ? "Approving..." : "✅ Approve"}
-                        </button>
-                        {role === "OWNER" && (
-                          <button
-                            className="btn btn-ghost sm:order-2"
-                            disabled={submitting}
-                            title="Revert to Processing so editors can continue editing"
-                            onClick={async () => {
-                              try {
-                                setSubmitting(true);
-                                const res = await fetch(`/api/videos/${video.id}`, {
-                                  method: "PATCH",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ status: "PROCESSING" })
-                                });
-                                if (!res.ok) throw new Error();
-                                await res.json();
-                                setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
-                                notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
-                              } catch {
-                                notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
-                              } finally {
-                                setSubmitting(false);
-                              }
-                            }}
-                          >
-                            ↩ Send back for editing
-                          </button>
-                        )}
-                      </div>
+                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
+                        {submitting ? "Approving…" : "Approve"}
+                      </button>
                     )}
-                    
-                    {/* Delete button for owners/admins/managers */}
+
+                    {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
+                      <button
+                        className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={submitting}
+                        onClick={approveOrPublish}
+                      >
+                        <Youtube className="h-5 w-5" />
+                        {submitting ? 'Working…' : 'Publish to YouTube'}
+                      </button>
+                    )}
+
                     {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
                       <button
-                        className="btn btn-outline btn-error ml-auto"
+                        className="btn btn-outline btn-error"
                         onClick={() => setDeleteModalOpen(true)}
                         title="Delete video permanently"
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
-                        Delete Video
+                        Delete
                       </button>
                     )}
+                  </div>
+
+                  {(role === "OWNER") && video.teamId && video.status === "PENDING" && (
+                    <button
+                      className="btn btn-ghost w-full"
+                      disabled={submitting}
+                      title="Revert to Processing so editors can continue editing"
+                      onClick={async () => {
+                        try {
+                          setSubmitting(true);
+                          const res = await fetch(`/api/videos/${video.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: "PROCESSING" })
+                          });
+                          if (!res.ok) throw new Error();
+                          await res.json();
+                          setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
+                          notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
+                        } catch {
+                          notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
+                        } finally {
+                          setSubmitting(false);
+                        }
+                      }}
+                    >
+                      ↩ Send back for editing
+                    </button>
+                  )}
                 </div>
               </div>
               {/* Upload timeline removed per request */}
