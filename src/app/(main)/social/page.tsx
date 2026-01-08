@@ -15,6 +15,45 @@ import { useTeam } from "@/context/TeamContext";
 
 const MotionDiv = motion.div as any;
 
+type CachedUserStatuses = {
+  yt: { isConnected: boolean; channelTitle?: string | null };
+  fb: { connected: boolean; instagramConnected: boolean; userName?: string | null; pages: any[]; instagramAccounts: any[] };
+  tt: { isConnected: boolean; username?: string | null };
+  th: { isConnected: boolean; threadsUserId?: string | null };
+  pin: { isConnected: boolean; username?: string | null };
+  li: { isConnected: boolean; name?: string | null };
+  x: { isConnected: boolean; username?: string | null };
+  updatedAt: number;
+};
+
+type CachedTeamOwnerPlatforms = {
+  connectedPlatforms: string[];
+  ownerName?: string | null;
+  updatedAt: number;
+};
+
+const SOCIAL_CACHE_USER_KEY = "uplora:social:status:user:v1";
+const SOCIAL_CACHE_TEAM_OWNER_PREFIX = "uplora:social:status:team-owner:v1:";
+
+function readJson<T>(key: string): T | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function writeJson<T>(key: string, value: T) {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore storage issues (private mode, quota, etc.)
+  }
+}
+
 const SocialConnections = () => {
   const notifications = useNotifications();
   const { selectedTeamId, selectedTeam, teams } = useTeam();
@@ -26,43 +65,51 @@ const SocialConnections = () => {
 
   const isTeamOwner = isTeamWorkspace && selectedTeam?.role === "OWNER";
 
+  // Load cached values synchronously to avoid "loading flash" on every navigation.
+  const cachedUser = readJson<CachedUserStatuses>(SOCIAL_CACHE_USER_KEY);
+
   const [teamOwnerPlatforms, setTeamOwnerPlatforms] = useState<{
     loading: boolean;
     connectedPlatforms: string[];
     ownerName?: string | null;
   }>({ loading: false, connectedPlatforms: [], ownerName: null });
-  const [yt, setYt] = useState<{ loading: boolean; isConnected: boolean; channelTitle?: string | null }>({ loading: true, isConnected: false });
+  const [yt, setYt] = useState<{ loading: boolean; isConnected: boolean; channelTitle?: string | null }>(() => ({
+    loading: !cachedUser,
+    isConnected: !!cachedUser?.yt?.isConnected,
+    channelTitle: cachedUser?.yt?.channelTitle || null,
+  }));
   const [fb, setFb] = useState<{ loading: boolean; isConnected: boolean; instagramConnected: boolean; userName?: string | null; pages: any[]; instagramAccounts: any[] }>({ 
-    loading: true, 
-    isConnected: false, 
-    instagramConnected: false,
-    pages: [], 
-    instagramAccounts: [] 
+    loading: !cachedUser, 
+    isConnected: !!cachedUser?.fb?.connected, 
+    instagramConnected: !!cachedUser?.fb?.instagramConnected,
+    userName: cachedUser?.fb?.userName || null,
+    pages: cachedUser?.fb?.pages || [], 
+    instagramAccounts: cachedUser?.fb?.instagramAccounts || [] 
   });
   const [tt, setTt] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
-    loading: true,
-    isConnected: false,
-    username: null,
+    loading: !cachedUser,
+    isConnected: !!cachedUser?.tt?.isConnected,
+    username: cachedUser?.tt?.username || null,
   });
   const [th, setTh] = useState<{ loading: boolean; isConnected: boolean; userId?: string | null }>({
-    loading: true,
-    isConnected: false,
-    userId: null,
+    loading: !cachedUser,
+    isConnected: !!cachedUser?.th?.isConnected,
+    userId: cachedUser?.th?.threadsUserId || null,
   });
   const [pin, setPin] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
-    loading: true,
-    isConnected: false,
-    username: null,
+    loading: !cachedUser,
+    isConnected: !!cachedUser?.pin?.isConnected,
+    username: cachedUser?.pin?.username || null,
   });
   const [li, setLi] = useState<{ loading: boolean; isConnected: boolean; name?: string | null }>({
-    loading: true,
-    isConnected: false,
-    name: null,
+    loading: !cachedUser,
+    isConnected: !!cachedUser?.li?.isConnected,
+    name: cachedUser?.li?.name || null,
   });
   const [x, setX] = useState<{ loading: boolean; isConnected: boolean; username?: string | null }>({
-    loading: true,
-    isConnected: false,
-    username: null,
+    loading: !cachedUser,
+    isConnected: !!cachedUser?.x?.isConnected,
+    username: cachedUser?.x?.username || null,
   });
 
   const [requestOpen, setRequestOpen] = useState(false);
@@ -79,11 +126,29 @@ const SocialConnections = () => {
         setTeamOwnerPlatforms({ loading: false, connectedPlatforms: [], ownerName: null });
         return;
       }
+
+      // Cache team-owner platforms per teamId (avoids reloading on every nav)
+      const teamKey = `${SOCIAL_CACHE_TEAM_OWNER_PREFIX}${selectedTeamId}`;
+      const cachedTeam = readJson<CachedTeamOwnerPlatforms>(teamKey);
+      if (cachedTeam) {
+        setTeamOwnerPlatforms({
+          loading: false,
+          connectedPlatforms: cachedTeam.connectedPlatforms,
+          ownerName: cachedTeam.ownerName || null,
+        });
+        return;
+      }
+
       setTeamOwnerPlatforms((p) => ({ ...p, loading: true }));
       try {
-        const res = await fetch(`/api/social-connections/status?teamId=${encodeURIComponent(selectedTeamId)}`, { cache: "no-store" });
+        const res = await fetch(`/api/social-connections/status?teamId=${encodeURIComponent(selectedTeamId)}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Failed to load team connections");
+        writeJson(teamKey, {
+          connectedPlatforms: Array.isArray(data?.connectedPlatforms) ? data.connectedPlatforms : [],
+          ownerName: data?.ownerName || null,
+          updatedAt: Date.now(),
+        } satisfies CachedTeamOwnerPlatforms);
         setTeamOwnerPlatforms({
           loading: false,
           connectedPlatforms: Array.isArray(data?.connectedPlatforms) ? data.connectedPlatforms : [],
@@ -97,12 +162,14 @@ const SocialConnections = () => {
 
   useEffect(() => {
     // Show one-time success/error banners based on query params (useful after OAuth redirects).
+    let shouldRefetch = false;
     try {
       const sp = new URLSearchParams(window.location.search);
       const error = sp.get("error");
       const warning = sp.get("warning");
       const success = sp.get("success");
       if (success) {
+        shouldRefetch = true;
         const msg =
           success === "facebook_connected" ? "Facebook connected." :
           success === "instagram_connected" ? "Instagram connected." :
@@ -115,6 +182,7 @@ const SocialConnections = () => {
         notifications.addNotification({ type: "success", title: "Success", message: msg });
       }
       if (warning === "facebook_no_pages") {
+        shouldRefetch = true;
         notifications.addNotification({
           type: "error",
           title: "Facebook connected, but no Pages found",
@@ -128,6 +196,7 @@ const SocialConnections = () => {
         });
       }
       if (error) {
+        shouldRefetch = true;
         const msg =
           error === "facebook_no_pages" ? "No Facebook Pages found for this account." :
           error === "tiktok_token_failed" ? "TikTok token exchange failed. Check redirect URI + env vars." :
@@ -140,10 +209,25 @@ const SocialConnections = () => {
       }
     } catch {}
 
+    // If we just returned from an OAuth flow, the status has changed => invalidate cache.
+    if (shouldRefetch) {
+      try {
+        window.sessionStorage.removeItem(SOCIAL_CACHE_USER_KEY);
+        if (selectedTeamId) window.sessionStorage.removeItem(`${SOCIAL_CACHE_TEAM_OWNER_PREFIX}${selectedTeamId}`);
+      } catch {}
+    }
+
+    // If cached and no refetch required, don't re-load (prevents "loading again" on navigation).
+    if (cachedUser && !shouldRefetch) {
+      return;
+    }
+
+    const abort = new AbortController();
+
     // Load YouTube status
     (async () => {
       try {
-        const res = await fetch('/api/youtube/status', { cache: 'no-store' });
+        const res = await fetch('/api/youtube/status', { signal: abort.signal });
         const data = await res.json();
         setYt({ loading: false, isConnected: !!data?.isConnected, channelTitle: data?.channelTitle || null });
       } catch {
@@ -154,7 +238,7 @@ const SocialConnections = () => {
     // Load Facebook status
     (async () => {
       try {
-        const res = await fetch('/api/facebook/status', { cache: 'no-store' });
+        const res = await fetch('/api/facebook/status', { signal: abort.signal });
         const data = await res.json();
         setFb({ 
           loading: false, 
@@ -172,7 +256,7 @@ const SocialConnections = () => {
     // Load TikTok status
     (async () => {
       try {
-        const res = await fetch("/api/tiktok/status", { cache: "no-store" });
+        const res = await fetch("/api/tiktok/status", { signal: abort.signal });
         const data = await res.json();
         const username = data?.username || data?.displayName || null;
         setTt({ loading: false, isConnected: !!data?.isConnected, username });
@@ -184,7 +268,7 @@ const SocialConnections = () => {
     // Load Threads status
     (async () => {
       try {
-        const res = await fetch("/api/threads/status", { cache: "no-store" });
+        const res = await fetch("/api/threads/status", { signal: abort.signal });
         const data = await res.json();
         setTh({ loading: false, isConnected: !!data?.isConnected, userId: data?.threadsUserId || null });
       } catch {
@@ -195,7 +279,7 @@ const SocialConnections = () => {
     // Load Pinterest status
     (async () => {
       try {
-        const res = await fetch("/api/pinterest/status", { cache: "no-store" });
+        const res = await fetch("/api/pinterest/status", { signal: abort.signal });
         const data = await res.json();
         setPin({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
       } catch {
@@ -206,7 +290,7 @@ const SocialConnections = () => {
     // Load LinkedIn status
     (async () => {
       try {
-        const res = await fetch("/api/linkedin/status", { cache: "no-store" });
+        const res = await fetch("/api/linkedin/status", { signal: abort.signal });
         const data = await res.json();
         setLi({ loading: false, isConnected: !!data?.isConnected, name: data?.name || null });
       } catch {
@@ -217,13 +301,39 @@ const SocialConnections = () => {
     // Load X status
     (async () => {
       try {
-        const res = await fetch("/api/twitter/status", { cache: "no-store" });
+        const res = await fetch("/api/twitter/status", { signal: abort.signal });
         const data = await res.json();
         setX({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
       } catch {
         setX({ loading: false, isConnected: false, username: null });
       }
     })();
+
+    // Persist cache once all fetches complete (best-effort; we write opportunistically below too)
+    window.setTimeout(() => {
+      try {
+        writeJson(SOCIAL_CACHE_USER_KEY, {
+          yt: { isConnected: yt.isConnected, channelTitle: yt.channelTitle || null },
+          fb: {
+            connected: fb.isConnected,
+            instagramConnected: fb.instagramConnected,
+            userName: fb.userName || null,
+            pages: fb.pages || [],
+            instagramAccounts: fb.instagramAccounts || [],
+          },
+          tt: { isConnected: tt.isConnected, username: tt.username || null },
+          th: { isConnected: th.isConnected, threadsUserId: th.userId || null },
+          pin: { isConnected: pin.isConnected, username: pin.username || null },
+          li: { isConnected: li.isConnected, name: li.name || null },
+          x: { isConnected: x.isConnected, username: x.username || null },
+          updatedAt: Date.now(),
+        } satisfies CachedUserStatuses);
+      } catch {}
+    }, 350);
+
+    return () => abort.abort();
+  // Intentionally only on first mount; caching handles subsequent navigations.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const getPlatformIcon = (platformId: string) => {
     const iconMap = {
