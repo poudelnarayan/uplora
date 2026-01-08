@@ -1,14 +1,16 @@
 "use client";
 
-import { CheckCircle, Clock, Check } from "lucide-react";
+import { CheckCircle, Clock, Check, Calendar } from "lucide-react";
 
-type Status = "PROCESSING" | "READY" | "PENDING" | "APPROVED" | "PUBLISHED";
+type Status = "PROCESSING" | "READY" | "PENDING" | "APPROVED" | "SCHEDULED" | "PUBLISHED";
 
-export function StatusChip({ status }: { status: Status }) {
+export function StatusChip({ status }: { status: Status | string }) {
   const baseClasses = "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition-all duration-200";
   const fontStyle = { fontFamily: 'Inter, Open Sans, sans-serif' };
 
-  if (status === "PUBLISHED") {
+  const upperStatus = String(status || "PROCESSING").toUpperCase();
+
+  if (upperStatus === "PUBLISHED") {
     return (
       <span className={`${baseClasses} bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700`} style={fontStyle}>
         <CheckCircle className="w-4 h-4" />
@@ -16,30 +18,22 @@ export function StatusChip({ status }: { status: Status }) {
       </span>
     );
   }
-  
-  if (status === "PENDING") {
+
+  if (upperStatus === "SCHEDULED") {
     return (
-      <span className={`${baseClasses} bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700`} style={fontStyle}>
-        <Clock className="w-4 h-4" />
-        Awaiting Approval
+      <span className={`${baseClasses} bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700`} style={fontStyle}>
+        <Calendar className="w-4 h-4" />
+        Scheduled
       </span>
     );
   }
 
-  if (status === "APPROVED") {
+  // Collapse internal workflow states to a single user-facing status: "Ready to publish"
+  if (upperStatus === "READY" || upperStatus === "PENDING" || upperStatus === "APPROVED") {
     return (
       <span className={`${baseClasses} bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700`} style={fontStyle}>
         <Check className="w-4 h-4" />
-        Approved
-      </span>
-    );
-  }
-
-  if (status === "READY") {
-    return (
-      <span className={`${baseClasses} bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-700`} style={fontStyle}>
-        <Check className="w-4 h-4" />
-        Ready to upload
+        Ready to publish
       </span>
     );
   }

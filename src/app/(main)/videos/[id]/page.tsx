@@ -259,10 +259,12 @@ export default function VideoPreviewPage() {
             
             // Show notification for status changes
             const statusMessages = {
-              'PROCESSING': 'Video is back in editing mode',
-              'PENDING': 'Video is awaiting approval',
-              'APPROVED': 'Video is approved and ready to publish',
-              'PUBLISHED': 'Video has been published'
+              'PROCESSING': 'Processing',
+              'READY': 'Ready to publish',
+              'PENDING': 'Ready to publish',
+              'APPROVED': 'Ready to publish',
+              'SCHEDULED': 'Scheduled',
+              'PUBLISHED': 'Published',
             } as const;
             const key = evt?.payload?.status as keyof typeof statusMessages | undefined;
             if (key) {
@@ -729,8 +731,8 @@ export default function VideoPreviewPage() {
       setVideo({ ...video, status: "READY" });
       notifications.addNotification({
         type: "success",
-        title: "Ready to upload",
-        message: "Marked as ready. You can now request approval.",
+        title: "Ready to publish",
+        message: "Marked ready. You can now request approval.",
       });
     } catch (e) {
       notifications.addNotification({
@@ -777,8 +779,8 @@ export default function VideoPreviewPage() {
         if (st !== "READY" && st !== "APPROVED" && st !== "PENDING") {
           notifications.addNotification({
             type: "error",
-            title: "Not ready to post",
-            message: "This video is not ready yet. Ask editors to mark it 'Ready to upload' before publishing.",
+            title: "Not ready to publish",
+            message: "This video is not ready yet. Ask editors to mark it 'Ready to publish' before publishing.",
           });
           setSubmitting(false);
           return;
@@ -1085,11 +1087,9 @@ export default function VideoPreviewPage() {
 
               <div id="edit-section" className="order-2 lg:order-none lg:col-span-7 space-y-3 -mx-2 sm:mx-0">
                 {/* Status chip (requested: above content div, left side) */}
-                {(String(video.status || "PROCESSING").toUpperCase() === "PROCESSING" || String(video.status || "").toUpperCase() === "READY") && (
-                  <div className="px-2 sm:px-0">
-                    <StatusChip status={(String(video.status || "PROCESSING").toUpperCase() as any)} />
-                  </div>
-                )}
+                <div className="px-2 sm:px-0">
+                  <StatusChip status={(String(video.status || "PROCESSING").toUpperCase() as any)} />
+                </div>
               
                 <div className={`card p-4 sm:p-6 space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 {/* Save status + action (moved away from under-video controls) */}

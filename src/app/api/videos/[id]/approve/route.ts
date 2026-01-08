@@ -177,7 +177,7 @@ export async function POST(
       // Readiness gate: block publish until READY or APPROVED
       if (upperStatus !== "READY" && upperStatus !== "APPROVED") {
         return NextResponse.json(
-          { error: "This video is not ready to upload yet. Ask your editors to mark it 'Ready to upload' before publishing." },
+          { error: "This video is not ready to publish yet. Ask your editors to mark it 'Ready to publish' before publishing." },
           { status: 400 }
         );
       }
