@@ -34,6 +34,7 @@ type CachedTeamOwnerPlatforms = {
 
 const SOCIAL_CACHE_USER_KEY = "uplora:social:status:user:v1";
 const SOCIAL_CACHE_TEAM_OWNER_PREFIX = "uplora:social:status:team-owner:v1:";
+const SOCIAL_CACHE_MAX_AGE_MS = 60_000; // 60s SWR window
 
 function readJson<T>(key: string): T | null {
   try {
@@ -51,6 +52,14 @@ function writeJson<T>(key: string, value: T) {
     window.sessionStorage.setItem(key, JSON.stringify(value));
   } catch {
     // ignore storage issues (private mode, quota, etc.)
+  }
+}
+
+function invalidateKey(key: string) {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // ignore
   }
 }
 
@@ -136,10 +145,11 @@ const SocialConnections = () => {
           connectedPlatforms: cachedTeam.connectedPlatforms,
           ownerName: cachedTeam.ownerName || null,
         });
-        return;
       }
 
-      setTeamOwnerPlatforms((p) => ({ ...p, loading: true }));
+      // SWR: always revalidate, but avoid flipping to "loading" if we already have cached data.
+      const isFresh = cachedTeam && Date.now() - cachedTeam.updatedAt < SOCIAL_CACHE_MAX_AGE_MS;
+      if (!isFresh) setTeamOwnerPlatforms((p) => ({ ...p, loading: true }));
       try {
         const res = await fetch(`/api/social-connections/status?teamId=${encodeURIComponent(selectedTeamId)}`);
         const data = await res.json();
@@ -211,125 +221,103 @@ const SocialConnections = () => {
 
     // If we just returned from an OAuth flow, the status has changed => invalidate cache.
     if (shouldRefetch) {
-      try {
-        window.sessionStorage.removeItem(SOCIAL_CACHE_USER_KEY);
-        if (selectedTeamId) window.sessionStorage.removeItem(`${SOCIAL_CACHE_TEAM_OWNER_PREFIX}${selectedTeamId}`);
-      } catch {}
-    }
-
-    // If cached and no refetch required, don't re-load (prevents "loading again" on navigation).
-    if (cachedUser && !shouldRefetch) {
-      return;
+      invalidateKey(SOCIAL_CACHE_USER_KEY);
+      if (selectedTeamId) invalidateKey(`${SOCIAL_CACHE_TEAM_OWNER_PREFIX}${selectedTeamId}`);
     }
 
     const abort = new AbortController();
 
-    // Load YouTube status
-    (async () => {
-      try {
-        const res = await fetch('/api/youtube/status', { signal: abort.signal });
-        const data = await res.json();
-        setYt({ loading: false, isConnected: !!data?.isConnected, channelTitle: data?.channelTitle || null });
-      } catch {
-        setYt({ loading: false, isConnected: false });
-      }
-    })();
+    const cached = readJson<CachedUserStatuses>(SOCIAL_CACHE_USER_KEY);
+    const isFresh = cached && Date.now() - cached.updatedAt < SOCIAL_CACHE_MAX_AGE_MS;
 
-    // Load Facebook status
-    (async () => {
-      try {
-        const res = await fetch('/api/facebook/status', { signal: abort.signal });
-        const data = await res.json();
-        setFb({ 
-          loading: false, 
-          isConnected: !!data?.connected, 
-          instagramConnected: !!data?.instagramConnected,
-          userName: data?.user?.name || null,
-          pages: data?.pages || [],
-          instagramAccounts: data?.instagramAccounts || []
-        });
-      } catch {
-        setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
-      }
-    })();
+    // Always revalidate once per mount for correctness, but don't flip to loading if we have a fresh cache.
+    if (!isFresh) {
+      setYt((p) => ({ ...p, loading: true }));
+      setFb((p) => ({ ...p, loading: true }));
+      setTt((p) => ({ ...p, loading: true }));
+      setTh((p) => ({ ...p, loading: true }));
+      setPin((p) => ({ ...p, loading: true }));
+      setLi((p) => ({ ...p, loading: true }));
+      setX((p) => ({ ...p, loading: true }));
+    }
 
-    // Load TikTok status
     (async () => {
-      try {
-        const res = await fetch("/api/tiktok/status", { signal: abort.signal });
-        const data = await res.json();
-        const username = data?.username || data?.displayName || null;
-        setTt({ loading: false, isConnected: !!data?.isConnected, username });
-      } catch {
-        setTt({ loading: false, isConnected: false, username: null });
-      }
-    })();
+      const fetchJson = async (url: string) => {
+        const res = await fetch(url, { signal: abort.signal });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, data };
+      };
 
-    // Load Threads status
-    (async () => {
-      try {
-        const res = await fetch("/api/threads/status", { signal: abort.signal });
-        const data = await res.json();
-        setTh({ loading: false, isConnected: !!data?.isConnected, userId: data?.threadsUserId || null });
-      } catch {
-        setTh({ loading: false, isConnected: false, userId: null });
-      }
-    })();
+      const [
+        ytRes,
+        fbRes,
+        ttRes,
+        thRes,
+        pinRes,
+        liRes,
+        xRes,
+      ] = await Promise.allSettled([
+        fetchJson("/api/youtube/status"),
+        fetchJson("/api/facebook/status"),
+        fetchJson("/api/tiktok/status"),
+        fetchJson("/api/threads/status"),
+        fetchJson("/api/pinterest/status"),
+        fetchJson("/api/linkedin/status"),
+        fetchJson("/api/twitter/status"),
+      ]);
 
-    // Load Pinterest status
-    (async () => {
-      try {
-        const res = await fetch("/api/pinterest/status", { signal: abort.signal });
-        const data = await res.json();
-        setPin({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
-      } catch {
-        setPin({ loading: false, isConnected: false, username: null });
-      }
-    })();
+      // Extract results safely
+      const ytData = ytRes.status === "fulfilled" ? ytRes.value : { ok: false, data: {} };
+      const fbData = fbRes.status === "fulfilled" ? fbRes.value : { ok: false, data: {} };
+      const ttData = ttRes.status === "fulfilled" ? ttRes.value : { ok: false, data: {} };
+      const thData = thRes.status === "fulfilled" ? thRes.value : { ok: false, data: {} };
+      const pinData = pinRes.status === "fulfilled" ? pinRes.value : { ok: false, data: {} };
+      const liData = liRes.status === "fulfilled" ? liRes.value : { ok: false, data: {} };
+      const xData = xRes.status === "fulfilled" ? xRes.value : { ok: false, data: {} };
 
-    // Load LinkedIn status
-    (async () => {
-      try {
-        const res = await fetch("/api/linkedin/status", { signal: abort.signal });
-        const data = await res.json();
-        setLi({ loading: false, isConnected: !!data?.isConnected, name: data?.name || null });
-      } catch {
-        setLi({ loading: false, isConnected: false, name: null });
-      }
-    })();
+      // Update state (never leave in loading=true)
+      setYt({ loading: false, isConnected: !!ytData.data?.isConnected, channelTitle: ytData.data?.channelTitle || null });
+      setFb({
+        loading: false,
+        isConnected: !!fbData.data?.connected,
+        instagramConnected: !!fbData.data?.instagramConnected,
+        userName: fbData.data?.user?.name || null,
+        pages: fbData.data?.pages || [],
+        instagramAccounts: fbData.data?.instagramAccounts || [],
+      });
+      setTt({ loading: false, isConnected: !!ttData.data?.isConnected, username: ttData.data?.username || ttData.data?.displayName || null });
+      setTh({ loading: false, isConnected: !!thData.data?.isConnected, userId: thData.data?.threadsUserId || null });
+      setPin({ loading: false, isConnected: !!pinData.data?.isConnected, username: pinData.data?.username || null });
+      setLi({ loading: false, isConnected: !!liData.data?.isConnected, name: liData.data?.name || null });
+      setX({ loading: false, isConnected: !!xData.data?.isConnected, username: xData.data?.username || null });
 
-    // Load X status
-    (async () => {
-      try {
-        const res = await fetch("/api/twitter/status", { signal: abort.signal });
-        const data = await res.json();
-        setX({ loading: false, isConnected: !!data?.isConnected, username: data?.username || null });
-      } catch {
-        setX({ loading: false, isConnected: false, username: null });
-      }
-    })();
-
-    // Persist cache once all fetches complete (best-effort; we write opportunistically below too)
-    window.setTimeout(() => {
-      try {
-        writeJson(SOCIAL_CACHE_USER_KEY, {
-          yt: { isConnected: yt.isConnected, channelTitle: yt.channelTitle || null },
-          fb: {
-            connected: fb.isConnected,
-            instagramConnected: fb.instagramConnected,
-            userName: fb.userName || null,
-            pages: fb.pages || [],
-            instagramAccounts: fb.instagramAccounts || [],
-          },
-          tt: { isConnected: tt.isConnected, username: tt.username || null },
-          th: { isConnected: th.isConnected, threadsUserId: th.userId || null },
-          pin: { isConnected: pin.isConnected, username: pin.username || null },
-          li: { isConnected: li.isConnected, name: li.name || null },
-          x: { isConnected: x.isConnected, username: x.username || null },
-          updatedAt: Date.now(),
-        } satisfies CachedUserStatuses);
-      } catch {}
-    }, 350);
+      // Write cache from the *fresh response*, not from React state.
+      writeJson(SOCIAL_CACHE_USER_KEY, {
+        yt: { isConnected: !!ytData.data?.isConnected, channelTitle: ytData.data?.channelTitle || null },
+        fb: {
+          connected: !!fbData.data?.connected,
+          instagramConnected: !!fbData.data?.instagramConnected,
+          userName: fbData.data?.user?.name || null,
+          pages: fbData.data?.pages || [],
+          instagramAccounts: fbData.data?.instagramAccounts || [],
+        },
+        tt: { isConnected: !!ttData.data?.isConnected, username: ttData.data?.username || ttData.data?.displayName || null },
+        th: { isConnected: !!thData.data?.isConnected, threadsUserId: thData.data?.threadsUserId || null },
+        pin: { isConnected: !!pinData.data?.isConnected, username: pinData.data?.username || null },
+        li: { isConnected: !!liData.data?.isConnected, name: liData.data?.name || null },
+        x: { isConnected: !!xData.data?.isConnected, username: xData.data?.username || null },
+        updatedAt: Date.now(),
+      } satisfies CachedUserStatuses);
+    })().catch(() => {
+      // If the page was loaded from cache and revalidation fails, keep UI as-is.
+      setYt((p) => ({ ...p, loading: false }));
+      setFb((p) => ({ ...p, loading: false }));
+      setTt((p) => ({ ...p, loading: false }));
+      setTh((p) => ({ ...p, loading: false }));
+      setPin((p) => ({ ...p, loading: false }));
+      setLi((p) => ({ ...p, loading: false }));
+      setX((p) => ({ ...p, loading: false }));
+    });
 
     return () => abort.abort();
   // Intentionally only on first mount; caching handles subsequent navigations.
@@ -526,43 +514,54 @@ const SocialConnections = () => {
                             className="w-full"
                             onClick={async () => {
                               try {
+                                let didChange = false;
                                 let resp;
                                 if (platform.id === "youtube") {
                                   resp = await fetch("/api/youtube/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "YouTube account disconnected" });
                                   setYt({ loading: false, isConnected: false });
+                                  didChange = true;
                                 } else if (platform.id === "facebook" || platform.id === "instagram") {
                                   resp = await fetch("/api/facebook/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "Facebook/Instagram disconnected" });
                                   setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
+                                  didChange = true;
                                 } else if (platform.id === "tiktok") {
                                   resp = await fetch("/api/tiktok/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "TikTok disconnected" });
                                   setTt({ loading: false, isConnected: false, username: null });
+                                  didChange = true;
                                 } else if (platform.id === "threads") {
                                   resp = await fetch("/api/threads/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "Threads disconnected" });
                                   setTh({ loading: false, isConnected: false, userId: null });
+                                  didChange = true;
                                 } else if (platform.id === "pinterest") {
                                   resp = await fetch("/api/pinterest/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "Pinterest disconnected" });
                                   setPin({ loading: false, isConnected: false, username: null });
+                                  didChange = true;
                                 } else if (platform.id === "linkedin") {
                                   resp = await fetch("/api/linkedin/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "LinkedIn disconnected" });
                                   setLi({ loading: false, isConnected: false, name: null });
+                                  didChange = true;
                                 } else if (platform.id === "twitter") {
                                   resp = await fetch("/api/twitter/disconnect", { method: "POST" });
                                   if (!resp.ok) throw new Error("Failed");
                                   notifications.addNotification({ type: "success", title: "Disconnected", message: "X disconnected" });
                                   setX({ loading: false, isConnected: false, username: null });
+                                  didChange = true;
                                 }
+
+                                // Connection state changed => invalidate cached statuses so next visit revalidates.
+                                if (didChange) invalidateKey(SOCIAL_CACHE_USER_KEY);
                               } catch {
                                 notifications.addNotification({ type: "error", title: "Disconnect failed", message: "Try again." });
                               }
