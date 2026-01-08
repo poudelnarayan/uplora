@@ -915,7 +915,7 @@ export default function VideoPreviewPage() {
           embedUrl={canonicalUrl}
         />
       )}
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-6 max-w-[88rem] mx-auto">
         <div className="flex items-center justify-between mt-6">
           <h1 className="heading-2">Video Preview</h1>
           <button
@@ -989,46 +989,10 @@ export default function VideoPreviewPage() {
                     )}
                   </div>
                 </div>
-                {/* Mobile: status + workflow (below video) */}
+                {/* Mobile: workflow (below video) */}
                 <div className="mt-3 px-2">
-                  <div className="rounded-xl border bg-background/60 backdrop-blur p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2 text-xs">
-                        {isSaving || submitting ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                            <span className="text-blue-600 dark:text-blue-400">Working…</span>
-                          </>
-                        ) : hasUnsavedChanges ? (
-                          <>
-                            <AlertCircle className="w-4 h-4 text-amber-500" />
-                            <span className="text-amber-600 dark:text-amber-400">Unsaved</span>
-                          </>
-                        ) : lastSavedAt ? (
-                          <>
-                            <Check className="w-4 h-4 text-green-500" />
-                            <span className="text-green-600 dark:text-green-400">
-                              Saved {new Date(lastSavedAt).toLocaleTimeString()}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">Ready</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Status: <span className="font-medium text-foreground">{String(video.status || "PROCESSING")}</span>
-                      </div>
-                    </div>
-
+                  <div className="rounded-xl border bg-background/60 backdrop-blur p-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        className={`btn ${hasUnsavedChanges ? 'btn-primary' : 'btn-outline'}`}
-                        disabled={isSaving || !hasUnsavedChanges}
-                        onClick={() => autoSave(true)}
-                        title={hasUnsavedChanges ? 'Save changes' : 'No changes to save'}
-                      >
-                        {isSaving ? 'Working…' : hasUnsavedChanges ? 'Save changes' : 'Saved'}
-                      </button>
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                         <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
@@ -1064,7 +1028,7 @@ export default function VideoPreviewPage() {
                 {/* Mobile: quick edit button just below the player */}
                 <div className="mt-2 px-2">
                   <button
-                    className="btn btn-ghost w-full"
+                    className="btn btn-primary w-full"
                     onClick={() => {
                       const el = document.getElementById('edit-section');
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1075,9 +1039,42 @@ export default function VideoPreviewPage() {
                 </div>
               </div>
 
-              <div id="edit-section" className="order-2 lg:order-none lg:col-span-9 space-y-6 -mx-2 sm:mx-0">
+              <div id="edit-section" className="order-2 lg:order-none lg:col-span-10 space-y-6 -mx-2 sm:mx-0">
               
                 <div className={`card p-4 sm:p-6 space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
+                {/* Save status + action (moved away from under-video controls) */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs">
+                    {isSaving || submitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="text-blue-600 dark:text-blue-400">Working…</span>
+                      </>
+                    ) : hasUnsavedChanges ? (
+                      <>
+                        <AlertCircle className="w-4 h-4 text-amber-500" />
+                        <span className="text-amber-600 dark:text-amber-400">Unsaved changes</span>
+                      </>
+                    ) : lastSavedAt ? (
+                      <>
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span className="text-green-600 dark:text-green-400">
+                          Saved {new Date(lastSavedAt).toLocaleTimeString()}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </div>
+                  <button
+                    className={`btn ${hasUnsavedChanges ? 'btn-primary' : 'btn-outline'}`}
+                    disabled={isSaving || !hasUnsavedChanges}
+                    onClick={() => autoSave(true)}
+                    title={hasUnsavedChanges ? 'Save changes' : 'No changes to save'}
+                  >
+                    {isSaving ? 'Working…' : hasUnsavedChanges ? 'Save changes' : 'Saved'}
+                  </button>
+                </div>
                 {video.status === "PENDING" && (
                   <div className="mb-3 text-sm flex items-center gap-2 p-3 rounded-md border bg-amber-50 text-amber-800 border-amber-200">
                     <Clock className="w-4 h-4" />
@@ -1090,7 +1087,7 @@ export default function VideoPreviewPage() {
                 )}
                 <div>
                   <label className="block text-sm font-medium mb-1">Title</label>
-                  <input className="input bg-background/60 border border-border/60" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Add a descriptive title" />
+                  <input className="input bg-muted/20 border border-border/60 w-full" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Add a descriptive title" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 flex items-center gap-2">
@@ -1141,7 +1138,7 @@ export default function VideoPreviewPage() {
 
                   <textarea 
                     name="description"
-                    className="textarea h-52 font-mono text-sm bg-background/60 border border-border/60" 
+                    className="textarea h-56 font-mono text-sm bg-muted/20 border border-border/60 w-full" 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)} 
                     placeholder="📝 Add your video description here..."
@@ -1318,7 +1315,7 @@ export default function VideoPreviewPage() {
             </div>
 
             {/* Right: sticky small player + status/timeline (desktop) */}
-            <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4 self-start">
+            <div className="hidden lg:block lg:col-span-2 space-y-4 lg:sticky lg:top-4 self-start">
               <div className="card p-2">
                 <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
                   {urlError ? (
@@ -1455,43 +1452,7 @@ export default function VideoPreviewPage() {
 
                 {/* Row 3: Actions (below video) */}
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 text-xs">
-                      {isSaving || submitting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          <span className="text-blue-600 dark:text-blue-400">Working…</span>
-                        </>
-                      ) : hasUnsavedChanges ? (
-                        <>
-                          <AlertCircle className="w-4 h-4 text-amber-500" />
-                          <span className="text-amber-600 dark:text-amber-400">Unsaved</span>
-                        </>
-                      ) : lastSavedAt ? (
-                        <>
-                          <Check className="w-4 h-4 text-green-500" />
-                          <span className="text-green-600 dark:text-green-400">
-                            Saved {new Date(lastSavedAt).toLocaleTimeString()}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground">Ready</span>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Status: <span className="font-medium text-foreground">{String(video.status || "PROCESSING")}</span>
-                    </div>
-                  </div>
-
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      className={`btn ${hasUnsavedChanges ? 'btn-primary' : 'btn-outline'}`}
-                      disabled={isSaving || !hasUnsavedChanges}
-                      onClick={() => autoSave(true)}
-                      title={hasUnsavedChanges ? 'Save changes' : 'No changes to save'}
-                    >
-                      {isSaving ? 'Working…' : hasUnsavedChanges ? 'Save changes' : 'Saved'}
-                    </button>
 
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
@@ -1524,12 +1485,12 @@ export default function VideoPreviewPage() {
 
                     {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
                       <button
-                        className="btn btn-outline btn-error"
+                        className="btn btn-warning"
                         onClick={() => setDeleteModalOpen(true)}
                         title="Delete video permanently"
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
+                        Delete video
                       </button>
                     )}
                   </div>
