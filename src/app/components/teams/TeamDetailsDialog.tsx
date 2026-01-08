@@ -10,6 +10,7 @@ import {
   X,
   Shield,
   Clock,
+  Loader2,
   Facebook,
   Instagram,
   Twitter,
@@ -20,7 +21,7 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
@@ -52,7 +53,7 @@ interface TeamDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   team: Team | null;
-  onRemoveMember: (teamId: number, memberUserId: string) => void;
+  onRemoveMember: (teamId: number, memberUserId: string) => Promise<void> | void;
   onEditTeam: (team: Team) => void;
   onInviteMember: (teamId: number) => void;
   onUpdateTeam: (teamId: number, updates: Partial<Team>) => void;
@@ -77,6 +78,9 @@ export const TeamDetailsDialog = ({
   const { toast } = useToast();
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
   const [loadingConnected, setLoadingConnected] = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null);
+  const [removingMember, setRemovingMember] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -103,13 +107,20 @@ export const TeamDetailsDialog = ({
     return connected.filter((p) => !team?.platforms?.includes(p));
   }, [connectedPlatforms, team?.platforms]);
 
-  const handleRemoveMember = (memberUserId: string, memberName: string) => {
-    if (team) {
-      onRemoveMember(team.id, memberUserId);
-      toast({
-        title: "Member Removed",
-        description: `${memberName} has been removed from ${team.name}`
-      });
+  const openRemoveMemberConfirm = (member: TeamMember) => {
+    setRemoveTarget(member);
+    setRemoveConfirmOpen(true);
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!team || !removeTarget) return;
+    setRemovingMember(true);
+    try {
+      await onRemoveMember(team.id, removeTarget.id);
+      setRemoveConfirmOpen(false);
+      setRemoveTarget(null);
+    } finally {
+      setRemovingMember(false);
     }
   };
 
@@ -140,7 +151,17 @@ export const TeamDetailsDialog = ({
   if (!team) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(next) => {
+        if (!next) {
+          setRemoveConfirmOpen(false);
+          setRemoveTarget(null);
+          setRemovingMember(false);
+        }
+        onClose();
+      }}
+    >
       <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-xl border border-border/50">
         <DialogHeader className="space-y-4">
           <div className="flex items-center justify-between">
@@ -323,7 +344,7 @@ export const TeamDetailsDialog = ({
                           variant="ghost"
                           size="sm"
                           className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                          onClick={() => handleRemoveMember(member.id, member.name)}
+                          onClick={() => openRemoveMemberConfirm(member)}
                         >
                           <UserX className="h-3 w-3" />
                         </Button>
@@ -335,6 +356,63 @@ export const TeamDetailsDialog = ({
             )}
           </div>
         </div>
+
+        {/* Confirm removal */}
+        <Dialog
+          open={removeConfirmOpen}
+          onOpenChange={(next) => {
+            if (removingMember) return;
+            setRemoveConfirmOpen(next);
+            if (!next) setRemoveTarget(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                  <UserX className="h-4 w-4" />
+                </span>
+                Remove member?
+              </DialogTitle>
+              <DialogDescription>
+                {removeTarget ? (
+                  <>
+                    This will remove <span className="font-medium text-foreground">{removeTarget.name}</span> from{" "}
+                    <span className="font-medium text-foreground">{team.name}</span>. They will lose access immediately.
+                  </>
+                ) : (
+                  "This will remove this user from the team."
+                )}
+              </DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRemoveConfirmOpen(false)}
+                disabled={removingMember}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={confirmRemoveMember}
+                disabled={removingMember || !removeTarget}
+              >
+                {removingMember ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Removing…
+                  </span>
+                ) : (
+                  "Remove"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
