@@ -325,71 +325,6 @@ export const TeamDetailsDialog = ({
 
           <Separator />
 
-          {/* Pending invitations */}
-          {canManageTeam && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Pending invitations</h3>
-                <Badge variant="outline" className="text-xs">
-                  {invites.filter((i) => String(i?.status || "").toUpperCase() === "PENDING").length} pending
-                </Badge>
-              </div>
-
-              {loadingInvites ? (
-                <div className="text-sm text-muted-foreground">Loading invites…</div>
-              ) : invites.filter((i) => String(i?.status || "").toUpperCase() === "PENDING").length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-4 text-sm text-muted-foreground">
-                    No pending invitations.
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-2">
-                  {invites
-                    .filter((i) => String(i?.status || "").toUpperCase() === "PENDING")
-                    .map((invite) => (
-                      <Card key={invite.id} className="border-border/50">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium truncate">{invite.email}</span>
-                                <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20">
-                                  Pending
-                                </Badge>
-                                {invite.role && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {String(invite.role)}
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground truncate">
-                                Invitation not accepted yet.
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive border-destructive/20 hover:bg-destructive/10"
-                              onClick={() => {
-                                setCancelInviteTarget(invite);
-                                setCancelInviteOpen(true);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <Separator />
-
           {/* Team Members */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -399,7 +334,7 @@ export const TeamDetailsDialog = ({
               </Badge>
             </div>
 
-            {team.members_data.length === 0 ? (
+            {team.members_data.length === 0 && invites.filter((i) => String(i?.status || "").toUpperCase() === "PENDING").length === 0 ? (
               <Card className="text-center py-4 border-dashed">
                 <CardContent>
                   <div className="flex flex-col items-center gap-2">
@@ -419,6 +354,54 @@ export const TeamDetailsDialog = ({
               </Card>
             ) : (
               <div className="space-y-2">
+                {/* Pending invites inside members list */}
+                {canManageTeam &&
+                  invites
+                    .filter((i) => String(i?.status || "").toUpperCase() === "PENDING")
+                    .map((invite) => (
+                      <Card key={`invite-${invite.id}`} className="group hover:shadow-sm transition-shadow border-border/50">
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-muted text-xs">
+                                  {String(invite?.email || "?").slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium text-sm truncate">{invite.email}</span>
+                                  {invite.role && (
+                                    <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                      {String(invite.role)}
+                                    </Badge>
+                                  )}
+                                  <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20">
+                                    Pending
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground truncate">Invitation not accepted yet</p>
+                              </div>
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                              onClick={() => {
+                                setCancelInviteTarget(invite);
+                                setCancelInviteOpen(true);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+
                 {team.members_data.map((member) => (
                   <Card key={member.id} className="group hover:shadow-sm transition-shadow border-border/50">
                     <CardContent className="p-3">
