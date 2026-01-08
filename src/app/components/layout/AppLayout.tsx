@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 
 const MotionDiv = motion.div as any;
 const MotionAside = motion.aside as any;
@@ -24,6 +25,7 @@ import {
   CheckCircle,
   FileText,
   ShieldCheck,
+  User as UserIcon,
 } from "lucide-react";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/app/components/ui/NotificationCenter/NotificationCenter";
@@ -61,6 +63,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const pathForFeedback = usePathnameForFeedback();
   const { teams, personalTeam, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
+  const { user } = useUser();
   const showWorkspaceSwitcher = (teams?.length ?? 0) > 0;
   const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
   const notifications = useNotifications();
@@ -258,7 +261,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-sidebar border-r border-sidebar-border">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-sidebar border-r border-sidebar-border overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-center h-16 px-4 border-b border-sidebar-border bg-sidebar">
           <div className="flex items-center">
@@ -274,7 +277,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </div>
             <Button
               variant="outline"
-              className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"
+              // Prevent outline variant hover text (accent-foreground) from turning black.
+              className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground focus-visible:text-sidebar-foreground active:text-sidebar-foreground data-[state=open]:text-sidebar-foreground"
               onClick={() => setWorkspaceDialogOpen(true)}
             >
               <span className="truncate">
@@ -285,7 +289,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <nav className="flex-1 space-y-1 px-3 py-4 bg-sidebar">
+        <nav className="flex-1 space-y-1 px-3 py-3 bg-sidebar overflow-y-auto">
           {/* Main Navigation */}
           {routes.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
@@ -329,7 +333,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
 
           {/* Creative Action Buttons */}
-          <div className="my-6 mx-3 border-t border-sidebar-border pt-4" />
+          <div className="my-5 mx-3 border-t border-sidebar-border pt-4" />
           
           {/* Feedback / Feature Requests */}
           <button
@@ -347,38 +351,45 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </button>
         </nav>
 
-        {/* User Profile Menu */}
-        <div className="border-t border-sidebar-border p-4 bg-sidebar/60" style={{ position: 'relative' }}>
-          {/* Subscription Badge */}
-          <div className="mb-3">
+        {/* Bottom area (no divider under Feedback; keep footer always visible on small heights) */}
+        <div className="mt-auto bg-sidebar">
+          <div className="px-4 pt-3 pb-2">
             <SubscriptionBadge />
           </div>
-          
-          <div style={{ position: 'relative', zIndex: 50 }}>
-            <UserMenu
-              dropdownPosition="top"
-              onFeedbackClick={() =>
-                openModal("feedback-hub", {
-                  onSubmitFeedback: submitFeedback,
-                  onSubmitIdea: submitIdea,
-                  defaultTab: "feedback",
-                })
-              }
-            />
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="border-t border-sidebar-border px-4 py-3 bg-sidebar">
-          <div className="text-[11px] text-sidebar-foreground/60 space-y-2">
-            <div className="flex flex-wrap gap-x-3 gap-y-1">
-              <Link href="/about" className="hover:text-sidebar-foreground transition-colors">About</Link>
-              <Link href="/copyright" className="hover:text-sidebar-foreground transition-colors">Copyright</Link>
-              <Link href="/contact" className="hover:text-sidebar-foreground transition-colors">Contact</Link>
-              <Link href="/terms" className="hover:text-sidebar-foreground transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-sidebar-foreground transition-colors">Privacy</Link>
+          {/* Profile click goes to Settings page (Billing + Settings + Sign out). */}
+          <div className="px-3 pb-3">
+            <Link
+              href="/settings"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            >
+              <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
+                {user?.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <UserIcon className="h-4 w-4" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate">{user?.fullName || user?.primaryEmailAddress?.emailAddress || "Account"}</div>
+                <div className="text-[11px] text-sidebar-foreground/60 truncate">Billing • Settings • Sign out</div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-sidebar-border px-4 py-3 bg-sidebar">
+            <div className="text-[11px] text-sidebar-foreground/60 space-y-2">
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                <Link href="/about" className="hover:text-sidebar-foreground transition-colors">About</Link>
+                <Link href="/copyright" className="hover:text-sidebar-foreground transition-colors">Copyright</Link>
+                <Link href="/contact" className="hover:text-sidebar-foreground transition-colors">Contact</Link>
+                <Link href="/terms" className="hover:text-sidebar-foreground transition-colors">Terms</Link>
+                <Link href="/privacy" className="hover:text-sidebar-foreground transition-colors">Privacy</Link>
+              </div>
+              <div>© {new Date().getFullYear()} Uplora</div>
             </div>
-            <div>© {new Date().getFullYear()} Uplora</div>
           </div>
         </div>
       </aside>
@@ -456,20 +467,32 @@ export default function AppShell({ children }: { children: ReactNode }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] flex items-center justify-center bg-background/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-md"
             >
               <MotionDiv
-                initial={{ scale: 0.96, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.98, opacity: 0 }}
-                className="w-[calc(100vw-2rem)] max-w-sm rounded-2xl border bg-card p-6 shadow-2xl text-center"
+                initial={{ scale: 0.98, opacity: 0, y: 6 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.98, opacity: 0, y: 6 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                className="w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-strong"
               >
-                <div className="flex justify-center">
-                  <LoadingSpinner size="lg" />
-                </div>
-                <div className="mt-4 text-base font-semibold text-foreground">Changing workspace…</div>
-                <div className="mt-1 text-sm text-muted-foreground truncate">
-                  Switching to <span className="font-medium text-foreground">{switchTargetName}</span>
+                <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-warning" />
+                <div className="p-6 text-center">
+                  <div className="flex justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                  <div className="mt-4 text-base font-semibold text-foreground">Switching workspace</div>
+                  <div className="mt-1 text-sm text-muted-foreground truncate">
+                    Changing to <span className="font-medium text-foreground">{switchTargetName}</span>
+                  </div>
+                  <div className="mt-4 h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <MotionDiv
+                      initial={{ x: "-60%" }}
+                      animate={{ x: "120%" }}
+                      transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+                      className="h-full w-1/2 bg-primary/40"
+                    />
+                  </div>
                 </div>
               </MotionDiv>
             </MotionDiv>

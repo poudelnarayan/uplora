@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { User, CreditCard, Bell, Shield, Globe, Save } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
@@ -19,6 +20,8 @@ import { useTheme } from "@/context/ThemeContext";
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
   const { theme, toggleTheme, mounted: themeMounted } = useTheme();
 
   const primaryEmail = useMemo(() => user?.primaryEmailAddress?.emailAddress || "", [user]);
@@ -56,11 +59,22 @@ const Settings = () => {
 
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account settings and preferences
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            await signOut();
+            router.push("/");
+          }}
+        >
+          Sign out
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
