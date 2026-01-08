@@ -747,6 +747,20 @@ export default function VideoPreviewPage() {
     if (!video) return;
     setSubmitting(true);
     try {
+      // UX guard: don't allow publishing team videos before editors mark ready
+      if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
+        const st = String(video.status || "PROCESSING").toUpperCase();
+        if (st !== "READY" && st !== "APPROVED" && st !== "PENDING") {
+          notifications.addNotification({
+            type: "error",
+            title: "Not ready to post",
+            message: "This video is not ready yet. Ask editors to mark it 'Ready to post' before publishing.",
+          });
+          setSubmitting(false);
+          return;
+        }
+      }
+
       // Call approve endpoint with video metadata for YouTube upload
       const response = await fetch(`/api/videos/${video.id}/approve`, { 
         method: "POST",
@@ -1040,10 +1054,10 @@ export default function VideoPreviewPage() {
               </div>
 
               <div id="edit-section" className="order-2 lg:order-none lg:col-span-7 space-y-3 -mx-2 sm:mx-0">
-                {/* Processing chip (requested: above content div, left side) */}
-                {(!video.status || String(video.status).toUpperCase() === "PROCESSING") && (
+                {/* Status chip (requested: above content div, left side) */}
+                {(String(video.status || "PROCESSING").toUpperCase() === "PROCESSING" || String(video.status || "").toUpperCase() === "READY") && (
                   <div className="px-2 sm:px-0">
-                    <StatusChip status={"PROCESSING" as any} />
+                    <StatusChip status={(String(video.status || "PROCESSING").toUpperCase() as any)} />
                   </div>
                 )}
               
