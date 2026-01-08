@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2 } from "lucide-react";
+import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube } from "lucide-react";
 import Image from "next/image";
 import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
 import { StatusChip } from "@/app/components/ui/StatusChip";
@@ -696,6 +696,7 @@ export default function VideoPreviewPage() {
     setSubmitting(true);
     try {
       const response = await fetch(`/api/videos/${video.id}/request-approval`, { method: "POST" });
+      const js = await response.json().catch(() => ({}));
       if (response.ok) {
         setVideo({ ...video, status: "PENDING" });
         notifications.addNotification({
@@ -704,13 +705,37 @@ export default function VideoPreviewPage() {
           message: "Owner/admins have been notified."
         });
       } else {
-        throw new Error("Failed to send request");
+        throw new Error(js?.error || "Failed to send request");
       }
     } catch (error) {
       notifications.addNotification({
         type: "error", 
         title: "❌ Request failed",
-        message: "Could not send publish request"
+        message: error instanceof Error ? error.message : "Could not send publish request"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const markReady = async () => {
+    if (!video) return;
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/videos/${video.id}/mark-ready`, { method: "POST" });
+      const js = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(js?.error || "Failed to mark ready");
+      setVideo({ ...video, status: "READY" });
+      notifications.addNotification({
+        type: "success",
+        title: "Ready to publish",
+        message: "Marked as ready. You can now request approval.",
+      });
+    } catch (e) {
+      notifications.addNotification({
+        type: "error",
+        title: "Failed",
+        message: e instanceof Error ? e.message : "Could not mark ready",
       });
     } finally {
       setSubmitting(false);
@@ -1270,9 +1295,26 @@ export default function VideoPreviewPage() {
                       {submitting ? "Sending Request..." : "📧 Request approval"}
                     </button>
                   )}
+                  {/* Editor/Manager workflow (simple, explicit): Ready -> Ask approval */}
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                    <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
+                      {submitting ? "Working..." : "Mark ready to publish"}
+                    </button>
+                  )}
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
+                    <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
+                      {submitting ? "Working..." : "Ask for approval"}
+                    </button>
+                  )}
+
                   {/* Owner/Admin can publish anytime; Manager can publish only when APPROVED */}
                   {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
-                    <button className="btn btn-primary" disabled={submitting} onClick={approveOrPublish}>
+                    <button
+                      className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={submitting}
+                      onClick={approveOrPublish}
+                    >
+                      <Youtube className="h-5 w-5" />
                       {submitting ? 'Working...' : 'Publish to YouTube'}
                     </button>
                   )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const { selectedTeamId, selectedTeam } = useTeam();
   const { getCachedContent, setCachedContent, isStale } = useContentCache();
   const notifications = useNotifications();
+  const router = useRouter();
   
   // Content state
   const [content, setContent] = useState<any[]>([]);
@@ -143,6 +145,12 @@ export default function Dashboard() {
     if (route) {
       window.location.href = `${route}?edit=${item.id}`;
     }
+  };
+
+  const openPostDetails = (item: any) => {
+    if (!item?.id) return;
+    if (item.type === "video") router.push(`/videos/${item.id}`);
+    else router.push(`/posts/${item.id}`);
   };
 
   const handleDeleteContent = async (item: any) => {
@@ -609,7 +617,18 @@ export default function Dashboard() {
                         whileHover={{ y: -8 }}
                         className="group"
                       >
-                        <Card className="overflow-hidden glass-card border-2 border-primary/10 hover:border-primary/30 transition-luxury shadow-medium hover:shadow-gold relative">
+                        <Card
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openPostDetails(item)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openPostDetails(item);
+                            }
+                          }}
+                          className="overflow-hidden glass-card border-2 border-primary/10 hover:border-primary/30 transition-luxury shadow-medium hover:shadow-gold relative cursor-pointer"
+                        >
                           <CardContent className="p-0">
                             {/* Content Preview with Overlay */}
                             {item.type === 'image' && item.imageUrl && (
@@ -730,7 +749,7 @@ export default function Dashboard() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleEditContent(item)}
+                                  onClick={(e) => { e.stopPropagation(); handleEditContent(item); }}
                                   className="h-9 px-3 hover-gold transition-luxury border-2 gap-1.5"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
@@ -741,7 +760,7 @@ export default function Dashboard() {
                                   <Button
                                     size="sm"
                                     variant="default"
-                                    onClick={() => handlePublishContent(item)}
+                                    onClick={(e) => { e.stopPropagation(); handlePublishContent(item); }}
                                     className="h-9 px-3 gradient-accent transition-luxury gap-1.5"
                                   >
                                     <Send className="w-3.5 h-3.5" />
@@ -753,7 +772,7 @@ export default function Dashboard() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleScheduleContent(item)}
+                                    onClick={(e) => { e.stopPropagation(); handleScheduleContent(item); }}
                                     className="h-9 px-3 hover-gold transition-luxury border-2 gap-1.5"
                                   >
                                     <Calendar className="w-3.5 h-3.5" />
@@ -763,11 +782,11 @@ export default function Dashboard() {
                               
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="ghost" className="h-9 w-9 p-0 hover-gold transition-luxury">
+                                  <Button size="sm" variant="ghost" className="h-9 w-9 p-0 hover-gold transition-luxury" onClick={(e) => e.stopPropagation()}>
                                     <MoreVertical className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="glass-card border-2 shadow-strong">
+                                <DropdownMenuContent align="end" className="glass-card border-2 shadow-strong" onClick={(e) => e.stopPropagation()}>
                                   <DropdownMenuItem onClick={() => handleEditContent(item)} className="cursor-pointer">
                                     <Edit className="w-4 h-4 mr-2 text-primary" />
                                     <span className="font-medium">Edit</span>

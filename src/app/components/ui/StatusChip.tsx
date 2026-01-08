@@ -2,7 +2,7 @@
 
 import { CheckCircle, Clock, Check, Loader } from "lucide-react";
 
-type Status = "PROCESSING" | "PENDING" | "APPROVED" | "PUBLISHED";
+type Status = "PROCESSING" | "READY" | "PENDING" | "APPROVED" | "PUBLISHED";
 
 export function StatusChip({ status }: { status: Status }) {
   const baseClasses = "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition-all duration-200";
@@ -31,6 +31,15 @@ export function StatusChip({ status }: { status: Status }) {
       <span className={`${baseClasses} bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700`} style={fontStyle}>
         <Check className="w-4 h-4" />
         Approved
+      </span>
+    );
+  }
+
+  if (status === "READY") {
+    return (
+      <span className={`${baseClasses} bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-700`} style={fontStyle}>
+        <Check className="w-4 h-4" />
+        Ready to publish
       </span>
     );
   }

@@ -1,0 +1,124 @@
+export const dynamic = "force-dynamic";
+
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
+import { supabaseAdmin } from "@/lib/supabase";
+import { broadcast } from "@/lib/realtime";
+
+export async function POST(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  try {
+    const { id } = context.params;
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
+
+    // Sync user
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
+    const userName = clerkUser.fullName || clerkUser.firstName || "";
+    const userImage = clerkUser.imageUrl || "";
+
+    const { data: me, error: userError } = await supabaseAdmin
+      .from("users")
+      .upsert(
+        {
+          id: userId,
+          clerkId: userId,
+          email: userEmail || "",
+          name: userName,
+          image: userImage,
+          updatedAt: new Date().toISOString(),
+        },
+        { onConflict: "clerkId" }
+      )
+      .select()
+      .single();
+
+    if (userError || !me) {
+      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    }
+
+    const { data: video, error: videoError } = await supabaseAdmin
+      .from("video_posts")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (videoError || !video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
+
+    const currentStatus = String(video.status || "PROCESSING").toUpperCase();
+    if (currentStatus === "PUBLISHED") {
+      return NextResponse.json({ error: "Already published" }, { status: 400 });
+    }
+    if (currentStatus === "PENDING") {
+      return NextResponse.json({ error: "Already pending approval" }, { status: 400 });
+    }
+    if (currentStatus === "APPROVED") {
+      return NextResponse.json({ error: "Already approved" }, { status: 400 });
+    }
+    if (currentStatus === "READY") {
+      return NextResponse.json({ ok: true, status: "READY" });
+    }
+
+    // Personal video: uploader can mark ready
+    if (!video.teamId) {
+      if (video.userId !== me.id) {
+        return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+      }
+    } else {
+      // Team video: only editor/manager can mark ready (owner can publish/approve anyway)
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from("teams")
+        .select("id, ownerId")
+        .eq("id", video.teamId)
+        .single();
+      if (teamError || !team) {
+        return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      }
+      if (team.ownerId === me.id) {
+        return NextResponse.json({ error: "Owner doesn't need to mark ready. You can approve/publish." }, { status: 400 });
+      }
+
+      const { data: membership } = await supabaseAdmin
+        .from("team_members")
+        .select("role,status")
+        .eq("teamId", team.id)
+        .eq("userId", me.id)
+        .single();
+      const role = String((membership as any)?.role || "");
+      const mStatus = String((membership as any)?.status || "");
+      if (mStatus !== "ACTIVE") {
+        return NextResponse.json({ error: "Not an active member of this team" }, { status: 403 });
+      }
+      if (role !== "MANAGER" && role !== "EDITOR") {
+        return NextResponse.json({ error: "Only managers/editors can mark ready" }, { status: 403 });
+      }
+    }
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from("video_posts")
+      .update({
+        status: "READY",
+        updatedAt: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) {
+      return NextResponse.json({ error: "Failed to mark ready" }, { status: 500 });
+    }
+
+    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "READY" } });
+    return NextResponse.json({ ok: true, status: "READY", video: updated });
+  } catch {
+    return NextResponse.json({ error: "Failed to mark ready" }, { status: 500 });
+  }
+}
+
+
