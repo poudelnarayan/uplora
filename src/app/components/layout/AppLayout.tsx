@@ -104,10 +104,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
     setSwitchTargetId(nextId);
     setSwitchingWorkspace(true);
     setWorkspaceDialogOpen(false);
-    setSelectedTeamId(nextId);
+    // Intentional delay for premium UX + prevents accidental rapid switching
+    window.setTimeout(() => {
+      setSelectedTeamId(nextId);
+    }, 2000);
   };
 
-  // Hide the switching overlay once the selection is applied (small delay for nicer UX)
+  // Hide the switching overlay once the selection is applied
   useEffect(() => {
     if (!switchingWorkspace) return;
     if (!switchTargetId) return;
@@ -115,7 +118,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     const t = window.setTimeout(() => {
       setSwitchingWorkspace(false);
       setSwitchTargetId(null);
-    }, 450);
+    }, 150);
     return () => window.clearTimeout(t);
   }, [switchingWorkspace, switchTargetId, selectedTeamId]);
 
@@ -289,7 +292,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <nav className="flex-1 space-y-1 px-3 py-3 bg-sidebar overflow-y-auto">
+        <nav className="flex-1 space-y-1 px-3 py-3 bg-sidebar">
           {/* Main Navigation */}
           {routes.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
@@ -474,24 +477,22 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.98, opacity: 0, y: 6 }}
                 transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                className="w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-strong"
+                className="w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-border bg-card shadow-strong p-6"
               >
-                <div className="h-1 w-full bg-gradient-to-r from-primary via-accent to-warning" />
-                <div className="p-6 text-center">
-                  <div className="flex justify-center">
-                    <LoadingSpinner size="lg" />
+                <div className="flex items-center gap-4">
+                  {/* Spinner ring outside the settings icon */}
+                  <div className="relative h-14 w-14">
+                    <div className="absolute inset-0 rounded-full border-4 border-muted" />
+                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Settings className="h-6 w-6 text-foreground" />
+                    </div>
                   </div>
-                  <div className="mt-4 text-base font-semibold text-foreground">Switching workspace</div>
-                  <div className="mt-1 text-sm text-muted-foreground truncate">
-                    Changing to <span className="font-medium text-foreground">{switchTargetName}</span>
-                  </div>
-                  <div className="mt-4 h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <MotionDiv
-                      initial={{ x: "-60%" }}
-                      animate={{ x: "120%" }}
-                      transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
-                      className="h-full w-1/2 bg-primary/40"
-                    />
+                  <div className="min-w-0">
+                    <div className="text-base font-semibold text-foreground">Switching workspace</div>
+                    <div className="mt-0.5 text-sm text-muted-foreground truncate">
+                      Changing to <span className="font-medium text-foreground">{switchTargetName}</span>
+                    </div>
                   </div>
                 </div>
               </MotionDiv>
@@ -541,7 +542,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 </button>
               </header>
               
-              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto bg-sidebar">
+              <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto no-scrollbar bg-sidebar">
                 {/* Main Navigation */}
                 {routes.map(({ href, label, icon: Icon }) => {
                   const active = path === href || path.startsWith(href + "/");

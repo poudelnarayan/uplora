@@ -355,6 +355,15 @@
 }
 
 @layer utilities {
+  /* Hide scrollbars but keep scrolling (clean SaaS feel) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
   /* Custom Utility Classes - Luxury Gradients */
   .gradient-primary {
     background: var(--gradient-primary);
