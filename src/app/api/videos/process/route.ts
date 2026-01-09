@@ -42,15 +42,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Already processing or processed" });
     }
 
-    // Mark as processing
-    const { error: updateError } = await supabaseAdmin
-      .from('video_posts')
-      .update({ status: "PROCESSING" })
-      .eq('id', videoId);
-    
-    if (updateError) {
-      console.error("Failed to update video status:", updateError);
-    }
+    // NOTE: Do NOT modify `video_posts.status` here.
+    // `status` is a user-facing workflow state (Processing / Ready / etc).
+    // Web-optimization is a separate concern and must not downgrade READY/PENDING/APPROVED.
 
     // Download original from S3
     const tempDir = tmpdir();
@@ -103,11 +97,10 @@ export async function POST(req: NextRequest) {
       CacheControl: 'max-age=31536000', // 1 year cache
     }));
 
-    // Update database with web-optimized key
+    // Update database with web-optimized key (without touching workflow status)
     const { error: finalUpdateError } = await supabaseAdmin
       .from('video_posts')
       .update({ 
-        status: "PROCESSING",
         // Store web-optimized key in filename for now (you might want to add webOptimizedKey column)
         filename: `${video.filename} [WEB:${optimizedKey}]`
       })
@@ -131,16 +124,6 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error("Video processing error:", error);
-    
-    // Reset status on error
-    const { error: resetError } = await supabaseAdmin
-      .from('video_posts')
-      .update({ status: "PROCESSING" })
-      .eq('id', videoId);
-    
-    if (resetError) {
-      console.error("Failed to reset video status:", resetError);
-    }
 
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }

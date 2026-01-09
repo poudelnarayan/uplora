@@ -32,11 +32,10 @@ export async function POST(req: NextRequest) {
     // Create a web-optimized key (same as original for now, but marked)
     const webOptimizedKey = video.key.replace('uploads/', 'web-optimized/');
     
-    // Update with processing complete
+    // Update web-optimized marker (without touching workflow status)
     const { error: updateError } = await supabaseAdmin
       .from('video_posts')
       .update({ 
-        status: "PROCESSING",
         // Store web key in filename field temporarily
         filename: video.filename + ` [WEB:${webOptimizedKey}]`
       })
