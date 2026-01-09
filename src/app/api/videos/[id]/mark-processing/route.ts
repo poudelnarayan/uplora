@@ -99,12 +99,22 @@ export async function POST(
       .single();
 
     if (updateError) {
-      return NextResponse.json({ error: "Failed to revert status" }, { status: 500 });
+      console.error("[mark-processing] Supabase update error:", updateError);
+      return NextResponse.json(
+        {
+          error: updateError.message || "Failed to revert status",
+          code: (updateError as any).code,
+          details: (updateError as any).details,
+          hint: (updateError as any).hint,
+        },
+        { status: 500 }
+      );
     }
 
     broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "PROCESSING" } });
     return NextResponse.json({ ok: true, status: "PROCESSING", video: updated });
-  } catch {
+  } catch (e) {
+    console.error("[mark-processing] Unexpected error:", e);
     return NextResponse.json({ error: "Failed to revert status" }, { status: 500 });
   }
 }

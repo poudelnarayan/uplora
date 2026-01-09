@@ -112,12 +112,22 @@ export async function POST(
       .single();
 
     if (updateError) {
-      return NextResponse.json({ error: "Failed to mark ready" }, { status: 500 });
+      console.error("[mark-ready] Supabase update error:", updateError);
+      return NextResponse.json(
+        {
+          error: updateError.message || "Failed to mark ready",
+          code: (updateError as any).code,
+          details: (updateError as any).details,
+          hint: (updateError as any).hint,
+        },
+        { status: 500 }
+      );
     }
 
     broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "READY" } });
     return NextResponse.json({ ok: true, status: "READY", video: updated });
-  } catch {
+  } catch (e) {
+    console.error("[mark-ready] Unexpected error:", e);
     return NextResponse.json({ error: "Failed to mark ready" }, { status: 500 });
   }
 }

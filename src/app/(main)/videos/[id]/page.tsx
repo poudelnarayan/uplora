@@ -735,6 +735,7 @@ export default function VideoPreviewPage() {
         message: "Marked ready. You can now request approval.",
       });
     } catch (e) {
+      console.error("[UI markReady] failed:", e);
       notifications.addNotification({
         type: "error",
         title: "Failed",
