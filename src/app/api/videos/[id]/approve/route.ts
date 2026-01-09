@@ -174,8 +174,8 @@ export async function POST(
         return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
       }
 
-      // Readiness gate: block publish until READY or APPROVED
-      if (upperStatus !== "READY" && upperStatus !== "APPROVED") {
+      // Readiness gate: block publish until PENDING (ready-to-publish) or APPROVED
+      if (upperStatus !== "PENDING" && upperStatus !== "APPROVED") {
         return NextResponse.json(
           { error: "This video is not ready to publish yet. Ask your editors to mark it 'Ready to publish' before publishing." },
           { status: 400 }

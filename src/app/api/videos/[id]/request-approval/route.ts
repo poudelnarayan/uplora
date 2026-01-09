@@ -102,17 +102,16 @@ export async function POST(
       return NextResponse.json({ error: "Only managers/editors can request approval" }, { status: 403 });
     }
 
-    // Enforce workflow: must be marked READY before requesting approval
+    // Enforce workflow: must be marked ready-to-publish (PENDING) before requesting approval
     const currentStatus = String(video.status || "PROCESSING").toUpperCase();
-    if (currentStatus !== "READY") {
-      return NextResponse.json({ error: "Mark this video as ready before requesting approval." }, { status: 400 });
+    if (currentStatus !== "PENDING") {
+      return NextResponse.json({ error: "Mark this video as ready to publish before requesting approval." }, { status: 400 });
     }
 
-    // Update status to PENDING
+    // Keep status as PENDING; requesting approval is tracked via requestedByUserId
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('video_posts')
       .update({ 
-        status: "PENDING", 
         requestedByUserId: me.id,
         approvedByUserId: null,
         updatedAt: new Date().toISOString()

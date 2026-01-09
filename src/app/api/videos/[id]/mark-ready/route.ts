@@ -104,7 +104,10 @@ export async function POST(
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("video_posts")
       .update({
-        status: "READY",
+        // NOTE: Supabase enum "VideoStatus" in prod does not include READY.
+        // We use existing enum value PENDING to represent "Ready to publish" (user-facing),
+        // and keep the approval workflow via requestedByUserId/approvedByUserId + APPROVED.
+        status: "PENDING",
         updatedAt: new Date().toISOString(),
       })
       .eq("id", id)
@@ -124,8 +127,8 @@ export async function POST(
       );
     }
 
-    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "READY" } });
-    return NextResponse.json({ ok: true, status: "READY", video: updated });
+    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "PENDING" } });
+    return NextResponse.json({ ok: true, status: "PENDING", video: updated });
   } catch (e) {
     console.error("[mark-ready] Unexpected error:", e);
     return NextResponse.json({ error: "Failed to mark ready" }, { status: 500 });

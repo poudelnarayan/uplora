@@ -55,8 +55,8 @@ export async function POST(
     if (!video.teamId) {
       return NextResponse.json({ error: "Not a team video" }, { status: 400 });
     }
-    if (currentStatus !== "READY") {
-      return NextResponse.json({ error: "Only READY videos can be reverted to processing" }, { status: 400 });
+    if (currentStatus !== "PENDING") {
+      return NextResponse.json({ error: "Only Ready-to-publish videos can be reverted to processing" }, { status: 400 });
     }
 
     // Team check + role: only editor/manager can undo ready (owner/admin can also do it if needed)

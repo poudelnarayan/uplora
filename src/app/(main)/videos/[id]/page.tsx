@@ -728,7 +728,7 @@ export default function VideoPreviewPage() {
       const response = await fetch(`/api/videos/${video.id}/mark-ready`, { method: "POST" });
       const js = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(js?.error || "Failed to mark ready");
-      setVideo({ ...video, status: "READY" });
+      setVideo({ ...video, status: "PENDING" });
       notifications.addNotification({
         type: "success",
         title: "Ready to publish",
@@ -777,7 +777,7 @@ export default function VideoPreviewPage() {
       // UX guard: don't allow publishing team videos before editors mark ready
       if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
         const st = String(video.status || "PROCESSING").toUpperCase();
-        if (st !== "READY" && st !== "APPROVED" && st !== "PENDING") {
+        if (st !== "PENDING" && st !== "APPROVED") {
           notifications.addNotification({
             type: "error",
             title: "Not ready to publish",
@@ -1041,13 +1041,13 @@ export default function VideoPreviewPage() {
                         </button>
                       )}
 
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "READY" && (
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
                         <button className="btn btn-outline" disabled={submitting} onClick={undoReadyToProcessing}>
                           {submitting ? "Working…" : "Undo ready (back to processing)"}
                         </button>
                       )}
 
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
                         <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
                           {submitting ? "Working…" : "Request approval"}
                         </button>
@@ -1443,12 +1443,12 @@ export default function VideoPreviewPage() {
                         {submitting ? "Working…" : "Mark ready to publish"}
                       </button>
                     )}
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "READY" && (
+                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
                       <button className="btn btn-outline" disabled={submitting} onClick={undoReadyToProcessing}>
                         {submitting ? "Working…" : "Undo ready (back to processing)"}
                       </button>
                     )}
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && video.status === "READY" && (
+                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
                       <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
                         {submitting ? "Working…" : "Request approval"}
                       </button>
