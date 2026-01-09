@@ -1030,38 +1030,42 @@ export default function VideoPreviewPage() {
                     )}
                   </div>
                 </div>
-                {/* Mobile: workflow (below video) */}
+                {/* Mobile: action dock (below video) */}
                 <div className="mt-3 px-2">
-                  <div className="rounded-xl border bg-background/60 backdrop-blur p-3">
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="rounded-2xl border bg-background/70 backdrop-blur p-3">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <div className="text-sm font-semibold">Actions</div>
+                      <div className="text-xs text-muted-foreground">Workflow</div>
+                    </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                        <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
+                        <button className="btn btn-primary w-full" disabled={submitting} onClick={markReady}>
                           {submitting ? "Working…" : "Mark ready to publish"}
                         </button>
                       )}
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="btn btn-outline" disabled={submitting} onClick={undoReadyToProcessing}>
-                          {submitting ? "Working…" : "Undo ready (back to processing)"}
+                        <button className="btn btn-outline w-full" disabled={submitting} onClick={undoReadyToProcessing}>
+                          {submitting ? "Working…" : "Undo (back to processing)"}
                         </button>
                       )}
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
+                        <button className="btn btn-outline w-full" disabled={submitting} onClick={requestApproval}>
                           {submitting ? "Working…" : "Request approval"}
                         </button>
                       )}
 
-                      {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === "PENDING" && (
-                        <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
+                      {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                        <button className="btn btn-success w-full" disabled={submitting} onClick={() => approveOrPublish()}>
                           {submitting ? "Approving…" : "Approve"}
                         </button>
                       )}
 
-                      {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
+                      {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
                         <button
-                          className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           disabled={submitting}
                           onClick={approveOrPublish}
                         >
@@ -1433,71 +1437,73 @@ export default function VideoPreviewPage() {
                 </div>
               </div>
 
-              {/* Buttons BELOW video on the right side */}
-              <div className="card p-3">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  {/* Workflow (left) */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                      <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                        {submitting ? "Working…" : "Mark ready to publish"}
-                      </button>
-                    )}
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                      <button className="btn btn-outline" disabled={submitting} onClick={undoReadyToProcessing}>
-                        {submitting ? "Working…" : "Undo ready (back to processing)"}
-                      </button>
-                    )}
-                    {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                      <button className="btn btn-primary" disabled={submitting} onClick={requestApproval}>
-                        {submitting ? "Working…" : "Request approval"}
-                      </button>
-                    )}
-                    {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === "PENDING" && (
-                      <button className="btn btn-success" disabled={submitting} onClick={() => approveOrPublish()}>
-                        {submitting ? "Approving…" : "Approve"}
-                      </button>
-                    )}
-                  </div>
+              {/* Action dock BELOW video */}
+              <div className="rounded-2xl border bg-background/70 backdrop-blur p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="text-sm font-semibold">Actions</div>
+                  <div className="text-xs text-muted-foreground">Workflow & publishing</div>
+                </div>
 
-                  {/* Primary actions (right) - wide, centered, spaced */}
-                  <div className="w-full sm:w-auto">
-                    <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
-                    <button
-                      className="btn btn-primary w-full py-3 text-base"
-                      onClick={() => {
-                        const el = document.getElementById('edit-section');
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }}
-                    >
-                      <Edit3 className="w-4 h-4 mr-1" />
-                      Edit video
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                    <button className="btn btn-primary w-full" disabled={submitting} onClick={markReady}>
+                      {submitting ? "Working…" : "Mark ready to publish"}
                     </button>
+                  )}
 
-                    {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && video.status === "APPROVED")) && (
-                      <button
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-base font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={submitting}
-                        onClick={approveOrPublish}
-                      >
-                        <Youtube className="h-5 w-5" />
-                        {submitting ? 'Working…' : 'Publish to YouTube'}
-                      </button>
-                    )}
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                    <button className="btn btn-outline w-full" disabled={submitting} onClick={undoReadyToProcessing}>
+                      {submitting ? "Working…" : "Undo (back to processing)"}
+                    </button>
+                  )}
 
-                    {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                      <button className="btn btn-warning w-full py-3 text-base" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete video
-                      </button>
-                    )}
-                    </div>
-                  </div>
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                    <button className="btn btn-outline w-full" disabled={submitting} onClick={requestApproval}>
+                      {submitting ? "Working…" : "Request approval"}
+                    </button>
+                  )}
+
+                  {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                    <button className="btn btn-success w-full" disabled={submitting} onClick={() => approveOrPublish()}>
+                      {submitting ? "Approving…" : "Approve"}
+                    </button>
+                  )}
+
+                  {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
+                    <button
+                      className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-base font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={submitting}
+                      onClick={approveOrPublish}
+                    >
+                      <Youtube className="h-5 w-5" />
+                      {submitting ? 'Working…' : 'Publish to YouTube'}
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    className="btn btn-primary w-full py-3 text-base"
+                    onClick={() => {
+                      const el = document.getElementById('edit-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" />
+                    Edit video
+                  </button>
+
+                  {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
+                    <button className="btn btn-warning w-full py-3 text-base" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete video
+                    </button>
+                  )}
                 </div>
 
                 {(role === "OWNER") && video.teamId && video.status === "PENDING" && (
                   <button
-                    className="btn btn-ghost w-full mt-2"
+                    className="btn btn-ghost w-full mt-3"
                     disabled={submitting}
                     title="Revert to Processing so editors can continue editing"
                     onClick={async () => {
