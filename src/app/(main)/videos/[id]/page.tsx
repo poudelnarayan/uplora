@@ -956,8 +956,8 @@ export default function VideoPreviewPage() {
           embedUrl={canonicalUrl}
         />
       )}
-      <div className="space-y-6 max-w-[88rem] mx-auto">
-        <div className="flex items-center justify-between mt-6">
+      <div className="space-y-6 max-w-[88rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex items-center justify-between">
           <h1 className="heading-2">Video Preview</h1>
           <button
             onClick={() => router.back()}
