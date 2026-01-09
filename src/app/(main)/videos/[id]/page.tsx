@@ -1036,7 +1036,7 @@ export default function VideoPreviewPage() {
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                         <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                          {submitting ? "Working…" : "Mark ready to upload"}
+                          {submitting ? "Working…" : "Mark ready to publish"}
                         </button>
                       )}
 
@@ -1439,7 +1439,7 @@ export default function VideoPreviewPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                       <button className="btn btn-ghost" disabled={submitting} onClick={markReady}>
-                        {submitting ? "Working…" : "Mark ready to upload"}
+                        {submitting ? "Working…" : "Mark ready to publish"}
                       </button>
                     )}
                     {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "READY" && (
