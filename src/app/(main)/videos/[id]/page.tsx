@@ -1486,12 +1486,6 @@ export default function VideoPreviewPage() {
                     </button>
                   )}
 
-                  {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                    <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={() => approveOrPublish()}>
-                      {submitting ? "Approving…" : "Approve"}
-                    </button>
-                  )}
-
                   {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
                     <button
                       className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
