@@ -1621,36 +1621,6 @@ export default function VideoPreviewPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="hidden sm:block" />
-                  <div className="col-span-1 sm:col-span-1">
-                    <div className="rounded-xl border border-red-200 bg-red-50/70 p-3 shadow-sm">
-                      <div className="text-xs font-semibold text-red-800 mb-2">Danger zone</div>
-                      <button
-                        className="w-full py-3 text-base font-semibold rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                        onClick={async () => {
-                          try {
-                            setDeleting(true);
-                            const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
-                            if (!res.ok) throw new Error();
-                            router.push("/posts/all?type=video");
-                            notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
-                          } catch {
-                            notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
-                          } finally {
-                            setDeleting(false);
-                          }
-                        }}
-                        title="Delete the post entirely (DB + S3)"
-                        disabled={deleting}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete post
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
                 {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
                     <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
@@ -1691,6 +1661,20 @@ export default function VideoPreviewPage() {
                 )}
               </div>
               {/* Upload timeline removed per request */}
+              
+              {/* Danger zone: delete post */}
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4 shadow-sm">
+                <div className="text-xs font-semibold text-red-800 mb-2">Danger zone</div>
+                <button
+                  className="w-full py-3 text-base font-semibold rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={() => setDeleteModalOpen(true)}
+                  title="Delete the post entirely (DB + S3)"
+                  disabled={deleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete post
+                </button>
+              </div>
             </div>
           </div>
         )}
