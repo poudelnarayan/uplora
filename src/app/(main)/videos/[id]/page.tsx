@@ -54,6 +54,7 @@ export default function VideoPreviewPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [replacing, setReplacing] = useState(false);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [deletePostModalOpen, setDeletePostModalOpen] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [webOptimizedUrl, setWebOptimizedUrl] = useState<string | null>(null);
@@ -997,6 +998,22 @@ export default function VideoPreviewPage() {
     }
   };
 
+  const deletePost = async () => {
+    if (!video) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      router.push("/posts/all?type=video");
+      notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
+    } catch {
+      notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
+    } finally {
+      setDeleting(false);
+      setDeletePostModalOpen(false);
+    }
+  };
+
   
 
   // Enhanced hashtag parsing - fixes double # issue and supports copy-paste
@@ -1726,24 +1743,10 @@ export default function VideoPreviewPage() {
               <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4 shadow-sm">
                 <button
                   className="w-full inline-flex items-center justify-center gap-2 py-3 text-base font-semibold rounded-xl border border-red-400 bg-transparent text-red-700 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={async () => {
-                    const ok = window.confirm("Delete this post and its media? This cannot be undone.");
-                    if (!ok) return;
-                    try {
-                      setDeleting(true);
-                      const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
-                      if (!res.ok) throw new Error();
-                      router.push("/posts/all?type=video");
-                      notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
-                    } catch {
-                      notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
-                    } finally {
-                      setDeleting(false);
-                    }
-                  }}
+                  onClick={() => setDeletePostModalOpen(true)}
                   title="Delete the post entirely (Supabase + S3)"
                   disabled={deleting}
-                  >
+                >
                   {deleting ? (
                     <span className="flex items-center gap-2">
                       <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
@@ -1819,6 +1822,20 @@ export default function VideoPreviewPage() {
         </div>
       )}
       </div>
+
+      {/* Delete post modal */}
+      <ConfirmationModal
+        isOpen={deletePostModalOpen}
+        onClose={() => (!deleting ? setDeletePostModalOpen(false) : null)}
+        onConfirm={deletePost}
+        title="Delete this post?"
+        message="This will remove the post and its media from Supabase and S3. This cannot be undone."
+        itemName={video?.filename}
+        confirmText={deleting ? "Deleting..." : "Delete post"}
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={deleting}
+      />
     </AppShell>
   );
 }
