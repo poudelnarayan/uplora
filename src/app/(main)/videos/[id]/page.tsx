@@ -1032,7 +1032,7 @@ export default function VideoPreviewPage() {
                 </div>
                 {/* Mobile: action bar (below video) */}
                 <div className="mt-3 px-2">
-                  <div className="rounded-2xl border bg-card/60 backdrop-blur p-3 shadow-sm">
+                  <div className="rounded-2xl border bg-card/60 backdrop-blur p-3 shadow-sm space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                         <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
@@ -1052,12 +1052,6 @@ export default function VideoPreviewPage() {
                         </button>
                       )}
 
-                      {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={() => approveOrPublish()}>
-                          {submitting ? "Approving…" : "Approve"}
-                        </button>
-                      )}
-
                       {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
                         <button
                           className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
@@ -1069,6 +1063,45 @@ export default function VideoPreviewPage() {
                         </button>
                       )}
                     </div>
+
+                    {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
+                        <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <button
+                            className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            disabled={submitting}
+                            onClick={() => approveOrPublish()}
+                          >
+                            {submitting ? "Approving…" : "Approve"}
+                          </button>
+                          <button
+                            className="w-full py-3 text-base font-semibold rounded-xl border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            disabled={submitting}
+                            onClick={async () => {
+                              try {
+                                setSubmitting(true);
+                                const res = await fetch(`/api/videos/${video.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ status: "PROCESSING" })
+                                });
+                                if (!res.ok) throw new Error();
+                                await res.json();
+                                setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
+                                notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
+                              } catch {
+                                notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
+                              } finally {
+                                setSubmitting(false);
+                              }
+                            }}
+                          >
+                            Send back for editing
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* Mobile: quick edit button just below the player */}
@@ -1433,7 +1466,7 @@ export default function VideoPreviewPage() {
               </div>
 
               {/* Action bar BELOW video */}
-              <div className="rounded-2xl border bg-card/60 backdrop-blur p-4 sm:p-5 shadow-sm">
+              <div className="rounded-2xl border bg-card/60 backdrop-blur p-4 sm:p-5 shadow-sm space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
                     <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
@@ -1471,7 +1504,7 @@ export default function VideoPreviewPage() {
                   )}
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
                     className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
                     onClick={() => {
@@ -1494,33 +1527,44 @@ export default function VideoPreviewPage() {
                     </button>
                   )}
                 </div>
-
-                {(role === "OWNER") && video.teamId && video.status === "PENDING" && (
-                  <button
-                    className="w-full mt-3 py-3 text-base font-semibold rounded-xl border border-amber-300 bg-amber-50/60 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={submitting}
-                    title="Revert to Processing so editors can continue editing"
-                    onClick={async () => {
-                      try {
-                        setSubmitting(true);
-                        const res = await fetch(`/api/videos/${video.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ status: "PROCESSING" })
-                        });
-                        if (!res.ok) throw new Error();
-                        await res.json();
-                        setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
-                        notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
-                      } catch {
-                        notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
-                      } finally {
-                        setSubmitting(false);
-                      }
-                    }}
-                  >
-                    ↩ Send back for editing
-                  </button>
+                
+                {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
+                    <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={submitting}
+                        onClick={() => approveOrPublish()}
+                      >
+                        {submitting ? "Approving…" : "Approve"}
+                      </button>
+                      <button
+                        className="w-full py-3 text-base font-semibold rounded-xl border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={submitting}
+                        onClick={async () => {
+                          try {
+                            setSubmitting(true);
+                            const res = await fetch(`/api/videos/${video.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ status: "PROCESSING" })
+                            });
+                            if (!res.ok) throw new Error();
+                            await res.json();
+                            setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
+                            notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
+                          } catch {
+                            notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
+                          } finally {
+                            setSubmitting(false);
+                          }
+                        }}
+                      >
+                        Send back for editing
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
               {/* Upload timeline removed per request */}
