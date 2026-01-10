@@ -879,6 +879,30 @@ export default function VideoPreviewPage() {
     }
   };
 
+  const deleteVideoFile = async () => {
+    if (!video) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/videos/${video.id}/file`, { method: "DELETE" });
+      const js = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(js?.error || "Failed to delete video file");
+      setVideo(v => v ? ({ ...v, key: null as any, status: "PROCESSING" }) : v);
+      setPlayUrl(null);
+      setBlobUrl(null);
+      setWebOptimizedUrl(null);
+      setUrlError(null);
+      notifications.addNotification({ type: "success", title: "Video file removed", message: "Upload a new file to replace it." });
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "Delete failed",
+        message: error instanceof Error ? error.message : "Failed to delete video file"
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const deleteVideo = async () => {
     if (!video) return;
     
@@ -1468,7 +1492,38 @@ export default function VideoPreviewPage() {
             {/* Right: bigger player + actions (desktop) */}
             <div className="hidden lg:block lg:col-span-5 space-y-3 lg:sticky lg:top-4 self-start">
               <div className="card p-3">
-                <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+                <div className="group relative w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+                  {/* Replace/delete overlay (desktop) */}
+                  <div className="absolute inset-0 z-10 hidden items-start justify-end p-2 bg-gradient-to-b from-black/40 via-transparent to-black/20 group-hover:flex transition-opacity">
+                    <button
+                      className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-red-600 shadow-sm hover:bg-white"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={replacing}
+                      title="Replace video"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {replacing ? "Replacing…" : "Replace"}
+                    </button>
+                    <button
+                      className="ml-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-red-600 shadow-sm hover:bg-white"
+                      onClick={() => deleteVideoFile()}
+                      disabled={replacing}
+                      title="Delete video file"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleReplace(f);
+                    }}
+                  />
                   {urlError ? (
                     <div className="w-full h-full flex flex-col items-center justify-center text-red-400 p-4">
                       <div className="text-sm mb-2">Error loading video:</div>
@@ -1567,35 +1622,33 @@ export default function VideoPreviewPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button
-                    className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm hover:from-amber-400 hover:to-orange-500 transition-colors"
-                    onClick={() => setDeleteModalOpen(true)}
-                    title="Delete video file only"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete video file
-                  </button>
-                  <button
-                    className="w-full py-3 text-base font-semibold rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={async () => {
-                      try {
-                        setDeleting(true);
-                        const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
-                        if (!res.ok) throw new Error();
-                        router.push("/posts/all?type=video");
-                        notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
-                      } catch {
-                        notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
-                      } finally {
-                        setDeleting(false);
-                      }
-                    }}
-                    title="Delete the post entirely (DB + S3)"
-                    disabled={deleting}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete post
-                  </button>
+                  <div className="hidden sm:block" />
+                  <div className="col-span-1 sm:col-span-1">
+                    <div className="rounded-xl border border-red-200 bg-red-50/70 p-3 shadow-sm">
+                      <div className="text-xs font-semibold text-red-800 mb-2">Danger zone</div>
+                      <button
+                        className="w-full py-3 text-base font-semibold rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        onClick={async () => {
+                          try {
+                            setDeleting(true);
+                            const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
+                            if (!res.ok) throw new Error();
+                            router.push("/posts/all?type=video");
+                            notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
+                          } catch {
+                            notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
+                          } finally {
+                            setDeleting(false);
+                          }
+                        }}
+                        title="Delete the post entirely (DB + S3)"
+                        disabled={deleting}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete post
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
