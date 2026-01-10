@@ -619,8 +619,12 @@ export default function VideoPreviewPage() {
       });
     } finally {
       setSubmitting(false);
-      setShowOverrideModal(false);
     }
+  };
+
+  const handleOverrideConfirm = () => {
+    setShowOverrideModal(false);
+    void forceReadyAndPublish();
   };
 
   const downloadAsBlob = async () => {
@@ -1776,7 +1780,7 @@ export default function VideoPreviewPage() {
       {/* Override publish modal */}
       {showOverrideModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-6 space-y-4">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-6 space-y-5">
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 <AlertCircle className="w-6 h-6 text-amber-500" />
@@ -1790,18 +1794,25 @@ export default function VideoPreviewPage() {
             </div>
             <div className="flex gap-2 justify-end">
               <button
-                className="btn btn-outline"
+                className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
                 onClick={() => setShowOverrideModal(false)}
                 disabled={submitting}
               >
                 Cancel
               </button>
               <button
-                className="btn btn-primary"
-                onClick={forceReadyAndPublish}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed min-w-[150px]"
+                onClick={handleOverrideConfirm}
                 disabled={submitting}
               >
-                {submitting ? "Working…" : "Publish anyway"}
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                    Publishing…
+                  </span>
+                ) : (
+                  "Publish anyway"
+                )}
               </button>
             </div>
           </div>
