@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube } from "lucide-react";
+import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube, XCircle } from "lucide-react";
 import Image from "next/image";
 import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
 import { StatusChip } from "@/app/components/ui/StatusChip";
@@ -51,6 +51,8 @@ export default function VideoPreviewPage() {
   
   const [playUrl, setPlayUrl] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [replacing, setReplacing] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [webOptimizedUrl, setWebOptimizedUrl] = useState<string | null>(null);
@@ -517,6 +519,50 @@ export default function VideoPreviewPage() {
   }, [video?.key]);
 
   // Download entire video as blob for better playback
+  const handleReplace = async (file: File) => {
+    if (!video) return;
+    setReplacing(true);
+    try {
+      // 1) Presign
+      const presignRes = await fetch(`/api/videos/${video.id}/replace/presign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type || "video/mp4", sizeBytes: file.size }),
+      });
+      const presign = await presignRes.json();
+      if (!presignRes.ok) throw new Error(presign?.error || "Presign failed");
+
+      // 2) Upload to S3
+      const putRes = await fetch(presign.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "video/mp4" },
+        body: file,
+      });
+      if (!putRes.ok) throw new Error("Upload failed");
+
+      // 3) Finalize
+      const finalizeRes = await fetch(`/api/videos/${video.id}/replace/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: presign.key, filename: file.name }),
+      });
+      const finalized = await finalizeRes.json();
+      if (!finalizeRes.ok) throw new Error(finalized?.error || "Failed to finalize replace");
+
+      setVideo(finalized.video);
+      setPlayUrl(null);
+      setBlobUrl(null);
+      setWebOptimizedUrl(null);
+      setUrlError(null);
+      notifications.addNotification({ type: "success", title: "Video replaced", message: "New upload saved. Re-processing started." });
+    } catch (err: any) {
+      notifications.addNotification({ type: "error", title: "Replace failed", message: err?.message || "Could not replace video" });
+    } finally {
+      setReplacing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const downloadAsBlob = async () => {
     if (!playUrl || isDownloading) return;
     setIsDownloading(true);
@@ -1013,7 +1059,29 @@ export default function VideoPreviewPage() {
             {/* On mobile, video first; on desktop, editor left */}
               <div className="lg:hidden order-1">
                 <div className="card p-2">
-                  <div className="w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+                  <div className="group relative w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
+                    {/* Replace overlay */}
+                    <div className="absolute inset-0 z-10 hidden items-start justify-end p-2 bg-gradient-to-b from-black/40 via-transparent to-black/20 group-hover:flex transition-opacity">
+                      <button
+                        className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-red-600 shadow-sm hover:bg-white"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={replacing}
+                        title="Replace video"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        {replacing ? "Replacing…" : "Replace"}
+                      </button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleReplace(f);
+                      }}
+                    />
                     {urlError ? (
                       <div className="w-full h-full flex flex-col items-center justify-center text-red-400 p-4">
                         <div className="text-sm mb-2">Error loading video:</div>
@@ -1500,28 +1568,36 @@ export default function VideoPreviewPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
-                    className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
-                    onClick={() => {
-                      const el = document.getElementById('edit-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
+                    className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm hover:from-amber-400 hover:to-orange-500 transition-colors"
+                    onClick={() => setDeleteModalOpen(true)}
+                    title="Delete video file only"
                   >
-                    <Edit3 className="w-4 h-4 mr-1" />
-                    Edit video
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete video file
                   </button>
-
-                  {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                    <button
-                      className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm hover:from-amber-400 hover:to-orange-500 transition-colors"
-                      onClick={() => setDeleteModalOpen(true)}
-                      title="Delete video permanently"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Delete video
-                    </button>
-                  )}
+                  <button
+                    className="w-full py-3 text-base font-semibold rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={async () => {
+                      try {
+                        setDeleting(true);
+                        const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
+                        if (!res.ok) throw new Error();
+                        router.push("/posts/all?type=video");
+                        notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
+                      } catch {
+                        notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                    title="Delete the post entirely (DB + S3)"
+                    disabled={deleting}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete post
+                  </button>
                 </div>
-                
+
                 {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
                     <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
