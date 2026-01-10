@@ -1662,17 +1662,39 @@ export default function VideoPreviewPage() {
               </div>
               {/* Upload timeline removed per request */}
               
-              {/* Danger zone: delete post */}
+              {/* Delete post */}
               <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4 shadow-sm">
-                <div className="text-xs font-semibold text-red-800 mb-2">Danger zone</div>
                 <button
-                  className="w-full py-3 text-base font-semibold rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={() => setDeleteModalOpen(true)}
-                  title="Delete the post entirely (DB + S3)"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={async () => {
+                    const ok = window.confirm("Delete this post and its media? This cannot be undone.");
+                    if (!ok) return;
+                    try {
+                      setDeleting(true);
+                      const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
+                      if (!res.ok) throw new Error();
+                      router.push("/posts/all?type=video");
+                      notifications.addNotification({ type: "success", title: "Post deleted", message: "Post and media removed." });
+                    } catch {
+                      notifications.addNotification({ type: "error", title: "Failed", message: "Could not delete post" });
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                  title="Delete the post entirely (Supabase + S3)"
                   disabled={deleting}
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Delete post
+                  {deleting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                      Deleting…
+                    </span>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Delete post
+                    </>
+                  )}
                 </button>
               </div>
             </div>
