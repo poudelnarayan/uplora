@@ -1035,32 +1035,32 @@ export default function VideoPreviewPage() {
                   <div className="rounded-2xl border bg-card/60 backdrop-blur p-3 shadow-sm">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                        <button className="btn btn-primary w-full py-3 text-base" disabled={submitting} onClick={markReady}>
+                        <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
                           {submitting ? "Working…" : "Mark ready to publish"}
                         </button>
                       )}
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="btn btn-outline w-full py-3 text-base" disabled={submitting} onClick={undoReadyToProcessing}>
+                        <button className="w-full py-3 text-base font-semibold rounded-xl border border-border bg-transparent text-foreground hover:bg-muted/60 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={undoReadyToProcessing}>
                           {submitting ? "Working…" : "Undo"}
                         </button>
                       )}
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="btn btn-outline w-full py-3 text-base" disabled={submitting} onClick={requestApproval}>
+                        <button className="w-full py-3 text-base font-semibold rounded-xl border border-sky-300 bg-sky-50/60 text-sky-700 hover:bg-sky-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={requestApproval}>
                           {submitting ? "Working…" : "Request approval"}
                         </button>
                       )}
 
                       {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="btn btn-success w-full py-3 text-base" disabled={submitting} onClick={() => approveOrPublish()}>
+                        <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={() => approveOrPublish()}>
                           {submitting ? "Approving…" : "Approve"}
                         </button>
                       )}
 
                       {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
                         <button
-                          className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                          className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                           disabled={submitting}
                           onClick={approveOrPublish}
                         >
@@ -1436,32 +1436,32 @@ export default function VideoPreviewPage() {
               <div className="rounded-2xl border bg-card/60 backdrop-blur p-4 sm:p-5 shadow-sm">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                    <button className="btn btn-primary w-full py-3 text-base" disabled={submitting} onClick={markReady}>
+                    <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
                       {submitting ? "Working…" : "Mark ready to publish"}
                     </button>
                   )}
 
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                    <button className="btn btn-outline w-full py-3 text-base" disabled={submitting} onClick={undoReadyToProcessing}>
+                    <button className="w-full py-3 text-base font-semibold rounded-xl border border-border bg-transparent text-foreground hover:bg-muted/60 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={undoReadyToProcessing}>
                       {submitting ? "Working…" : "Undo"}
                     </button>
                   )}
 
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                    <button className="btn btn-outline w-full py-3 text-base" disabled={submitting} onClick={requestApproval}>
+                    <button className="w-full py-3 text-base font-semibold rounded-xl border border-sky-300 bg-sky-50/60 text-sky-700 hover:bg-sky-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={requestApproval}>
                       {submitting ? "Working…" : "Request approval"}
                     </button>
                   )}
 
                   {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                    <button className="btn btn-success w-full py-3 text-base" disabled={submitting} onClick={() => approveOrPublish()}>
+                    <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={() => approveOrPublish()}>
                       {submitting ? "Approving…" : "Approve"}
                     </button>
                   )}
 
                   {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
                     <button
-                      className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-[#FF0000] hover:bg-[#E60000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                      className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                       disabled={submitting}
                       onClick={approveOrPublish}
                     >
