@@ -53,6 +53,7 @@ export default function VideoPreviewPage() {
   const [urlError, setUrlError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [replacing, setReplacing] = useState(false);
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [webOptimizedUrl, setWebOptimizedUrl] = useState<string | null>(null);
@@ -563,6 +564,65 @@ export default function VideoPreviewPage() {
     }
   };
 
+  const forceReadyAndPublish = async () => {
+    if (!video) return;
+    setSubmitting(true);
+    try {
+      // 1) Mark ready (PENDING)
+      const readyRes = await fetch(`/api/videos/${video.id}/mark-ready`, { method: "POST" });
+      const readyJs = await readyRes.json().catch(() => ({}));
+      if (!readyRes.ok) throw new Error(readyJs?.error || "Failed to set ready");
+
+      // 2) Publish/approve
+      const response = await fetch(`/api/videos/${video.id}/approve`, { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          privacyStatus: visibility,
+          madeForKids,
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json().catch(() => ({}));
+        if (result?.status === "APPROVED") {
+          setVideo({ ...video, status: "APPROVED" });
+          notifications.addNotification({
+            type: "success",
+            title: "Approved",
+            message: "This video is approved. A manager can now publish it to YouTube.",
+          });
+        } else {
+          setVideo({ ...video, status: "PUBLISHED" });
+          notifications.addNotification({
+            type: "success",
+            title: "✅ Video published to YouTube!",
+            message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
+          });
+          router.push("/dashboard");
+        }
+      } else {
+        const error = await response.json();
+        notifications.addNotification({
+          type: "error",
+          title: "Failed",
+          message: error?.error || "Could not publish",
+        });
+      }
+    } catch (e: any) {
+      notifications.addNotification({
+        type: "error",
+        title: "Failed",
+        message: e?.message || "Could not publish",
+      });
+    } finally {
+      setSubmitting(false);
+      setShowOverrideModal(false);
+    }
+  };
+
   const downloadAsBlob = async () => {
     if (!playUrl || isDownloading) return;
     setIsDownloading(true);
@@ -824,11 +884,7 @@ export default function VideoPreviewPage() {
       if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
         const st = String(video.status || "PROCESSING").toUpperCase();
         if (st !== "PENDING" && st !== "APPROVED") {
-          notifications.addNotification({
-            type: "error",
-            title: "Not ready to publish",
-            message: "This video is not ready yet. Ask editors to mark it 'Ready to publish' before publishing.",
-          });
+          setShowOverrideModal(true);
           setSubmitting(false);
           return;
         }
@@ -1716,6 +1772,41 @@ export default function VideoPreviewPage() {
         variant="danger"
         isLoading={deleting}
       />
+
+      {/* Override publish modal */}
+      {showOverrideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-1">
+                <AlertCircle className="w-6 h-6 text-amber-500" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Override readiness?</h3>
+                <p className="text-sm text-muted-foreground">
+                  This video is not marked ready. Do you want to publish anyway? This will force it to ready and publish.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                className="btn btn-outline"
+                onClick={() => setShowOverrideModal(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={forceReadyAndPublish}
+                disabled={submitting}
+              >
+                {submitting ? "Working…" : "Publish anyway"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </AppShell>
   );
