@@ -1665,7 +1665,7 @@ export default function VideoPreviewPage() {
               {/* Delete post */}
               <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4 shadow-sm">
                 <button
-                  className="w-full inline-flex items-center justify-center gap-2 py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 text-base font-semibold rounded-xl border border-red-400 bg-transparent text-red-700 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={async () => {
                     const ok = window.confirm("Delete this post and its media? This cannot be undone.");
                     if (!ok) return;
@@ -1683,10 +1683,10 @@ export default function VideoPreviewPage() {
                   }}
                   title="Delete the post entirely (Supabase + S3)"
                   disabled={deleting}
-                >
+                  >
                   {deleting ? (
                     <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                       Deleting…
                     </span>
                   ) : (
