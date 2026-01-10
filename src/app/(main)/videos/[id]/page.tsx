@@ -1074,7 +1074,7 @@ export default function VideoPreviewPage() {
                 {/* Mobile: quick edit button just below the player */}
                 <div className="mt-2 px-2">
                   <button
-                    className="btn btn-primary w-full"
+                    className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
                     onClick={() => {
                       const el = document.getElementById('edit-section');
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1473,7 +1473,7 @@ export default function VideoPreviewPage() {
 
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
-                    className="btn btn-primary w-full py-3 text-base"
+                    className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
                     onClick={() => {
                       const el = document.getElementById('edit-section');
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1484,7 +1484,11 @@ export default function VideoPreviewPage() {
                   </button>
 
                   {(role === "OWNER" || role === "ADMIN" || role === "MANAGER") && (
-                    <button className="btn btn-warning w-full py-3 text-base" onClick={() => setDeleteModalOpen(true)} title="Delete video permanently">
+                    <button
+                      className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm hover:from-amber-400 hover:to-orange-500 transition-colors"
+                      onClick={() => setDeleteModalOpen(true)}
+                      title="Delete video permanently"
+                    >
                       <Trash2 className="w-4 h-4 mr-1" />
                       Delete video
                     </button>
@@ -1493,7 +1497,7 @@ export default function VideoPreviewPage() {
 
                 {(role === "OWNER") && video.teamId && video.status === "PENDING" && (
                   <button
-                    className="btn btn-ghost w-full mt-3"
+                    className="w-full mt-3 py-3 text-base font-semibold rounded-xl border border-amber-300 bg-amber-50/60 text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     disabled={submitting}
                     title="Revert to Processing so editors can continue editing"
                     onClick={async () => {
