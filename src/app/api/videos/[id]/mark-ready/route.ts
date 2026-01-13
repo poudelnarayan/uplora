@@ -134,6 +134,13 @@ export async function POST(
       teamId: updated.teamId || null,
       payload: { id: updated.id, status: "PENDING", requestedByUserId: null, approvedByUserId: null }
     });
+    if (updated.teamId) {
+      broadcast({
+        type: "post.status",
+        teamId: String(updated.teamId),
+        payload: { id: updated.id, status: "PENDING", contentType: "video" }
+      });
+    }
     return NextResponse.json({ ok: true, status: "PENDING", video: updated });
   } catch (e) {
     console.error("[mark-ready] Unexpected error:", e);

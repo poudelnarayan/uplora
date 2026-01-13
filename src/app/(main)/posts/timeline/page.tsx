@@ -85,13 +85,14 @@ const Timeline = () => {
       es.onmessage = (ev) => {
         try {
           const evt = JSON.parse(ev.data || "{}");
-          if (!evt?.type || !evt.type.startsWith("post.")) return;
+          if (!evt?.type) return;
+          if (!evt.type.startsWith("post.") && !evt.type.startsWith("video.")) return;
           invalidateCache(selectedTeamId);
           fetchContent();
           notifications.addNotification({
             type: "info",
             title: "Live update",
-            message: evt.type === "post.status" ? "Post status updated" : "Posts updated",
+            message: evt.type === "post.status" || evt.type === "video.status" ? "Status updated" : "Posts updated",
           });
         } catch {
           // ignore parse errors

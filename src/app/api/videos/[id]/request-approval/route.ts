@@ -216,6 +216,13 @@ export async function POST(
       teamId: video.teamId || null,
       payload: { id: video.id, status: "PENDING", requestedByUserId: me.id, approvedByUserId: null }
     });
+    if (video.teamId) {
+      broadcast({
+        type: "post.status",
+        teamId: String(video.teamId),
+        payload: { id: video.id, status: "PENDING", contentType: "video" }
+      });
+    }
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {
     return NextResponse.json({ error: "Failed to request approval" }, { status: 500 });

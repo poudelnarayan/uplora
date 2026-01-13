@@ -158,6 +158,13 @@ export async function POST(
           teamId: video.teamId || null,
           payload: { id: video.id, status: "APPROVED", requestedByUserId: null, approvedByUserId: me.id }
         });
+        if (video.teamId) {
+          broadcast({
+            type: "post.status",
+            teamId: String(video.teamId),
+            payload: { id: video.id, status: "APPROVED", contentType: "video" }
+          });
+        }
         return NextResponse.json({ ok: true, status: "APPROVED", video: approved });
       }
 
@@ -393,6 +400,13 @@ export async function POST(
       teamId: video.teamId || null, 
       payload: { id: video.id, status: "PUBLISHED", requestedByUserId: null, approvedByUserId: me.id } 
     });
+    if (video.teamId) {
+      broadcast({
+        type: "post.status",
+        teamId: String(video.teamId),
+        payload: { id: video.id, status: "PUBLISHED", contentType: "video" }
+      });
+    }
 
     return NextResponse.json({ ok: true, video: updated, youtubeVideoId });
   } catch (e) {

@@ -107,8 +107,8 @@ const Posted = () => {
         try {
           const evt = JSON.parse(ev.data || "{}");
           if (!evt?.type) return;
-          // Only react to post.* events for this team
-          if (!evt.type.startsWith("post.")) return;
+          // React to post.* and video.* (video status drives post cards too)
+          if (!evt.type.startsWith("post.") && !evt.type.startsWith("video.")) return;
           // Invalidate and refetch to keep metrics accurate
           invalidateCache(selectedTeamId);
           fetchContent();
@@ -116,7 +116,7 @@ const Posted = () => {
           notifications.addNotification({
             type: "info",
             title: "Live update",
-            message: evt.type === "post.status" ? "Post status updated" : "Posts updated",
+            message: evt.type === "post.status" || evt.type === "video.status" ? "Status updated" : "Posts updated",
           });
         } catch {
           // ignore parse errors

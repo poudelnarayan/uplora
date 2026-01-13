@@ -83,6 +83,13 @@ export async function POST(
       teamId: updated.teamId || null,
       payload: { id: updated.id, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }
     });
+    if (updated.teamId) {
+      broadcast({
+        type: "post.status",
+        teamId: String(updated.teamId),
+        payload: { id: updated.id, status: "PROCESSING", contentType: "video" }
+      });
+    }
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {
     console.error("[replace/complete] unexpected:", e);
