@@ -1203,8 +1203,8 @@ export default function VideoPreviewPage() {
                 <div className="mt-3 px-2">
                   <div className="rounded-2xl border bg-card/60 backdrop-blur p-3 shadow-sm space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                        <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
+                    <button className="sm:col-span-2 lg:col-span-4 w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
                           {submitting ? "Working…" : "Mark ready to publish"}
                         </button>
                       )}
@@ -1669,7 +1669,7 @@ export default function VideoPreviewPage() {
               <div className="rounded-2xl border bg-card/60 backdrop-blur p-4 sm:p-5 shadow-sm space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === "PROCESSING" || !video.status) && (
-                    <button className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
+                    <button className="sm:col-span-2 lg:col-span-4 w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
                       {submitting ? "Working…" : "Mark ready to publish"}
                     </button>
                   )}

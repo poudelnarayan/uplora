@@ -144,12 +144,15 @@ const Posted = () => {
     }
   });
 
-  const totalMetrics = postedContent.reduce((acc, post) => ({
-    views: acc.views + post.metrics.views,
-    likes: acc.likes + post.metrics.likes,
-    shares: acc.shares + post.metrics.shares,
-    comments: acc.comments + post.metrics.comments,
-  }), { views: 0, likes: 0, shares: 0, comments: 0 });
+  const totalMetrics = postedContent.reduce((acc, post) => {
+    const m = post.metrics || { views: 0, likes: 0, shares: 0, comments: 0 };
+    return {
+      views: acc.views + (m.views || 0),
+      likes: acc.likes + (m.likes || 0),
+      shares: acc.shares + (m.shares || 0),
+      comments: acc.comments + (m.comments || 0),
+    };
+  }, { views: 0, likes: 0, shares: 0, comments: 0 });
 
   if (!isLoaded) return <PageLoader />;
   if (!user) return <RedirectToSignIn redirectUrl="/posts/posted" />;
@@ -264,6 +267,10 @@ const Posted = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {sortedContent.map((post) => (
               <Card key={post.id} className="hover:shadow-lg transition-all duration-300">
+                {(() => {
+                  post.metrics = post.metrics || { views: 0, likes: 0, shares: 0, comments: 0 };
+                  return null;
+                })()}
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -298,22 +305,22 @@ const Posted = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
                         <Eye className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">{post.metrics.views.toLocaleString()}</span>
+                        <span className="text-sm font-medium">{(post.metrics.views || 0).toLocaleString()}</span>
                         <span className="text-xs text-muted-foreground">views</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Heart className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium">{post.metrics.likes}</span>
+                        <span className="text-sm font-medium">{post.metrics.likes || 0}</span>
                         <span className="text-xs text-muted-foreground">likes</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Share className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium">{post.metrics.shares}</span>
+                        <span className="text-sm font-medium">{post.metrics.shares || 0}</span>
                         <span className="text-xs text-muted-foreground">shares</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-purple-500" />
-                        <span className="text-sm font-medium">{post.metrics.comments}</span>
+                        <span className="text-sm font-medium">{post.metrics.comments || 0}</span>
                         <span className="text-xs text-muted-foreground">comments</span>
                       </div>
                     </div>
@@ -321,7 +328,12 @@ const Posted = () => {
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-2 border-t">
                       <div className="text-sm text-muted-foreground">
-                        Engagement: {((post.metrics.likes + post.metrics.shares + post.metrics.comments) / post.metrics.views * 100).toFixed(1)}%
+                        {(() => {
+                          const views = post.metrics.views || 0;
+                          const engagement = post.metrics.likes + post.metrics.shares + post.metrics.comments;
+                          const pct = views > 0 ? (engagement / views) * 100 : 0;
+                          return <>Engagement: {pct.toFixed(1)}%</>;
+                        })()}
                       </div>
                       {post.url && (
                         <Button variant="outline" size="sm" className="gap-1">
