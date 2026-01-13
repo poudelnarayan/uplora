@@ -25,7 +25,7 @@ import AppShell from "@/app/components/layout/AppLayout";
 export default function Dashboard() {
   const { user } = useUser();
   const { selectedTeamId, selectedTeam } = useTeam();
-  const { getCachedContent, setCachedContent, isStale } = useContentCache();
+  const { getCachedContent, setCachedContent, isStale, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   const router = useRouter();
   
@@ -273,6 +273,41 @@ export default function Dashboard() {
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  // Realtime: listen to post.* events for the current team and refresh
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    let es: EventSource | null = null;
+    try {
+      const url = `/api/events?teamId=${encodeURIComponent(selectedTeamId)}`;
+      es = new EventSource(url);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || "{}");
+          if (!evt?.type || !evt.type.startsWith("post.")) return;
+          // Invalidate cache and refetch to keep counts/metrics live
+          invalidateCache(selectedTeamId);
+          fetchContent();
+          notifications.addNotification({
+            type: "info",
+            title: "Live update",
+            message: evt.type === "post.status" ? "Post status updated" : "Posts updated",
+          });
+        } catch {
+          // ignore parse errors
+        }
+      };
+      es.onerror = () => {
+        try { es?.close(); } catch {}
+        es = null;
+      };
+    } catch {
+      // ignore SSE setup errors
+    }
+    return () => {
+      try { es?.close(); } catch {}
+    };
+  }, [selectedTeamId, fetchContent, invalidateCache, notifications]);
 
   
   // Show loading while team context is initializing

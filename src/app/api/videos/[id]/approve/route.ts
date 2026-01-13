@@ -153,7 +153,11 @@ export async function POST(
         } catch (e) {
           console.error("Failed to notify requester about approval:", e);
         }
-        broadcast({ type: "video.status", teamId: video.teamId || null, payload: { id: video.id, status: "APPROVED" } });
+        broadcast({
+          type: "video.status",
+          teamId: video.teamId || null,
+          payload: { id: video.id, status: "APPROVED", requestedByUserId: null, approvedByUserId: me.id }
+        });
         return NextResponse.json({ ok: true, status: "APPROVED", video: approved });
       }
 
@@ -387,7 +391,7 @@ export async function POST(
     broadcast({ 
       type: "video.status", 
       teamId: video.teamId || null, 
-      payload: { id: video.id, status: "PUBLISHED" }
+      payload: { id: video.id, status: "PUBLISHED", requestedByUserId: null, approvedByUserId: me.id } 
     });
 
     return NextResponse.json({ ok: true, video: updated, youtubeVideoId });

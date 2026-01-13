@@ -111,7 +111,11 @@ export async function POST(
       );
     }
 
-    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "PROCESSING" } });
+    broadcast({
+      type: "video.status",
+      teamId: updated.teamId || null,
+      payload: { id: updated.id, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }
+    });
     return NextResponse.json({ ok: true, status: "PROCESSING", video: updated });
   } catch (e) {
     console.error("[mark-processing] Unexpected error:", e);

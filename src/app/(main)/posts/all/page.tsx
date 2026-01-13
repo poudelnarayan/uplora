@@ -23,7 +23,7 @@ const MotionDiv = motion.div as any;
 function AllPostsInner() {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
-  const { getCachedContent, setCachedContent, isStale, removeContentItem } = useContentCache();
+  const { getCachedContent, setCachedContent, isStale, removeContentItem, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   const searchParams = useSearchParams();
 
@@ -99,6 +99,40 @@ function AllPostsInner() {
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  // Realtime: listen for post.* events on this team and refresh
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    let es: EventSource | null = null;
+    try {
+      const url = `/api/events?teamId=${encodeURIComponent(selectedTeamId)}`;
+      es = new EventSource(url);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || "{}");
+          if (!evt?.type || !evt.type.startsWith("post.")) return;
+          invalidateCache(selectedTeamId);
+          fetchContent();
+          notifications.addNotification({
+            type: "info",
+            title: "Live update",
+            message: evt.type === "post.status" ? "Post status updated" : "Posts updated",
+          });
+        } catch {
+          // ignore parse errors
+        }
+      };
+      es.onerror = () => {
+        try { es?.close(); } catch {}
+        es = null;
+      };
+    } catch {
+      // ignore SSE setup errors
+    }
+    return () => {
+      try { es?.close(); } catch {}
+    };
+  }, [selectedTeamId, fetchContent, invalidateCache, notifications]);
 
   const handleSchedulePost = async () => {
     if (!canSchedule) {

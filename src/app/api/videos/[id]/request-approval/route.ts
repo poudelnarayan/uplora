@@ -211,7 +211,11 @@ export async function POST(
     }
 
     // notify team
-    broadcast({ type: "video.status", teamId: video.teamId || null, payload: { id: video.id, status: "PENDING" } });
+    broadcast({
+      type: "video.status",
+      teamId: video.teamId || null,
+      payload: { id: video.id, status: "PENDING", requestedByUserId: me.id, approvedByUserId: null }
+    });
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {
     return NextResponse.json({ error: "Failed to request approval" }, { status: 500 });

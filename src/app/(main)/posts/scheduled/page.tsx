@@ -30,7 +30,7 @@ interface ScheduledPost {
 const Scheduled = () => {
   const { user, isLoaded } = useUser();
   const { selectedTeamId, selectedTeam } = useTeam();
-  const { getCachedContent, setCachedContent, isStale } = useContentCache();
+  const { getCachedContent, setCachedContent, isStale, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   
   const [scheduledPosts, setScheduledPosts] = useState<any[]>([]);
@@ -88,6 +88,40 @@ const Scheduled = () => {
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  // Realtime: refresh on post.* events for this team
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    let es: EventSource | null = null;
+    try {
+      const url = `/api/events?teamId=${encodeURIComponent(selectedTeamId)}`;
+      es = new EventSource(url);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || "{}");
+          if (!evt?.type || !evt.type.startsWith("post.")) return;
+          invalidateCache(selectedTeamId);
+          fetchContent();
+          notifications.addNotification({
+            type: "info",
+            title: "Live update",
+            message: evt.type === "post.status" ? "Post status updated" : "Posts updated",
+          });
+        } catch {
+          // ignore parse errors
+        }
+      };
+      es.onerror = () => {
+        try { es?.close(); } catch {}
+        es = null;
+      };
+    } catch {
+      // ignore SSE setup errors
+    }
+    return () => {
+      try { es?.close(); } catch {}
+    };
+  }, [selectedTeamId, fetchContent, invalidateCache, notifications]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {

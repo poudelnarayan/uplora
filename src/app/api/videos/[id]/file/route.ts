@@ -74,7 +74,11 @@ export async function DELETE(
       }
     }
 
-    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "PROCESSING" } });
+    broadcast({
+      type: "video.status",
+      teamId: updated.teamId || null,
+      payload: { id: updated.id, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }
+    });
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {
     console.error("[file delete] unexpected:", e);

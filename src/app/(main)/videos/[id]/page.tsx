@@ -260,8 +260,13 @@ export default function VideoPreviewPage() {
           }
           
           if (evt.type === 'video.status') {
-            // Status change - update immediately
-            setVideo(prev => prev ? { ...prev, status: evt.payload.status } : prev);
+            // Status change - update immediately (also sync approval/request flags when present)
+            setVideo(prev => prev ? {
+              ...prev,
+              status: evt.payload.status,
+              requestedByUserId: evt.payload.requestedByUserId ?? prev.requestedByUserId,
+              approvedByUserId: evt.payload.approvedByUserId ?? prev.approvedByUserId,
+            } : prev);
             
             // Show notification for status changes
             const statusMessages = {

@@ -129,7 +129,11 @@ export async function POST(
       );
     }
 
-    broadcast({ type: "video.status", teamId: updated.teamId || null, payload: { id: updated.id, status: "PENDING" } });
+    broadcast({
+      type: "video.status",
+      teamId: updated.teamId || null,
+      payload: { id: updated.id, status: "PENDING", requestedByUserId: null, approvedByUserId: null }
+    });
     return NextResponse.json({ ok: true, status: "PENDING", video: updated });
   } catch (e) {
     console.error("[mark-ready] Unexpected error:", e);
