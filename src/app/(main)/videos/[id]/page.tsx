@@ -29,6 +29,8 @@ interface Video {
   visibility?: "private" | "unlisted" | "public";
   madeForKids?: boolean;
   thumbnailKey?: string | null;
+  requestedByUserId?: string | null;
+  approvedByUserId?: string | null;
   uploader?: {
     id: string;
     name: string;
@@ -589,14 +591,14 @@ export default function VideoPreviewPage() {
       if (response.ok) {
         const result = await response.json().catch(() => ({}));
         if (result?.status === "APPROVED") {
-          setVideo({ ...video, status: "APPROVED" });
+          setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
           notifications.addNotification({
             type: "success",
             title: "Approved",
             message: "This video is approved. A manager can now publish it to YouTube.",
           });
         } else {
-          setVideo({ ...video, status: "PUBLISHED" });
+          setVideo({ ...video, status: "PUBLISHED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
           notifications.addNotification({
             type: "success",
             title: "✅ Video published to YouTube!",
@@ -812,7 +814,7 @@ export default function VideoPreviewPage() {
       const response = await fetch(`/api/videos/${video.id}/request-approval`, { method: "POST" });
       const js = await response.json().catch(() => ({}));
       if (response.ok) {
-        setVideo({ ...video, status: "PENDING" });
+        setVideo({ ...video, status: "PENDING", requestedByUserId: user?.id || video.requestedByUserId || null });
         notifications.addNotification({
           type: "success",
           title: "✅ Approval request sent!",
@@ -839,7 +841,7 @@ export default function VideoPreviewPage() {
       const response = await fetch(`/api/videos/${video.id}/mark-ready`, { method: "POST" });
       const js = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(js?.error || "Failed to mark ready");
-      setVideo({ ...video, status: "PENDING" });
+      setVideo({ ...video, status: "PENDING", requestedByUserId: null, approvedByUserId: null });
       notifications.addNotification({
         type: "success",
         title: "Ready to publish",
@@ -864,7 +866,7 @@ export default function VideoPreviewPage() {
       const response = await fetch(`/api/videos/${video.id}/mark-processing`, { method: "POST" });
       const js = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(js?.error || "Failed to revert status");
-      setVideo({ ...video, status: "PROCESSING" });
+      setVideo({ ...video, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null });
       notifications.addNotification({
         type: "success",
         title: "Back to processing",
@@ -910,14 +912,14 @@ export default function VideoPreviewPage() {
       if (response.ok) {
         const result = await response.json().catch(() => ({}));
         if (result?.status === "APPROVED") {
-          setVideo({ ...video, status: "APPROVED" });
+          setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
           notifications.addNotification({
             type: "success",
             title: "Approved",
             message: "This video is approved. A manager can now publish it to YouTube.",
           });
         } else {
-          setVideo({ ...video, status: "PUBLISHED" });
+          setVideo({ ...video, status: "PUBLISHED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
           notifications.addNotification({
             type: "success",
             title: "✅ Video published to YouTube!",
@@ -1215,7 +1217,7 @@ export default function VideoPreviewPage() {
                         </button>
                       )}
 
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !video.requestedByUserId && (
                         <button className="w-full py-3 text-base font-semibold rounded-xl border border-sky-300 bg-sky-50/60 text-sky-700 hover:bg-sky-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={requestApproval}>
                           {submitting ? "Working…" : "Request approval"}
                         </button>
@@ -1233,7 +1235,7 @@ export default function VideoPreviewPage() {
                       )}
                     </div>
 
-                    {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                  {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !!video.requestedByUserId && (
                       <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
                         <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1330,10 +1332,14 @@ export default function VideoPreviewPage() {
                 {video.status === "PENDING" && (
                   <div className="mb-3 text-sm flex items-center gap-2 p-3 rounded-md border bg-amber-50 text-amber-800 border-amber-200">
                     <Clock className="w-4 h-4" />
-                    {role === "EDITOR" ? (
-                      <span>Awaiting owner review — editors can’t edit while awaiting publish.</span>
+                    {video.requestedByUserId ? (
+                      role === "EDITOR" ? (
+                        <span>Awaiting owner review — editors can’t edit while awaiting publish.</span>
+                      ) : (
+                        <span>Approval requested — you can approve/publish or send back to Processing.</span>
+                      )
                     ) : (
-                      <span>Awaiting publish — you can edit or send back to Processing to allow editors to make changes.</span>
+                      <span>Marked ready. Editors must explicitly request approval to notify owners/admins.</span>
                     )}
                   </div>
                 )}
@@ -1680,7 +1686,7 @@ export default function VideoPreviewPage() {
                     </button>
                   )}
 
-                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !video.requestedByUserId && (
                     <button className="w-full py-3 text-base font-semibold rounded-xl border border-sky-300 bg-sky-50/60 text-sky-700 hover:bg-sky-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={requestApproval}>
                       {submitting ? "Working…" : "Request approval"}
                     </button>
@@ -1698,7 +1704,7 @@ export default function VideoPreviewPage() {
                   )}
                 </div>
 
-                {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !!video.requestedByUserId && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
                     <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1722,7 +1728,7 @@ export default function VideoPreviewPage() {
                             });
                             if (!res.ok) throw new Error();
                             await res.json();
-                            setVideo(v => v ? ({ ...v, status: "PROCESSING" }) : v);
+                            setVideo(v => v ? ({ ...v, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }) : v);
                             notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
                           } catch {
                             notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });

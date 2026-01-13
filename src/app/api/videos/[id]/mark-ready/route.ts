@@ -108,6 +108,8 @@ export async function POST(
         // We use existing enum value PENDING to represent "Ready to publish" (user-facing),
         // and keep the approval workflow via requestedByUserId/approvedByUserId + APPROVED.
         status: "PENDING",
+        requestedByUserId: null,
+        approvedByUserId: null,
         updatedAt: new Date().toISOString(),
       })
       .eq("id", id)

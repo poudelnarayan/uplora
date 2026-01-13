@@ -95,6 +95,8 @@ export async function GET(
       uploadedAt: v.uploadedAt,
       updatedAt: v.updatedAt,
       teamId: v.teamId || undefined,
+    requestedByUserId: v.requestedByUserId || null,
+    approvedByUserId: v.approvedByUserId || null,
       // Include metadata fields
       description: v.description || "",
       visibility: v.visibility || "public",
