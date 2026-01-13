@@ -245,9 +245,6 @@ export default function VideoPreviewPage() {
           if (!evt?.type?.startsWith('video.')) return;
           if (evt?.payload?.id !== id) return;
           
-          // If user has unsaved changes, don't clobber the form
-          if (hasUnsavedChanges || isSaving) return;
-          
           if (evt.type === 'video.deleted') {
             // Video was deleted, redirect to videos page
             notifications.addNotification({
@@ -260,7 +257,7 @@ export default function VideoPreviewPage() {
           }
           
           if (evt.type === 'video.status') {
-            // Status change - update immediately (also sync approval/request flags when present)
+            // Always update workflow flags, even if there are unsaved metadata edits
             setVideo(prev => prev ? {
               ...prev,
               status: evt.payload.status,
@@ -285,8 +282,11 @@ export default function VideoPreviewPage() {
                 message: statusMessages[key]
               });
             }
-            return;
+            // Do not return; allow subsequent refresh when safe
           }
+          
+          // If user has unsaved changes, don't clobber form fields (but status above already applied)
+          if (hasUnsavedChanges || isSaving) return;
           
           // For other updates, soft refresh of server fields
           const res = await fetch(`/api/videos/${id}`, { cache: 'no-store' });
