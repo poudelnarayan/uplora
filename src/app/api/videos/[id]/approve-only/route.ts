@@ -70,12 +70,16 @@ export async function POST(
     if (team.ownerId === me.id) {
       callerRole = "OWNER";
     } else {
-      const { data: membership } = await supabaseAdmin
+      const { data: membership, error: membershipError } = await supabaseAdmin
         .from("team_members")
         .select("role,status")
         .eq("teamId", team.id)
         .eq("userId", me.id)
         .single();
+      if (membershipError) {
+        console.error("Approve-only membership error:", membershipError);
+        return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
+      }
       const role = (membership as any)?.role as string | undefined;
       const mStatus = (membership as any)?.status as string | undefined;
       if (mStatus !== "ACTIVE") {
@@ -120,9 +124,14 @@ export async function POST(
     });
 
     return NextResponse.json({ ok: true, status: "APPROVED", video: approved });
-  } catch (e) {
+  } catch (e: any) {
     console.error("Approve-only failed:", e);
-    return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
+    const safe = {
+      message: e?.message || "Failed to approve video",
+      code: e?.code,
+      name: e?.name,
+    };
+    return NextResponse.json({ error: safe.message, debug: safe }, { status: 500 });
   }
 }
 
