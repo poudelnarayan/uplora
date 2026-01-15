@@ -1285,7 +1285,9 @@ export default function VideoPreviewPage() {
                         </div>
                       )}
 
-                      {(role === "OWNER" || role === "ADMIN") && (
+                      {/* Owner/Admin: always show publish. Editor/Manager: only show when APPROVED */}
+                      {((role === "OWNER" || role === "ADMIN") || 
+                        ((role === "EDITOR" || role === "MANAGER") && String(video.status || "").toUpperCase() === "APPROVED")) && (
                         <button
                           className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                           disabled={submitting}
@@ -1784,7 +1786,9 @@ export default function VideoPreviewPage() {
                     </div>
                   )}
 
-                  {(role === "OWNER" || role === "ADMIN") && (
+                  {/* Owner/Admin: always show publish. Editor/Manager: only show when APPROVED */}
+                  {((role === "OWNER" || role === "ADMIN") || 
+                    ((role === "EDITOR" || role === "MANAGER") && String(video.status || "").toUpperCase() === "APPROVED")) && (
                     <button
                       className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                       disabled={submitting}

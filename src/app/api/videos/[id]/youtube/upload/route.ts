@@ -93,8 +93,23 @@ export async function POST(
 
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    if (video.teamId && callerRole !== "OWNER" && callerRole !== "ADMIN") {
-      return NextResponse.json({ error: "Only owner/admin can upload team videos to YouTube." }, { status: 403 });
+    // Publishing permissions for team videos:
+    // - Owner/Admin: can publish any PENDING or APPROVED video
+    // - Editor/Manager: can only publish APPROVED videos
+    if (video.teamId) {
+      const isOwnerOrAdmin = callerRole === "OWNER" || callerRole === "ADMIN";
+      const isEditorOrManager = callerRole === "EDITOR" || callerRole === "MANAGER";
+      const upperStatus = String(video.status || "PROCESSING").toUpperCase();
+
+      if (isEditorOrManager && upperStatus !== "APPROVED") {
+        return NextResponse.json({ 
+          error: "This video needs to be approved by an owner/admin before you can publish it to YouTube." 
+        }, { status: 403 });
+      }
+
+      if (!isOwnerOrAdmin && !isEditorOrManager) {
+        return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
+      }
     }
 
     if (!video.key) {

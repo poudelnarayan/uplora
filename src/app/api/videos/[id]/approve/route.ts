@@ -169,19 +169,21 @@ export async function POST(
       }
 
       // Publishing permissions (team):
-      // - Must be marked READY (or already APPROVED) before publishing
-      // - Owner/Admin: can publish after READY/APPROVED
-      // - Manager/Editor: cannot publish
+      // - Owner/Admin: can publish PENDING or APPROVED videos
+      // - Editor/Manager: can only publish APPROVED videos (after admin approval)
       const upperStatus = String(video.status || "PROCESSING").toUpperCase();
-      const canPublishAsOwnerAdmin = callerRole === "OWNER" || callerRole === "ADMIN";
+      const isOwnerOrAdmin = callerRole === "OWNER" || callerRole === "ADMIN";
+      const isEditorOrManager = callerRole === "EDITOR" || callerRole === "MANAGER";
 
-      if (!canPublishAsOwnerAdmin) {
-        if (callerRole === "EDITOR") {
-          return NextResponse.json({ error: "Editors must request approval; they cannot publish to YouTube." }, { status: 403 });
-        }
-        if (callerRole === "MANAGER") {
-          return NextResponse.json({ error: "Only the owner/admin can publish team videos to YouTube." }, { status: 403 });
-        }
+      // For editors/managers: only allow if video is APPROVED
+      if (isEditorOrManager && upperStatus !== "APPROVED") {
+        return NextResponse.json({ 
+          error: "This video needs to be approved by an owner/admin before you can publish it to YouTube." 
+        }, { status: 403 });
+      }
+
+      // For non-team members, deny
+      if (!isOwnerOrAdmin && !isEditorOrManager) {
         return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
       }
 
