@@ -15,7 +15,8 @@ import {
   Image as ImageIcon,
   X,
   Youtube,
-  Eye
+  Eye,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Textarea } from "@/app/components/ui/textarea";
@@ -110,6 +111,11 @@ const MakePostVideosInner = () => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
   const [savedThumbnailKey, setSavedThumbnailKey] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedMetadataRef = useRef<string>("");
 
   const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
 
@@ -427,26 +433,62 @@ const MakePostVideosInner = () => {
     };
   }, [editId, notifications]);
 
-  const persistVideoMeta = async () => {
-    if (!videoId) {
-      notifications.addNotification({ type: 'warning', title: 'No video yet', message: 'Upload a video first' });
+  // Auto-save metadata to localStorage
+  useEffect(() => {
+    if (!videoId) return;
+    const metadata = JSON.stringify({ title, description, privacy, tags, category });
+    try {
+      localStorage.setItem(`video_meta_${videoId}`, metadata);
+    } catch {}
+  }, [videoId, title, description, privacy, tags, category]);
+
+  // Load metadata from localStorage on mount
+  useEffect(() => {
+    if (!videoId) return;
+    try {
+      const saved = localStorage.getItem(`video_meta_${videoId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.description) setDescription(parsed.description);
+        if (parsed.privacy) setPrivacy(parsed.privacy);
+        if (parsed.tags) setTags(parsed.tags);
+        if (parsed.category) setCategory(parsed.category);
+      }
+    } catch {}
+  }, [videoId]);
+
+  // Auto-save function (debounced)
+  const autoSaveMetadata = useCallback(async (silent = true) => {
+    if (!videoId) return;
+    
+    const currentMetadata = JSON.stringify({ title, description, privacy, tags, category });
+    
+    // Skip if nothing changed
+    if (currentMetadata === lastSavedMetadataRef.current) {
+      setHasUnsavedChanges(false);
       return;
     }
+
+    setHasUnsavedChanges(true);
+    setIsAutoSaving(true);
+
     try {
-      setSavingMeta(true);
       let thumbnailKey: string | undefined = undefined;
-      if (thumbFile) {
+      if (thumbFile && !savedThumbnailKey) {
         const presign = await fetch('/api/s3/presign-thumbnail', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename: thumbFile.name, contentType: thumbFile.type, videoId })
         });
-        if (!presign.ok) throw new Error('Failed to prepare thumbnail upload');
-        const { putUrl, key } = await presign.json();
-        await fetch(putUrl, { method: 'PUT', headers: { 'Content-Type': thumbFile.type }, body: thumbFile });
-        thumbnailKey = key;
-        setSavedThumbnailKey(key);
+        if (presign.ok) {
+          const { putUrl, key } = await presign.json();
+          await fetch(putUrl, { method: 'PUT', headers: { 'Content-Type': thumbFile.type }, body: thumbFile });
+          thumbnailKey = key;
+          setSavedThumbnailKey(key);
+        }
       }
+
       const patch = await fetch(`/api/videos/${videoId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -455,19 +497,93 @@ const MakePostVideosInner = () => {
           description,
           visibility: privacy,
           madeForKids: false,
-          thumbnailKey: thumbnailKey !== undefined ? thumbnailKey : undefined
+          thumbnailKey: thumbnailKey !== undefined ? thumbnailKey : savedThumbnailKey || undefined
         })
       });
-      if (!patch.ok) {
+
+      if (patch.ok) {
+        lastSavedMetadataRef.current = currentMetadata;
+        setHasUnsavedChanges(false);
+        setLastSavedAt(new Date());
+        if (!silent) {
+          notifications.addNotification({ type: 'success', title: 'Saved', message: 'Details updated' });
+        }
+      } else {
         const err = await patch.json().catch(() => ({}));
         throw new Error(err?.error || 'Failed to save');
       }
-      notifications.addNotification({ type: 'success', title: 'Saved', message: 'Details updated' });
     } catch (e) {
-      notifications.addNotification({ type: 'error', title: 'Save failed', message: e instanceof Error ? e.message : 'Try again' });
+      if (!silent) {
+        notifications.addNotification({ type: 'error', title: 'Save failed', message: e instanceof Error ? e.message : 'Try again' });
+      }
     } finally {
-      setSavingMeta(false);
+      setIsAutoSaving(false);
     }
+  }, [videoId, title, description, privacy, tags, category, thumbFile, savedThumbnailKey, notifications]);
+
+  // Debounced auto-save trigger
+  useEffect(() => {
+    if (!videoId) return;
+    
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save (2 seconds after user stops typing)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSaveMetadata(true);
+    }, 2000);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [videoId, title, description, privacy, tags, category, autoSaveMetadata]);
+
+  // Navigation guard - warn before leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Intercept router navigation
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      if (hasUnsavedChanges && videoId) {
+        const confirmed = window.confirm(
+          'You have unsaved changes. Are you sure you want to leave? Your changes will be auto-saved, but you may lose recent edits.'
+        );
+        if (!confirmed) {
+          router.push(window.location.pathname);
+          return false;
+        }
+      }
+    };
+
+    // Note: Next.js router doesn't have a built-in way to intercept navigation
+    // We'll rely on beforeunload for browser navigation and show a confirmation
+    // For programmatic navigation, we'll handle it in the onClick handlers
+  }, [hasUnsavedChanges, videoId, router]);
+
+  // Manual save function
+  const persistVideoMeta = async () => {
+    if (!videoId) {
+      notifications.addNotification({ type: 'warning', title: 'No video yet', message: 'Upload a video first' });
+      return;
+    }
+    setSavingMeta(true);
+    await autoSaveMetadata(false);
+    setSavingMeta(false);
   };
 
   const publishToYouTube = async () => {
@@ -542,7 +658,15 @@ const MakePostVideosInner = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => router.push("/make-post")}
+                onClick={async () => {
+                  if (hasUnsavedChanges && videoId) {
+                    // Try to save before leaving
+                    await autoSaveMetadata(false);
+                    // Small delay to ensure save completes
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                  }
+                  router.push("/make-post");
+                }}
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -584,24 +708,66 @@ const MakePostVideosInner = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={persistVideoMeta}
-                disabled={savingMeta || !videoId}
-              >
-                {savingMeta ? (
-                  <InlineSpinner size="sm" />
-                ) : (
-                  <Save className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {/* Auto-save status indicator */}
+                {videoId && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {isAutoSaving ? (
+                      <>
+                        <InlineSpinner size="xs" />
+                        <span className="hidden sm:inline">Saving...</span>
+                      </>
+                    ) : hasUnsavedChanges ? (
+                      <>
+                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="hidden sm:inline">Unsaved changes</span>
+                      </>
+                    ) : lastSavedAt ? (
+                      <>
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <span className="hidden sm:inline">
+                          Saved {lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
                 )}
-                {savingMeta ? 'Saving…' : 'Save'}
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={persistVideoMeta}
+                  disabled={(savingMeta || isAutoSaving) || !videoId}
+                >
+                  {savingMeta || isAutoSaving ? (
+                    <InlineSpinner size="sm" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {savingMeta ? 'Saving…' : 'Save'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Upload in progress banner */}
+      {activeUpload && (activeUpload.status === "uploading" || activeUpload.status === "queued") && (
+        <div className="max-w-5xl mx-auto px-6 pt-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-3">
+            <Upload className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-pulse" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Upload in progress ({activeUpload.progress}%)
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                You can navigate anywhere—your upload will continue in the background. Metadata is auto-saved.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
         <div className="grid lg:grid-cols-3 gap-8">
