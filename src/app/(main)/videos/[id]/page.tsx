@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube, XCircle } from "lucide-react";
 import Image from "next/image";
 import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
-import { StatusChip } from "@/app/components/ui/StatusChip";
+import { StatusChip, getDisplayStatus } from "@/app/components/ui/StatusChip";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { NextSeoNoSSR, VideoJsonLdNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { videoCache } from "@/lib/videoCache";
@@ -268,14 +268,21 @@ export default function VideoPreviewPage() {
             // Show notification for status changes
             const statusMessages = {
               'PROCESSING': 'Processing',
-              'READY': 'Ready to publish',
-              'PENDING': 'Ready to publish',
-              'APPROVED': 'Ready to publish',
+              'READY': 'Ready to Publish',
+              'PENDING': 'Ready to Publish',
               'SCHEDULED': 'Scheduled',
-              'PUBLISHED': 'Published',
+              'PUBLISHED': 'Posted',
             } as const;
             const key = evt?.payload?.status as keyof typeof statusMessages | undefined;
-            if (key) {
+            // Also check for approval status from payload
+            const isApproved = evt?.payload?.isApproved || evt?.payload?.approvedByUserId;
+            if (isApproved) {
+              notifications.addNotification({
+                type: "success",
+                title: "Status updated",
+                message: "Approved"
+              });
+            } else if (key && statusMessages[key]) {
               notifications.addNotification({
                 type: "success",
                 title: "Status updated",
@@ -1233,7 +1240,8 @@ export default function VideoPreviewPage() {
                         </button>
                       )}
 
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                      {/* Show approval workflow only if not yet approved */}
+                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !video.approvedByUserId && (
                         <div className="sm:col-span-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-white p-3 shadow-sm space-y-3">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
@@ -1344,7 +1352,7 @@ export default function VideoPreviewPage() {
               <div id="edit-section" className="order-2 lg:order-none lg:col-span-7 space-y-3 -mx-2 sm:mx-0">
                 {/* Status chip (requested: above content div, left side) */}
                 <div className="px-2 sm:px-0">
-                  <StatusChip status={(String(video.status || "PROCESSING").toUpperCase() as any)} />
+                  <StatusChip status={getDisplayStatus(video)} />
                 </div>
               
                 <div className={`card p-4 sm:p-6 space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === "PENDING" ? "opacity-60 pointer-events-none select-none" : ""}`}>
@@ -1732,7 +1740,8 @@ export default function VideoPreviewPage() {
                     </button>
                   )}
 
-                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
+                  {/* Show approval workflow only if not yet approved */}
+                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !video.approvedByUserId && (
                     <div className="sm:col-span-2 lg:col-span-4 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
