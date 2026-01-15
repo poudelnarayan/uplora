@@ -956,16 +956,19 @@ export default function VideoPreviewPage() {
         headers: { "Content-Type": "application/json" },
       });
       const result = await response.json().catch(() => ({}));
+      console.log("[approvePendingOnly] response:", response.status, result);
       if (!response.ok) {
-        throw new Error(result?.error || "Failed to approve");
+        const errMsg = result?.details || result?.error || `Failed to approve (${response.status})`;
+        throw new Error(errMsg);
       }
       setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
       notifications.addNotification({
         type: "success",
         title: "Approved",
-        message: "This video is approved. An owner/admin can now publish it to YouTube.",
+        message: "This video is approved. Editors can now publish it to YouTube.",
       });
     } catch (error) {
+      console.error("[approvePendingOnly] error:", error);
       notifications.addNotification({
         type: "error",
         title: "❌ Action failed",
