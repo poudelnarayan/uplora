@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { VideoStatus } from "@/types/videoStatus";
 
 export async function POST(
   req: NextRequest,
@@ -98,17 +99,18 @@ export async function POST(
     }
 
     step = "check-status";
-    const currentStatus = String(video.status || "PROCESSING").toUpperCase();
-    if (currentStatus !== "PENDING") {
+    const currentStatus = String(video.status || VideoStatus.PROCESSING).toUpperCase();
+    // Allow approval from APPROVAL_REQUESTED or legacy PENDING status
+    if (currentStatus !== VideoStatus.APPROVAL_REQUESTED && currentStatus !== "PENDING") {
       return NextResponse.json({ error: `Video is not pending approval (current: ${currentStatus})`, step }, { status: 400 });
     }
 
     step = "update-video";
-    // Keep status as PENDING but set approvedByUserId to mark it as approved
-    // The combination of status=PENDING + approvedByUserId!=null means "approved, ready to publish"
+    // Set status to APPROVAL_APPROVED
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('video_posts')
       .update({ 
+        status: VideoStatus.APPROVAL_APPROVED,
         approvedByUserId: me.id,
         requestedByUserId: null,
         updatedAt: new Date().toISOString()
@@ -123,19 +125,18 @@ export async function POST(
     }
 
     step = "broadcast";
-    // Broadcast with isApproved flag so UI can react
     broadcast({ 
       type: "video.status", 
       teamId: video.teamId || null, 
-      payload: { id: video.id, status: "PENDING", isApproved: true, requestedByUserId: null, approvedByUserId: me.id } 
+      payload: { id: video.id, status: VideoStatus.APPROVAL_APPROVED, requestedByUserId: null, approvedByUserId: me.id } 
     });
     broadcast({
       type: "post.status",
       teamId: String(video.teamId),
-      payload: { id: video.id, status: "PENDING", isApproved: true, contentType: "video" }
+      payload: { id: video.id, status: VideoStatus.APPROVAL_APPROVED, contentType: "video" }
     });
 
-    return NextResponse.json({ ok: true, status: "PENDING", isApproved: true, video: updated });
+    return NextResponse.json({ ok: true, status: VideoStatus.APPROVAL_APPROVED, video: updated });
   } catch (e: any) {
     console.error("Approve-only failed at step:", step, e);
     return NextResponse.json({ 

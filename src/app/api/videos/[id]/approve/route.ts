@@ -10,6 +10,7 @@ import { broadcast } from "@/lib/realtime";
 import { S3Client, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
 import { uploadYouTubeVideo, validateAndNormalizeMetadata } from "@/server/services/youtubeUploadService";
+import { VideoStatus } from "@/types/videoStatus";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -99,12 +100,12 @@ export async function POST(
       }
 
       // Publishing permissions (team):
-      // - Owner/Admin: can publish any PENDING video
-      // - Editor/Manager: can only publish if video has been approved (approvedByUserId is set)
-      const upperStatus = String(video.status || "PROCESSING").toUpperCase();
+      // - Owner/Admin: can publish any ready video (READY_TO_PUBLISH, APPROVAL_REQUESTED, APPROVAL_APPROVED)
+      // - Editor/Manager: can only publish if video status is APPROVAL_APPROVED
+      const upperStatus = String(video.status || VideoStatus.PROCESSING).toUpperCase();
       const isOwnerOrAdmin = callerRole === "OWNER" || callerRole === "ADMIN";
       const isEditorOrManager = callerRole === "EDITOR" || callerRole === "MANAGER";
-      const isApproved = !!video.approvedByUserId;
+      const isApproved = upperStatus === VideoStatus.APPROVAL_APPROVED;
 
       // For editors/managers: only allow if video has been approved by owner/admin
       if (isEditorOrManager && !isApproved) {
@@ -118,8 +119,9 @@ export async function POST(
         return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
       }
 
-      // Readiness gate: block publish until PENDING (ready-to-publish)
-      if (upperStatus !== "PENDING") {
+      // Readiness gate: block publish until ready (not PROCESSING)
+      const readyStatuses = [VideoStatus.READY_TO_PUBLISH, VideoStatus.APPROVAL_REQUESTED, VideoStatus.APPROVAL_APPROVED, "PENDING"];
+      if (!readyStatuses.includes(upperStatus)) {
         return NextResponse.json(
           { error: "This video is not ready to publish yet. Ask your editors to mark it 'Ready to publish' before publishing." },
           { status: 400 }
@@ -215,10 +217,10 @@ export async function POST(
 
     const newStatus =
       uploadResult.uploadStatus === "SCHEDULED"
-        ? "SCHEDULED"
+        ? VideoStatus.SCHEDULED
         : uploadResult.uploadStatus === "PUBLISHED"
-          ? "PUBLISHED"
-          : "PROCESSING";
+          ? VideoStatus.POSTED
+          : VideoStatus.PROCESSING;
 
     // Update video status after successful upload
     const { data: updated, error: updateError } = await supabaseAdmin

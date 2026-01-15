@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { VideoStatus } from "@/types/videoStatus";
 
 export async function POST(
   req: NextRequest,
@@ -51,11 +52,13 @@ export async function POST(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    const currentStatus = String(video.status || "PROCESSING").toUpperCase();
+    const currentStatus = String(video.status || VideoStatus.PROCESSING).toUpperCase();
     if (!video.teamId) {
       return NextResponse.json({ error: "Not a team video" }, { status: 400 });
     }
-    if (currentStatus !== "PENDING") {
+    
+    // Allow reverting from READY_TO_PUBLISH or legacy PENDING
+    if (currentStatus !== VideoStatus.READY_TO_PUBLISH && currentStatus !== "PENDING") {
       return NextResponse.json({ error: "Only Ready-to-publish videos can be reverted to processing" }, { status: 400 });
     }
 
@@ -89,7 +92,7 @@ export async function POST(
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("video_posts")
       .update({
-        status: "PROCESSING",
+        status: VideoStatus.PROCESSING,
         requestedByUserId: null,
         approvedByUserId: null,
         updatedAt: new Date().toISOString(),
@@ -114,20 +117,18 @@ export async function POST(
     broadcast({
       type: "video.status",
       teamId: updated.teamId || null,
-      payload: { id: updated.id, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }
+      payload: { id: updated.id, status: VideoStatus.PROCESSING, requestedByUserId: null, approvedByUserId: null }
     });
     if (updated.teamId) {
       broadcast({
         type: "post.status",
         teamId: String(updated.teamId),
-        payload: { id: updated.id, status: "PROCESSING", contentType: "video" }
+        payload: { id: updated.id, status: VideoStatus.PROCESSING, contentType: "video" }
       });
     }
-    return NextResponse.json({ ok: true, status: "PROCESSING", video: updated });
+    return NextResponse.json({ ok: true, status: VideoStatus.PROCESSING, video: updated });
   } catch (e) {
     console.error("[mark-processing] Unexpected error:", e);
     return NextResponse.json({ error: "Failed to revert status" }, { status: 500 });
   }
 }
-
-

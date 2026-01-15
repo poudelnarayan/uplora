@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { VideoStatus } from "@/types/videoStatus";
 
 export async function POST(
   req: NextRequest,
@@ -51,18 +52,20 @@ export async function POST(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    const currentStatus = String(video.status || "PROCESSING").toUpperCase();
-    if (currentStatus === "PUBLISHED") {
-      return NextResponse.json({ error: "Already published" }, { status: 400 });
+    const currentStatus = String(video.status || VideoStatus.PROCESSING).toUpperCase();
+    
+    // Check if already in a later state
+    if (currentStatus === VideoStatus.POSTED || currentStatus === "PUBLISHED") {
+      return NextResponse.json({ error: "Already posted" }, { status: 400 });
     }
-    if (currentStatus === "PENDING") {
+    if (currentStatus === VideoStatus.APPROVAL_REQUESTED || currentStatus === "PENDING") {
       return NextResponse.json({ error: "Already pending approval" }, { status: 400 });
     }
-    if (currentStatus === "APPROVED") {
+    if (currentStatus === VideoStatus.APPROVAL_APPROVED || currentStatus === "APPROVED") {
       return NextResponse.json({ error: "Already approved" }, { status: 400 });
     }
-    if (currentStatus === "READY") {
-      return NextResponse.json({ ok: true, status: "READY" });
+    if (currentStatus === VideoStatus.READY_TO_PUBLISH || currentStatus === "READY") {
+      return NextResponse.json({ ok: true, status: VideoStatus.READY_TO_PUBLISH });
     }
 
     // Personal video: uploader can mark ready
@@ -98,16 +101,12 @@ export async function POST(
           return NextResponse.json({ error: "Not allowed to mark ready" }, { status: 403 });
         }
       }
-
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("video_posts")
       .update({
-        // NOTE: Supabase enum "VideoStatus" in prod does not include READY.
-        // We use existing enum value PENDING to represent "Ready to publish" (user-facing),
-        // and keep the approval workflow via requestedByUserId/approvedByUserId + APPROVED.
-        status: "PENDING",
+        status: VideoStatus.READY_TO_PUBLISH,
         requestedByUserId: null,
         approvedByUserId: null,
         updatedAt: new Date().toISOString(),
@@ -132,20 +131,18 @@ export async function POST(
     broadcast({
       type: "video.status",
       teamId: updated.teamId || null,
-      payload: { id: updated.id, status: "PENDING", requestedByUserId: null, approvedByUserId: null }
+      payload: { id: updated.id, status: VideoStatus.READY_TO_PUBLISH, requestedByUserId: null, approvedByUserId: null }
     });
     if (updated.teamId) {
       broadcast({
         type: "post.status",
         teamId: String(updated.teamId),
-        payload: { id: updated.id, status: "PENDING", contentType: "video" }
+        payload: { id: updated.id, status: VideoStatus.READY_TO_PUBLISH, contentType: "video" }
       });
     }
-    return NextResponse.json({ ok: true, status: "PENDING", video: updated });
+    return NextResponse.json({ ok: true, status: VideoStatus.READY_TO_PUBLISH, video: updated });
   } catch (e) {
     console.error("[mark-ready] Unexpected error:", e);
     return NextResponse.json({ error: "Failed to mark ready" }, { status: 500 });
   }
 }
-
-

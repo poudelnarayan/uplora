@@ -8,6 +8,7 @@ import { sendMail } from "@/lib/email";
 import { broadcast } from "@/lib/realtime";
 import { sendTelegramMessageToChat } from "@/lib/notify";
 import { normalizeSocialConnections } from "@/types/socialConnections";
+import { VideoStatus } from "@/types/videoStatus";
 
 export async function POST(
   req: NextRequest,
@@ -102,16 +103,17 @@ export async function POST(
       return NextResponse.json({ error: "Only managers/editors can request approval" }, { status: 403 });
     }
 
-    // Enforce workflow: must be marked ready-to-publish (PENDING) before requesting approval
-    const currentStatus = String(video.status || "PROCESSING").toUpperCase();
-    if (currentStatus !== "PENDING") {
+    // Enforce workflow: must be marked ready-to-publish before requesting approval
+    const currentStatus = String(video.status || VideoStatus.PROCESSING).toUpperCase();
+    if (currentStatus !== VideoStatus.READY_TO_PUBLISH && currentStatus !== "PENDING") {
       return NextResponse.json({ error: "Mark this video as ready to publish before requesting approval." }, { status: 400 });
     }
 
-    // Keep status as PENDING; requesting approval is tracked via requestedByUserId
+    // Set status to APPROVAL_REQUESTED
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('video_posts')
       .update({ 
+        status: VideoStatus.APPROVAL_REQUESTED,
         requestedByUserId: me.id,
         approvedByUserId: null,
         updatedAt: new Date().toISOString()
@@ -214,16 +216,16 @@ export async function POST(
     broadcast({
       type: "video.status",
       teamId: video.teamId || null,
-      payload: { id: video.id, status: "PENDING", requestedByUserId: me.id, approvedByUserId: null }
+      payload: { id: video.id, status: VideoStatus.APPROVAL_REQUESTED, requestedByUserId: me.id, approvedByUserId: null }
     });
     if (video.teamId) {
       broadcast({
         type: "post.status",
         teamId: String(video.teamId),
-        payload: { id: video.id, status: "PENDING", contentType: "video" }
+        payload: { id: video.id, status: VideoStatus.APPROVAL_REQUESTED, contentType: "video" }
       });
     }
-    return NextResponse.json({ ok: true, video: updated });
+    return NextResponse.json({ ok: true, status: VideoStatus.APPROVAL_REQUESTED, video: updated });
   } catch (e) {
     return NextResponse.json({ error: "Failed to request approval" }, { status: 500 });
   }
