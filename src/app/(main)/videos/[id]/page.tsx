@@ -1226,15 +1226,16 @@ export default function VideoPreviewPage() {
                             <p className="text-xs text-slate-500">Request owner/admin approval or undo to continue editing.</p>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 px-3 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                              disabled={submitting || !!video.requestedByUserId}
-                              onClick={undoReadyToProcessing}
-                              title={video.requestedByUserId ? "Approval requested — undo is disabled" : "Undo to editing"}
-                            >
-                              <ArrowLeft className="h-4 w-4" />
-                              {submitting ? "Working…" : "Undo to editing"}
-                            </button>
+                            {!video.requestedByUserId && (
+                              <button
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 px-3 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={submitting}
+                                onClick={undoReadyToProcessing}
+                              >
+                                <ArrowLeft className="h-4 w-4" />
+                                {submitting ? "Working…" : "Undo to editing"}
+                              </button>
+                            )}
 
                             {!video.requestedByUserId ? (
                               <button
@@ -1724,15 +1725,16 @@ export default function VideoPreviewPage() {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                          disabled={submitting || !!video.requestedByUserId}
-                          onClick={undoReadyToProcessing}
-                          title={video.requestedByUserId ? "Approval requested — undo is disabled" : "Undo to editing"}
-                        >
-                          <ArrowLeft className="h-4 w-4" />
-                          {submitting ? "Working…" : "Undo to editing"}
-                        </button>
+                        {!video.requestedByUserId && (
+                          <button
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            disabled={submitting}
+                            onClick={undoReadyToProcessing}
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            {submitting ? "Working…" : "Undo to editing"}
+                          </button>
+                        )}
 
                         {!video.requestedByUserId ? (
                           <button
