@@ -1,14 +1,17 @@
 # YouTube Thumbnail Upload Implementation
 
 ## Overview
+
 Extended the existing YouTube upload feature to support uploading custom thumbnails from Uplora to YouTube videos.
 
 ## Implementation Details
 
 ### 1. Enhanced Thumbnail Upload Service
+
 **File:** `src/server/services/youtubeUploadService.ts`
 
 - **`validateThumbnail(buffer, mimeType)`**: Validates thumbnail before upload
+
   - Checks MIME type (JPG, PNG, WEBP)
   - Enforces 2MB size limit
   - Validates minimum file size
@@ -21,6 +24,7 @@ Extended the existing YouTube upload feature to support uploading custom thumbna
   - Retries on 401 (token expiration)
 
 ### 2. Thumbnail Upload Endpoint
+
 **File:** `src/app/api/videos/[id]/youtube/thumbnail/route.ts`
 
 - Accepts multipart form data with thumbnail file
@@ -29,7 +33,9 @@ Extended the existing YouTube upload feature to support uploading custom thumbna
 - Returns detailed error messages
 
 ### 3. Integrated into Upload Flow
+
 **Files:**
+
 - `src/app/api/videos/[id]/approve/route.ts`
 - `src/app/api/videos/[id]/youtube/upload/route.ts`
 
@@ -43,26 +49,29 @@ Add the following columns to the `video_posts` table:
 
 ```sql
 -- Thumbnail upload status
-ALTER TABLE video_posts 
-ADD COLUMN IF NOT EXISTS youtubeThumbnailUploadStatus TEXT 
+ALTER TABLE video_posts
+ADD COLUMN IF NOT EXISTS youtubeThumbnailUploadStatus TEXT
 CHECK (youtubeThumbnailUploadStatus IN ('PENDING', 'SUCCESS', 'FAILED'));
 
 -- Thumbnail upload error message (if failed)
-ALTER TABLE video_posts 
+ALTER TABLE video_posts
 ADD COLUMN IF NOT EXISTS youtubeThumbnailUploadError TEXT;
 ```
 
 ## API Endpoints
 
 ### Upload Thumbnail (Standalone)
+
 **POST** `/api/videos/[id]/youtube/thumbnail`
 
 **Request:**
+
 - `multipart/form-data` with `file` field
 - File must be JPG, PNG, or WEBP
 - Max size: 2MB
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -72,6 +81,7 @@ ADD COLUMN IF NOT EXISTS youtubeThumbnailUploadError TEXT;
 ```
 
 **Error Response:**
+
 ```json
 {
   "ok": false,
@@ -107,7 +117,7 @@ ADD COLUMN IF NOT EXISTS youtubeThumbnailUploadError TEXT;
 ✅ Detailed error messages  
 ✅ Status tracking in database  
 ✅ Handles unverified channels gracefully  
-✅ Production-ready error handling  
+✅ Production-ready error handling
 
 ## Security
 
@@ -115,4 +125,3 @@ ADD COLUMN IF NOT EXISTS youtubeThumbnailUploadError TEXT;
 - Server-side validation of all inputs
 - Automatic token refresh
 - Secure S3 access for thumbnail retrieval
-

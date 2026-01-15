@@ -215,12 +215,15 @@ export async function POST(
       return NextResponse.json({ error: err?.message || "YouTube upload failed" }, { status: 500 });
     }
 
+    // Determine final status based on upload result
+    // If video is published (public/unlisted) or scheduled, set appropriate status
+    // For successful uploads, status should be POSTED (unless scheduled)
     const newStatus =
       uploadResult.uploadStatus === "SCHEDULED"
         ? VideoStatus.SCHEDULED
-        : uploadResult.uploadStatus === "PUBLISHED"
-          ? VideoStatus.POSTED
-          : VideoStatus.PROCESSING;
+        : uploadResult.uploadStatus === "PUBLISHED" || uploadResult.uploadStatus === "PROCESSING"
+          ? VideoStatus.POSTED  // Successful upload = POSTED
+          : VideoStatus.POSTED; // Default to POSTED for successful uploads
 
     // Upload thumbnail if available (non-blocking - don't fail entire upload if thumbnail fails)
     let thumbnailUploadStatus: "PENDING" | "SUCCESS" | "FAILED" | null = null;
@@ -371,7 +374,14 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ ok: true, video: updated, youtubeVideoId: uploadResult.youtubeVideoId });
+    return NextResponse.json({ 
+      ok: true, 
+      video: updated, 
+      youtubeVideoId: uploadResult.youtubeVideoId,
+      thumbnailUploadStatus: thumbnailUploadStatus,
+      thumbnailUploadError: thumbnailUploadError,
+      uploadStatus: uploadResult.uploadStatus
+    });
   } catch (e) {
     console.error("Error approving video:", e);
     return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });

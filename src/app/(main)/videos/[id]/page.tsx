@@ -15,6 +15,7 @@ import { videoCache } from "@/lib/videoCache";
 import { ThumbnailShimmer } from "@/app/components/ui/Shimmer";
 import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
+import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 export const dynamic = "force-dynamic";
 
 interface Video {
@@ -80,6 +81,8 @@ export default function VideoPreviewPage() {
   const [imageLoading, setImageLoading] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadPromise, setUploadPromise] = useState<Promise<Response> | null>(null);
   
   // Track original values for change detection
   const [originalMetadata, setOriginalMetadata] = useState({
@@ -886,54 +889,33 @@ export default function VideoPreviewPage() {
 
   const approveOrPublish = async () => {
     if (!video) return;
-    setSubmitting(true);
-    try {
-      // UX guard: don't allow publishing team videos before editors mark ready
-      if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
-        const st = String(video.status || VideoStatus.PROCESSING).toUpperCase();
-        // Allow if ready states
-        const readyStatuses = [VideoStatus.READY_TO_PUBLISH, VideoStatus.APPROVAL_REQUESTED, VideoStatus.APPROVAL_APPROVED, "PENDING"];
-        if (!readyStatuses.includes(st)) {
-          setShowOverrideModal(true);
-          setSubmitting(false);
-          return;
-        }
+    
+    // UX guard: don't allow publishing team videos before editors mark ready
+    if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
+      const st = String(video.status || VideoStatus.PROCESSING).toUpperCase();
+      // Allow if ready states
+      const readyStatuses = [VideoStatus.READY_TO_PUBLISH, VideoStatus.APPROVAL_REQUESTED, VideoStatus.APPROVAL_APPROVED, "PENDING"];
+      if (!readyStatuses.includes(st)) {
+        setShowOverrideModal(true);
+        return;
       }
-
-      // Call approve endpoint with video metadata for YouTube upload
-      const response = await fetch(`/api/videos/${video.id}/approve`, { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description,
-          privacyStatus: visibility,
-          madeForKids,
-        })
-      });
-      
-      if (response.ok) {
-        const result = await response.json().catch(() => ({}));
-        setVideo({ ...video, status: VideoStatus.POSTED, approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
-        notifications.addNotification({
-          type: "success",
-          title: "✅ Video published to YouTube!",
-          message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
-        });
-        router.push("/dashboard");
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to approve");
-      }
-    } catch (error) {
-      notifications.addNotification({
-        type: "error",
-        title: "❌ Action failed", 
-        message: error instanceof Error ? error.message : "Could not publish video to YouTube"
-      });
-    } finally {
-      setSubmitting(false);
     }
+
+    // Create upload promise
+    const uploadResponse = fetch(`/api/videos/${video.id}/approve`, { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        description,
+        privacyStatus: visibility,
+        madeForKids,
+      })
+    });
+
+    // Show upload modal
+    setUploadPromise(uploadResponse);
+    setShowUploadModal(true);
   };
 
   const approvePendingOnly = async () => {
@@ -1933,6 +1915,41 @@ export default function VideoPreviewPage() {
         variant="danger"
         isLoading={deleting}
       />
+
+      {/* YouTube Upload Modal */}
+      {uploadPromise && (
+        <YouTubeUploadModal
+          isOpen={showUploadModal}
+          onClose={() => {
+            setShowUploadModal(false);
+            setUploadPromise(null);
+          }}
+          onSuccess={async () => {
+            // Refresh video data to get updated status
+            try {
+              const res = await fetch(`/api/videos/${id}`);
+              if (res.ok) {
+                const updatedVideo = await res.json();
+                setVideo(updatedVideo);
+                
+                // Update status to POSTED if upload was successful
+                if (updatedVideo.status === VideoStatus.POSTED || updatedVideo.youtubeVideoId) {
+                  setVideo({ ...updatedVideo, status: VideoStatus.POSTED });
+                }
+              }
+            } catch (err) {
+              console.error("Failed to refresh video:", err);
+            }
+            
+            // Navigate to dashboard after a short delay
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 500);
+          }}
+          videoTitle={title || video?.filename}
+          uploadPromise={uploadPromise}
+        />
+      )}
     </AppShell>
   );
 }
