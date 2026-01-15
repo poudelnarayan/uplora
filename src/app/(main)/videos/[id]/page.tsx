@@ -595,22 +595,14 @@ export default function VideoPreviewPage() {
 
       if (response.ok) {
         const result = await response.json().catch(() => ({}));
-        if (result?.status === "APPROVED") {
-          setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
-          notifications.addNotification({
-            type: "success",
-            title: "Approved",
-            message: "This video is approved. An owner/admin can now publish it to YouTube.",
-          });
-        } else {
-          setVideo({ ...video, status: "PUBLISHED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
-          notifications.addNotification({
-            type: "success",
-            title: "✅ Video published to YouTube!",
-            message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
-          });
-          router.push("/dashboard");
-        }
+        // Published successfully
+        setVideo({ ...video, status: "PUBLISHED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
+        notifications.addNotification({
+          type: "success",
+          title: "✅ Video published to YouTube!",
+          message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
+        });
+        router.push("/dashboard");
       } else {
         const error = await response.json();
         notifications.addNotification({
@@ -895,7 +887,8 @@ export default function VideoPreviewPage() {
       // UX guard: don't allow publishing team videos before editors mark ready
       if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
         const st = String(video.status || "PROCESSING").toUpperCase();
-        if (st !== "PENDING" && st !== "APPROVED") {
+        // Allow if PENDING (with or without approval)
+        if (st !== "PENDING") {
           setShowOverrideModal(true);
           setSubmitting(false);
           return;
@@ -916,22 +909,13 @@ export default function VideoPreviewPage() {
       
       if (response.ok) {
         const result = await response.json().catch(() => ({}));
-        if (result?.status === "APPROVED") {
-          setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
-          notifications.addNotification({
-            type: "success",
-            title: "Approved",
-            message: "This video is approved. A manager can now publish it to YouTube.",
-          });
-        } else {
-          setVideo({ ...video, status: "PUBLISHED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
-          notifications.addNotification({
-            type: "success",
-            title: "✅ Video published to YouTube!",
-            message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
-          });
-          router.push("/dashboard");
-        }
+        setVideo({ ...video, status: "PUBLISHED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
+        notifications.addNotification({
+          type: "success",
+          title: "✅ Video published to YouTube!",
+          message: `The video has been successfully uploaded and published${result.youtubeVideoId ? ` (YouTube ID: ${result.youtubeVideoId})` : ''}`
+        });
+        router.push("/dashboard");
       } else {
         const error = await response.json();
         throw new Error(error.error || "Failed to approve");
@@ -961,7 +945,8 @@ export default function VideoPreviewPage() {
         const errMsg = result?.details || result?.error || `Failed to approve (${response.status})`;
         throw new Error(errMsg);
       }
-      setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
+      // Status stays PENDING but approvedByUserId marks it as approved
+      setVideo({ ...video, approvedByUserId: user?.id || null, requestedByUserId: null });
       notifications.addNotification({
         type: "success",
         title: "Approved",
@@ -1288,9 +1273,9 @@ export default function VideoPreviewPage() {
                         </div>
                       )}
 
-                      {/* Owner/Admin: always show publish. Editor/Manager: only show when APPROVED */}
+                      {/* Owner/Admin: always show publish. Editor/Manager: only show when approved (approvedByUserId is set) */}
                       {((role === "OWNER" || role === "ADMIN") || 
-                        ((role === "EDITOR" || role === "MANAGER") && String(video.status || "").toUpperCase() === "APPROVED")) && (
+                        ((role === "EDITOR" || role === "MANAGER") && !!video.approvedByUserId)) && (
                         <button
                           className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                           disabled={submitting}
@@ -1789,9 +1774,9 @@ export default function VideoPreviewPage() {
                     </div>
                   )}
 
-                  {/* Owner/Admin: always show publish. Editor/Manager: only show when APPROVED */}
+                  {/* Owner/Admin: always show publish. Editor/Manager: only show when approved (approvedByUserId is set) */}
                   {((role === "OWNER" || role === "ADMIN") || 
-                    ((role === "EDITOR" || role === "MANAGER") && String(video.status || "").toUpperCase() === "APPROVED")) && (
+                    ((role === "EDITOR" || role === "MANAGER") && !!video.approvedByUserId)) && (
                     <button
                       className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                       disabled={submitting}

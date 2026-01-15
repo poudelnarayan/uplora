@@ -98,85 +98,16 @@ export async function POST(
         callerRole = (role as any) || "MEMBER";
       }
 
-      // PENDING -> APPROVED (approve step) by owner/admin only; no publishing at this stage.
-      if (String(video.status || "").toUpperCase() === "PENDING") {
-        if (callerRole !== "OWNER" && callerRole !== "ADMIN") {
-          return NextResponse.json({ error: "Only owner/admin can approve a pending video" }, { status: 403 });
-        }
-        const { data: approved, error: approveErr } = await supabaseAdmin
-          .from('video_posts')
-          .update({
-            status: "APPROVED",
-            approvedByUserId: me.id,
-            requestedByUserId: null,
-            updatedAt: new Date().toISOString(),
-          })
-          .eq('id', video.id)
-          .select()
-          .single();
-        if (approveErr) {
-          return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
-        }
-        // Notify requester (best-effort)
-        try {
-          if (video.requestedByUserId) {
-            const { data: requester } = await supabaseAdmin
-              .from('users')
-              .select('email,name')
-              .eq('id', video.requestedByUserId)
-              .single();
-            if (requester?.email) {
-              const videoTitle = String(video.filename || "").replace(/\.[^/.]+$/, '');
-              const videoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/videos/${video.id}`;
-              await sendMail({
-                to: requester.email,
-                subject: `✅ Approved: ${videoTitle}`,
-                text: [
-                  `Your video has been approved.`,
-                  ``,
-                  `Video: ${videoTitle}`,
-                  `Link: ${videoUrl}`,
-                  ``,
-                  `Next step: an owner/admin can publish this video to YouTube.`,
-                ].join("\n"),
-                html: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>✅ Video Approved</h2>
-                    <p><strong>Video:</strong> ${videoTitle}</p>
-                    <p><strong>Link:</strong> <a href="${videoUrl}">${videoUrl}</a></p>
-                    <p>Next step: an owner/admin can publish this video to YouTube.</p>
-                  </div>
-                `,
-              });
-            }
-          }
-        } catch (e) {
-          console.error("Failed to notify requester about approval:", e);
-        }
-        broadcast({
-          type: "video.status",
-          teamId: video.teamId || null,
-          payload: { id: video.id, status: "APPROVED", requestedByUserId: null, approvedByUserId: me.id }
-        });
-        if (video.teamId) {
-          broadcast({
-            type: "post.status",
-            teamId: String(video.teamId),
-            payload: { id: video.id, status: "APPROVED", contentType: "video" }
-          });
-        }
-        return NextResponse.json({ ok: true, status: "APPROVED", video: approved });
-      }
-
       // Publishing permissions (team):
-      // - Owner/Admin: can publish PENDING or APPROVED videos
-      // - Editor/Manager: can only publish APPROVED videos (after admin approval)
+      // - Owner/Admin: can publish any PENDING video
+      // - Editor/Manager: can only publish if video has been approved (approvedByUserId is set)
       const upperStatus = String(video.status || "PROCESSING").toUpperCase();
       const isOwnerOrAdmin = callerRole === "OWNER" || callerRole === "ADMIN";
       const isEditorOrManager = callerRole === "EDITOR" || callerRole === "MANAGER";
+      const isApproved = !!video.approvedByUserId;
 
-      // For editors/managers: only allow if video is APPROVED
-      if (isEditorOrManager && upperStatus !== "APPROVED") {
+      // For editors/managers: only allow if video has been approved by owner/admin
+      if (isEditorOrManager && !isApproved) {
         return NextResponse.json({ 
           error: "This video needs to be approved by an owner/admin before you can publish it to YouTube." 
         }, { status: 403 });
@@ -187,8 +118,8 @@ export async function POST(
         return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
       }
 
-      // Readiness gate: block publish until PENDING (ready-to-publish) or APPROVED
-      if (upperStatus !== "PENDING" && upperStatus !== "APPROVED") {
+      // Readiness gate: block publish until PENDING (ready-to-publish)
+      if (upperStatus !== "PENDING") {
         return NextResponse.json(
           { error: "This video is not ready to publish yet. Ask your editors to mark it 'Ready to publish' before publishing." },
           { status: 400 }

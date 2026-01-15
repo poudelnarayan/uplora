@@ -104,10 +104,11 @@ export async function POST(
     }
 
     step = "update-video";
+    // Keep status as PENDING but set approvedByUserId to mark it as approved
+    // The combination of status=PENDING + approvedByUserId!=null means "approved, ready to publish"
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('video_posts')
       .update({ 
-        status: "APPROVED",
         approvedByUserId: me.id,
         requestedByUserId: null,
         updatedAt: new Date().toISOString()
@@ -122,18 +123,19 @@ export async function POST(
     }
 
     step = "broadcast";
+    // Broadcast with isApproved flag so UI can react
     broadcast({ 
       type: "video.status", 
       teamId: video.teamId || null, 
-      payload: { id: video.id, status: "APPROVED", requestedByUserId: null, approvedByUserId: me.id } 
+      payload: { id: video.id, status: "PENDING", isApproved: true, requestedByUserId: null, approvedByUserId: me.id } 
     });
     broadcast({
       type: "post.status",
       teamId: String(video.teamId),
-      payload: { id: video.id, status: "APPROVED", contentType: "video" }
+      payload: { id: video.id, status: "PENDING", isApproved: true, contentType: "video" }
     });
 
-    return NextResponse.json({ ok: true, status: "APPROVED", video: updated });
+    return NextResponse.json({ ok: true, status: "PENDING", isApproved: true, video: updated });
   } catch (e: any) {
     console.error("Approve-only failed at step:", step, e);
     return NextResponse.json({ 
