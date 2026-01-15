@@ -231,6 +231,7 @@ export async function POST(
     
     if (video.thumbnailKey) {
       try {
+        console.log(`[Thumbnail Upload] Starting thumbnail upload for video ${uploadResult.youtubeVideoId}, thumbnailKey: ${video.thumbnailKey}`);
         // Set status to PENDING
         thumbnailUploadStatus = "PENDING";
         
@@ -247,12 +248,16 @@ export async function POST(
         }
         const thumbnailBuffer = Buffer.concat(chunks);
         
+        console.log(`[Thumbnail Upload] Thumbnail buffer size: ${thumbnailBuffer.length} bytes`);
+        
         // Determine MIME type from file extension or default to JPEG
         const thumbMimeType = video.thumbnailKey.toLowerCase().endsWith('.png')
           ? 'image/png'
           : video.thumbnailKey.toLowerCase().endsWith('.webp')
           ? 'image/webp'
           : 'image/jpeg';
+        
+        console.log(`[Thumbnail Upload] MIME type: ${thumbMimeType}`);
         
         // Upload thumbnail to YouTube
         const thumbResult = await uploadYouTubeThumbnail(
@@ -266,16 +271,18 @@ export async function POST(
         thumbnailUploadError = thumbResult.error || null;
         
         if (thumbResult.status === "SUCCESS") {
-          console.log(`Thumbnail uploaded successfully for video ${uploadResult.youtubeVideoId}`);
+          console.log(`[Thumbnail Upload] ✅ Thumbnail uploaded successfully for video ${uploadResult.youtubeVideoId}`);
         } else {
-          console.warn(`Thumbnail upload failed for video ${uploadResult.youtubeVideoId}:`, thumbResult.error);
+          console.warn(`[Thumbnail Upload] ❌ Thumbnail upload failed for video ${uploadResult.youtubeVideoId}:`, thumbResult.error, `Error code: ${thumbResult.errorCode}`);
         }
       } catch (thumbErr: any) {
         // Thumbnail upload failed, but don't fail the entire video upload
         thumbnailUploadStatus = "FAILED";
         thumbnailUploadError = thumbErr?.message || "Failed to upload thumbnail";
-        console.error("Thumbnail upload error (non-blocking):", thumbErr);
+        console.error("[Thumbnail Upload] ❌ Thumbnail upload error (non-blocking):", thumbErr);
       }
+    } else {
+      console.log(`[Thumbnail Upload] No thumbnailKey found for video ${video.id}, skipping thumbnail upload`);
     }
 
     // Update video status after successful upload (including thumbnail status)
@@ -374,14 +381,22 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ 
+    // Return success response with all details
+    const responseData = { 
       ok: true, 
+      success: true,
       video: updated, 
       youtubeVideoId: uploadResult.youtubeVideoId,
       thumbnailUploadStatus: thumbnailUploadStatus,
       thumbnailUploadError: thumbnailUploadError,
-      uploadStatus: uploadResult.uploadStatus
-    });
+      uploadStatus: uploadResult.uploadStatus,
+      message: "Video uploaded successfully to YouTube"
+    };
+
+    console.log(`[Approve] ✅ Successfully uploaded video ${uploadResult.youtubeVideoId} to YouTube`);
+    console.log(`[Approve] Thumbnail status: ${thumbnailUploadStatus || "N/A"}`);
+
+    return NextResponse.json(responseData, { status: 200 });
   } catch (e) {
     console.error("Error approving video:", e);
     return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });

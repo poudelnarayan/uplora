@@ -95,13 +95,17 @@ export async function GET(
       uploadedAt: v.uploadedAt,
       updatedAt: v.updatedAt,
       teamId: v.teamId || undefined,
-    requestedByUserId: v.requestedByUserId || null,
-    approvedByUserId: v.approvedByUserId || null,
+      requestedByUserId: v.requestedByUserId || null,
+      approvedByUserId: v.approvedByUserId || null,
       // Include metadata fields
       description: v.description || "",
       visibility: v.visibility || "public",
       madeForKids: v.madeForKids || false,
       thumbnailKey: v.thumbnailKey || null,
+      // YouTube fields
+      youtubeVideoId: (v as any).youtubeVideoId || null,
+      youtubeThumbnailUploadStatus: (v as any).youtubeThumbnailUploadStatus || null,
+      youtubeThumbnailUploadError: (v as any).youtubeThumbnailUploadError || null,
       uploader: {
         id: v.users.id,
         name: v.users.name,

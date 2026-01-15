@@ -63,19 +63,55 @@ export function YouTubeUploadModal({
         clearInterval(progressInterval);
         setProgress(100);
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData?.error || `Upload failed: ${response.status}`);
+        // Parse response
+        let result: any = {};
+        try {
+          result = await response.json();
+        } catch (parseError) {
+          console.error("Failed to parse response:", parseError);
+          // If response is not ok, throw error
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+          }
         }
 
-        const result = await response.json().catch(() => ({}));
-        setYoutubeVideoId(result?.youtubeVideoId || result?.video?.youtubeVideoId || null);
+        // Check if upload was successful
+        // HTTP status check
+        if (!response.ok) {
+          const errorMsg = result?.error || result?.message || `Upload failed: ${response.status} ${response.statusText}`;
+          console.error("[YouTubeUploadModal] Upload failed:", response.status, errorMsg, result);
+          throw new Error(errorMsg);
+        }
+
+        // Check for success indicators in response body
+        if (result?.ok === false || result?.success === false) {
+          const errorMsg = result?.error || result?.message || "Upload failed";
+          console.error("[YouTubeUploadModal] Upload marked as failed in response:", errorMsg, result);
+          throw new Error(errorMsg);
+        }
+
+        // If we have a youtubeVideoId, consider it successful even if other fields are missing
+        if (!result?.youtubeVideoId && !result?.video?.youtubeVideoId) {
+          console.warn("[YouTubeUploadModal] No youtubeVideoId in response:", result);
+          // Don't throw error here - let it continue and show success if status is 200
+        }
+
+        // Extract YouTube video ID
+        const videoId = result?.youtubeVideoId || result?.video?.youtubeVideoId || null;
+        setYoutubeVideoId(videoId);
 
         // Check thumbnail upload status
-        if (result?.thumbnailUploadStatus) {
+        if (result?.thumbnailUploadStatus !== undefined) {
           setThumbnailStatus(result.thumbnailUploadStatus === "SUCCESS" ? "success" : "failed");
           if (result.thumbnailUploadStatus === "FAILED") {
             setThumbnailError(result.thumbnailUploadError || "Thumbnail upload failed");
+          }
+        } else if (result?.video?.youtubeThumbnailUploadStatus) {
+          // Check nested video object
+          const thumbStatus = result.video.youtubeThumbnailUploadStatus;
+          setThumbnailStatus(thumbStatus === "SUCCESS" ? "success" : thumbStatus === "FAILED" ? "failed" : null);
+          if (thumbStatus === "FAILED") {
+            setThumbnailError(result.video.youtubeThumbnailUploadError || "Thumbnail upload failed");
           }
         }
 

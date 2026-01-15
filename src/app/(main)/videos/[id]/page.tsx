@@ -33,6 +33,9 @@ interface Video {
   thumbnailKey?: string | null;
   requestedByUserId?: string | null;
   approvedByUserId?: string | null;
+  youtubeVideoId?: string | null;
+  youtubeThumbnailUploadStatus?: "PENDING" | "SUCCESS" | "FAILED" | null;
+  youtubeThumbnailUploadError?: string | null;
   uploader?: {
     id: string;
     name: string;
@@ -918,6 +921,53 @@ export default function VideoPreviewPage() {
     setShowUploadModal(true);
   };
 
+  const retryThumbnailUpload = async () => {
+    if (!video || !video.youtubeVideoId || !video.thumbnailKey) {
+      notifications.addNotification({
+        type: "error",
+        title: "Cannot retry thumbnail",
+        message: "Video or thumbnail not found"
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/videos/${video.id}/youtube/thumbnail/retry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error || "Failed to upload thumbnail");
+      }
+
+      const result = await response.json();
+      
+      // Refresh video data
+      const res = await fetch(`/api/videos/${id}`);
+      if (res.ok) {
+        const updatedVideo = await res.json();
+        setVideo(updatedVideo);
+      }
+
+      notifications.addNotification({
+        type: result.status === "SUCCESS" ? "success" : "error",
+        title: result.status === "SUCCESS" ? "Thumbnail uploaded" : "Thumbnail upload failed",
+        message: result.status === "SUCCESS" ? "Thumbnail has been uploaded to YouTube" : (result.error || "Please try again")
+      });
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "Thumbnail upload failed",
+        message: error instanceof Error ? error.message : "Could not upload thumbnail"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const approvePendingOnly = async () => {
     if (!video) return;
     setSubmitting(true);
@@ -1272,6 +1322,28 @@ export default function VideoPreviewPage() {
                           <Youtube className="h-5 w-5" />
                           {submitting ? 'Working…' : 'Publish to YouTube'}
                         </button>
+                      )}
+
+                      {/* Thumbnail retry button - show if video is uploaded but thumbnail failed */}
+                      {video.youtubeVideoId && 
+                       video.thumbnailKey && 
+                       video.youtubeThumbnailUploadStatus === "FAILED" && (
+                        <div className="sm:col-span-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-amber-800">
+                            <ImageIcon className="h-4 w-4 text-amber-600" />
+                            Thumbnail upload failed
+                          </div>
+                          <p className="text-xs text-amber-700">
+                            {video.youtubeThumbnailUploadError || "Thumbnail could not be uploaded to YouTube"}
+                          </p>
+                          <button
+                            className="w-full py-2.5 text-sm font-semibold rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            disabled={submitting}
+                            onClick={retryThumbnailUpload}
+                          >
+                            {submitting ? "Uploading..." : "Retry Thumbnail Upload"}
+                          </button>
+                        </div>
                       )}
                     </div>
 
