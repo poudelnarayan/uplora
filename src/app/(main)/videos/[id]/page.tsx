@@ -947,6 +947,35 @@ export default function VideoPreviewPage() {
     }
   };
 
+  const approvePendingOnly = async () => {
+    if (!video) return;
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/videos/${video.id}/approve-only`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || "Failed to approve");
+      }
+      setVideo({ ...video, status: "APPROVED", approvedByUserId: user?.id || video.approvedByUserId || null, requestedByUserId: null });
+      notifications.addNotification({
+        type: "success",
+        title: "Approved",
+        message: "This video is approved. An owner/admin can now publish it to YouTube.",
+      });
+    } catch (error) {
+      notifications.addNotification({
+        type: "error",
+        title: "❌ Action failed",
+        message: error instanceof Error ? error.message : "Could not approve video",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const deleteVideoFile = async () => {
     if (!video) return;
     setDeleting(true);
@@ -1275,7 +1304,7 @@ export default function VideoPreviewPage() {
                           <button
                             className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             disabled={submitting}
-                            onClick={() => approveOrPublish()}
+                            onClick={approvePendingOnly}
                           >
                             {submitting ? "Approving…" : "Approve"}
                           </button>
