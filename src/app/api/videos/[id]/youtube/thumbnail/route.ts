@@ -5,10 +5,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { uploadYouTubeThumbnail } from "@/server/services/youtubeUploadService";
+import { uploadYouTubeThumbnail, validateThumbnail, type ThumbnailUploadResult } from "@/server/services/youtubeUploadService";
 
-const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
-const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024; // 2MB (YouTube limit)
 
 export async function POST(
   req: NextRequest,
@@ -25,11 +25,20 @@ export async function POST(
       return NextResponse.json({ error: "Thumbnail file missing." }, { status: 400 });
     }
 
+    // Validate file type
     if (!ACCEPTED_TYPES.has(file.type)) {
-      return NextResponse.json({ error: "Thumbnail must be JPG or PNG." }, { status: 400 });
+      return NextResponse.json({ 
+        error: "Thumbnail must be JPG, PNG, or WEBP.",
+        acceptedTypes: Array.from(ACCEPTED_TYPES)
+      }, { status: 400 });
     }
+    
+    // Validate file size
     if (file.size > MAX_THUMBNAIL_BYTES) {
-      return NextResponse.json({ error: "Thumbnail exceeds 5MB." }, { status: 400 });
+      return NextResponse.json({ 
+        error: `Thumbnail exceeds 2MB limit. Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+        maxSize: MAX_THUMBNAIL_BYTES
+      }, { status: 400 });
     }
 
     // Sync user
@@ -105,18 +114,102 @@ export async function POST(
       return NextResponse.json({ error: "YouTube videoId missing. Upload first." }, { status: 400 });
     }
 
+    // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
-    await uploadYouTubeThumbnail(
-      video.teamId ? String(team?.ownerId || "") : userId,
+    
+    // Additional validation using service function
+    const validation = validateThumbnail(buffer, file.type);
+    if (!validation.valid) {
+      // Update database with failed status
+      await supabaseAdmin
+        .from("video_posts")
+        .update({
+          youtubeThumbnailUploadStatus: "FAILED",
+          youtubeThumbnailUploadError: validation.error || "Validation failed",
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", id);
+      
+      return NextResponse.json({ 
+        error: validation.error,
+        status: "FAILED"
+      }, { status: 400 });
+    }
+
+    // Determine publisher user ID (team owner for team videos, current user for personal)
+    const publisherUserId = video.teamId ? String(team?.ownerId || "") : userId;
+
+    // Update database: set status to PENDING
+    await supabaseAdmin
+      .from("video_posts")
+      .update({
+        youtubeThumbnailUploadStatus: "PENDING",
+        youtubeThumbnailUploadError: null,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    // Upload thumbnail to YouTube
+    const result: ThumbnailUploadResult = await uploadYouTubeThumbnail(
+      publisherUserId,
       video.youtubeVideoId,
       buffer,
       file.type
     );
 
-    return NextResponse.json({ ok: true });
+    // Update database with upload result
+    const updateData: any = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (result.status === "SUCCESS") {
+      updateData.youtubeThumbnailUploadStatus = "SUCCESS";
+      updateData.youtubeThumbnailUploadError = null;
+    } else {
+      updateData.youtubeThumbnailUploadStatus = "FAILED";
+      updateData.youtubeThumbnailUploadError = result.error || "Upload failed";
+    }
+
+    await supabaseAdmin
+      .from("video_posts")
+      .update(updateData)
+      .eq("id", id);
+
+    if (result.status === "SUCCESS") {
+      return NextResponse.json({ 
+        ok: true, 
+        status: "SUCCESS",
+        message: "Thumbnail uploaded successfully"
+      });
+    } else {
+      return NextResponse.json({ 
+        ok: false,
+        status: "FAILED",
+        error: result.error,
+        errorCode: result.errorCode
+      }, { status: 500 });
+    }
   } catch (err: any) {
     console.error("Thumbnail upload failed:", err);
-    return NextResponse.json({ error: err?.message || "Thumbnail upload failed" }, { status: 500 });
+    
+    // Update database with failed status
+    try {
+      await supabaseAdmin
+        .from("video_posts")
+        .update({
+          youtubeThumbnailUploadStatus: "FAILED",
+          youtubeThumbnailUploadError: err?.message || "Unexpected error",
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", context.params.id);
+    } catch (dbErr) {
+      console.error("Failed to update database:", dbErr);
+    }
+    
+    return NextResponse.json({ 
+      error: err?.message || "Thumbnail upload failed",
+      status: "FAILED"
+    }, { status: 500 });
   }
 }
 

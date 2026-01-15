@@ -8,7 +8,7 @@ import { S3Client, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import type { Readable } from "stream";
-import { uploadYouTubeVideo, validateAndNormalizeMetadata } from "@/server/services/youtubeUploadService";
+import { uploadYouTubeVideo, validateAndNormalizeMetadata, uploadYouTubeThumbnail } from "@/server/services/youtubeUploadService";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -182,6 +182,56 @@ export async function POST(
       } catch {}
     });
 
+    // Upload thumbnail if available (non-blocking - don't fail entire upload if thumbnail fails)
+    let thumbnailUploadStatus: "PENDING" | "SUCCESS" | "FAILED" | null = null;
+    let thumbnailUploadError: string | null = null;
+    
+    if (video.thumbnailKey) {
+      try {
+        // Get thumbnail from S3
+        const thumbObj = await s3.send(new GetObjectCommand({
+          Bucket: process.env.S3_BUCKET!,
+          Key: video.thumbnailKey,
+        }));
+        
+        // Convert stream to buffer
+        const chunks: Buffer[] = [];
+        for await (const chunk of thumbObj.Body as Readable) {
+          chunks.push(Buffer.from(chunk));
+        }
+        const thumbnailBuffer = Buffer.concat(chunks);
+        
+        // Determine MIME type from file extension or default to JPEG
+        const thumbMimeType = video.thumbnailKey.toLowerCase().endsWith('.png')
+          ? 'image/png'
+          : video.thumbnailKey.toLowerCase().endsWith('.webp')
+          ? 'image/webp'
+          : 'image/jpeg';
+        
+        // Upload thumbnail to YouTube
+        const thumbResult = await uploadYouTubeThumbnail(
+          publisherUserId,
+          uploadResult.youtubeVideoId,
+          thumbnailBuffer,
+          thumbMimeType
+        );
+        
+        thumbnailUploadStatus = thumbResult.status;
+        thumbnailUploadError = thumbResult.error || null;
+        
+        if (thumbResult.status === "SUCCESS") {
+          console.log(`Thumbnail uploaded successfully for video ${uploadResult.youtubeVideoId}`);
+        } else {
+          console.warn(`Thumbnail upload failed for video ${uploadResult.youtubeVideoId}:`, thumbResult.error);
+        }
+      } catch (thumbErr: any) {
+        // Thumbnail upload failed, but don't fail the entire video upload
+        thumbnailUploadStatus = "FAILED";
+        thumbnailUploadError = thumbErr?.message || "Failed to upload thumbnail";
+        console.error("Thumbnail upload error (non-blocking):", thumbErr);
+      }
+    }
+
     await supabaseAdmin
       .from("video_posts")
       .update({
@@ -189,6 +239,8 @@ export async function POST(
         youtubeUploadStatus: uploadResult.uploadStatus,
         youtubePublishAt: uploadResult.publishAt,
         youtubeVisibility: uploadResult.visibility,
+        youtubeThumbnailUploadStatus: thumbnailUploadStatus,
+        youtubeThumbnailUploadError: thumbnailUploadError,
         updatedAt: new Date().toISOString(),
       })
       .eq("id", video.id);
@@ -197,6 +249,8 @@ export async function POST(
       ok: true,
       youtubeVideoId: uploadResult.youtubeVideoId,
       uploadStatus: uploadResult.uploadStatus,
+      thumbnailUploadStatus: thumbnailUploadStatus,
+      thumbnailUploadError: thumbnailUploadError,
     });
   } catch (err: any) {
     console.error("YouTube upload failed:", err);

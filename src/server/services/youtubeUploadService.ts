@@ -349,24 +349,199 @@ export async function uploadYouTubeVideo(
   };
 }
 
+/**
+ * Thumbnail upload status types
+ */
+export type ThumbnailUploadStatus = "PENDING" | "SUCCESS" | "FAILED";
+
+/**
+ * Thumbnail upload result
+ */
+export type ThumbnailUploadResult = {
+  status: ThumbnailUploadStatus;
+  error?: string;
+  errorCode?: string;
+};
+
+/**
+ * Valid thumbnail MIME types
+ */
+const VALID_THUMBNAIL_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
+
+/**
+ * Maximum thumbnail size: 2MB (YouTube limit)
+ */
+const MAX_THUMBNAIL_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Validates thumbnail buffer before upload
+ */
+export function validateThumbnail(buffer: Buffer, mimeType: string): { valid: boolean; error?: string } {
+  // Check MIME type
+  if (!VALID_THUMBNAIL_TYPES.has(mimeType.toLowerCase())) {
+    return {
+      valid: false,
+      error: `Invalid image format. Accepted formats: JPG, PNG, WEBP. Got: ${mimeType}`,
+    };
+  }
+
+  // Check size
+  if (buffer.length > MAX_THUMBNAIL_SIZE_BYTES) {
+    return {
+      valid: false,
+      error: `Thumbnail size exceeds 2MB limit. Size: ${(buffer.length / 1024 / 1024).toFixed(2)}MB`,
+    };
+  }
+
+  // Check minimum size (must be at least a few bytes)
+  if (buffer.length < 100) {
+    return {
+      valid: false,
+      error: "Thumbnail file appears to be empty or corrupted",
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Uploads a custom thumbnail to YouTube
+ * 
+ * @param publisherUserId - User ID of the YouTube account owner
+ * @param youtubeVideoId - YouTube video ID to attach thumbnail to
+ * @param buffer - Image buffer (JPG, PNG, or WEBP)
+ * @param mimeType - MIME type of the image
+ * @returns Upload result with status and error info
+ */
 export async function uploadYouTubeThumbnail(
   publisherUserId: string,
   youtubeVideoId: string,
   buffer: Buffer,
   mimeType: string
-) {
-  const { accessToken, refreshToken } = await getYouTubeAccess(publisherUserId);
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.uplora.io"}/api/youtube/connect`
-  );
-  oauth2Client.setCredentials({ access_token: accessToken, refresh_token: refreshToken });
-  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+): Promise<ThumbnailUploadResult> {
+  try {
+    // Validate thumbnail before upload
+    const validation = validateThumbnail(buffer, mimeType);
+    if (!validation.valid) {
+      return {
+        status: "FAILED",
+        error: validation.error,
+        errorCode: "VALIDATION_ERROR",
+      };
+    }
 
-  await youtube.thumbnails.set({
-    videoId: youtubeVideoId,
-    media: { body: Readable.from(buffer), mimeType },
-  });
+    // Get and refresh YouTube access token
+    let accessToken: string;
+    let refreshToken: string;
+    try {
+      const tokens = await getYouTubeAccess(publisherUserId);
+      accessToken = tokens.accessToken;
+      refreshToken = tokens.refreshToken;
+    } catch (err: any) {
+      return {
+        status: "FAILED",
+        error: err?.message || "Failed to get YouTube access token",
+        errorCode: "AUTH_ERROR",
+      };
+    }
+
+    // Prepare OAuth2 client
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.uplora.io"}/api/youtube/connect`
+    );
+    oauth2Client.setCredentials({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    // Create YouTube API client
+    const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+
+    // Upload thumbnail using YouTube Data API v3
+    try {
+      await youtube.thumbnails.set({
+        videoId: youtubeVideoId,
+        media: {
+          body: Readable.from(buffer),
+          mimeType: mimeType,
+        },
+      });
+
+      return {
+        status: "SUCCESS",
+      };
+    } catch (uploadErr: any) {
+      // Handle specific YouTube API errors
+      const errorMessage = uploadErr?.message || "Unknown error";
+      const errorCode = uploadErr?.code || uploadErr?.response?.status || "UPLOAD_ERROR";
+
+      // Check for common error scenarios
+      if (errorMessage.includes("unverified") || errorMessage.includes("verification")) {
+        return {
+          status: "FAILED",
+          error: "YouTube channel is not verified. Custom thumbnails require channel verification.",
+          errorCode: "UNVERIFIED_CHANNEL",
+        };
+      }
+
+      if (errorMessage.includes("quota") || errorCode === 403) {
+        return {
+          status: "FAILED",
+          error: "YouTube API quota exceeded or access denied",
+          errorCode: "QUOTA_EXCEEDED",
+        };
+      }
+
+      if (errorCode === 401) {
+        // Token expired, try refreshing once
+        try {
+          const tokens = await getYouTubeAccess(publisherUserId);
+          oauth2Client.setCredentials({
+            access_token: tokens.accessToken,
+            refresh_token: tokens.refreshToken,
+          });
+
+          // Retry upload with fresh token
+          await youtube.thumbnails.set({
+            videoId: youtubeVideoId,
+            media: {
+              body: Readable.from(buffer),
+              mimeType: mimeType,
+            },
+          });
+
+          return {
+            status: "SUCCESS",
+          };
+        } catch (retryErr: any) {
+          return {
+            status: "FAILED",
+            error: retryErr?.message || "Failed to upload thumbnail after token refresh",
+            errorCode: "AUTH_RETRY_FAILED",
+          };
+        }
+      }
+
+      return {
+        status: "FAILED",
+        error: errorMessage,
+        errorCode: String(errorCode),
+      };
+    }
+  } catch (err: any) {
+    // Catch any unexpected errors
+    return {
+      status: "FAILED",
+      error: err?.message || "Unexpected error during thumbnail upload",
+      errorCode: "UNKNOWN_ERROR",
+    };
+  }
 }
 
