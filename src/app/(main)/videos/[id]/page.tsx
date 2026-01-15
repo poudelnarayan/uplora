@@ -1293,7 +1293,7 @@ export default function VideoPreviewPage() {
                       )}
                     </div>
 
-                  {(role === "OWNER" || role === "ADMIN") && video.teamId && video.status === VideoStatus.APPROVAL_REQUESTED && (
+                  {(role === "OWNER" || role === "ADMIN") && video.teamId && !!video.requestedByUserId && !video.approvedByUserId && (
                       <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
                         <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1802,7 +1802,7 @@ export default function VideoPreviewPage() {
                       <button
                         className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         disabled={submitting}
-                        onClick={() => approveOrPublish()}
+                        onClick={approvePendingOnly}
                       >
                         {submitting ? "Approving…" : "Approve"}
                       </button>
@@ -1815,7 +1815,7 @@ export default function VideoPreviewPage() {
                             const res = await fetch(`/api/videos/${video.id}`, {
                               method: "PATCH",
                               headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ status: "PROCESSING" })
+                              body: JSON.stringify({ status: VideoStatus.PROCESSING })
                             });
                             if (!res.ok) throw new Error();
                             await res.json();
