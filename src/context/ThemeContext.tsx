@@ -15,20 +15,40 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const savedTheme = localStorage.getItem("uplora-theme") as "dark" | "light" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
+    const initialTheme = savedTheme || "dark";
+    
+    // Apply theme immediately to prevent flash
+    const root = document.documentElement;
+    if (initialTheme === "dark") {
+      root.classList.add("dark");
+      root.setAttribute("data-theme", "dark");
     } else {
-      // Default to dark theme
-      setTheme("dark");
-      localStorage.setItem("uplora-theme", "dark");
+      root.classList.remove("dark");
+      root.setAttribute("data-theme", "light");
     }
+    
+    setTheme(initialTheme);
+    if (!savedTheme) {
+      localStorage.setItem("uplora-theme", initialTheme);
+    }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
-    document.documentElement.setAttribute("data-theme", theme);
+    
+    // Update both data-theme attribute and dark class for Tailwind
+    const root = document.documentElement;
+    
+    if (theme === "dark") {
+      root.classList.add("dark");
+      root.setAttribute("data-theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      root.setAttribute("data-theme", "light");
+    }
+    
     localStorage.setItem("uplora-theme", theme);
   }, [theme, mounted]);
 

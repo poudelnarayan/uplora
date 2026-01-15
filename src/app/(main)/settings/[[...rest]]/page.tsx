@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { User, CreditCard, Bell, Shield, Globe, Save } from "lucide-react";
+import { User, CreditCard, Bell, Shield, Globe, Save, Moon, Sun } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
 import { Button } from "@/app/components/ui/button";
@@ -453,18 +453,49 @@ const Settings = () => {
               <div className="space-y-4">
                 <h4 className="font-medium">Interface Preferences</h4>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Dark Mode</Label>
-                      <p className="text-sm text-muted-foreground">Use dark theme</p>
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {themeMounted ? (
+                          theme === "dark" ? (
+                            <Moon className="h-4 w-4 text-primary" />
+                          ) : (
+                            <Sun className="h-4 w-4 text-primary" />
+                          )
+                        ) : (
+                          <Moon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <Label className="text-base font-semibold">Theme</Label>
+                        {themeMounted && (
+                          <Badge variant="outline" className="text-xs">
+                            {theme === "dark" ? "Dark" : "Light"}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {themeMounted ? (
+                          theme === "dark" 
+                            ? "Dark theme is active. Switch to light mode for a brighter interface." 
+                            : "Light theme is active. Switch to dark mode for reduced eye strain."
+                        ) : (
+                          "Loading theme preferences..."
+                        )}
+                      </p>
                     </div>
-                    <Switch
-                      checked={themeMounted ? theme === "dark" : true}
-                      onCheckedChange={() => toggleTheme()}
-                      disabled={!themeMounted}
-                    />
+                    <div className="ml-4">
+                      <Switch
+                        checked={themeMounted ? theme === "dark" : true}
+                        onCheckedChange={() => {
+                          if (themeMounted) {
+                            toggleTheme();
+                          }
+                        }}
+                        disabled={!themeMounted}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
                     <div>
                       <Label>Compact View</Label>
                       <p className="text-sm text-muted-foreground">Show more content in less space</p>
