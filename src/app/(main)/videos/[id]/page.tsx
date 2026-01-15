@@ -1217,15 +1217,41 @@ export default function VideoPreviewPage() {
                       )}
 
                       {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                        <button className="w-full py-3 text-base font-semibold rounded-xl border border-border bg-transparent text-foreground hover:bg-muted/60 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={undoReadyToProcessing}>
-                          {submitting ? "Working…" : "Undo"}
-                        </button>
-                      )}
+                        <div className="sm:col-span-2 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-white p-3 shadow-sm space-y-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                              <Shield className="h-4 w-4 text-sky-600" />
+                              Approval workflow
+                            </div>
+                            <p className="text-xs text-slate-500">Request owner/admin approval or undo to continue editing.</p>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 px-3 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                              disabled={submitting}
+                              onClick={undoReadyToProcessing}
+                            >
+                              <ArrowLeft className="h-4 w-4" />
+                              {submitting ? "Working…" : "Undo to editing"}
+                            </button>
 
-                      {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !video.requestedByUserId && (
-                        <button className="w-full py-3 text-base font-semibold rounded-xl border border-sky-300 bg-sky-50/60 text-sky-700 hover:bg-sky-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={requestApproval}>
-                          {submitting ? "Working…" : "Request approval"}
-                        </button>
+                            {!video.requestedByUserId ? (
+                              <button
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-3 py-3 text-sm font-semibold text-white shadow-md hover:from-sky-400 hover:to-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={submitting}
+                                onClick={requestApproval}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                                {submitting ? "Working…" : "Request approval"}
+                              </button>
+                            ) : (
+                              <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-3 text-sm font-semibold text-sky-700">
+                                <Clock3 className="h-4 w-4" />
+                                Approval requested
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       )}
 
                       {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
@@ -1686,15 +1712,43 @@ export default function VideoPreviewPage() {
                   )}
 
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && (
-                    <button className="w-full py-3 text-base font-semibold rounded-xl border border-border bg-transparent text-foreground hover:bg-muted/60 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={undoReadyToProcessing}>
-                      {submitting ? "Working…" : "Undo"}
-                    </button>
-                  )}
+                    <div className="sm:col-span-2 lg:col-span-4 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                            <Shield className="h-4 w-4 text-sky-600" />
+                            Approval workflow
+                          </div>
+                          <p className="text-xs text-slate-500">Request owner/admin approval or undo to continue editing.</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          disabled={submitting}
+                          onClick={undoReadyToProcessing}
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          {submitting ? "Working…" : "Undo to editing"}
+                        </button>
 
-                  {(role === "EDITOR" || role === "MANAGER") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !video.requestedByUserId && (
-                    <button className="w-full py-3 text-base font-semibold rounded-xl border border-sky-300 bg-sky-50/60 text-sky-700 hover:bg-sky-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={requestApproval}>
-                      {submitting ? "Working…" : "Request approval"}
-                    </button>
+                        {!video.requestedByUserId ? (
+                          <button
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md hover:from-sky-400 hover:to-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            disabled={submitting}
+                            onClick={requestApproval}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            {submitting ? "Working…" : "Request approval"}
+                          </button>
+                        ) : (
+                          <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+                            <Clock3 className="h-4 w-4" />
+                            Approval requested
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
 
                   {(role === "OWNER" || role === "ADMIN" || (role === "MANAGER" && String(video.status || "").toUpperCase() === "APPROVED")) && (
