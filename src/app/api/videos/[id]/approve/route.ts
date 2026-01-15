@@ -2,15 +2,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { google } from "googleapis";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { sendMail } from "@/lib/email";
 import { broadcast } from "@/lib/realtime";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
-import { getUserSocialConnections, updateUserSocialConnections } from "@/server/services/socialConnections";
+import { uploadYouTubeVideo, validateAndNormalizeMetadata } from "@/server/services/youtubeUploadService";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -109,6 +108,7 @@ export async function POST(
           .update({
             status: "APPROVED",
             approvedByUserId: me.id,
+            requestedByUserId: null,
             updatedAt: new Date().toISOString(),
           })
           .eq('id', video.id)
@@ -137,14 +137,14 @@ export async function POST(
                   `Video: ${videoTitle}`,
                   `Link: ${videoUrl}`,
                   ``,
-                  `Next step: a manager can publish this video to YouTube.`,
+                  `Next step: an owner/admin can publish this video to YouTube.`,
                 ].join("\n"),
                 html: `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2>✅ Video Approved</h2>
                     <p><strong>Video:</strong> ${videoTitle}</p>
                     <p><strong>Link:</strong> <a href="${videoUrl}">${videoUrl}</a></p>
-                    <p>Next step: a manager can publish this video to YouTube.</p>
+                    <p>Next step: an owner/admin can publish this video to YouTube.</p>
                   </div>
                 `,
               });
@@ -200,7 +200,7 @@ export async function POST(
     }
 
     // Parse YouTube metadata from request
-    const { title, description, privacyStatus, madeForKids } = await req.json().catch(() => ({ }));
+    const rawPayload = await req.json().catch(() => ({}));
 
     // Choose which YouTube account to publish with:
     // - Personal videos: current user
@@ -210,121 +210,94 @@ export async function POST(
       return NextResponse.json({ error: "Team owner missing for publishing" }, { status: 400 });
     }
 
-    // Ensure YouTube connection exists (unified social connections)
-    const social = await getUserSocialConnections(publisherUserId);
-    const yt = social.youtube;
-    if (!yt?.accessToken || !yt?.refreshToken) {
-      return NextResponse.json(
-        { error: video.teamId ? "Team owner YouTube not connected. Owner must connect YouTube." : "YouTube not connected. Please connect your YouTube account in settings." },
-        { status: 403 }
-      );
-    }
-
-    // Prepare YouTube client
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.YT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.uplora.io'}/api/youtube/connect`
-    );
-    oauth2Client.setCredentials({ 
-      access_token: yt.accessToken,
-      refresh_token: yt.refreshToken 
-    });
-    const youtube = google.youtube({ version: "v3", auth: oauth2Client });
-
-    // Ensure we have a fresh access token before uploading (and persist back to socialConnections)
+    const safeTitle = rawPayload?.title || (video.filename ? video.filename.replace(/\.[^/.]+$/, '') : "Untitled");
+    let metadata;
     try {
-      // Newer libs refresh lazily; proactively refresh to avoid 401s when expiry_date is missing
-      // @ts-ignore - method exists at runtime
-      const { credentials } = await oauth2Client.refreshAccessToken();
-      if (credentials?.access_token) {
-        try {
-          await updateUserSocialConnections(publisherUserId, current => ({
-            ...current,
-            youtube: {
-              ...(current.youtube || {}),
-              accessToken: String(credentials.access_token),
-              tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : undefined,
-            },
-          }));
-        } catch {}
-      }
-    } catch {}
+      metadata = validateAndNormalizeMetadata({
+        title: safeTitle,
+        description: rawPayload?.description || "",
+        tags: rawPayload?.tags,
+        categoryId: rawPayload?.categoryId,
+        defaultLanguage: rawPayload?.defaultLanguage,
+        defaultAudioLanguage: rawPayload?.defaultAudioLanguage,
+        privacyStatus: rawPayload?.privacyStatus || "private",
+        publishAt: rawPayload?.publishAt || null,
+        madeForKids: rawPayload?.madeForKids,
+        selfDeclaredMadeForKids: rawPayload?.selfDeclaredMadeForKids,
+      });
+    } catch (err: any) {
+      return NextResponse.json({ error: err?.message || "Invalid metadata" }, { status: 400 });
+    }
 
     // Get video stream from S3
     if (!video.key) {
       return NextResponse.json({ error: "Video storage key missing" }, { status: 400 });
     }
-    const s3Obj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.key }));
-    const mediaBody = s3Obj.Body as Readable;
+    const head = await s3.send(new HeadObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.key }));
+    const sizeBytes = Number(head.ContentLength || 0);
+    const mimeType = head.ContentType || video.contentType || "video/mp4";
+    if (!sizeBytes) {
+      return NextResponse.json({ error: "Video size missing. Upload aborted." }, { status: 400 });
+    }
 
-    // Upload to YouTube with one retry on 401
-    const performUpload = async () => {
-      return youtube.videos.insert({
-        part: ["snippet", "status"],
-        requestBody: {
-          snippet: {
-            title: title || (video.filename ? video.filename.replace(/\.[^/.]+$/, '') : 'Untitled'),
-            description: description || "",
-          },
-          status: {
-            privacyStatus: privacyStatus || "private",
-            madeForKids: madeForKids || false,
-          },
-        },
-        media: { body: mediaBody },
-      });
+    const uploadSource = {
+      sizeBytes,
+      mimeType,
+      createReadStream: async (startByte = 0) => {
+        const range = startByte > 0 ? `bytes=${startByte}-` : undefined;
+        const s3Obj = await s3.send(new GetObjectCommand({
+          Bucket: process.env.S3_BUCKET!,
+          Key: video.key,
+          Range: range,
+        }));
+        return s3Obj.Body as Readable;
+      },
     };
 
-    let insertRes;
+    await supabaseAdmin
+      .from('video_posts')
+      .update({
+        youtubeUploadStatus: "UPLOADING",
+        youtubeVisibility: metadata.privacyStatus,
+        youtubePublishAt: metadata.publishAt,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq('id', video.id);
+
+    let uploadResult;
     try {
-      insertRes = await performUpload();
+      uploadResult = await uploadYouTubeVideo(publisherUserId, uploadSource, metadata);
     } catch (err: any) {
-      const status = err?.code || err?.status || err?.response?.status;
-      if (status === 401) {
-        try {
-          // @ts-ignore - method exists at runtime
-          const { credentials } = await oauth2Client.refreshAccessToken();
-          if (credentials?.access_token) {
-            try {
-              await updateUserSocialConnections(publisherUserId, current => ({
-                ...current,
-                youtube: {
-                  ...(current.youtube || {}),
-                  accessToken: String(credentials.access_token),
-                  tokenExpiresAt: credentials.expiry_date ? new Date(credentials.expiry_date).toISOString() : undefined,
-                },
-              }));
-            } catch {}
-          }
-        } catch {}
-        // retry once
-        insertRes = await performUpload();
-      } else {
-        throw err;
-      }
+      await supabaseAdmin
+        .from('video_posts')
+        .update({
+          youtubeUploadStatus: "FAILED",
+          youtubeVisibility: metadata.privacyStatus,
+          youtubePublishAt: metadata.publishAt,
+          updatedAt: new Date().toISOString(),
+        })
+        .eq('id', video.id);
+      return NextResponse.json({ error: err?.message || "YouTube upload failed" }, { status: 500 });
     }
 
-    const youtubeVideoId = insertRes.data.id || null;
+    const newStatus =
+      uploadResult.uploadStatus === "SCHEDULED"
+        ? "SCHEDULED"
+        : uploadResult.uploadStatus === "PUBLISHED"
+          ? "PUBLISHED"
+          : "PROCESSING";
 
-    // If thumbnail exists, set it
-    try {
-      if (video.thumbnailKey && youtubeVideoId) {
-        const thumbObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: video.thumbnailKey }));
-        const thumbBody = thumbObj.Body as Readable;
-        await youtube.thumbnails.set({ videoId: youtubeVideoId, media: { body: thumbBody } });
-      }
-    } catch (thumbErr) {
-      console.warn('YouTube thumbnail set failed:', thumbErr);
-    }
-
-    // Update video status to PUBLISHED after successful upload
+    // Update video status after successful upload
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('video_posts')
-      .update({ 
-        status: "PUBLISHED", 
-        // Keep the approver if the video was already approved; otherwise mark this caller.
+      .update({
+        status: newStatus,
         approvedByUserId: (video as any).approvedByUserId || me.id,
+        requestedByUserId: null,
+        youtubeVideoId: uploadResult.youtubeVideoId,
+        youtubeUploadStatus: uploadResult.uploadStatus,
+        youtubePublishAt: uploadResult.publishAt,
+        youtubeVisibility: uploadResult.visibility,
         updatedAt: new Date().toISOString()
       })
       .eq('id', video.id)
@@ -398,17 +371,17 @@ export async function POST(
     broadcast({ 
       type: "video.status", 
       teamId: video.teamId || null, 
-      payload: { id: video.id, status: "PUBLISHED", requestedByUserId: null, approvedByUserId: me.id } 
+      payload: { id: video.id, status: newStatus, requestedByUserId: null, approvedByUserId: me.id } 
     });
     if (video.teamId) {
       broadcast({
         type: "post.status",
         teamId: String(video.teamId),
-        payload: { id: video.id, status: "PUBLISHED", contentType: "video" }
+        payload: { id: video.id, status: newStatus, contentType: "video" }
       });
     }
 
-    return NextResponse.json({ ok: true, video: updated, youtubeVideoId });
+    return NextResponse.json({ ok: true, video: updated, youtubeVideoId: uploadResult.youtubeVideoId });
   } catch (e) {
     console.error("Error approving video:", e);
     return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
