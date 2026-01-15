@@ -107,12 +107,19 @@ export async function GET(req: NextRequest) {
             updatedAt,
             thumbnailKey,
             userId,
-            teamId
+            teamId,
+            requestedByUserId,
+            approvedByUserId
           `)
           .eq('teamId', teamId);
 
         if (status !== 'ALL') {
-          videoQuery = videoQuery.eq('status', status);
+          // For APPROVAL_REQUESTED, also include legacy PENDING with requestedByUserId
+          if (status === 'APPROVAL_REQUESTED') {
+            videoQuery = videoQuery.or(`status.eq.APPROVAL_REQUESTED,and(status.eq.PENDING,requestedByUserId.not.is.null)`);
+          } else {
+            videoQuery = videoQuery.eq('status', status);
+          }
         }
 
           // Apply sorting

@@ -42,7 +42,7 @@ export default function ApprovalsPage() {
         const params = new URLSearchParams({
           teamId: selectedTeamId,
           types: "video,image,text,reel",
-          status: "PENDING",
+          status: "APPROVAL_REQUESTED", // Use new status value
           sortBy: "newest",
           limit: "100",
           offset: "0",

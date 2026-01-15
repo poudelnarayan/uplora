@@ -1317,7 +1317,7 @@ export default function VideoPreviewPage() {
                                 });
                                 if (!res.ok) throw new Error();
                                 await res.json();
-                                setVideo(v => v ? ({ ...v, status: VideoStatus.PROCESSING }) : v);
+                                setVideo(v => v ? ({ ...v, status: VideoStatus.PROCESSING, requestedByUserId: null, approvedByUserId: null }) : v);
                                 notifications.addNotification({ type: "success", title: "Sent back for editing", message: "Editors can edit again." });
                               } catch {
                                 notifications.addNotification({ type: "error", title: "Failed", message: "Could not send back for editing" });
@@ -1795,7 +1795,7 @@ export default function VideoPreviewPage() {
                   )}
                 </div>
 
-                {(role === "OWNER" || role === "ADMIN") && video.teamId && String(video.status || "").toUpperCase() === "PENDING" && !!video.requestedByUserId && (
+                {(role === "OWNER" || role === "ADMIN") && video.teamId && !!video.requestedByUserId && !video.approvedByUserId && (
                   <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 space-y-2">
                     <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
