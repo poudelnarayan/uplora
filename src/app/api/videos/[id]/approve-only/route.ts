@@ -37,6 +37,7 @@ export async function POST(
       .single();
 
     if (userError) {
+      console.error("Approve-only user sync error:", userError);
       return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
     }
 
@@ -47,6 +48,7 @@ export async function POST(
       .single();
 
     if (videoError || !video) {
+      console.error("Approve-only video fetch error:", videoError);
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
@@ -60,6 +62,7 @@ export async function POST(
       .eq('id', video.teamId)
       .single();
     if (teamError || !team) {
+      console.error("Approve-only team fetch error:", teamError);
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
@@ -101,7 +104,8 @@ export async function POST(
       .select()
       .single();
     if (approveErr) {
-      return NextResponse.json({ error: "Failed to approve video" }, { status: 500 });
+      console.error("Approve-only update error:", approveErr);
+      return NextResponse.json({ error: approveErr.message || "Failed to approve video" }, { status: 500 });
     }
 
     broadcast({
