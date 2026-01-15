@@ -2,6 +2,7 @@ import "./globals.css";
 import Providers from "./providers";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter, Playfair_Display } from 'next/font/google';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   subsets: ['latin'],
