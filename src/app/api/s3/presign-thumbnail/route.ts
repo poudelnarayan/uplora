@@ -84,8 +84,21 @@ export async function POST(req: NextRequest) {
     }
     if (!allowed) return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
 
-    // Presign thumbnail under teams/<teamId>/videos/<videoId>/thumbnail
-    const key = `teams/${finalTeamId}/videos/${videoId}/thumbnail`;
+    // Extract file extension from filename or determine from contentType
+    let extension = '';
+    if (safeName.includes('.')) {
+      const parts = safeName.split('.');
+      extension = '.' + parts[parts.length - 1].toLowerCase();
+    } else {
+      // Determine extension from contentType
+      if (contentType.includes('png')) extension = '.png';
+      else if (contentType.includes('gif')) extension = '.gif';
+      else if (contentType.includes('bmp')) extension = '.bmp';
+      else extension = '.jpg'; // Default to jpg for jpeg
+    }
+
+    // Presign thumbnail under teams/<teamId>/videos/<videoId>/thumbnail.<ext>
+    const key = `teams/${finalTeamId}/videos/${videoId}/thumbnail${extension}`;
 
     const command = new PutObjectCommand({ 
       Bucket: process.env.S3_BUCKET!, 
