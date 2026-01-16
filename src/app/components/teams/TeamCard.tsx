@@ -8,7 +8,11 @@ import {
   ChevronRight,
   Sparkles,
   User,
-  Shield
+  Shield,
+  Calendar,
+  Activity,
+  TrendingUp,
+  CheckCircle2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -185,19 +189,41 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
           </div>
         </CardHeader>
         
-        <CardContent className="px-6 pb-6 space-y-5 relative z-10">
+        <CardContent className="px-6 pb-6 space-y-6 relative z-10">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10 border border-blue-200/50 dark:border-blue-800/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+                  Members
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {team.members_data.length}
+              </p>
+            </div>
+            
+            <div className="p-3 rounded-xl bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10 border border-green-200/50 dark:border-green-800/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
+                  Platforms
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                {team.platforms.length}
+              </p>
+            </div>
+          </div>
+
           {/* Platform Access Section */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+              <Shield className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Platform Access
+                Connected Platforms
               </span>
-              {team.platforms.length > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-auto">
-                  {team.platforms.length}
-                </Badge>
-              )}
             </div>
             
             {team.platforms.length > 0 ? (
@@ -209,19 +235,21 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
                       key={platform}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-green-50/80 dark:bg-green-950/30 border border-green-200/60 dark:border-green-800/60 rounded-lg backdrop-blur-sm"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-green-50/80 dark:bg-green-950/30 border border-green-200/60 dark:border-green-800/60 rounded-lg backdrop-blur-sm shadow-sm"
                     >
                       {Icon && <Icon className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
                       <span className="text-xs font-medium text-green-700 dark:text-green-300 capitalize">
                         {platform}
                       </span>
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
                     </motion.div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic">No platforms connected</p>
+              <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-border/50 text-center">
+                <p className="text-xs text-muted-foreground">No platforms connected yet</p>
+              </div>
             )}
           </div>
 
@@ -230,7 +258,7 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
           {/* Team Members Preview */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Team Members
               </span>
@@ -241,53 +269,75 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
             
             {team.members_data.length > 0 ? (
               <div className="space-y-2">
-                {/* Show first 3 members */}
-                {team.members_data.slice(0, 3).map((member) => (
-                  <div key={member.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <Avatar className="h-7 w-7 border border-border/50">
+                {/* Show first 4 members with more details */}
+                {team.members_data.slice(0, 4).map((member) => (
+                  <motion.div
+                    key={member.id}
+                    whileHover={{ x: 2 }}
+                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-border/30"
+                  >
+                    <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
                       <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                      <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
                         {member.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate text-foreground">
-                        {member.name}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        {member.role}
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold truncate text-foreground">
+                          {member.name}
+                        </p>
+                        {member.role === "OWNER" && (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
+                            Owner
+                          </Badge>
+                        )}
+                        {member.role === "ADMIN" && (
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate capitalize">
+                        {member.role.toLowerCase()}
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-                {team.members_data.length > 3 && (
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-dashed border-border/50">
+                {team.members_data.length > 4 && (
+                  <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-dashed border-border/50">
                     <div className="flex -space-x-2">
-                      {team.members_data.slice(3, 6).map((member) => (
-                        <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
+                      {team.members_data.slice(4, 8).map((member) => (
+                        <Avatar key={member.id} className="h-7 w-7 border-2 border-background shadow-sm">
                           <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
                             {member.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground ml-2">
-                      +{team.members_data.length - 3} more
+                    <p className="text-sm font-medium text-muted-foreground ml-2">
+                      +{team.members_data.length - 4} more members
                     </p>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic">No members yet</p>
+              <div className="p-4 rounded-lg bg-muted/30 border border-dashed border-border/50 text-center">
+                <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                <p className="text-xs text-muted-foreground">No members yet</p>
+              </div>
             )}
           </div>
           
           {/* View details hint */}
-          <div className="pt-3 border-t border-border/50">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Tap to view full details</span>
-              <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="pt-4 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Activity className="h-3.5 w-3.5" />
+                <span>Tap to view full details</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
         </CardContent>

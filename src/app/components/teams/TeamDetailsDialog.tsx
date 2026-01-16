@@ -92,7 +92,7 @@ export const TeamDetailsDialog = ({
   const [updatingPlatform, setUpdatingPlatform] = useState<string | null>(null);
 
   const canManageTeam = Boolean(team?.isOwner) || team?.role === "OWNER";
-  const canConnectPlatforms = canManageTeam; // Only owners can connect platforms
+  const canConnectPlatforms = team?.role === "ADMIN" || team?.role === "OWNER" || Boolean(team?.isOwner); // Only admins and owners can connect platforms
 
   useEffect(() => {
     if (!isOpen) return;
@@ -175,7 +175,7 @@ export const TeamDetailsDialog = ({
     if (!canConnectPlatforms) {
       toast({
         title: "Permission Denied",
-        description: "Only team owners can disconnect platforms",
+        description: "Only team admins and owners can disconnect platforms",
         variant: "destructive"
       });
       return;
@@ -205,7 +205,7 @@ export const TeamDetailsDialog = ({
     if (!canConnectPlatforms) {
       toast({
         title: "Permission Denied",
-        description: "Only team owners can connect platforms",
+        description: "Only team admins and owners can connect platforms",
         variant: "destructive"
       });
       return;
@@ -277,6 +277,7 @@ export const TeamDetailsDialog = ({
                   </Button>
                 </>
               )}
+              {/* No buttons shown for non-owners - just info display */}
             </div>
           </div>
         </DialogHeader>
@@ -289,9 +290,9 @@ export const TeamDetailsDialog = ({
               <h3 className="text-lg font-semibold">Platform Access</h3>
               {canConnectPlatforms && (
                 <Link href="/social">
-                  <Button variant="ghost" size="sm" className="h-7 px-2.5 gap-1.5 text-xs">
-                    <Plus className="h-3 w-3" />
-                    <span className="hidden sm:inline">Connect More</span>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 gap-1 text-[10px]">
+                    <Plus className="h-2.5 w-2.5" />
+                    <span className="hidden sm:inline">More</span>
                   </Button>
                 </Link>
               )}
@@ -300,7 +301,7 @@ export const TeamDetailsDialog = ({
             <p className="text-sm text-muted-foreground">
               {canConnectPlatforms 
                 ? "Click on your connected platforms to grant team access. Only platforms connected to your account are shown."
-                : "Only team owners can manage platform access. Contact the team owner to connect platforms."}
+                : "Only team admins and owners can manage platform access. Contact an admin or owner to connect platforms."}
             </p>
 
             {/* Show all user's connected platforms */}
@@ -370,7 +371,7 @@ export const TeamDetailsDialog = ({
                           {platform}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {isConnectedToTeam ? "Connected" : canConnectPlatforms ? "Click to connect" : "Owner only"}
+                          {isConnectedToTeam ? "Connected" : canConnectPlatforms ? "Click to connect" : "Admin only"}
                         </p>
                       </div>
                       {canConnectPlatforms && isConnectedToTeam && (
