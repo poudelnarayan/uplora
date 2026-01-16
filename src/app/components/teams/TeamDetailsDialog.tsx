@@ -311,7 +311,7 @@ export const TeamDetailsDialog = ({
                 <span className="ml-2 text-sm text-muted-foreground">Loading platforms...</span>
               </div>
             ) : connectedPlatforms.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <div className="flex flex-wrap gap-2">
                 {connectedPlatforms.map((platform) => {
                   const isConnectedToTeam = team.platforms.includes(platform);
                   const Icon = platformIcons[platform as keyof typeof platformIcons];
@@ -330,7 +330,7 @@ export const TeamDetailsDialog = ({
                         }
                       }}
                       className={`
-                        relative group flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all
+                        relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all
                         ${canConnectPlatforms && !updatingPlatform ? "cursor-pointer hover:scale-105 active:scale-95" : "cursor-not-allowed opacity-60"}
                         ${updatingPlatform === platform ? "opacity-50 pointer-events-none" : ""}
                         ${isConnectedToTeam
@@ -340,54 +340,39 @@ export const TeamDetailsDialog = ({
                       `}
                     >
                       {updatingPlatform === platform && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-xl z-10">
-                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg z-10">
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
                         </div>
                       )}
                       {isConnectedToTeam && (
-                        <div className="absolute top-2 right-2">
-                          <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm"></div>
+                        <div className="absolute -top-1 -right-1">
+                          <div className="w-2 h-2 bg-green-500 rounded-full shadow-sm"></div>
                         </div>
                       )}
-                      <div className={`
-                        p-2 rounded-lg transition-colors
-                        ${isConnectedToTeam
-                          ? "bg-green-100 dark:bg-green-900/40"
-                          : "bg-muted"
-                        }
-                      `}>
-                        <Icon className={`h-4 w-4 ${
-                          isConnectedToTeam
-                            ? "text-green-700 dark:text-green-400"
-                            : "text-muted-foreground"
-                        }`} />
-                      </div>
-                      <div className="text-center">
-                        <p className={`text-sm font-semibold capitalize ${
-                          isConnectedToTeam
-                            ? "text-green-700 dark:text-green-400"
-                            : "text-foreground"
-                        }`}>
-                          {platform}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {isConnectedToTeam ? "Connected" : canConnectPlatforms ? "Click to connect" : "Admin only"}
-                        </p>
-                      </div>
+                      <Icon className={`h-3 w-3 flex-shrink-0 ${
+                        isConnectedToTeam
+                          ? "text-green-700 dark:text-green-400"
+                          : "text-muted-foreground"
+                      }`} />
+                      <span className={`text-xs font-medium capitalize ${
+                        isConnectedToTeam
+                          ? "text-green-700 dark:text-green-400"
+                          : "text-foreground"
+                      }`}>
+                        {platform}
+                      </span>
                       {canConnectPlatforms && isConnectedToTeam && (
-                        <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemovePlatform(platform);
-                            }}
-                          >
-                            <X className="h-2.5 w-2.5" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemovePlatform(platform);
+                          }}
+                        >
+                          <X className="h-2 w-2" />
+                        </Button>
                       )}
                     </div>
                   );
