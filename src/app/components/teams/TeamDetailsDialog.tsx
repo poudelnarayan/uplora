@@ -92,6 +92,7 @@ export const TeamDetailsDialog = ({
   const [updatingPlatform, setUpdatingPlatform] = useState<string | null>(null);
 
   const canManageTeam = Boolean(team?.isOwner) || team?.role === "OWNER";
+  const canConnectPlatforms = canManageTeam; // Only owners can connect platforms
 
   useEffect(() => {
     if (!isOpen) return;
@@ -171,10 +172,10 @@ export const TeamDetailsDialog = ({
     if (!team) return;
     if (updatingPlatform === platform) return; // Prevent double-clicks
     
-    if (!canManageTeam) {
+    if (!canConnectPlatforms) {
       toast({
         title: "Permission Denied",
-        description: "Only team owners and admins can manage platform access",
+        description: "Only team owners can disconnect platforms",
         variant: "destructive"
       });
       return;
@@ -201,10 +202,10 @@ export const TeamDetailsDialog = ({
     if (!team) return;
     if (updatingPlatform === platform) return; // Prevent double-clicks
     
-    if (!canManageTeam) {
+    if (!canConnectPlatforms) {
       toast({
         title: "Permission Denied",
-        description: "Only team owners and admins can manage platform access",
+        description: "Only team owners can connect platforms",
         variant: "destructive"
       });
       return;
@@ -286,16 +287,20 @@ export const TeamDetailsDialog = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Platform Access</h3>
-              <Link href="/social">
-                <Button variant="ghost" size="sm" className="h-7 px-2.5 gap-1.5 text-xs">
-                  <Plus className="h-3 w-3" />
-                  <span className="hidden sm:inline">Connect More</span>
-                </Button>
-              </Link>
+              {canConnectPlatforms && (
+                <Link href="/social">
+                  <Button variant="ghost" size="sm" className="h-7 px-2.5 gap-1.5 text-xs">
+                    <Plus className="h-3 w-3" />
+                    <span className="hidden sm:inline">Connect More</span>
+                  </Button>
+                </Link>
+              )}
             </div>
 
             <p className="text-sm text-muted-foreground">
-              Click on your connected platforms to grant team access. Only platforms connected to your account are shown.
+              {canConnectPlatforms 
+                ? "Click on your connected platforms to grant team access. Only platforms connected to your account are shown."
+                : "Only team owners can manage platform access. Contact the team owner to connect platforms."}
             </p>
 
             {/* Show all user's connected platforms */}
@@ -316,7 +321,7 @@ export const TeamDetailsDialog = ({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (!canManageTeam || updatingPlatform) return;
+                        if (!canConnectPlatforms || updatingPlatform) return;
                         if (isConnectedToTeam) {
                           handleRemovePlatform(platform);
                         } else {
@@ -324,8 +329,8 @@ export const TeamDetailsDialog = ({
                         }
                       }}
                       className={`
-                        relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
-                        ${canManageTeam && !updatingPlatform ? "cursor-pointer hover:scale-105 active:scale-95" : "cursor-not-allowed opacity-60"}
+                        relative group flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all
+                        ${canConnectPlatforms && !updatingPlatform ? "cursor-pointer hover:scale-105 active:scale-95" : "cursor-not-allowed opacity-60"}
                         ${updatingPlatform === platform ? "opacity-50 pointer-events-none" : ""}
                         ${isConnectedToTeam
                           ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 shadow-sm"
@@ -344,13 +349,13 @@ export const TeamDetailsDialog = ({
                         </div>
                       )}
                       <div className={`
-                        p-3 rounded-lg transition-colors
+                        p-2 rounded-lg transition-colors
                         ${isConnectedToTeam
                           ? "bg-green-100 dark:bg-green-900/40"
                           : "bg-muted"
                         }
                       `}>
-                        <Icon className={`h-6 w-6 ${
+                        <Icon className={`h-4 w-4 ${
                           isConnectedToTeam
                             ? "text-green-700 dark:text-green-400"
                             : "text-muted-foreground"
@@ -365,10 +370,10 @@ export const TeamDetailsDialog = ({
                           {platform}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {isConnectedToTeam ? "Connected" : "Click to connect"}
+                          {isConnectedToTeam ? "Connected" : canConnectPlatforms ? "Click to connect" : "Owner only"}
                         </p>
                       </div>
-                      {canManageTeam && isConnectedToTeam && (
+                      {canConnectPlatforms && isConnectedToTeam && (
                         <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"

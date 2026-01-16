@@ -6,13 +6,16 @@ import {
   Trash2,
   Loader2,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  User,
+  Shield
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu";
 import { Separator } from "@/app/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 import { PlatformIcon, platformIcons } from "./PlatformIcon";
 
 interface Team {
@@ -184,16 +187,22 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
         
         <CardContent className="px-6 pb-6 space-y-5 relative z-10">
           {/* Platform Access Section */}
-          {team.platforms.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Platform Access
-                </span>
-              </div>
-              
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Platform Access
+              </span>
+              {team.platforms.length > 0 && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-auto">
+                  {team.platforms.length}
+                </Badge>
+              )}
+            </div>
+            
+            {team.platforms.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {team.platforms.slice(0, 4).map((platform) => {
+                {team.platforms.map((platform) => {
                   const Icon = platformIcons[platform as keyof typeof platformIcons];
                   return (
                     <motion.div
@@ -210,21 +219,74 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
                     </motion.div>
                   );
                 })}
-                {team.platforms.length > 4 && (
-                  <div className="flex items-center justify-center px-2.5 py-1.5 bg-muted/50 border border-border/50 rounded-lg">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      +{team.platforms.length - 4} more
-                    </span>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No platforms connected</p>
+            )}
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* Team Members Preview */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Team Members
+              </span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-auto">
+                {team.members_data.length}
+              </Badge>
+            </div>
+            
+            {team.members_data.length > 0 ? (
+              <div className="space-y-2">
+                {/* Show first 3 members */}
+                {team.members_data.slice(0, 3).map((member) => (
+                  <div key={member.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <Avatar className="h-7 w-7 border border-border/50">
+                      <AvatarImage src={member.avatar} alt={member.name} />
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                        {member.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate text-foreground">
+                        {member.name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {member.role}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {team.members_data.length > 3 && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-dashed border-border/50">
+                    <div className="flex -space-x-2">
+                      {team.members_data.slice(3, 6).map((member) => (
+                        <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
+                          <AvatarImage src={member.avatar} alt={member.name} />
+                          <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                            {member.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-2">
+                      +{team.members_data.length - 3} more
+                    </p>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No members yet</p>
+            )}
+          </div>
           
           {/* View details hint */}
-          <div className="pt-2 border-t border-border/50">
+          <div className="pt-3 border-t border-border/50">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Tap to view details</span>
+              <span>Tap to view full details</span>
               <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
