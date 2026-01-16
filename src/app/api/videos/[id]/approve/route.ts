@@ -215,15 +215,13 @@ export async function POST(
       return NextResponse.json({ error: err?.message || "YouTube upload failed" }, { status: 500 });
     }
 
-    // Determine final status based on upload result
-    // If video is published (public/unlisted) or scheduled, set appropriate status
-    // For successful uploads, status should be POSTED (unless scheduled)
+    // Mark as POSTED immediately after successful upload to YouTube
+    // Don't wait for YouTube processing - the video is successfully sent
+    // YouTube processing happens on their side and can take time
     const newStatus =
       uploadResult.uploadStatus === "SCHEDULED"
         ? VideoStatus.SCHEDULED
-        : uploadResult.uploadStatus === "PUBLISHED" || uploadResult.uploadStatus === "PROCESSING"
-          ? VideoStatus.POSTED  // Successful upload = POSTED
-          : VideoStatus.POSTED; // Default to POSTED for successful uploads
+        : VideoStatus.POSTED; // Mark as POSTED immediately - video is successfully sent to YouTube
 
     // Upload thumbnail if available (non-blocking - don't fail entire upload if thumbnail fails)
     let thumbnailUploadStatus: "PENDING" | "SUCCESS" | "FAILED" | null = null;

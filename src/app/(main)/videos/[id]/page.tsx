@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube, XCircle } from "lucide-react";
+import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube, XCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
 import { StatusChip, getDisplayStatus } from "@/app/components/ui/StatusChip";
@@ -1688,26 +1688,38 @@ export default function VideoPreviewPage() {
             <div className="hidden lg:block lg:col-span-5 space-y-3 lg:sticky lg:top-4 self-start">
               <div className="card p-3">
                 <div className="group relative w-full rounded-lg overflow-hidden bg-black" style={{ aspectRatio: '16 / 9' }}>
-                  {/* Replace/delete overlay (desktop) */}
-                  <div className="absolute inset-0 z-10 hidden items-start justify-end p-2 bg-gradient-to-b from-black/40 via-transparent to-black/20 group-hover:flex transition-opacity">
-                    <button
-                      className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-red-600 shadow-sm hover:bg-white"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={replacing}
-                      title="Replace video"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      {replacing ? "Replacing…" : "Replace"}
-                    </button>
-                    <button
-                      className="ml-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-red-600 shadow-sm hover:bg-white"
-                      onClick={() => deleteVideoFile()}
-                      disabled={replacing}
-                      title="Delete video file"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </button>
+                  {/* Replace/delete overlay (desktop) - redesigned */}
+                  <div className="absolute inset-0 z-10 hidden group-hover:flex items-center justify-center transition-opacity">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+                    <div className="relative flex items-center gap-3">
+                      <button
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/95 hover:bg-white text-gray-900 font-semibold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={replacing}
+                        title="Replace video"
+                      >
+                        {replacing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Replacing…
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Replace Video
+                          </>
+                        )}
+                      </button>
+                      <button
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        onClick={() => deleteVideoFile()}
+                        disabled={replacing}
+                        title="Delete video file"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                   <input
                     ref={fileInputRef}

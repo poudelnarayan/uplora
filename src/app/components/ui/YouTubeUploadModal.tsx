@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Youtube, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react";
+import { Youtube, CheckCircle, XCircle, Loader2, AlertCircle, Upload, Sparkles } from "lucide-react";
 import { Button } from "./button";
 import { Dialog, DialogContent } from "./dialog";
 
@@ -115,20 +115,19 @@ export function YouTubeUploadModal({
           }
         }
 
-        // Small delay to show completion
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
+        // Mark as success immediately - don't wait for YouTube processing
+        // The video is successfully sent to YouTube, processing happens on YouTube's side
         if (cancelled) return;
 
         setStep("success");
 
-        // Auto-close after 2.5 seconds and call onSuccess
+        // Auto-close after 2 seconds and call onSuccess
         setTimeout(() => {
           if (!cancelled) {
             onSuccess?.();
             onClose();
           }
-        }, 2500);
+        }, 2000);
       } catch (err: any) {
         if (cancelled) return;
         setError(err?.message || "Upload failed");
@@ -151,17 +150,18 @@ export function YouTubeUploadModal({
       }
       onClose();
     }}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden border-0 shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Youtube className="h-6 w-6 text-white" />
+        <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-red-700 px-6 py-5 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyMCIvPjwvZz48L2c+PC9zdmc+')] opacity-20"></div>
+          <div className="relative flex items-center gap-4">
+            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg">
+              <Youtube className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-white">Publishing to YouTube</h3>
+              <h3 className="text-xl font-bold text-white mb-1">Publishing to YouTube</h3>
               {videoTitle && (
-                <p className="text-sm text-white/90 truncate">{videoTitle}</p>
+                <p className="text-sm text-white/90 truncate font-medium">{videoTitle}</p>
               )}
             </div>
           </div>
@@ -170,56 +170,98 @@ export function YouTubeUploadModal({
         {/* Content */}
         <div className="p-6 space-y-4">
           {step === "uploading" && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
+            <div className="space-y-6 py-2">
+              <div className="flex flex-col items-center gap-4">
                 <div className="relative">
-                  <Loader2 className="h-8 w-8 text-red-500 animate-spin" />
+                  <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl animate-pulse"></div>
+                  <div className="relative p-4 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-2xl border-2 border-red-200 dark:border-red-800">
+                    <Upload className="h-10 w-10 text-red-600 dark:text-red-400 animate-bounce" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Uploading video...</p>
-                  <p className="text-xs text-muted-foreground">This may take a few minutes</p>
+                <div className="text-center space-y-1">
+                  <p className="text-base font-semibold text-foreground">Uploading to YouTube</p>
+                  <p className="text-xs text-muted-foreground">Sending your video to YouTube...</p>
                 </div>
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full"
-                />
+              <div className="space-y-2">
+                <div className="w-full bg-muted rounded-full h-3 overflow-hidden shadow-inner">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-red-500 via-red-600 to-red-500 rounded-full relative overflow-hidden"
+                  >
+                    <motion.div
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    />
+                  </motion.div>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Uploading</span>
+                  <span className="font-semibold text-foreground">{Math.round(progress)}%</span>
+                </div>
               </div>
-              <p className="text-xs text-center text-muted-foreground font-medium">
-                {Math.round(progress)}% complete
-              </p>
             </div>
           )}
 
           {step === "success" && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="space-y-5 py-2"
             >
-              <div className="flex flex-col items-center gap-3 py-2">
-                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
-                  <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+                    className="absolute inset-0 bg-green-500/20 rounded-full blur-2xl"
+                  />
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
+                    className="relative p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl border-2 border-green-200 dark:border-green-800 shadow-lg"
+                  >
+                    <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+                  </motion.div>
                 </div>
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-foreground">Upload Successful!</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Your video has been published to YouTube
-                  </p>
+                <div className="text-center space-y-2">
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xl font-bold text-foreground"
+                  >
+                    Successfully Published! 🎉
+                  </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-sm text-muted-foreground"
+                  >
+                    Your video has been sent to YouTube and is being processed
+                  </motion.p>
                   {youtubeVideoId && (
-                    <a
+                    <motion.a
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
                       href={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-red-600 dark:text-red-400 hover:underline mt-2 inline-block"
+                      className="inline-flex items-center gap-2 mt-3 px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-md"
                     >
-                      View on YouTube →
-                    </a>
+                      <Youtube className="h-4 w-4" />
+                      View on YouTube
+                    </motion.a>
                   )}
                 </div>
               </div>

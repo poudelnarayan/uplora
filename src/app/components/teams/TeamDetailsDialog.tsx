@@ -244,83 +244,117 @@ export const TeamDetailsDialog = ({
 
           {/* Platform Access */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Platform Access</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Platform Access</h3>
+              <Link href="/social">
+                <Button variant="outline" size="sm" className="gap-2 text-xs">
+                  <Plus className="h-3.5 w-3.5" />
+                  Connect More Platforms
+                </Button>
+              </Link>
+            </div>
 
-            {/* Connected Platforms as Chips */}
-            {team.platforms.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {team.platforms.map((platform) => (
-                  <div key={platform} className="relative group">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-full text-xs font-medium text-green-700 dark:text-green-300 transition-all hover:shadow-sm">
-                      {(() => {
-                        const Icon = platformIcons[platform as keyof typeof platformIcons];
-                        return <Icon className="h-3.5 w-3.5" />;
-                      })()}
-                      <span className="capitalize">{platform}</span>
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+            <p className="text-sm text-muted-foreground">
+              Click on your connected platforms to grant team access. Only platforms connected to your account are shown.
+            </p>
+
+            {/* Show all user's connected platforms */}
+            {loadingConnected ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading platforms...</span>
+              </div>
+            ) : connectedPlatforms.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {connectedPlatforms.map((platform) => {
+                  const isConnectedToTeam = team.platforms.includes(platform);
+                  const Icon = platformIcons[platform as keyof typeof platformIcons];
+                  
+                  return (
+                    <div
+                      key={platform}
+                      onClick={() => {
+                        if (!canManageTeam) return;
+                        if (isConnectedToTeam) {
+                          handleRemovePlatform(platform);
+                        } else {
+                          handleAddPlatform(platform);
+                        }
+                      }}
+                      className={`
+                        relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer
+                        ${isConnectedToTeam
+                          ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 shadow-sm"
+                          : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                        }
+                        ${!canManageTeam ? "cursor-not-allowed opacity-60" : "hover:scale-105"}
+                      `}
+                    >
+                      {isConnectedToTeam && (
+                        <div className="absolute top-2 right-2">
+                          <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm"></div>
+                        </div>
+                      )}
+                      <div className={`
+                        p-3 rounded-lg transition-colors
+                        ${isConnectedToTeam
+                          ? "bg-green-100 dark:bg-green-900/40"
+                          : "bg-muted"
+                        }
+                      `}>
+                        <Icon className={`h-6 w-6 ${
+                          isConnectedToTeam
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-muted-foreground"
+                        }`} />
+                      </div>
+                      <div className="text-center">
+                        <p className={`text-sm font-semibold capitalize ${
+                          isConnectedToTeam
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-foreground"
+                        }`}>
+                          {platform}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {isConnectedToTeam ? "Connected" : "Click to connect"}
+                        </p>
+                      </div>
+                      {canManageTeam && isConnectedToTeam && (
+                        <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePlatform(platform);
+                            }}
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    {canManageTeam && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute -top-1 -right-1 h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm"
-                        onClick={() => handleRemovePlatform(platform)}
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-dashed">
-                <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground">No platforms connected.</p>
-                </div>
-                <Link href="/social">
-                  <Button size="sm" variant="ghost" className="text-xs h-7 gap-1 flex-shrink-0">
-                    <LinkIcon className="h-3 w-3" />
-                    Connect
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            {/* Quick Add - Show available platforms */}
-            {canManageTeam && team.platforms.length > 0 && (
-              <div className="pt-2">
-                <details className="group">
-                  <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
-                    <Plus className="h-3 w-3" />
-                    Add more platforms
-                  </summary>
-                  <div className="flex flex-wrap gap-1.5 mt-2 pt-2">
-                    {loadingConnected ? (
-                      <div className="text-xs text-muted-foreground">Checking connected platforms…</div>
-                    ) : addablePlatforms.length > 0 ? (
-                      addablePlatforms.map((platform) => (
-                        <div
-                          key={platform}
-                          className="flex items-center gap-1 px-2 py-1 bg-muted/50 hover:bg-muted border border-dashed border-border hover:border-primary/50 rounded-md cursor-pointer transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
-                          onClick={() => handleAddPlatform(platform)}
-                        >
-                          {(() => {
-                            const Icon = platformIcons[platform as keyof typeof platformIcons] as any;
-                            return <Icon className="h-3 w-3" />;
-                          })()}
-                          <span className="capitalize">{platform}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>No more connected platforms to add.</span>
-                        <Link href="/social" className="text-primary hover:underline">Connect more</Link>
-                      </div>
-                    )}
-                  </div>
-                </details>
-              </div>
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                  <LinkIcon className="h-10 w-10 text-muted-foreground mb-3" />
+                  <h4 className="font-semibold mb-1">No platforms connected</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Connect your social media accounts to enable team publishing
+                  </p>
+                  <Link href="/social">
+                    <Button size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Connect Platforms
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             )}
           </div>
 

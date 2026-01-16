@@ -685,29 +685,14 @@ const MakePostVideosInner = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Uploading to</span>
-                <Select
-                  value={effectiveTeamId || undefined}
-                  onValueChange={(v) => {
-                    if (isEditMode) return;
-                    setUploadTeamId(v);
-                    setSelectedTeamId(v);
-                  }}
-                  disabled={isEditMode}
-                >
-                  <SelectTrigger className="h-9 w-[220px]">
-                    <SelectValue placeholder="Select team/workspace" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectableTeams.map((t: any) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Team info - read-only, just for display */}
+              {effectiveTeamId && effectiveTeam && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                  <span className="text-xs font-medium text-primary">Uploading to</span>
+                  <span className="text-xs font-semibold text-foreground">{effectiveTeam.name}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 {/* Auto-save status indicator */}
                 {videoId && (
