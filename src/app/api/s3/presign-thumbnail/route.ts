@@ -103,7 +103,13 @@ export async function POST(req: NextRequest) {
     const command = new PutObjectCommand({ 
       Bucket: process.env.S3_BUCKET!, 
       Key: key, 
-      ContentType: contentType 
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000', // Cache for 1 year
+      Metadata: {
+        'uploaded-by': userId,
+        'video-id': videoId,
+        'upload-type': 'thumbnail'
+      }
     });
     const putUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 

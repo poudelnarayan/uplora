@@ -359,8 +359,25 @@ export default function VideoPreviewPage() {
           body: JSON.stringify({ filename: thumbFile.name, contentType: thumbFile.type || "image/jpeg", sizeBytes: thumbFile.size, teamId: video.teamId, videoId: video.id }),
         }).then(r=>r.json());
         if (presign?.putUrl && presign?.key) {
-          const put = await fetch(presign.putUrl, { method: "PUT", headers: { "Content-Type": thumbFile.type || "image/jpeg" }, body: thumbFile });
-          if (put.ok) thumbnailKey = presign.key;
+          const put = await fetch(presign.putUrl, { 
+            method: "PUT", 
+            headers: { 
+              "Content-Type": thumbFile.type || "image/jpeg",
+              "Content-Length": thumbFile.size.toString()
+            }, 
+            body: thumbFile 
+          });
+          if (put.ok) {
+            thumbnailKey = presign.key;
+            console.log(`[Thumbnail Upload] Successfully uploaded thumbnail to S3: ${presign.key}`);
+          } else {
+            const errorText = await put.text();
+            console.error(`[Thumbnail Upload] Failed to upload thumbnail to S3:`, put.status, errorText);
+            throw new Error(`Failed to upload thumbnail: ${put.status}`);
+          }
+        } else {
+          console.error(`[Thumbnail Upload] Failed to get presigned URL:`, presign);
+          throw new Error("Failed to get presigned URL for thumbnail");
         }
       }
 
