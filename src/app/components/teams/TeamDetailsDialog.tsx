@@ -301,19 +301,30 @@ export const TeamDetailsDialog = ({
             <p className="text-sm text-muted-foreground">
               {canConnectPlatforms 
                 ? "Click on your connected platforms to grant team access. Only platforms connected to your account are shown."
-                : "Only team admins and owners can manage platform access. Contact an admin or owner to connect platforms."}
+                : "Platforms connected to this team by admins and owners."}
             </p>
 
-            {/* Show all user's connected platforms */}
+            {/* Show platforms based on user role */}
             {loadingConnected ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 <span className="ml-2 text-sm text-muted-foreground">Loading platforms...</span>
               </div>
-            ) : connectedPlatforms.length > 0 ? (
+            ) : (() => {
+              // For admins/owners: show all their connected platforms
+              // For editors/members: only show platforms already connected to the team
+              const platformsToShow = canConnectPlatforms 
+                ? connectedPlatforms 
+                : team.platforms;
+              
+              return platformsToShow.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {connectedPlatforms.map((platform) => {
-                  const isConnectedToTeam = team.platforms.includes(platform);
+                {platformsToShow.map((platform) => {
+                  // For editors: all shown platforms are connected (since we only show team.platforms)
+                  // For admins: check if platform is in team.platforms
+                  const isConnectedToTeam = canConnectPlatforms 
+                    ? team.platforms.includes(platform)
+                    : true; // Editors only see connected platforms
                   const Icon = platformIcons[platform as keyof typeof platformIcons];
                   
                   return (
@@ -361,6 +372,12 @@ export const TeamDetailsDialog = ({
                       }`}>
                         {platform}
                       </span>
+                      {/* Show status only for admins when platform is not connected */}
+                      {canConnectPlatforms && !isConnectedToTeam && (
+                        <span className="text-[10px] text-muted-foreground ml-1">
+                          (not connected)
+                        </span>
+                      )}
                       {canConnectPlatforms && isConnectedToTeam && (
                         <Button
                           variant="ghost"
@@ -384,17 +401,22 @@ export const TeamDetailsDialog = ({
                   <LinkIcon className="h-10 w-10 text-muted-foreground mb-3" />
                   <h4 className="font-semibold mb-1">No platforms connected</h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Connect your social media accounts to enable team publishing
+                    {canConnectPlatforms 
+                      ? "Connect your social media accounts to enable team publishing"
+                      : "No platforms have been connected to this team yet"}
                   </p>
-                  <Link href="/social">
-                    <Button size="sm" className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Connect Platforms
-                    </Button>
-                  </Link>
+                  {canConnectPlatforms && (
+                    <Link href="/social">
+                      <Button size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Connect Platforms
+                      </Button>
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
-            )}
+            );
+            })()}
           </div>
 
           <Separator />
