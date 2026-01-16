@@ -36,6 +36,8 @@ interface Video {
   youtubeVideoId?: string | null;
   youtubeThumbnailUploadStatus?: "PENDING" | "SUCCESS" | "FAILED" | null;
   youtubeThumbnailUploadError?: string | null;
+  youtubePublishAt?: string | null;
+  youtubeUploadStatus?: string | null;
   uploader?: {
     id: string;
     name: string;
@@ -86,6 +88,9 @@ export default function VideoPreviewPage() {
   const [deleting, setDeleting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadPromise, setUploadPromise] = useState<Promise<Response> | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
   
   // Track original values for change detection
   const [originalMetadata, setOriginalMetadata] = useState({
@@ -936,6 +941,105 @@ export default function VideoPreviewPage() {
     // Show upload modal
     setUploadPromise(uploadResponse);
     setShowUploadModal(true);
+  };
+
+  const scheduleVideo = async () => {
+    if (!video) return;
+    if (!scheduleDate || !scheduleTime) {
+      notifications.addNotification({
+        type: "error",
+        title: "Missing information",
+        message: "Please select both date and time"
+      });
+      return;
+    }
+
+    // Combine date and time
+    const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+    if (isNaN(scheduledDateTime.getTime())) {
+      notifications.addNotification({
+        type: "error",
+        title: "Invalid date/time",
+        message: "Please select a valid date and time"
+      });
+      return;
+    }
+
+    // Check if scheduled time is in the future
+    if (scheduledDateTime.getTime() <= Date.now()) {
+      notifications.addNotification({
+        type: "error",
+        title: "Invalid schedule time",
+        message: "Scheduled time must be in the future"
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // UX guard: don't allow scheduling team videos before editors mark ready
+      if (video.teamId && (role === "OWNER" || role === "ADMIN")) {
+        const st = String(video.status || VideoStatus.PROCESSING).toUpperCase();
+        const readyStatuses = [VideoStatus.READY_TO_PUBLISH, VideoStatus.APPROVAL_REQUESTED, VideoStatus.APPROVAL_APPROVED, "PENDING"];
+        if (!readyStatuses.includes(st)) {
+          notifications.addNotification({
+            type: "error",
+            title: "Cannot schedule",
+            message: "Video must be ready to publish before scheduling"
+          });
+          return;
+        }
+      }
+
+      // Schedule the video using YouTube upload API with publishAt
+      const response = await fetch(`/api/videos/${video.id}/youtube/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          privacyStatus: visibility,
+          madeForKids,
+          publishAt: scheduledDateTime.toISOString(),
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error || "Failed to schedule video");
+      }
+
+      const result = await response.json();
+      
+      // Update video state
+      const updatedVideo: Video = { 
+        ...video, 
+        status: VideoStatus.SCHEDULED,
+        youtubePublishAt: scheduledDateTime.toISOString(),
+        youtubeUploadStatus: result.youtubeUploadStatus || "UPLOADING",
+        approvedByUserId: user?.id || video.approvedByUserId || null,
+        requestedByUserId: null
+      };
+      setVideo(updatedVideo);
+
+      notifications.addNotification({
+        type: "success",
+        title: "Video scheduled! 🎬",
+        message: `Video will be published on ${scheduledDateTime.toLocaleString()}`
+      });
+
+      setShowScheduleModal(false);
+      setScheduleDate("");
+      setScheduleTime("");
+    } catch (error: any) {
+      notifications.addNotification({
+        type: "error",
+        title: "Scheduling failed",
+        message: error?.message || "Could not schedule video"
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const retryThumbnailUpload = async () => {
@@ -1882,14 +1986,24 @@ export default function VideoPreviewPage() {
                   {/* Owner/Admin: always show publish. Editor/Manager: only show when status is APPROVAL_APPROVED */}
                   {((role === "OWNER" || role === "ADMIN") || 
                     ((role === "EDITOR" || role === "MANAGER") && video.status === VideoStatus.APPROVAL_APPROVED)) && (
-                    <button
-                      className="sm:col-span-2 lg:col-span-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
-                      disabled={submitting}
-                      onClick={approveOrPublish}
-                    >
-                      <Youtube className="h-5 w-5" />
-                      {submitting ? 'Working…' : 'Publish to YouTube'}
-                    </button>
+                    <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                        disabled={submitting}
+                        onClick={approveOrPublish}
+                      >
+                        <Youtube className="h-5 w-5" />
+                        {submitting ? 'Working…' : 'Publish to YouTube'}
+                      </button>
+                      <button
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                        disabled={submitting}
+                        onClick={() => setShowScheduleModal(true)}
+                      >
+                        <Clock className="h-5 w-5" />
+                        Schedule
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -1961,6 +2075,95 @@ export default function VideoPreviewPage() {
       </div>
       
       
+      {/* Schedule Video Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">Schedule Video</h3>
+              </div>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="p-1 hover:bg-muted rounded-lg transition-colors"
+                disabled={submitting}
+              >
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  disabled={submitting}
+                />
+              </div>
+
+              {scheduleDate && scheduleTime && (
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Scheduled for:</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {new Date(`${scheduleDate}T${scheduleTime}`).toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowScheduleModal(false);
+                  setScheduleDate("");
+                  setScheduleTime("");
+                }}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground font-semibold transition-colors disabled:opacity-50"
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={scheduleVideo}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                disabled={submitting || !scheduleDate || !scheduleTime}
+              >
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Scheduling...
+                  </span>
+                ) : (
+                  "Schedule Video"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Video Confirmation */}
       <ConfirmationModal
         isOpen={deleteModalOpen}
