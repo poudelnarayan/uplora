@@ -89,6 +89,7 @@ export const TeamDetailsDialog = ({
   const [cancelInviteTarget, setCancelInviteTarget] = useState<any | null>(null);
   const [cancelingInvite, setCancelingInvite] = useState(false);
   const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [updatingPlatform, setUpdatingPlatform] = useState<string | null>(null);
 
   const canManageTeam = Boolean(team?.isOwner) || team?.role === "OWNER";
 
@@ -166,27 +167,66 @@ export const TeamDetailsDialog = ({
     }
   };
 
-  const handleRemovePlatform = (platform: string) => {
-    if (team) {
+  const handleRemovePlatform = async (platform: string) => {
+    if (!team) return;
+    if (updatingPlatform === platform) return; // Prevent double-clicks
+    
+    if (!canManageTeam) {
+      toast({
+        title: "Permission Denied",
+        description: "Only team owners and admins can manage platform access",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setUpdatingPlatform(platform);
+    
+    try {
+      // Optimistic update - immediately update local state
       const updatedPlatforms = team.platforms.filter(p => p !== platform);
       onUpdateTeam(team.id, { platforms: updatedPlatforms });
+      
       toast({
         title: "Platform Removed ✨",
         description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} access removed from ${team.name}`,
         variant: "default"
       });
+    } finally {
+      setUpdatingPlatform(null);
     }
   };
 
-  const handleAddPlatform = (platform: string) => {
-    if (team && !team.platforms.includes(platform)) {
+  const handleAddPlatform = async (platform: string) => {
+    if (!team) return;
+    if (updatingPlatform === platform) return; // Prevent double-clicks
+    
+    if (!canManageTeam) {
+      toast({
+        title: "Permission Denied",
+        description: "Only team owners and admins can manage platform access",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (team.platforms.includes(platform)) {
+      return; // Already connected
+    }
+    
+    setUpdatingPlatform(platform);
+    
+    try {
+      // Optimistic update - immediately update local state
       const updatedPlatforms = [...team.platforms, platform];
       onUpdateTeam(team.id, { platforms: updatedPlatforms });
+      
       toast({
         title: "Platform Added! 🚀",
         description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} access granted to ${team.name}`,
         variant: "default"
       });
+    } finally {
+      setUpdatingPlatform(null);
     }
   };
 
@@ -247,9 +287,9 @@ export const TeamDetailsDialog = ({
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Platform Access</h3>
               <Link href="/social">
-                <Button variant="outline" size="sm" className="gap-2 text-xs">
-                  <Plus className="h-3.5 w-3.5" />
-                  Connect More Platforms
+                <Button variant="ghost" size="sm" className="h-7 px-2.5 gap-1.5 text-xs">
+                  <Plus className="h-3 w-3" />
+                  <span className="hidden sm:inline">Connect More</span>
                 </Button>
               </Link>
             </div>
@@ -273,8 +313,10 @@ export const TeamDetailsDialog = ({
                   return (
                     <div
                       key={platform}
-                      onClick={() => {
-                        if (!canManageTeam) return;
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!canManageTeam || updatingPlatform) return;
                         if (isConnectedToTeam) {
                           handleRemovePlatform(platform);
                         } else {
@@ -282,14 +324,20 @@ export const TeamDetailsDialog = ({
                         }
                       }}
                       className={`
-                        relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all cursor-pointer
+                        relative group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                        ${canManageTeam && !updatingPlatform ? "cursor-pointer hover:scale-105 active:scale-95" : "cursor-not-allowed opacity-60"}
+                        ${updatingPlatform === platform ? "opacity-50 pointer-events-none" : ""}
                         ${isConnectedToTeam
                           ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 shadow-sm"
                           : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
                         }
-                        ${!canManageTeam ? "cursor-not-allowed opacity-60" : "hover:scale-105"}
                       `}
                     >
+                      {updatingPlatform === platform && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-xl z-10">
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        </div>
+                      )}
                       {isConnectedToTeam && (
                         <div className="absolute top-2 right-2">
                           <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-sm"></div>
