@@ -342,11 +342,13 @@ export const TeamDetailsDialog = ({
                       }}
                       className={`
                         relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all
-                        ${canConnectPlatforms && !updatingPlatform ? "cursor-pointer hover:scale-105 active:scale-95" : "cursor-not-allowed opacity-60"}
+                        ${canConnectPlatforms && !updatingPlatform ? "cursor-pointer hover:scale-105 active:scale-95" : ""}
                         ${updatingPlatform === platform ? "opacity-50 pointer-events-none" : ""}
                         ${isConnectedToTeam
                           ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:border-green-400 dark:hover:border-green-600 shadow-sm"
-                          : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                          : canConnectPlatforms 
+                            ? "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                            : "bg-card border-border"
                         }
                       `}
                     >
