@@ -397,18 +397,18 @@ export const TeamDetailsDialog = ({
               </div>
             ) : (
               <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                  <LinkIcon className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h4 className="font-semibold mb-1">No platforms connected</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <CardContent className="flex flex-col items-center justify-center py-4 text-center">
+                  <LinkIcon className="h-6 w-6 text-muted-foreground mb-2" />
+                  <h4 className="text-sm font-semibold mb-1">No platforms connected</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
                     {canConnectPlatforms 
                       ? "Connect your social media accounts to enable team publishing"
                       : "No platforms have been connected to this team yet"}
                   </p>
                   {canConnectPlatforms && (
                     <Link href="/social">
-                      <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
+                      <Button size="sm" className="gap-2 h-7 text-xs">
+                        <Plus className="h-3 w-3" />
                         Connect Platforms
                       </Button>
                     </Link>
