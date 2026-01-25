@@ -324,7 +324,7 @@ const Teams = () => {
           ? "grid-cols-1" 
           : teams.length === 2 
           ? "grid-cols-1 lg:grid-cols-2" 
-          : "grid-cols-1 lg:grid-cols-2"
+          : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
       }`}>
         {/* Initial Loading State */}
         {isLoading ? (
@@ -495,8 +495,10 @@ const Teams = () => {
                 </div>
                 <div className={`relative grid gap-8 ${
                   createdTeams.length === 1
-                    ? "grid-cols-1 max-w-4xl"
-                    : "grid-cols-1"
+                    ? "grid-cols-1"
+                    : createdTeams.length === 2
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
                 }`}>
                   {createdTeams.map((team, index) => (
                     <TeamCard
@@ -526,8 +528,10 @@ const Teams = () => {
                 </div>
                 <div className={`relative grid gap-8 ${
                   joinedTeams.length === 1
-                    ? "grid-cols-1 max-w-4xl"
-                    : "grid-cols-1"
+                    ? "grid-cols-1"
+                    : joinedTeams.length === 2
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
                 }`}>
                   {joinedTeams.map((team, index) => (
                     <TeamCard

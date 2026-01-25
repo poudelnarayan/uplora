@@ -77,7 +77,7 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
             onViewTeam(team);
           }
         }}
-        className="h-full min-h-[600px] w-full bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-xl border border-border/60 hover:border-border shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden relative group/card"
+        className="h-full min-h-[600px] bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-xl border border-border/60 hover:border-border shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden relative group/card"
       >
         {/* Subtle gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-primary/0 group-hover/card:from-primary/5 group-hover/card:via-primary/3 group-hover/card:to-primary/5 transition-all duration-500 pointer-events-none" />
