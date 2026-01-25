@@ -113,25 +113,25 @@ export default function ConnectAccountsPage() {
       totalSteps={4} 
       onBack={handleBack}
     >
-      <div className="text-center space-y-12">
+      <div className="text-center space-y-8">
         {/* Header */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="space-y-6"
+          className="space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
-            <Plus className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-xs">
+            <Plus className="w-3.5 h-3.5" />
             Connect your accounts
           </div>
           
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               Connect your social media
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Connect your social media accounts to start creating and scheduling content. You can add more later.
+            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
+              Connect your accounts to get started. You can add more later.
             </p>
           </div>
         </MotionDiv>
@@ -159,7 +159,7 @@ export default function ConnectAccountsPage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div
-                    className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer group overflow-hidden ${
+                    className={`relative p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer group overflow-hidden ${
                       isConnected
                         ? 'border-green-500/50 shadow-xl shadow-green-500/20 bg-gradient-to-br ' + platform.bgGradient
                         : 'border-border hover:border-primary/50 bg-card/50 backdrop-blur-sm hover:shadow-lg'
@@ -171,11 +171,11 @@ export default function ConnectAccountsPage() {
                     )}
                     
                     <div className="relative z-10">
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${platform.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-7 h-7 text-white" />
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${platform.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-6 h-6 text-white" />
                       </div>
                       
-                      <h3 className="text-lg font-bold text-foreground mb-2">
+                      <h3 className="text-base font-bold text-foreground mb-1.5">
                         {platform.name}
                       </h3>
                       
@@ -223,10 +223,10 @@ export default function ConnectAccountsPage() {
             <Button
               onClick={handleNext}
               size="lg"
-              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl"
+              className="w-full sm:w-auto px-6 py-4 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
             >
               Continue
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </MotionDiv>

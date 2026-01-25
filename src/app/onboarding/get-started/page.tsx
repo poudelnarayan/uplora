@@ -136,29 +136,29 @@ export default function GetStartedPage() {
       totalSteps={4} 
       onBack={handleBack}
     >
-      <div className="text-center space-y-12">
+      <div className="text-center space-y-8">
         {/* Header */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="space-y-6"
+          className="space-y-4"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-2xl shadow-green-500/30 mx-auto"
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-xl shadow-green-500/30 mx-auto"
           >
-            <CheckCircle className="w-10 h-10 text-white" />
+            <CheckCircle className="w-8 h-8 text-white" />
           </motion.div>
           
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               You're all set! 🎉
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Welcome to Uplora! Here's what you can do to get started
+            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
+              Welcome to Uplora! Here's what you can do
             </p>
           </div>
         </MotionDiv>
@@ -170,11 +170,11 @@ export default function GetStartedPage() {
           transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
           className="max-w-5xl mx-auto"
         >
-          <h3 className="text-2xl font-bold text-foreground mb-8">
-            What you can do with Uplora
+          <h3 className="text-xl font-bold text-foreground mb-6">
+            What you can do
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -186,14 +186,14 @@ export default function GetStartedPage() {
                   whileHover={{ scale: 1.05, y: -4 }}
                   className="group"
                 >
-                  <div className={`p-6 rounded-2xl border border-border bg-gradient-to-br ${feature.bgGradient} hover:shadow-xl transition-all duration-300 h-full`}>
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto`}>
-                      <Icon className="w-7 h-7 text-white" />
+                  <div className={`p-5 rounded-xl border border-border bg-gradient-to-br ${feature.bgGradient} hover:shadow-lg transition-all duration-300 h-full`}>
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto`}>
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
-                    <h4 className="font-bold text-foreground mb-2 text-lg">
+                    <h4 className="font-bold text-foreground mb-1.5 text-base">
                       {feature.title}
                     </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -214,18 +214,18 @@ export default function GetStartedPage() {
             onClick={handleGetStarted}
             disabled={isCompleting}
             size="lg"
-            className="px-12 py-6 text-xl font-semibold bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary/80 hover:to-primary/90 text-primary-foreground shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-xl disabled:opacity-50"
+            className="px-8 py-4 text-base font-semibold bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary/80 hover:to-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl disabled:opacity-50"
           >
             {isCompleting ? (
               <>
-                <Zap className="w-6 h-6 mr-2 animate-pulse" />
+                <Zap className="w-5 h-5 mr-2 animate-pulse" />
                 Setting up...
               </>
             ) : (
               <>
-                <Rocket className="w-6 h-6 mr-2" />
+                <Rocket className="w-5 h-5 mr-2" />
                 Get Started with Uplora
-                <ArrowRight className="w-6 h-6 ml-2" />
+                <ArrowRight className="w-5 h-5 ml-2" />
               </>
             )}
           </Button>

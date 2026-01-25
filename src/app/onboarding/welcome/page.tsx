@@ -80,25 +80,25 @@ export default function WelcomePage() {
 
   return (
     <OnboardingLayout currentStep={1} totalSteps={4}>
-      <div className="text-center space-y-12">
+      <div className="text-center space-y-8">
         {/* Header */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="space-y-6"
+          className="space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
-            <Sparkles className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-xs">
+            <Sparkles className="w-3.5 h-3.5" />
             Welcome to Uplora
           </div>
           
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               What best describes you?
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Help us personalize your experience by telling us a bit about yourself
+            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
+              Help us personalize your experience
             </p>
           </div>
         </MotionDiv>
@@ -108,7 +108,7 @@ export default function WelcomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl mx-auto"
         >
           {userTypes.map((type, index) => {
             const Icon = type.icon;
@@ -124,7 +124,7 @@ export default function WelcomePage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <div
-                  className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer group overflow-hidden ${
+                  className={`relative p-5 rounded-xl border-2 transition-all duration-300 cursor-pointer group overflow-hidden ${
                     isSelected
                       ? 'border-primary shadow-xl shadow-primary/20 bg-gradient-to-br ' + type.bgGradient
                       : 'border-border hover:border-primary/50 bg-card/50 backdrop-blur-sm hover:shadow-lg'
@@ -137,14 +137,14 @@ export default function WelcomePage() {
                   )}
                   
                   <div className="relative z-10">
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-7 h-7 text-white" />
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${type.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
                     
-                    <h3 className="text-lg font-bold text-foreground mb-2">
+                    <h3 className="text-base font-bold text-foreground mb-1.5">
                       {type.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       {type.description}
                     </p>
                     
@@ -175,10 +175,10 @@ export default function WelcomePage() {
             onClick={handleNext}
             disabled={!selectedType}
             size="lg"
-            className="px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+            className="px-6 py-4 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
           >
             Continue
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </MotionDiv>
       </div>

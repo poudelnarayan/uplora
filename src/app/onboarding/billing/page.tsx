@@ -91,25 +91,25 @@ export default function BillingPage() {
       onBack={handleBack}
       showClose={false}
     >
-      <div className="max-w-6xl mx-auto space-y-12">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center space-y-6"
+          className="text-center space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
-            <Sparkles className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-xs">
+            <Sparkles className="w-3.5 h-3.5" />
             Choose your plan
           </div>
           
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
               Choose your plan
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Start with a 7-day free trial. No credit card required. Cancel anytime.
+            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
+              7-day free trial • No credit card required
             </p>
           </div>
         </MotionDiv>
@@ -155,7 +155,7 @@ export default function BillingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
+          className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto"
         >
           {plans.map((plan, index) => (
             <MotionCard
@@ -163,11 +163,11 @@ export default function BillingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
-              whileHover={{ y: -8 }}
+              whileHover={{ y: -4 }}
               className="relative"
             >
               <div
-                className={`relative p-8 rounded-3xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+                className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
                   selectedPlan === index
                     ? 'border-primary shadow-2xl shadow-primary/30 bg-gradient-to-br from-primary/5 via-primary/5 to-primary/10'
                     : plan.popular
@@ -184,36 +184,36 @@ export default function BillingPage() {
                   </div>
                 )}
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Plan Header */}
                   <div>
-                    <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
-                    <p className="text-muted-foreground">{plan.description}</p>
+                    <h3 className="text-xl font-bold text-foreground mb-1.5">{plan.name}</h3>
+                    <p className="text-sm text-muted-foreground">{plan.description}</p>
                   </div>
 
                   {/* Price */}
                   <div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-5xl font-bold text-foreground">
+                      <span className="text-4xl font-bold text-foreground">
                         ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                       </span>
-                      <span className="text-muted-foreground text-lg">/month</span>
+                      <span className="text-muted-foreground text-base">/month</span>
                     </div>
                     {isYearly && (
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Billed ${plan.yearlyPrice} annually
                       </p>
                     )}
                   </div>
 
                   {/* Features */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {plan.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check className="h-3.5 w-3.5 text-primary" />
+                      <div key={featureIndex} className="flex items-start gap-2.5">
+                        <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check className="h-3 w-3 text-primary" />
                         </div>
-                        <span className="text-foreground leading-relaxed">
+                        <span className="text-sm text-foreground leading-relaxed">
                           {feature}
                         </span>
                       </div>
@@ -262,10 +262,10 @@ export default function BillingPage() {
           <Button
             onClick={handleGetStarted}
             size="lg"
-            className="px-10 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl"
+            className="px-8 py-4 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
           >
             Continue with {plans[selectedPlan].name} Plan
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </MotionDiv>
       </div>

@@ -152,18 +152,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get existing user's internal ID if they exist
+    let internalUserId = userId; // Default to clerkId
+    if (existingUser) {
+      const { data: userData } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("clerkId", userId)
+        .maybeSingle();
+      if (userData?.id) {
+        internalUserId = userData.id;
+      }
+    }
+
+    // Use upsert with both id and clerkId - id for existing records, clerkId for conflict resolution
     const { error } = await supabaseAdmin
       .from("users")
       .upsert(
         {
-          id: userId,
+          id: internalUserId,
           clerkId: userId,
           email: emailToUse, // NOT NULL
           name: clerkUser?.fullName || null,
           image: clerkUser?.imageUrl || null,
           ...update,
         },
-        { onConflict: "clerkId" }
+        { 
+          onConflict: "clerkId"
+        }
       );
 
     if (error) {
