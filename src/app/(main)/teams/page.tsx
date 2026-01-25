@@ -317,14 +317,14 @@ const Teams = () => {
           </div>
 
           {/* Content */}
-          <div className="p-6">
-            <div className="mx-auto w-full max-w-6xl">
-            <div className={`relative grid gap-6 ${
+          <div className="p-6 lg:p-8">
+            <div className="mx-auto w-full max-w-7xl">
+            <div className={`relative grid gap-8 ${
         teams.length === 1 
           ? "grid-cols-1" 
           : teams.length === 2 
           ? "grid-cols-1 lg:grid-cols-2" 
-          : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+          : "grid-cols-1 lg:grid-cols-2"
       }`}>
         {/* Initial Loading State */}
         {isLoading ? (
@@ -481,24 +481,22 @@ const Teams = () => {
             </motion.div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {createdTeams.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-semibold text-foreground">Created by you</h2>
-                    <p className="text-xs text-muted-foreground">You can manage members, invites, and settings.</p>
+                    <h2 className="text-base font-semibold text-foreground">Created by you</h2>
+                    <p className="text-sm text-muted-foreground mt-1">You can manage members, invites, and settings.</p>
                   </div>
                   <Badge variant="outline" className="text-xs">
                     {createdTeams.length} team{createdTeams.length !== 1 ? "s" : ""}
                   </Badge>
                 </div>
-                <div className={`relative grid gap-6 ${
+                <div className={`relative grid gap-8 ${
                   createdTeams.length === 1
                     ? "grid-cols-1"
-                    : createdTeams.length === 2
-                    ? "grid-cols-1 lg:grid-cols-2"
-                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+                    : "grid-cols-1 lg:grid-cols-2"
                 }`}>
                   {createdTeams.map((team, index) => (
                     <TeamCard
@@ -516,22 +514,20 @@ const Teams = () => {
             )}
 
             {joinedTeams.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-semibold text-foreground">Joined teams</h2>
-                    <p className="text-xs text-muted-foreground">Only the creator can edit/delete/remove members.</p>
+                    <h2 className="text-base font-semibold text-foreground">Joined teams</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Only the creator can edit/delete/remove members.</p>
                   </div>
                   <Badge variant="outline" className="text-xs">
                     {joinedTeams.length} team{joinedTeams.length !== 1 ? "s" : ""}
                   </Badge>
                 </div>
-                <div className={`relative grid gap-6 ${
+                <div className={`relative grid gap-8 ${
                   joinedTeams.length === 1
                     ? "grid-cols-1"
-                    : joinedTeams.length === 2
-                    ? "grid-cols-1 lg:grid-cols-2"
-                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+                    : "grid-cols-1 lg:grid-cols-2"
                 }`}>
                   {joinedTeams.map((team, index) => (
                     <TeamCard

@@ -85,22 +85,22 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
         {/* Glass morphism effect */}
         <div className="absolute inset-0 bg-white/0 dark:bg-white/0 group-hover/card:bg-white/[0.02] dark:group-hover/card:bg-white/[0.01] transition-all duration-500 pointer-events-none rounded-lg" />
         
-        <CardHeader className="pb-6 pt-6 px-6 relative z-10">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4 flex-1 min-w-0">
+        <CardHeader className="pb-6 pt-7 px-7 relative z-10">
+          <div className="flex items-start justify-between gap-5">
+            <div className="flex items-start gap-5 flex-1 min-w-0">
               {/* Icon with refined styling */}
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 2 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                className={`relative p-4 rounded-2xl bg-gradient-to-br ${team.color} text-white shadow-lg group-hover/card:shadow-xl transition-shadow duration-500 flex-shrink-0`}
+                className={`relative p-5 rounded-2xl bg-gradient-to-br ${team.color} text-white shadow-lg group-hover/card:shadow-xl transition-shadow duration-500 flex-shrink-0`}
               >
                 <div className="absolute inset-0 bg-white/10 rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
-                <Users className="h-6 w-6 relative z-10" />
+                <Users className="h-7 w-7 relative z-10" />
               </motion.div>
               
-              <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex-1 min-w-0 space-y-3">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <CardTitle className="text-xl font-semibold tracking-tight text-foreground group-hover/card:text-foreground transition-colors duration-300">
+                  <CardTitle className="text-2xl font-bold tracking-tight text-foreground group-hover/card:text-foreground transition-colors duration-300">
                     {team.name}
                   </CardTitle>
                   {team.isOwner ? (
@@ -125,16 +125,16 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
                 </CardDescription>
                 
                 {/* Stats row */}
-                <div className="flex items-center gap-4 pt-1">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Users className="h-3.5 w-3.5" />
-                    <span className="font-medium">{team.members_data.length}</span>
+                <div className="flex items-center gap-5 pt-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span className="font-semibold text-foreground">{team.members_data.length}</span>
                     <span className="text-muted-foreground/70">members</span>
                   </div>
                   {team.platforms.length > 0 && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      <span className="font-medium">{team.platforms.length}</span>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Sparkles className="h-4 w-4" />
+                      <span className="font-semibold text-foreground">{team.platforms.length}</span>
                       <span className="text-muted-foreground/70">platforms</span>
                     </div>
                   )}
@@ -189,29 +189,29 @@ export const TeamCard = ({ team, index, onEdit, onDelete, onViewTeam, isDeleting
           </div>
         </CardHeader>
         
-        <CardContent className="px-6 pb-6 space-y-6 relative z-10">
+        <CardContent className="px-7 pb-7 space-y-6 relative z-10">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10 border border-blue-200/50 dark:border-blue-800/30">
-              <div className="flex items-center gap-2 mb-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10 border border-blue-200/50 dark:border-blue-800/30">
+              <div className="flex items-center gap-2 mb-2">
                 <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
                   Members
                 </span>
               </div>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+              <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                 {team.members_data.length}
               </p>
             </div>
             
-            <div className="p-3 rounded-xl bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10 border border-green-200/50 dark:border-green-800/30">
-              <div className="flex items-center gap-2 mb-1">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/20 dark:to-green-900/10 border border-green-200/50 dark:border-green-800/30">
+              <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
                 <span className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
                   Platforms
                 </span>
               </div>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+              <p className="text-3xl font-bold text-green-900 dark:text-green-100">
                 {team.platforms.length}
               </p>
             </div>
