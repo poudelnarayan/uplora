@@ -67,11 +67,32 @@ export default function BillingPage() {
 
   const handleGetStarted = async () => {
     try {
+      // Save plan selection to localStorage
       localStorage.setItem('onboarding_selected_plan', JSON.stringify({
         plan: plans[selectedPlan].name,
         isYearly,
         freeTrialEnabled
       }));
+      
+      // Mark onboarding as completed when plan is selected
+      try {
+        const response = await fetch('/api/user/onboarding-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'complete' }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Failed to mark onboarding as completed:', errorData);
+          // Continue anyway - don't block the user
+        } else {
+          console.log('✅ Onboarding marked as completed');
+        }
+      } catch (error) {
+        console.error('Error marking onboarding as completed:', error);
+        // Continue anyway - don't block the user
+      }
       
       router.push('/onboarding/get-started');
     } catch (error) {
