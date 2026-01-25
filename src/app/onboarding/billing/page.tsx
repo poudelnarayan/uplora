@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import OnboardingLayout from "../layout";
 import { useState, useEffect } from "react";
-import { Check } from "lucide-react";
+import { Check, Sparkles, ArrowRight, Zap } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
 
 const MotionDiv = motion.div;
+const MotionCard = motion.div;
 
 export default function BillingPage() {
   const router = useRouter();
@@ -15,7 +17,6 @@ export default function BillingPage() {
   const [freeTrialEnabled, setFreeTrialEnabled] = useState(true);
 
   useEffect(() => {
-    // Load any previously selected plan from localStorage
     const savedPlan = localStorage.getItem('onboarding_selected_plan');
     if (savedPlan) {
       try {
@@ -32,7 +33,7 @@ export default function BillingPage() {
   const plans = [
     {
       name: "Starter",
-      description: "Best for beginner creators",
+      description: "Perfect for getting started",
       monthlyPrice: 9,
       yearlyPrice: 90,
       features: [
@@ -42,7 +43,8 @@ export default function BillingPage() {
         "Schedule posts",
         "Carousel posts",
         "Human support"
-      ]
+      ],
+      popular: false
     },
     {
       name: "Creator",
@@ -57,7 +59,7 @@ export default function BillingPage() {
         "Carousel posts",
         "Bulk video scheduling",
         "Content studio access",
-        "Human support"
+        "Priority support"
       ],
       popular: true
     }
@@ -65,14 +67,12 @@ export default function BillingPage() {
 
   const handleGetStarted = async () => {
     try {
-      // Store selected plan
       localStorage.setItem('onboarding_selected_plan', JSON.stringify({
         plan: plans[selectedPlan].name,
         isYearly,
         freeTrialEnabled
       }));
       
-      // Continue to final step
       router.push('/onboarding/get-started');
     } catch (error) {
       console.error('Error saving plan:', error);
@@ -91,172 +91,182 @@ export default function BillingPage() {
       onBack={handleBack}
       showClose={false}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-12">
         {/* Header */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center space-y-4"
+          className="text-center space-y-6"
         >
-          <h1 className="text-3xl font-bold text-foreground">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium text-sm">
+            <Sparkles className="w-4 h-4" />
             Choose your plan
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Try for free for 7 days - cancel anytime
-          </p>
+          </div>
+          
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Choose your plan
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Start with a 7-day free trial. No credit card required. Cancel anytime.
+            </p>
+          </div>
         </MotionDiv>
 
         {/* Billing Toggle */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex items-center justify-center gap-6"
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          className="flex items-center justify-center gap-4"
         >
-          <button
-            onClick={() => setIsYearly(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              !isYearly 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-muted text-muted-foreground hover:bg-muted/70'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setIsYearly(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors relative ${
-              isYearly 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-muted text-muted-foreground hover:bg-muted/70'
-            }`}
-          >
-            Yearly
-            {isYearly && (
-              <span className="absolute -top-2 -right-2 bg-warning text-warning-foreground text-xs px-2 py-1 rounded-full">
-                40% OFF
-              </span>
-            )}
-          </button>
-        </MotionDiv>
-
-        {/* Free Trial Toggle */}
-        <MotionDiv
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex items-center justify-center gap-3"
-        >
-          <span className="text-sm text-muted-foreground">Free trial</span>
-          <button
-            onClick={() => setFreeTrialEnabled(!freeTrialEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              freeTrialEnabled ? 'bg-primary' : 'bg-border'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                freeTrialEnabled ? 'translate-x-6' : 'translate-x-1'
+          <div className="relative inline-flex items-center p-1 bg-muted rounded-xl border border-border">
+            <button
+              onClick={() => setIsYearly(false)}
+              className={`relative px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                !isYearly 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
-            />
-          </button>
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              className={`relative px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                isYearly 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Yearly
+              {isYearly && (
+                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
+                  40% OFF
+                </span>
+              )}
+            </button>
+          </div>
         </MotionDiv>
 
         {/* Pricing Cards */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto"
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
         >
           {plans.map((plan, index) => (
-            <div
+            <MotionCard
               key={plan.name}
-              className={`relative p-8 rounded-2xl border-2 transition-all cursor-pointer ${
-                selectedPlan === index
-                  ? 'border-primary/40 bg-primary/5'
-                  : plan.popular
-                    ? 'border-primary/20 bg-card hover:border-primary/30'
-                    : 'border-border bg-card hover:border-primary/20'
-              }`}
-              onClick={() => setSelectedPlan(index)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+              whileHover={{ y: -8 }}
+              className="relative"
             >
-              {plan.popular && (
-                <div className="absolute -top-3 right-6">
-                  <span className="gradient-primary text-primary-foreground text-sm font-medium px-3 py-1 rounded-full shadow-medium">
-                    Most popular
-                  </span>
-                </div>
-              )}
-
-              <div className="text-center space-y-6">
-                {/* Plan Header */}
-                <div>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
-                  <p className="text-muted-foreground">{plan.description}</p>
-                </div>
-
-                {/* Price */}
-                <div>
-                  <span className="text-4xl font-bold text-foreground">
-                    ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
-                  </span>
-                  <span className="text-muted-foreground ml-1">/month</span>
-                </div>
-
-                {/* Features */}
-                <div className="space-y-3 text-left">
-                  {plan.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center gap-3">
-                      <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className={`text-foreground ${featureIndex === 0 ? 'font-semibold' : ''}`}>
-                        {feature}
-                      </span>
+              <div
+                className={`relative p-8 rounded-3xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+                  selectedPlan === index
+                    ? 'border-primary shadow-2xl shadow-primary/30 bg-gradient-to-br from-primary/5 via-primary/5 to-primary/10'
+                    : plan.popular
+                      ? 'border-primary/30 bg-card hover:border-primary/50 hover:shadow-xl'
+                      : 'border-border bg-card hover:border-primary/30 hover:shadow-lg'
+                }`}
+                onClick={() => setSelectedPlan(index)}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 right-0">
+                    <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-2xl rounded-tr-3xl shadow-lg">
+                      Most Popular
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
 
-                {/* Button */}
-                <button
-                  className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
-                    selectedPlan === index
-                      ? 'bg-primary text-primary-foreground hover:bg-primary-hover'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPlan(index);
-                  }}
-                >
-                  Start 7 day free trial →
-                </button>
+                <div className="space-y-6">
+                  {/* Plan Header */}
+                  <div>
+                    <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                    <p className="text-muted-foreground">{plan.description}</p>
+                  </div>
 
-                {/* Fine Print */}
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span>
-                    {freeTrialEnabled ? '$0.00 due today, cancel anytime' : 'Start immediately, cancel anytime'}
-                  </span>
+                  {/* Price */}
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold text-foreground">
+                        ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                      </span>
+                      <span className="text-muted-foreground text-lg">/month</span>
+                    </div>
+                    {isYearly && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Billed ${plan.yearlyPrice} annually
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Features */}
+                  <div className="space-y-3">
+                    {plan.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="text-foreground leading-relaxed">
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Selection Indicator */}
+                  {selectedPlan === index && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center gap-2 text-primary font-semibold"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      </div>
+                      <span>Selected</span>
+                    </motion.div>
+                  )}
                 </div>
               </div>
-            </div>
+            </MotionCard>
           ))}
+        </MotionDiv>
+
+        {/* Free Trial Info */}
+        <MotionDiv
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 max-w-md mx-auto"
+        >
+          <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <p className="text-sm font-medium text-green-700 dark:text-green-300">
+            {freeTrialEnabled ? '$0.00 due today • 7-day free trial' : 'Start immediately • Cancel anytime'}
+          </p>
         </MotionDiv>
 
         {/* Continue Button */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
           className="pt-4 flex justify-center"
         >
-          <button
+          <Button
             onClick={handleGetStarted}
-            className="gradient-primary text-primary-foreground py-4 px-8 rounded-lg font-medium shadow-medium hover:shadow-strong transition-all text-lg"
+            size="lg"
+            className="px-10 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl"
           >
             Continue with {plans[selectedPlan].name} Plan
-          </button>
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
         </MotionDiv>
       </div>
     </OnboardingLayout>

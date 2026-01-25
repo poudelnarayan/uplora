@@ -81,7 +81,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { clerkUserId, clerkUser } = await getAuthenticatedUserSafe();
+    const authResult = await getAuthenticatedUserSafe();
+    if (!authResult || !authResult.clerkUserId) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+    
+    const { clerkUserId, clerkUser } = authResult;
     const userId = clerkUserId;
 
     const body = await req.json().catch(() => ({}));
