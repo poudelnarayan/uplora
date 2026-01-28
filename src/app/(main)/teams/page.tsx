@@ -129,7 +129,7 @@ const Teams = () => {
       });
       const js = await res.json();
       if (!res.ok) throw new Error(js?.error || 'Failed to create team');
-      
+
       // Show success message immediately
       toast({ title: 'Team Created', description: `${teamData.name} has been created successfully` });
 
@@ -181,12 +181,12 @@ const Teams = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, role: memberData.role.toUpperCase() })
       });
-      
+
       const result = await res.json().catch(() => ({}));
-      
+
       if (res.ok) {
         // Success - refresh UI (do NOT close Team Details; only the invite dialog should close)
-        try { await refreshTeams(true); } catch {}
+        try { await refreshTeams(true); } catch { }
         setIsInviteOpen(false);
         setSelectedTeamForInvite(undefined);
         return result;
@@ -290,269 +290,96 @@ const Teams = () => {
   return (
     <AppShell>
       <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="min-h-full"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+
           {/* Header */}
           <div className="px-6 py-4 border-b border-border">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-semibold text-foreground">Team Management</h1>
-                <p className="text-muted-foreground text-sm mt-1">
+                <h1 className="text-2xl font-semibold">Team Management</h1>
+                <p className="text-sm text-muted-foreground">
                   Create teams, manage members, and control platform access
                 </p>
               </div>
 
-              <div className="flex gap-3">
-                <CreateTeamDialog
-                  onCreateTeam={handleCreateTeam}
-                  isOpen={isCreateTeamOpen}
-                  onOpenChange={setIsCreateTeamOpen}
-                  isLoading={isCreatingTeam}
-                />
-              </div>
+              <CreateTeamDialog
+                onCreateTeam={handleCreateTeam} isOpen={isCreateTeamOpen} onOpenChange={setIsCreateTeamOpen} isLoading={isCreatingTeam}
+              />
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6 lg:p-8">
-            <div className="mx-auto w-full max-w-7xl">
-            <div className={`relative grid gap-8 ${
-        teams.length === 1 
-          ? "grid-cols-1" 
-          : teams.length === 2 
-          ? "grid-cols-1 lg:grid-cols-2" 
-          : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
-      }`}>
-        {/* Initial Loading State */}
-        {isLoading ? (
-          <div className="col-span-full flex items-center justify-center py-16">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading teams...</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Creating Team Overlay */}
-            {isCreatingTeam && (
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                <div className="flex items-center gap-3 bg-background border border-border rounded-lg px-6 py-4 shadow-lg">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span className="text-sm font-medium">Creating team...</span>
-                </div>
-              </div>
-            )}
-            
-            {teams.length === 0 ? (
-              <EmptyState onCreateTeam={() => setIsCreateTeamOpen(true)} />
-            ) : teams.length === 1 ? (
-          // Special expanded layout for single team - Apple style
-          <div className="col-span-full">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 100 }}
-            >
-              <Card
-                role="button"
-                tabIndex={0}
-                onClick={() => setViewingTeam(teams[0])}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setViewingTeam(teams[0]);
-                  }
-                }}
-                className="bg-gradient-to-br from-card via-card/98 to-card/95 backdrop-blur-xl border border-border/60 hover:border-border shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden relative group"
-              >
-                {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:via-primary/3 group-hover:to-primary/5 transition-all duration-500 pointer-events-none" />
-                
-                <CardHeader className="pb-6 pt-8 px-8 relative z-10">
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex items-start gap-6 flex-1 min-w-0">
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotate: 2 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        className={`relative p-5 rounded-3xl bg-gradient-to-br ${teams[0].color} text-white shadow-xl group-hover:shadow-2xl transition-shadow duration-500 flex-shrink-0`}
-                      >
-                        <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <Users className="h-10 w-10 relative z-10" />
-                      </motion.div>
-                      
-                      <div className="flex-1 min-w-0 space-y-3">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h2 className="text-3xl font-bold tracking-tight text-foreground">{teams[0].name}</h2>
-                          {teams[0].isOwner && (
-                            <Badge variant="outline" className="px-2.5 py-1 bg-primary/8 dark:bg-primary/12 text-primary border-primary/20 font-medium">
-                              Owner
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
-                          {teams[0].description || "No description provided"}
-                        </p>
-                        <div className="flex items-center gap-6 pt-2">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Users className="h-4 w-4" />
-                            <span className="font-semibold text-foreground">{teams[0].members_data.length}</span>
-                            <span>member{teams[0].members_data.length !== 1 ? 's' : ''}</span>
-                          </div>
-                          {teams[0].platforms.length > 0 && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Sparkles className="h-4 w-4" />
-                              <span className="font-semibold text-foreground">{teams[0].platforms.length}</span>
-                              <span>platform{teams[0].platforms.length !== 1 ? 's' : ''}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-9 w-9 p-0 hover:bg-muted/80 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuItem onClick={() => setEditingTeam(teams[0])}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Team
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteTeam(teams[0].id)}
-                            disabled={deletingTeamId === teams[0].id}
-                          >
-                            {deletingTeamId === teams[0].id ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4 mr-2" />
-                            )}
-                            Delete Team
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="px-8 pb-8 space-y-6 relative z-10">
-                  {teams[0].platforms.length > 0 && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-primary" />
-                          Platform Access
-                        </h3>
-                      </div>
-                      <div className="flex flex-wrap gap-2.5">
-                        {teams[0].platforms.map((platform) => {
-                          const Icon = platformIcons[platform as keyof typeof platformIcons];
-                          return (
-                            <motion.div
-                              key={platform}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="flex items-center gap-2 px-3 py-2 bg-green-50/80 dark:bg-green-950/30 border border-green-200/60 dark:border-green-800/60 rounded-xl backdrop-blur-sm shadow-sm"
-                            >
-                              {Icon && <Icon className="h-4 w-4 text-green-600 dark:text-green-400" />}
-                              <span className="text-sm font-semibold capitalize text-green-700 dark:text-green-300">{platform}</span>
-                              <div className="w-2 h-2 bg-green-500 rounded-full shadow-sm" />
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        ) : (
-          <div className="space-y-10">
-            {createdTeams.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base font-semibold text-foreground">Created by you</h2>
-                    <p className="text-sm text-muted-foreground mt-1">You can manage members, invites, and settings.</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {createdTeams.length} team{createdTeams.length !== 1 ? "s" : ""}
-                  </Badge>
-                </div>
-                <div className={`relative grid gap-8 ${
-                  createdTeams.length === 1
-                    ? "grid-cols-1"
-                    : createdTeams.length === 2
-                    ? "grid-cols-1 lg:grid-cols-2"
-                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
-                }`}>
-                  {createdTeams.map((team, index) => (
-                    <TeamCard
-                      key={team.id}
-                      team={team}
-                      index={index}
-                      onEdit={(t) => setEditingTeam(t)}
-                      onDelete={handleDeleteTeam}
-                      onViewTeam={(t) => setViewingTeam(t)}
-                      isDeleting={deletingTeamId === team.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+          <div className="p-6 lg:p-8 max-w-7xl mx-auto">
 
-            {joinedTeams.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base font-semibold text-foreground">Joined teams</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Only the creator can edit/delete/remove members.</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {joinedTeams.length} team{joinedTeams.length !== 1 ? "s" : ""}
-                  </Badge>
-                </div>
-                <div className={`relative grid gap-8 ${
-                  joinedTeams.length === 1
-                    ? "grid-cols-1"
-                    : joinedTeams.length === 2
-                    ? "grid-cols-1 lg:grid-cols-2"
-                    : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
-                }`}>
-                  {joinedTeams.map((team, index) => (
-                    <TeamCard
-                      key={team.id}
-                      team={team}
-                      index={index}
-                      onEdit={(t) => setEditingTeam(t)}
-                      onDelete={handleDeleteTeam}
-                      onViewTeam={(t) => setViewingTeam(t)}
-                      isDeleting={deletingTeamId === team.id}
-                    />
-                  ))}
-                </div>
+            {isLoading ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : teams.length === 0 ? (
+              <EmptyState onCreateTeam={() => setIsCreateTeamOpen(true)} />
+            ) : (
+              <div className="space-y-12">
+
+                {createdTeams.length > 0 && (
+                  <section className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h2 className="font-semibold">Created by you</h2>
+                      <Badge variant="outline">{createdTeams.length}</Badge>
+                    </div>
+
+                    <div className="
+                      relative grid gap-6
+                      grid-cols-1
+                      sm:grid-cols-2
+                      lg:grid-cols-3
+                      xl:grid-cols-4
+                    ">
+                      {createdTeams.map((team, index) => (
+                        <TeamCard
+                          key={team.id}
+                          team={team}
+                          index={index}
+                          onEdit={setEditingTeam}
+                          onDelete={handleDeleteTeam}
+                          onViewTeam={setViewingTeam}
+                          isDeleting={deletingTeamId === team.id}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {joinedTeams.length > 0 && (
+                  <section className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h2 className="font-semibold">Joined teams</h2>
+                      <Badge variant="outline">{joinedTeams.length}</Badge>
+                    </div>
+
+                    <div className="
+                      relative grid gap-6
+                      grid-cols-1
+                      sm:grid-cols-2
+                      lg:grid-cols-3
+                      xl:grid-cols-4
+                    ">
+                      {joinedTeams.map((team, index) => (
+                        <TeamCard
+                          key={team.id}
+                          team={team}
+                          index={index}
+                          onEdit={setEditingTeam}
+                          onDelete={handleDeleteTeam}
+                          onViewTeam={setViewingTeam}
+                          isDeleting={deletingTeamId === team.id}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
               </div>
             )}
-          </div>
-            )}
-          </>
-        )}
-            </div>
-            </div>
           </div>
 
           {/* Dialogs */}
