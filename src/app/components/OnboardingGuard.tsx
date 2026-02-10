@@ -55,7 +55,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     if (!isLoaded || !user) return;
     if (shouldSkipOnboarding) return;
     if (isLoading) return;
-    if (!shouldShowOnboarding) return;
+    // Only redirect if shouldShowOnboarding is explicitly true (not null or false)
+    if (shouldShowOnboarding !== true) return;
     if (pathname.startsWith('/onboarding')) return;
 
     router.push('/onboarding');

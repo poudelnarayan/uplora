@@ -88,6 +88,7 @@ export default function OnboardingPage() {
   const [teamError, setTeamError] = useState<string | null>(null);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   const progressValue = useMemo(() => ((stepIndex + 1) / steps.length) * 100, [stepIndex]);
   const displayName = user?.firstName || user?.fullName || "there";
@@ -98,20 +99,19 @@ export default function OnboardingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (isLoading) return;
-    if (shouldShowOnboarding === false) {
-      router.replace("/dashboard");
-    }
-  }, [isLoaded, isLoading, shouldShowOnboarding, router]);
+  // Remove the auto-redirect effect that causes loops
+  // We'll handle redirects manually after skip/complete actions
 
   const handleSkip = async () => {
+    if (isSkipping) return; // Prevent multiple clicks
     try {
+      setIsSkipping(true);
       await skipOnboarding();
-      router.replace("/dashboard");
+      // Use window.location to force a full page reload and prevent loops
+      window.location.href = "/";
     } catch (error) {
       console.error("Skip onboarding failed:", error);
+      setIsSkipping(false);
     }
   };
 
@@ -167,15 +167,24 @@ export default function OnboardingPage() {
     setIsCompleting(true);
     try {
       await completeOnboarding();
-      router.replace("/dashboard");
+      // Use window.location to force a full page reload and prevent loops
+      window.location.href = "/";
     } catch (error) {
       console.error("Complete onboarding failed:", error);
-    } finally {
       setIsCompleting(false);
     }
   };
 
+  // Validation for each step
+  const canContinueFromWelcome = role !== null && goal !== null;
   const canContinueFromWorkspace = !createTeam || teamCreated || workspaceName.trim().length > 0;
+  
+  // Determine if we can continue based on current step
+  const canContinue = stepIndex === 0 
+    ? canContinueFromWelcome 
+    : stepIndex === 1 
+    ? canContinueFromWorkspace 
+    : true; // Steps 2 and 3 have no requirements
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-muted/40">
@@ -194,8 +203,13 @@ export default function OnboardingPage() {
               <h1 className="font-display text-xl text-foreground">Welcome to Uplora, {displayName}</h1>
             </div>
           </div>
-          <Button variant="ghost" onClick={handleSkip} className="text-muted-foreground">
-            Skip for now
+          <Button 
+            variant="ghost" 
+            onClick={handleSkip} 
+            disabled={isSkipping || isCompleting}
+            className="text-muted-foreground"
+          >
+            {isSkipping ? "Skipping..." : "Skip for now"}
           </Button>
         </header>
 
@@ -460,7 +474,7 @@ export default function OnboardingPage() {
                   Back
                 </Button>
                 {stepIndex < steps.length - 1 ? (
-                  <Button onClick={handleNext} disabled={!canContinueFromWorkspace || isCreatingTeam}>
+                  <Button onClick={handleNext} disabled={!canContinue || isCreatingTeam}>
                     {isCreatingTeam ? "Creating workspace..." : "Continue"}
                   </Button>
                 ) : (

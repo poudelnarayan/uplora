@@ -21,7 +21,7 @@ export function useOnboarding() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const shouldShow = Boolean(data.shouldShowOnboarding);
@@ -90,9 +90,14 @@ export function useOnboarding() {
       );
     }
 
+    // Update state immediately
     setShouldShowOnboarding(false);
     setOnboardingCompleted(true);
     setOnboardingSkipped(false);
+
+    // Refresh status from server to ensure consistency
+    await checkOnboardingStatus();
+
     return responseData;
   };
 
@@ -109,9 +114,14 @@ export function useOnboarding() {
       );
     }
 
+    // Update state immediately
     setShouldShowOnboarding(false);
     setOnboardingSkipped(true);
     setOnboardingCompleted(false);
+
+    // Refresh status from server to ensure consistency
+    await checkOnboardingStatus();
+
     return responseData;
   };
 
