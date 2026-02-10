@@ -42,7 +42,11 @@ export function useOnboarding() {
   };
 
   useEffect(() => {
-    if (!isLoaded || !user) {
+    if (!isLoaded) {
+      setIsLoading(true);
+      return;
+    }
+    if (!user) {
       setIsLoading(false);
       setShouldShowOnboarding(false);
       setOnboardingCompleted(false);

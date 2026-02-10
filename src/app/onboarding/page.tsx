@@ -7,7 +7,6 @@ import {
   Check,
   ClipboardCheck,
   Compass,
-  Link2,
   Rocket,
   Sparkles,
   UserRound,
@@ -100,11 +99,12 @@ export default function OnboardingPage() {
   }, [isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     if (isLoading) return;
     if (shouldShowOnboarding === false) {
       router.replace("/dashboard");
     }
-  }, [isLoading, shouldShowOnboarding, router]);
+  }, [isLoaded, isLoading, shouldShowOnboarding, router]);
 
   const handleSkip = async () => {
     try {
@@ -236,22 +236,6 @@ export default function OnboardingPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/60 bg-card/80 shadow-medium">
-              <CardContent className="space-y-4 p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Link2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Need help connecting?</p>
-                    <p className="text-xs text-muted-foreground">Our social hub is ready anytime.</p>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full" onClick={() => router.push("/social")}>
-                  Open Social Connections
-                </Button>
-              </CardContent>
-            </Card>
           </aside>
 
           <Card className="border-border/60 bg-card/90 shadow-strong">
@@ -418,11 +402,8 @@ export default function OnboardingPage() {
                         ))}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3">
-                        <Button variant="outline" onClick={() => router.push("/social")}>
-                          Open Social Connections
-                        </Button>
-                        <p className="text-xs text-muted-foreground">We will keep onboarding open in this tab.</p>
+                      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-xs text-muted-foreground">
+                        You can connect channels right after onboarding in the Social hub.
                       </div>
                     </div>
                   )}
