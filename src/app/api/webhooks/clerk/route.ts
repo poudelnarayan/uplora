@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         name: `${first_name || ""} ${last_name || ""}`.trim()
       });
 
-      // Create user in database with onboardingCompleted = false (camelCase column name)
+      // Create user in database with onboarding defaults (camelCase column names)
       try {
         const userEmail = email_addresses[0]?.email_address;
         const userName = `${first_name || ""} ${last_name || ""}`.trim() || "User";
@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
             clerkId: id,
             email: userEmail || "",
             name: userName,
-            onboardingCompleted: false, // camelCase column name - New users need to complete onboarding
+            onboardingCompleted: false,
+            onboardingSkipped: false,
+            onboardingSeenAt: null,
             updatedAt: new Date().toISOString()
           }, {
             onConflict: 'clerkId'

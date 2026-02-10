@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 
 export function useOnboarding() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const pathname = usePathname();
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState<boolean | null>(null);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [onboardingSkipped, setOnboardingSkipped] = useState(false);
+  const [onboardingSeenAt, setOnboardingSeenAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Function to check onboarding status from database
   const checkOnboardingStatus = async () => {
     try {
-      console.log('🔍 Checking onboarding status...');
       const response = await fetch('/api/user/onboarding-status', {
         method: 'GET',
         headers: {
@@ -25,23 +25,15 @@ export function useOnboarding() {
       if (response.ok) {
         const data = await response.json();
         const shouldShow = Boolean(data.shouldShowOnboarding);
-        
-        console.log('📊 Onboarding status from database:', data);
-        
         setShouldShowOnboarding(shouldShow);
-        
-        if (shouldShow) {
-          console.log('➡️ User needs to complete onboarding');
-        } else {
-          console.log('✅ User has completed onboarding');
-        }
+        setOnboardingCompleted(Boolean(data.onboardingCompleted));
+        setOnboardingSkipped(Boolean(data.onboardingSkipped));
+        setOnboardingSeenAt(data.onboardingSeenAt ?? null);
       } else {
-        console.error('❌ Failed to fetch onboarding status');
         // On error, assume they need onboarding (safer default)
         setShouldShowOnboarding(true);
       }
     } catch (error) {
-      console.error('❌ Error checking onboarding status:', error);
       // On error, assume they need onboarding (safer default)
       setShouldShowOnboarding(true);
     } finally {
@@ -53,6 +45,9 @@ export function useOnboarding() {
     if (!isLoaded || !user) {
       setIsLoading(false);
       setShouldShowOnboarding(false);
+      setOnboardingCompleted(false);
+      setOnboardingSkipped(false);
+      setOnboardingSeenAt(null);
       return;
     }
 
@@ -66,17 +61,17 @@ export function useOnboarding() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'seen' }),
       });
+      setOnboardingSeenAt(new Date().toISOString());
     } catch {
       // best-effort
     }
   };
 
   const redirectToOnboarding = () => {
-    router.push('/onboarding/welcome');
+    router.push('/onboarding');
   };
 
   const completeOnboarding = async () => {
-    console.log('🔄 Starting onboarding completion...');
     const response = await fetch('/api/user/onboarding-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,24 +79,17 @@ export function useOnboarding() {
     });
 
     const responseData = await response.json().catch(() => ({}));
-    console.log('📡 API Response:', responseData);
 
     if (!response.ok) {
       throw new Error(
-        (responseData as any)?.details?.message ||
-          (responseData as any)?.error ||
-          'Failed to mark onboarding completed'
+        (responseData as any)?.error || 'Failed to mark onboarding completed'
       );
     }
 
-    // Verify persistence (debugging + safety)
-    const persisted = (responseData as any)?.persisted;
-    if (!persisted?.onboardingCompleted) {
-      throw new Error('Onboarding completion did not persist (onboardingCompleted is still false).');
-    }
-
     setShouldShowOnboarding(false);
-    router.replace('/dashboard');
+    setOnboardingCompleted(true);
+    setOnboardingSkipped(false);
+    return responseData;
   };
 
   const skipOnboarding = async () => {
@@ -113,14 +101,14 @@ export function useOnboarding() {
     const responseData = await response.json().catch(() => ({}));
     if (!response.ok) {
       throw new Error(
-        (responseData as any)?.details?.message ||
-          (responseData as any)?.error ||
-          'Failed to skip onboarding'
+        (responseData as any)?.error || 'Failed to skip onboarding'
       );
     }
 
     setShouldShowOnboarding(false);
-    router.replace('/dashboard');
+    setOnboardingSkipped(true);
+    setOnboardingCompleted(false);
+    return responseData;
   };
 
   return {
@@ -129,6 +117,10 @@ export function useOnboarding() {
     completeOnboarding,
     skipOnboarding,
     markOnboardingSeen,
-    isLoading
+    isLoading,
+    onboardingCompleted,
+    onboardingSkipped,
+    onboardingSeenAt,
+    refresh: checkOnboardingStatus
   };
 }

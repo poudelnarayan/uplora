@@ -29,10 +29,11 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     '/terms',
     '/copyright',
     '/invite', // Invitation pages
+    '/social', // Allow connecting accounts during onboarding
     '/test-supabase' // Test pages
   ];
 
-  const shouldSkipOnboarding = skipOnboardingPages.some(page => 
+  const shouldSkipOnboarding = skipOnboardingPages.some(page =>
     pathname === page || pathname.startsWith(page + '/')
   );
 
@@ -57,7 +58,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     if (!shouldShowOnboarding) return;
     if (pathname.startsWith('/onboarding')) return;
 
-    router.push('/onboarding/welcome');
+    router.push('/onboarding');
   }, [isLoaded, user, shouldSkipOnboarding, isLoading, shouldShowOnboarding, pathname, router]);
 
   // Show loading spinner while checking (only for authenticated users on protected pages)
@@ -65,7 +66,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <InlineSpinner size="lg" />
+          <InlineSpinner size="md" />
           <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -81,7 +82,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <InlineSpinner size="lg" />
+          <InlineSpinner size="md" />
           <p className="mt-4 text-muted-foreground">Redirecting to onboarding...</p>
         </div>
       </div>
