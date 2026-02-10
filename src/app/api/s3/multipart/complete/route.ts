@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, CompleteMultipartUploadCommand, AbortMultipartUploadCommand, GetObjectCommand, PutObjectCommand, CopyObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import { tmpdir } from "os";
@@ -13,6 +13,9 @@ import { spawn } from "child_process";
 import crypto from "crypto";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
+const DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+const maxFromEnv = Number(process.env.MAX_UPLOAD_BYTES || process.env.MAX_VIDEO_UPLOAD_BYTES);
+const MAX_UPLOAD_BYTES = Number.isFinite(maxFromEnv) && maxFromEnv > 0 ? maxFromEnv : DEFAULT_MAX_UPLOAD_BYTES;
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -83,10 +86,11 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     // Parse metadata from upload lock if present; otherwise fallback to request body
-    const lockMeta: { filename?: string; contentType?: string; teamId?: string | null; videoId?: string } = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
+    const lockMeta: { filename?: string; contentType?: string; teamId?: string | null; videoId?: string; sizeBytes?: number } = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
     const inferredFilename: string = (lockMeta.filename || originalFilenameFromReq || key.split('/').pop() || 'video.mp4') as string;
     const inferredContentType = lockMeta.contentType ?? contentType ?? 'application/octet-stream';
     const lockTeamId = (lockMeta.teamId !== undefined ? lockMeta.teamId : teamId) ?? null;
+    const expectedSize = Number.isFinite(Number(lockMeta.sizeBytes ?? sizeBytes)) ? Number(lockMeta.sizeBytes ?? sizeBytes) : null;
 
     const title = String(inferredFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
@@ -122,6 +126,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Validate uploaded size before creating records
+    let actualSize = 0;
+    try {
+      const head = await s3.send(new HeadObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+      actualSize = Number(head.ContentLength || 0);
+    } catch (headError) {
+      console.error("Failed to head uploaded object:", headError);
+      return NextResponse.json({ error: "Upload validation failed" }, { status: 500 });
+    }
+
+    if (!actualSize) {
+      return NextResponse.json({ error: "Uploaded file has no size" }, { status: 400 });
+    }
+
+    if (actualSize > MAX_UPLOAD_BYTES) {
+      try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
+      try {
+        await supabaseAdmin.from('upload_locks').delete().eq('userId', user.id).eq('key', key);
+      } catch {}
+      return NextResponse.json({ error: "File too large", maxBytes: MAX_UPLOAD_BYTES }, { status: 413 });
+    }
+
+    if (expectedSize !== null && actualSize !== expectedSize) {
+      try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
+      try {
+        await supabaseAdmin.from('upload_locks').delete().eq('userId', user.id).eq('key', key);
+      } catch {}
+      return NextResponse.json({ error: "Uploaded size mismatch" }, { status: 400 });
+    }
+
     // Create the video record only after successful upload completion
     // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
     const newVideoId = (lockMeta.videoId as string | undefined) || crypto.randomUUID();
@@ -141,7 +175,7 @@ export async function POST(req: NextRequest) {
           key,
           filename: existingVideo?.filename || title,
           contentType: inferredContentType,
-          sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
+          sizeBytes: actualSize || (typeof sizeBytes === "number" ? sizeBytes : 0),
           teamId: existingVideo?.teamId || finalTeamId,
           userId: existingVideo?.userId || user.id,
           status: "PROCESSING",
@@ -170,106 +204,108 @@ export async function POST(req: NextRequest) {
     const fileNameForStorage: string = inferredFilename || "video.mp4";
     const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/${fileNameForStorage}`;
 
-    // Start background tasks after responding fast
-    setTimeout(async () => {
-      try {
-        // Move original to canonical location using S3 CopyObject to avoid streaming header issues
+    // Move original to canonical location using S3 CopyObject to avoid streaming header issues
+    try {
+      if (key !== canonicalOriginalKey) {
+        const copySource = `${process.env.S3_BUCKET!}/${encodeURI(key)}`;
+        await s3.send(new CopyObjectCommand({
+          Bucket: process.env.S3_BUCKET!,
+          Key: canonicalOriginalKey,
+          CopySource: copySource,
+          MetadataDirective: "REPLACE",
+          ContentType: inferredContentType,
+        }));
+
+        // Delete the temporary upload object to avoid directory mismatch
         try {
-          if (key !== canonicalOriginalKey) {
-            const copySource = `${process.env.S3_BUCKET!}/${encodeURI(key)}`;
-            await s3.send(new CopyObjectCommand({
-              Bucket: process.env.S3_BUCKET!,
-              Key: canonicalOriginalKey,
-              CopySource: copySource,
-              MetadataDirective: "REPLACE",
-              ContentType: inferredContentType,
-            }));
-
-            // Delete the temporary upload object to avoid directory mismatch
-            try {
-              await s3.send(new DeleteObjectCommand({
-                Bucket: process.env.S3_BUCKET!,
-                Key: key,
-              }));
-            } catch (delErr) {
-              console.warn("Failed to delete temp upload object:", delErr);
-            }
-
-            // Update video.key to canonical path
-            await supabaseAdmin
-              .from('video_posts')
-              .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
-              .eq('id', video.id);
-          } else {
-            // Key is already canonical; ensure DB reflects it
-            await supabaseAdmin
-              .from('video_posts')
-              .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
-              .eq('id', video.id);
-          }
-        } catch (e) {
-          console.error("Failed to move original to canonical location", e);
-        }
-
-        // Transcode with faststart for progressive streaming
-        try {
-          const tempDir = tmpdir();
-          const originalPath = join(tempDir, `original-${key.replace(/\W+/g, '-')}.mp4`);
-          const optimizedPath = join(tempDir, `optimized-${key.replace(/\W+/g, '-')}.mp4`);
-
-          // Download original from canonical location
-          const getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: canonicalOriginalKey }));
-          const body = getObj.Body as NodeJS.ReadableStream;
-          await new Promise<void>((resolve, reject) => {
-            const ws = createWriteStream(originalPath);
-            body.pipe(ws);
-            ws.on("finish", () => resolve());
-            ws.on("error", reject);
-          });
-
-          await new Promise<void>((resolve, reject) => {
-            const ff = spawn("ffmpeg", [
-              "-y",
-              "-i", originalPath,
-              "-c:v", "libx264",
-              "-preset", "fast",
-              "-crf", "23",
-              "-maxrate", "3500k",
-              "-bufsize", "7000k",
-              "-c:a", "aac",
-              "-b:a", "128k",
-              "-movflags", "+faststart",
-              optimizedPath,
-            ]);
-            ff.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)));
-            ff.on("error", reject);
-          });
-
-          // Upload optimized to a deterministic preview key
-          const previewKey = `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`;
-          await s3.send(new PutObjectCommand({
+          await s3.send(new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET!,
-            Key: previewKey,
-            Body: createReadStream(optimizedPath),
-            ContentType: "video/mp4",
-            CacheControl: "max-age=31536000",
+            Key: key,
           }));
-
-          try { unlinkSync(originalPath); unlinkSync(optimizedPath); } catch {}
-        } catch (e) {
-          console.error("Preview optimization failed", e);
+        } catch (delErr) {
+          console.warn("Failed to delete temp upload object:", delErr);
         }
 
-        // Broadcast after background work starts
-        broadcast({ 
-          type: "video.created", 
-          teamId: finalTeamId, 
-          payload: { id: video.id, title: video.filename }
-        });
-      } catch (e) {
-        console.error("Background tasks error", e);
+        // Update video.key to canonical path
+        await supabaseAdmin
+          .from('video_posts')
+          .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
+          .eq('id', video.id);
+      } else {
+        // Key is already canonical; ensure DB reflects it
+        await supabaseAdmin
+          .from('video_posts')
+          .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
+          .eq('id', video.id);
       }
-    }, 0);
+    } catch (e) {
+      console.error("Failed to move original to canonical location", e);
+    }
+
+    // Transcode with faststart for progressive streaming
+    try {
+      const tempDir = tmpdir();
+      const originalPath = join(tempDir, `original-${key.replace(/\W+/g, '-')}.mp4`);
+      const optimizedPath = join(tempDir, `optimized-${key.replace(/\W+/g, '-')}.mp4`);
+
+      // Download original (prefer canonical, fallback to original key if needed)
+      let getObj;
+      try {
+        getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: canonicalOriginalKey }));
+      } catch (err) {
+        if (key !== canonicalOriginalKey) {
+          getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+        } else {
+          throw err;
+        }
+      }
+      const body = getObj.Body as NodeJS.ReadableStream;
+      await new Promise<void>((resolve, reject) => {
+        const ws = createWriteStream(originalPath);
+        body.pipe(ws);
+        ws.on("finish", () => resolve());
+        ws.on("error", reject);
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        const ff = spawn("ffmpeg", [
+          "-y",
+          "-i", originalPath,
+          "-c:v", "libx264",
+          "-preset", "fast",
+          "-crf", "23",
+          "-maxrate", "3500k",
+          "-bufsize", "7000k",
+          "-c:a", "aac",
+          "-b:a", "128k",
+          "-movflags", "+faststart",
+          optimizedPath,
+        ]);
+        ff.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)));
+        ff.on("error", reject);
+      });
+
+      // Upload optimized to a deterministic preview key
+      const previewKey = `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`;
+      await s3.send(new PutObjectCommand({
+        Bucket: process.env.S3_BUCKET!,
+        Key: previewKey,
+        Body: createReadStream(optimizedPath),
+        ContentType: "video/mp4",
+        CacheControl: "max-age=31536000",
+      }));
+
+      try { unlinkSync(originalPath); unlinkSync(optimizedPath); } catch {}
+    } catch (e) {
+      console.error("Preview optimization failed", e);
+    }
+
+    // Broadcast after processing completes
+    broadcast({ 
+      type: "video.created", 
+      teamId: finalTeamId, 
+      payload: { id: video.id, title: video.filename }
+    });
 
     return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id, 
       keys: {

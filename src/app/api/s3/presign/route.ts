@@ -8,6 +8,9 @@ import crypto from "crypto";
 import { supabaseAdmin } from "@/lib/supabase";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
+const DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+const maxFromEnv = Number(process.env.MAX_UPLOAD_BYTES || process.env.MAX_VIDEO_UPLOAD_BYTES);
+const MAX_UPLOAD_BYTES = Number.isFinite(maxFromEnv) && maxFromEnv > 0 ? maxFromEnv : DEFAULT_MAX_UPLOAD_BYTES;
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,6 +21,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     let { filename, objectName, contentType, sizeBytes, teamId, videoId } = body as { filename: string; objectName?: string; contentType: string; sizeBytes?: number; teamId?: string | null; videoId?: string };
     if (!filename || !contentType) return NextResponse.json({ error: "Missing filename/contentType" }, { status: 400 });
+    const normalizedSize = Number(sizeBytes);
+    if (!Number.isFinite(normalizedSize) || normalizedSize <= 0) {
+      return NextResponse.json({ error: "Valid sizeBytes required" }, { status: 400 });
+    }
+    if (normalizedSize > MAX_UPLOAD_BYTES) {
+      return NextResponse.json({ error: "File too large", maxBytes: MAX_UPLOAD_BYTES }, { status: 413 });
+    }
 
     // Ensure user exists early
     const { data: user, error: userError } = await supabaseAdmin
@@ -109,7 +119,7 @@ export async function POST(req: NextRequest) {
         metadata: JSON.stringify({
           filename: safeName,
           contentType,
-          sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
+          sizeBytes: normalizedSize,
           teamId,
           videoId
         })
@@ -126,7 +136,7 @@ export async function POST(req: NextRequest) {
       videoId,
       filename: safeName,
       contentType,
-      sizeBytes: Number.isFinite(Number(sizeBytes)) ? Number(sizeBytes) : 0,
+      sizeBytes: normalizedSize,
       teamId
     });
   } catch (e: unknown) {

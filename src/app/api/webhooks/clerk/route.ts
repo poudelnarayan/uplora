@@ -107,10 +107,12 @@ export async function POST(req: NextRequest) {
           });
 
           // Send email via our email API
+          const internalSecret = process.env.SEND_EMAIL_API_SECRET;
           const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...(internalSecret ? { "x-uplora-internal-secret": internalSecret } : {})
             },
             body: JSON.stringify({
               to: userEmail,

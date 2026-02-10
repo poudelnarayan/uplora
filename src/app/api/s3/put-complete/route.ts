@@ -6,6 +6,12 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { S3Client, HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+const DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+const maxFromEnv = Number(process.env.MAX_UPLOAD_BYTES || process.env.MAX_VIDEO_UPLOAD_BYTES);
+const MAX_UPLOAD_BYTES = Number.isFinite(maxFromEnv) && maxFromEnv > 0 ? maxFromEnv : DEFAULT_MAX_UPLOAD_BYTES;
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,6 +84,45 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Load upload lock metadata (if present) to validate size
+    const { data: uploadLock } = await supabaseAdmin
+      .from('upload_locks')
+      .select('*')
+      .eq('userId', user.id)
+      .eq('key', key)
+      .maybeSingle();
+
+    const lockMeta: { sizeBytes?: number } = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
+    const expectedSize = Number.isFinite(Number(lockMeta.sizeBytes ?? sizeBytes))
+      ? Number(lockMeta.sizeBytes ?? sizeBytes)
+      : null;
+
+    // Validate actual uploaded size against expected/max
+    let actualSize = 0;
+    try {
+      const head = await s3.send(new HeadObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+      actualSize = Number(head.ContentLength || 0);
+    } catch (headError) {
+      console.error("Failed to head uploaded object:", headError);
+      return NextResponse.json({ error: "Upload validation failed" }, { status: 500 });
+    }
+
+    if (!actualSize) {
+      return NextResponse.json({ error: "Uploaded file has no size" }, { status: 400 });
+    }
+
+    if (actualSize > MAX_UPLOAD_BYTES) {
+      try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
+      await supabaseAdmin.from('upload_locks').delete().eq('userId', user.id).eq('key', key);
+      return NextResponse.json({ error: "File too large", maxBytes: MAX_UPLOAD_BYTES }, { status: 413 });
+    }
+
+    if (expectedSize !== null && actualSize !== expectedSize) {
+      try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
+      await supabaseAdmin.from('upload_locks').delete().eq('userId', user.id).eq('key', key);
+      return NextResponse.json({ error: "Uploaded size mismatch" }, { status: 400 });
+    }
+
     // Create the video record only after successful upload completion
     const title = String(filename || "").replace(/\.[^/.]+$/, "") || "Untitled";
     const now = new Date().toISOString();
@@ -90,7 +135,7 @@ export async function POST(req: NextRequest) {
         key,
         filename: title,
         contentType: contentType || "application/octet-stream",
-        sizeBytes: typeof sizeBytes === "number" ? sizeBytes : 0,
+        sizeBytes: actualSize || (typeof sizeBytes === "number" ? sizeBytes : 0),
         teamId: finalTeamId,
         userId: user.id,
         status: "PROCESSING",
