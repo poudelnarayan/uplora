@@ -111,74 +111,83 @@ export default function ReelCaptionEditor({
   }, [content, selectedPlatforms]);
 
   return (
-    <div className="space-y-5">
-      {/* Label + counters — stacked so counters never fight the label for space */}
-      <div className="space-y-2">
-        <label className="block text-xs font-black uppercase tracking-[0.18em] text-primary">
-          Caption
-        </label>
-        {activePlatforms.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
-            {activePlatforms.map(pid => {
-              const cfg = PLATFORM_CONFIG[pid];
-              if (!cfg) return null;
-              const over = content.length > cfg.charLimit;
-              return (
-                <span
-                  key={pid}
-                  className={`px-3 py-1 rounded-lg text-[0.62rem] font-black uppercase whitespace-nowrap transition-colors ${
-                    over
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-primary/5 text-primary"
+    <div className="space-y-4">
+      {/* Platform character counters */}
+      {activePlatforms.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap">
+          {activePlatforms.map(pid => {
+            const cfg = PLATFORM_CONFIG[pid];
+            if (!cfg) return null;
+            const over = content.length > cfg.charLimit;
+            const pct = Math.min((content.length / cfg.charLimit) * 100, 100);
+            return (
+              <div
+                key={pid}
+                className={`relative px-3 py-1.5 rounded-lg text-[0.62rem] font-bold uppercase whitespace-nowrap overflow-hidden transition-colors ${
+                  over
+                    ? "bg-destructive/8 text-destructive border border-destructive/15"
+                    : "bg-muted/40 text-muted-foreground border border-border/30"
+                }`}
+              >
+                {/* Progress bar background */}
+                <div
+                  className={`absolute inset-y-0 left-0 transition-all duration-300 ${
+                    over ? "bg-destructive/10" : "bg-primary/8"
                   }`}
-                >
+                  style={{ width: `${pct}%` }}
+                />
+                <span className="relative">
                   {PLATFORM_SHORT[pid]}: {content.length.toLocaleString()}/{cfg.charLimit.toLocaleString()}
                 </span>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Textarea */}
       <textarea
         value={content}
         onChange={e => onChange(e.target.value)}
         placeholder="What's this reel about? Use #hashtags and @mentions to increase reach…"
-        rows={6}
+        rows={5}
         disabled={locked}
-        className="w-full bg-background border border-border/60 focus:border-primary/40 rounded-xl px-4 py-3 text-foreground font-medium text-sm placeholder:text-muted-foreground/40 focus:ring-0 outline-none transition-colors resize-none leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-background/60 border border-border/50 focus:border-primary/50 focus:bg-background rounded-xl px-4 py-3 text-foreground font-medium text-sm placeholder:text-muted-foreground/35 focus:ring-2 focus:ring-primary/10 outline-none transition-all duration-200 resize-none leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
       />
 
       {/* Stats row */}
       <div className="flex items-center gap-3 flex-wrap text-[0.72rem] text-muted-foreground">
         <span className="flex items-center gap-1.5 whitespace-nowrap">
-          <Hash className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+          <Hash className="h-3.5 w-3.5 text-primary/50 shrink-0" />
           <span className={hashtagCount > 0 ? "text-foreground font-semibold" : ""}>{hashtagCount} hashtags</span>
         </span>
+        <span className="w-px h-3 bg-border/40" />
         <span className="flex items-center gap-1.5 whitespace-nowrap">
-          <AtSign className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+          <AtSign className="h-3.5 w-3.5 text-primary/50 shrink-0" />
           <span className={mentionCount > 0 ? "text-foreground font-semibold" : ""}>{mentionCount} mentions</span>
         </span>
         {hasLinks && (
-          <span className="flex items-center gap-1.5 whitespace-nowrap">
-            <Link2 className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-            <span className="text-foreground font-semibold">{links.length} link{links.length > 1 ? "s" : ""}</span>
-          </span>
+          <>
+            <span className="w-px h-3 bg-border/40" />
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              <Link2 className="h-3.5 w-3.5 text-primary/50 shrink-0" />
+              <span className="text-foreground font-semibold">{links.length} link{links.length > 1 ? "s" : ""}</span>
+            </span>
+          </>
         )}
-        <span className="text-muted-foreground/50 whitespace-nowrap">{content.length} chars</span>
+        <span className="ml-auto text-muted-foreground/40 tabular-nums whitespace-nowrap">{content.length} chars</span>
       </div>
 
       {/* IG first-55-char preview */}
       {igVisiblePreview && (
-        <div className="rounded-2xl border border-pink-200 bg-pink-50/60 px-5 py-4">
-          <p className="text-[0.68rem] font-black text-pink-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Info className="h-3.5 w-3.5" />
+        <div className="rounded-xl border border-border/40 bg-muted/30 px-4 py-3">
+          <p className="text-[0.68rem] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <Info className="h-3.5 w-3.5 text-primary/60" />
             Instagram visible preview (first 55 chars)
           </p>
-          <p className="text-sm text-gray-700 font-medium">
+          <p className="text-sm text-foreground/80 font-medium">
             {igVisiblePreview}
-            <span className="text-pink-400 font-bold">… more</span>
+            <span className="text-primary/60 font-bold">… more</span>
           </p>
         </div>
       )}
@@ -189,15 +198,15 @@ export default function ReelCaptionEditor({
           {platformWarnings.map((w, i) => (
             <div
               key={i}
-              className={`flex items-start gap-3 px-5 py-3.5 rounded-2xl text-[0.75rem] font-semibold ${
+              className={`flex items-start gap-2.5 px-4 py-3 rounded-xl text-[0.73rem] font-semibold ${
                 w.type === "error"
-                  ? "bg-destructive/8 text-destructive border border-destructive/15"
+                  ? "bg-destructive/6 text-destructive border border-destructive/10"
                   : w.type === "warn"
-                  ? "bg-amber-50 text-amber-700 border border-amber-200"
-                  : "bg-blue-50 text-blue-700 border border-blue-200"
+                  ? "bg-warning-muted text-warning-foreground border border-warning/20"
+                  : "bg-muted/40 text-muted-foreground border border-border/30"
               }`}
             >
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
                 <span className="font-black">{w.platform}: </span>
                 {w.message}
@@ -209,8 +218,8 @@ export default function ReelCaptionEditor({
 
       {/* Hashtag best practices tips (only when platforms selected) */}
       {activePlatforms.length > 0 && hashtagCount === 0 && content.length > 20 && (
-        <div className="flex items-start gap-3 px-5 py-3.5 rounded-2xl bg-primary/4 border border-primary/10 text-[0.73rem] text-primary/70">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-primary/4 border border-primary/10 text-[0.73rem] text-primary/60">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           <span>
             Add <span className="font-black">#hashtags</span> to boost discovery.
             {selectedPlatforms.includes("Instagram") && " Instagram: max 5 recommended (Dec 2025)."}

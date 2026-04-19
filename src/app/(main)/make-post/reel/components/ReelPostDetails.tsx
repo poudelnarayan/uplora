@@ -1,5 +1,6 @@
 "use client";
 
+import { Type, PenLine } from "lucide-react";
 import ReelCaptionEditor from "./ReelCaptionEditor";
 
 interface ReelPostDetailsProps {
@@ -20,27 +21,43 @@ export default function ReelPostDetails({
   locked,
 }: ReelPostDetailsProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
 
-      {/* Title */}
-      <div className="space-y-2">
-        <label className="text-xs font-black uppercase tracking-[0.18em] text-primary">Title</label>
+      {/* Title field */}
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <Type className="h-3 w-3 text-primary" />
+          </div>
+          <label className="text-xs font-bold uppercase tracking-wider text-foreground">Title</label>
+        </div>
         <input
           value={title}
           onChange={e => onTitleChange(e.target.value)}
           placeholder="Enter a compelling title…"
           disabled={locked}
-          className="w-full bg-background border border-border/60 focus:border-primary/40 rounded-xl px-4 py-3 text-foreground font-semibold text-base placeholder:text-muted-foreground/40 focus:ring-0 outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-background/60 border border-border/50 focus:border-primary/50 focus:bg-background rounded-xl px-4 py-3 text-foreground font-semibold text-base placeholder:text-muted-foreground/35 focus:ring-2 focus:ring-primary/10 outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
+      {/* Divider */}
+      <div className="border-t border-border/30" />
+
       {/* Caption */}
-      <ReelCaptionEditor
-        content={content}
-        onChange={onContentChange}
-        selectedPlatforms={selectedPlatforms}
-        locked={locked}
-      />
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <PenLine className="h-3 w-3 text-primary" />
+          </div>
+          <label className="text-xs font-bold uppercase tracking-wider text-foreground">Caption & Details</label>
+        </div>
+        <ReelCaptionEditor
+          content={content}
+          onChange={onContentChange}
+          selectedPlatforms={selectedPlatforms}
+          locked={locked}
+        />
+      </div>
     </div>
   );
 }

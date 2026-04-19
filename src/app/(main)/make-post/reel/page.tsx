@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft, Sparkles, ChevronRight, Layers, Clock, Film } from "lucide-react";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/app/components/ui/Notification";
@@ -215,32 +215,227 @@ function MakePostReelsContent() {
 
   return (
     <AppShell>
-      <div
-        className="min-h-screen"
-        style={{ background: "radial-gradient(ellipse 80% 50% at 60% -5%, hsl(var(--muted)) 0%, hsl(var(--background)) 65%)" }}
-      >
+      <div className="min-h-screen flex flex-col" style={{ background: "var(--gradient-subtle)" }}>
 
-        {/* ── Top header bar — title left, action buttons right ── */}
-        <header className="px-6 lg:px-10 xl:px-14 pt-8 pb-6 flex items-center justify-between gap-6">
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            TOP NAVIGATION BAR — back button, breadcrumbs, workspace, actions
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <header className="sticky top-0 z-20 border-b border-border/50 backdrop-blur-xl bg-card/80">
+          <div className="px-4 sm:px-6 lg:px-8 xl:px-10">
 
-          {/* Left: title block */}
-          <div className="min-w-0">
-            <p className="text-[0.65rem] font-black uppercase tracking-[0.24em] text-primary mb-0.5">Short Reel</p>
-            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight text-foreground leading-none truncate">
-              Create Short Reel
-            </h1>
-            <p className="text-xs text-muted-foreground font-medium mt-1.5 hidden sm:block">
-              Vertical video · 60 s max · 9:16
-            </p>
+            {/* Row 1: Back + Breadcrumbs + Workspace + Actions */}
+            <div className="flex items-center justify-between h-16 gap-4">
+
+              {/* Left: Back + Breadcrumbs */}
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={() => router.push("/make-post")}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-border/60 bg-background hover:bg-muted hover:border-primary/30 transition-all duration-200 active:scale-95 shrink-0 group"
+                  aria-label="Back to Make Post"
+                >
+                  <ArrowLeft className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </button>
+
+                {/* Breadcrumbs */}
+                <nav className="hidden sm:flex items-center gap-1.5 text-sm min-w-0">
+                  <button
+                    onClick={() => router.push("/make-post")}
+                    className="text-muted-foreground hover:text-foreground transition-colors font-medium whitespace-nowrap"
+                  >
+                    Make Post
+                  </button>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+                  <span className="text-foreground font-semibold whitespace-nowrap flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    Short Reel
+                  </span>
+                </nav>
+
+                {/* Mobile title */}
+                <span className="sm:hidden text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  Short Reel
+                </span>
+              </div>
+
+              {/* Right: Workspace indicator + Desktop Actions */}
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Workspace badge */}
+                {selectedTeam && (
+                  <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40">
+                    <Layers className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs font-semibold text-foreground max-w-[140px] truncate">
+                      {selectedTeam.name?.includes("Personal Workspace") ? "Personal" : selectedTeam.name}
+                    </span>
+                  </div>
+                )}
+
+                {/* Desktop action buttons */}
+                <div className={`hidden sm:flex items-center gap-2 ${locked ? "opacity-60 pointer-events-none" : ""}`}>
+                  {showApprove && (
+                    <button
+                      onClick={approve}
+                      disabled={!!isApproving || busy}
+                      className="flex items-center gap-2 bg-success hover:bg-success/90 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all disabled:opacity-50 active:scale-95"
+                    >
+                      {isApproving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Approve
+                    </button>
+                  )}
+                  {showRequestApproval && (
+                    <button
+                      onClick={requestApproval}
+                      disabled={!!isRequestingApproval || busy}
+                      className="flex items-center gap-2 bg-warning hover:bg-warning/90 text-warning-foreground font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all disabled:opacity-50 active:scale-95"
+                    >
+                      {isRequestingApproval && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Request Approval
+                    </button>
+                  )}
+                  <button
+                    onClick={() => save(true)}
+                    disabled={busy}
+                    className="flex items-center gap-2 bg-background border border-border/60 hover:bg-muted text-foreground font-semibold text-xs px-4 py-2 rounded-lg transition-all disabled:opacity-50 active:scale-95"
+                  >
+                    {isDrafting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Save Draft
+                  </button>
+                  <button
+                    onClick={() => save(false)}
+                    disabled={busy}
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs px-4 py-2 rounded-lg shadow-md shadow-primary/20 transition-all disabled:opacity-50 active:scale-95"
+                  >
+                    {(isPublishing || isUploading) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    {publishLabel}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
+        </header>
 
-          {/* Right: action buttons — hidden on mobile (shown at bottom instead) */}
-          <div className={`hidden sm:flex items-center gap-3 shrink-0 ${locked ? "opacity-60 pointer-events-none" : ""}`}>
+        {/* ── Pending approval banner ── */}
+        {editId && postStatus === "PENDING" && (
+          <div className="px-4 sm:px-6 lg:px-8 xl:px-10 pt-4">
+            <div className="rounded-xl border border-warning/30 bg-warning-muted px-4 py-3 text-sm text-warning-foreground font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-warning shrink-0" />
+              {role === "EDITOR"
+                ? "Awaiting approval — editing is locked until approved or returned."
+                : "This post is awaiting your approval. Use the Approve button above."}
+            </div>
+          </div>
+        )}
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            HERO SECTION — Title + Specs + Platform selector (horizontal pills)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-10 pt-6 pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            {/* Left: Title + Spec chips */}
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground leading-none">
+                {editId ? "Edit Short Reel" : "Create Short Reel"}
+              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/8 text-primary text-xs font-bold">
+                  <Film className="h-3 w-3" />
+                  9:16 Vertical
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted text-muted-foreground text-xs font-semibold">
+                  <Clock className="h-3 w-3" />
+                  60s Max
+                </span>
+                {/* Mobile workspace badge */}
+                {selectedTeam && (
+                  <span className="md:hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/60 border border-border/40 text-xs font-semibold text-foreground">
+                    <Layers className="h-3 w-3 text-primary" />
+                    {selectedTeam.name?.includes("Personal Workspace") ? "Personal" : selectedTeam.name}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Horizontal platform pills (desktop) */}
+            <div className="hidden lg:block">
+              <ReelPlatformSelector
+                selected={selectedPlatforms}
+                onChange={setSelectedPlatforms}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            MAIN CONTENT — Two-column layout
+            Left: Upload + Post Details
+            Right: Phone Preview (sticky)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <section className="flex-1 px-4 sm:px-6 lg:px-8 xl:px-10 pt-4 pb-32 sm:pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] gap-6 lg:gap-8 items-start">
+
+            {/* ── Left column: Upload + Details ── */}
+            <div className={`space-y-5 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+
+              {/* Upload area card */}
+              <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-soft">
+                <ReelUploadArea
+                  dragActive={dragActive}
+                  selectedVideo={selectedVideo}
+                  selectedFile={selectedFile}
+                  onDrag={handleDrag}
+                  onDrop={handleDrop}
+                  onFileChange={handleFileChange}
+                  onClear={() => { setSelectedVideo(null); setSelectedFile(null); }}
+                />
+              </div>
+
+              {/* Post details card */}
+              <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-soft">
+                <ReelPostDetails
+                  title={title}
+                  content={content}
+                  onTitleChange={setTitle}
+                  onContentChange={setContent}
+                  selectedPlatforms={selectedPlatforms}
+                  locked={locked}
+                />
+              </div>
+
+              {/* Mobile/tablet: platforms */}
+              <div className="lg:hidden">
+                <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-soft">
+                  <ReelPlatformSelector
+                    selected={selectedPlatforms}
+                    onChange={setSelectedPlatforms}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right column: Phone Preview (hidden on mobile) ── */}
+            <div className="hidden lg:block sticky top-[5.5rem]">
+              <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-soft">
+                <ReelPreview
+                  selectedVideo={selectedVideo}
+                  content={content}
+                  title={title}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            MOBILE BOTTOM ACTION BAR — glass morphism sticky bar
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className={`sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/40 backdrop-blur-xl bg-card/90 px-4 py-3 safe-area-bottom ${locked ? "opacity-60 pointer-events-none" : ""}`}>
+          <div className="space-y-2">
+            {/* Approval actions */}
             {showApprove && (
               <button
                 onClick={approve}
                 disabled={!!isApproving || busy}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50 active:scale-95"
+                className="w-full flex items-center justify-center gap-2 bg-success text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 {isApproving && <Loader2 className="h-4 w-4 animate-spin" />}
                 Approve &amp; Publish
@@ -250,132 +445,33 @@ function MakePostReelsContent() {
               <button
                 onClick={requestApproval}
                 disabled={!!isRequestingApproval || busy}
-                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 active:scale-95"
+                className="w-full flex items-center justify-center gap-2 bg-warning text-warning-foreground font-bold py-3 rounded-xl transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 {isRequestingApproval && <Loader2 className="h-4 w-4 animate-spin" />}
                 Request Approval
               </button>
             )}
-            <button
-              onClick={() => save(true)}
-              disabled={busy}
-              className="flex items-center gap-2 bg-background border border-border hover:bg-muted text-foreground font-semibold text-sm px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 active:scale-95"
-            >
-              {isDrafting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save Draft
-            </button>
-            <button
-              onClick={() => save(false)}
-              disabled={busy}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-primary/25 transition-all disabled:opacity-50 active:scale-95"
-            >
-              {(isPublishing || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
-              {publishLabel}
-            </button>
-          </div>
-        </header>
-
-        {/* Pending banner */}
-        {editId && postStatus === "PENDING" && (
-          <div className="px-6 lg:px-10 xl:px-14 pb-4">
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 font-medium">
-              {role === "EDITOR"
-                ? "Awaiting approval — editing is locked until approved or returned."
-                : "This post is awaiting your approval. Use the Approve button above."}
+            {/* Primary actions row */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => save(false)}
+                disabled={busy}
+                className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl shadow-md shadow-primary/20 transition-all disabled:opacity-50 active:scale-[0.98]"
+              >
+                {(isPublishing || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
+                {publishLabel}
+              </button>
+              <button
+                onClick={() => save(true)}
+                disabled={busy}
+                className="px-5 py-3 rounded-xl bg-muted text-foreground font-semibold transition-all disabled:opacity-50 active:scale-[0.98]"
+              >
+                {isDrafting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Draft"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* ── Main two-column grid ── */}
-        {/*
-          Mobile (< sm):  single column — no phone preview, actions at bottom
-          sm / lg+:       left 60% content  |  right 40% phone+platforms
-        */}
-        <section className="px-6 lg:px-10 xl:px-14 pb-24">
-          <div className="grid grid-cols-1 sm:grid-cols-[60%_40%] gap-6 lg:gap-8 xl:gap-10 items-start">
-
-            {/* ── Left 60%: upload + caption ── */}
-            <div className={`space-y-5 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
-              <ReelUploadArea
-                dragActive={dragActive}
-                selectedVideo={selectedVideo}
-                selectedFile={selectedFile}
-                onDrag={handleDrag}
-                onDrop={handleDrop}
-                onFileChange={handleFileChange}
-                onClear={() => { setSelectedVideo(null); setSelectedFile(null); }}
-              />
-              <ReelPostDetails
-                title={title}
-                content={content}
-                onTitleChange={setTitle}
-                onContentChange={setContent}
-                selectedPlatforms={selectedPlatforms}
-                locked={locked}
-              />
-
-              {/* Wide screen (xl+): platforms sit just below caption in left column */}
-              <div className="hidden xl:block">
-                <ReelPlatformSelector
-                  selected={selectedPlatforms}
-                  onChange={setSelectedPlatforms}
-                />
-              </div>
-
-              {/* Mobile-only: platforms + action buttons at bottom */}
-              <div className="sm:hidden space-y-4">
-                <ReelPlatformSelector
-                  selected={selectedPlatforms}
-                  onChange={setSelectedPlatforms}
-                />
-                <div className={`flex flex-col gap-3 ${locked ? "opacity-60 pointer-events-none" : ""}`}>
-                  {showApprove && (
-                    <button onClick={approve} disabled={!!isApproving || busy}
-                      className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-4 rounded-2xl transition-all disabled:opacity-50">
-                      {isApproving && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Approve &amp; Publish
-                    </button>
-                  )}
-                  {showRequestApproval && (
-                    <button onClick={requestApproval} disabled={!!isRequestingApproval || busy}
-                      className="w-full flex items-center justify-center gap-2 bg-amber-500 text-white font-bold py-4 rounded-2xl transition-all disabled:opacity-50">
-                      {isRequestingApproval && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Request Approval
-                    </button>
-                  )}
-                  <div className="flex gap-3">
-                    <button onClick={() => save(false)} disabled={busy}
-                      className="flex-1 flex items-center justify-center gap-2 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50">
-                      {(isPublishing || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {publishLabel}
-                    </button>
-                    <button onClick={() => save(true)} disabled={busy}
-                      className="px-6 py-4 rounded-2xl bg-muted text-foreground font-semibold transition-all disabled:opacity-50">
-                      {isDrafting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Draft"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Right 40%: phone preview (hidden on mobile) ── */}
-            <div className="hidden sm:flex flex-col gap-5 sticky top-6">
-              <ReelPreview
-                selectedVideo={selectedVideo}
-                content={content}
-                title={title}
-              />
-              {/* Laptop only (sm–xl): platforms below phone. On xl+ they live in left col. */}
-              <div className="xl:hidden">
-                <ReelPlatformSelector
-                  selected={selectedPlatforms}
-                  onChange={setSelectedPlatforms}
-                />
-              </div>
-            </div>
-
-          </div>
-        </section>
       </div>
     </AppShell>
   );
