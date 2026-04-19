@@ -98,18 +98,18 @@ export async function POST(req: NextRequest) {
 
       // Store feedback in Supabase for analytics
       const { error: dbError } = await supabaseAdmin
-        .from('feedbackSubmissions')
+        .from('feedback_submissions')
         .insert({
-          userId: supabaseUser.id,
+          user_id: supabaseUser.id,
           type: type || 'feedback',
           category: category || 'general',
           title: title || null,
           message: message,
-          teamId: teamId || null,
-          teamName: teamName || null,
+          team_id: teamId || null,
+          team_name: teamName || null,
           path: path || null,
           priority: priority || null,
-          includeEmail: includeEmail || false
+          include_email: includeEmail || false
         });
 
       if (dbError) {

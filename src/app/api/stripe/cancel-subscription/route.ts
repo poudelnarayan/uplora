@@ -12,45 +12,38 @@ export async function POST(req: NextRequest) {
 
     const { immediate = false } = await req.json();
 
-    // Get user's subscription
     const { data: customer } = await supabaseAdmin
-      .from('stripeCustomers')
-      .select(`
-        customerId,
-        stripeSubscriptions (
-          subscriptionId,
-          status
-        )
-      `)
-      .eq('userId', userId)
+      .from('stripe_customers')
+      .select('customer_id')
+      .eq('user_id', userId)
       .single();
 
-    if (!customer?.stripeSubscriptions?.[0]) {
+    if (!customer) {
       return NextResponse.json({ error: "No active subscription found" }, { status: 404 });
     }
 
-    const subscription = customer.stripeSubscriptions[0];
+    const { data: subscription } = await supabaseAdmin
+      .from('stripe_subscriptions')
+      .select('subscription_id, status')
+      .eq('customer_id', customer.customer_id)
+      .single();
 
-    if (immediate) {
-      // Cancel immediately
-      await stripe.subscriptions.cancel(subscription.subscriptionId);
-    } else {
-      // Cancel at period end
-      await stripe.subscriptions.update(subscription.subscriptionId, {
-        cancel_at_period_end: true,
-      });
+    if (!subscription?.subscription_id) {
+      return NextResponse.json({ error: "No active subscription found" }, { status: 404 });
     }
 
-    return NextResponse.json({ 
-      success: true,
-      message: immediate ? "Subscription canceled immediately" : "Subscription will cancel at period end"
-    });
+    if (immediate) {
+      await stripe.subscriptions.cancel(subscription.subscription_id);
+    } else {
+      await stripe.subscriptions.update(subscription.subscription_id, { cancel_at_period_end: true });
+    }
 
+    return NextResponse.json({
+      success: true,
+      message: immediate ? "Subscription canceled immediately" : "Subscription will cancel at period end",
+    });
   } catch (error) {
     console.error('Cancel subscription error:', error);
-    return NextResponse.json(
-      { error: 'Failed to cancel subscription' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to cancel subscription' }, { status: 500 });
   }
 }

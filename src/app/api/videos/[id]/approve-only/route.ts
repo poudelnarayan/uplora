@@ -3,9 +3,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
 import { VideoStatus } from "@/types/videoStatus";
+import { getVideoById, syncUser, getTeamAndRole, updateVideoStatus } from "@/lib/video-utils";
 
 export async function POST(
   req: NextRequest,
@@ -13,136 +13,60 @@ export async function POST(
 ) {
   let step = "init";
   try {
-    step = "get-params";
-    const { id } = context.params;
-    
     step = "auth";
+    const { id } = context.params;
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Auth required", step }, { status: 401 });
 
-    step = "clerk-user";
+    step = "sync-user";
     const client = await clerkClient();
-    const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
-
-    step = "upsert-user";
-    const { data: me, error: userError } = await supabaseAdmin
-      .from('users')
-      .upsert({
-        id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
-        image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
-      .select()
-      .single();
-
-    if (userError) {
-      console.error("Approve-only user sync error:", userError);
-      return NextResponse.json({ error: "Failed to sync user", details: userError.message, step }, { status: 500 });
-    }
+    const me = await syncUser(userId, await client.users.getUser(userId));
 
     step = "get-video";
-    const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (videoError || !video) {
-      return NextResponse.json({ error: "Video not found", step }, { status: 404 });
-    }
+    const video = await getVideoById(id);
+    if (!video) return NextResponse.json({ error: "Video not found", step }, { status: 404 });
 
     if (!video.teamId) {
       return NextResponse.json({ error: "Approval is only for team videos", step }, { status: 400 });
     }
 
-    step = "get-team";
-    const { data: team, error: teamError } = await supabaseAdmin
-      .from('teams')
-      .select('id, ownerId, name')
-      .eq('id', video.teamId)
-      .single();
-
-    if (teamError || !team) {
-      return NextResponse.json({ error: "Team not found", step }, { status: 404 });
-    }
-
     step = "check-role";
-    let callerRole: "OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | "MEMBER" | null = null;
-    if (team.ownerId === me.id) {
-      callerRole = "OWNER";
-    } else {
-      const { data: membership } = await supabaseAdmin
-        .from('team_members')
-        .select('role,status')
-        .eq('teamId', team.id)
-        .eq('userId', me.id)
-        .single();
-
-      const role = (membership as any)?.role as string | undefined;
-      const mStatus = (membership as any)?.status as string | undefined;
-      if (!membership || mStatus !== "ACTIVE") {
-        return NextResponse.json({ error: "Not an active member of this team", step }, { status: 403 });
-      }
-      callerRole = (role as any) || "MEMBER";
-    }
-
-    if (callerRole !== "OWNER" && callerRole !== "ADMIN") {
-      return NextResponse.json({ error: "Only owner/admin can approve", callerRole, step }, { status: 403 });
+    const { team, role } = await getTeamAndRole(video.teamId, me.id);
+    if (!team) return NextResponse.json({ error: "Team not found", step }, { status: 404 });
+    if (!role) return NextResponse.json({ error: "Not an active member of this team", step }, { status: 403 });
+    if (role !== "OWNER" && role !== "ADMIN") {
+      return NextResponse.json({ error: "Only owner/admin can approve", callerRole: role, step }, { status: 403 });
     }
 
     step = "check-status";
-    const currentStatus = String(video.status || VideoStatus.PROCESSING).toUpperCase();
-    // Allow approval from APPROVAL_REQUESTED or legacy PENDING status
-    if (currentStatus !== VideoStatus.APPROVAL_REQUESTED && currentStatus !== "PENDING") {
-      return NextResponse.json({ error: `Video is not pending approval (current: ${currentStatus})`, step }, { status: 400 });
+    if (video.status !== VideoStatus.APPROVAL_REQUESTED) {
+      return NextResponse.json({ error: `Video is not pending approval (current: ${video.status})`, step }, { status: 400 });
     }
 
     step = "update-video";
-    // Set status to APPROVAL_APPROVED
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from('video_posts')
-      .update({ 
-        status: VideoStatus.APPROVAL_APPROVED,
-        approvedByUserId: me.id,
-        requestedByUserId: null,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', video.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error("Approve-only update error:", updateError);
-      return NextResponse.json({ error: "Failed to update video", details: updateError.message, step }, { status: 500 });
-    }
+    const updated = await updateVideoStatus(id, VideoStatus.APPROVAL_APPROVED, {
+      approved_by_user_id: me.id,
+      requested_by_user_id: null,
+    });
 
     step = "broadcast";
-    broadcast({ 
-      type: "video.status", 
-      teamId: video.teamId || null, 
-      payload: { id: video.id, status: VideoStatus.APPROVAL_APPROVED, requestedByUserId: null, approvedByUserId: me.id } 
+    broadcast({
+      type: "video.status",
+      teamId: video.teamId,
+      payload: { id, status: VideoStatus.APPROVAL_APPROVED, requestedByUserId: null, approvedByUserId: me.id }
     });
     broadcast({
       type: "post.status",
-      teamId: String(video.teamId),
-      payload: { id: video.id, status: VideoStatus.APPROVAL_APPROVED, contentType: "video" }
+      teamId: video.teamId,
+      payload: { id, status: VideoStatus.APPROVAL_APPROVED, contentType: "video" }
     });
 
     return NextResponse.json({ ok: true, status: VideoStatus.APPROVAL_APPROVED, video: updated });
   } catch (e: any) {
     console.error("Approve-only failed at step:", step, e);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: e?.message || "Failed to approve video",
       step,
-      stack: process.env.NODE_ENV === "development" ? e?.stack : undefined
     }, { status: 500 });
   }
 }

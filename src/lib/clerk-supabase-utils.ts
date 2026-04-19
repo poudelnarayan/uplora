@@ -15,7 +15,6 @@ export async function getAuthenticatedUser() {
       throw new Error("User not found");
     }
 
-    // Sync user data with Supabase
     const supabaseUser = await upsertSupabaseUser(userId, {
       email: clerkUser.emailAddresses[0]?.emailAddress || "",
       name: clerkUser.fullName || undefined,
@@ -28,7 +27,6 @@ export async function getAuthenticatedUser() {
       supabaseUser,
     };
   } catch (error) {
-    // Handle cases where auth() might fail due to context issues
     if (error instanceof Error && error.message.includes('cookies')) {
       throw new Error("Authentication required");
     }
@@ -48,7 +46,7 @@ export async function safeAuth() {
   }
 }
 
-// Safe wrapper for currentUser() that handles context issues  
+// Safe wrapper for currentUser() that handles context issues
 export async function safeCurrentUser() {
   try {
     return await currentUser();
@@ -60,7 +58,6 @@ export async function safeCurrentUser() {
   }
 }
 
-// Updated getAuthenticatedUser using safe wrappers
 export async function getAuthenticatedUserSafe() {
   const { userId } = await safeAuth();
   if (!userId) {
@@ -72,7 +69,6 @@ export async function getAuthenticatedUserSafe() {
     throw new Error("User not found");
   }
 
-  // Sync user data with Supabase
   const supabaseUser = await upsertSupabaseUser(userId, {
     email: clerkUser.emailAddresses[0]?.emailAddress || "",
     name: clerkUser.fullName || undefined,
@@ -101,14 +97,13 @@ export async function withAuth<T>(
   }
 }
 
-// Check if user has access to a team (camelCase columns)
+// Check if user has access to a team
 export async function checkTeamAccess(teamId: string, userId: string) {
-  // Check if user is team owner
   const { data: team, error: teamError } = await supabaseAdmin
     .from('teams')
     .select('*')
     .eq('id', teamId)
-    .eq('ownerId', userId)
+    .eq('owner_id', userId)
     .maybeSingle();
 
   if (teamError && teamError.code !== 'PGRST116') {
@@ -119,12 +114,11 @@ export async function checkTeamAccess(teamId: string, userId: string) {
     return { hasAccess: true, role: 'OWNER' as const };
   }
 
-  // Check if user is team member
   const { data: membership, error: memberError } = await supabaseAdmin
     .from('team_members')
     .select('role')
-    .eq('teamId', teamId)
-    .eq('userId', userId)
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
     .maybeSingle();
 
   if (memberError && memberError.code !== 'PGRST116') {
@@ -138,13 +132,13 @@ export async function checkTeamAccess(teamId: string, userId: string) {
   return { hasAccess: false, role: null };
 }
 
-// Create personal team for user if it doesn't exist (camelCase)
+// Create personal team for user if it doesn't exist
 export async function ensurePersonalTeam(userId: string) {
   const { data: existingTeam, error: checkError } = await supabaseAdmin
     .from('teams')
     .select('id')
-    .eq('ownerId', userId)
-    .eq('isPersonal', true)
+    .eq('owner_id', userId)
+    .eq('is_personal', true)
     .maybeSingle();
 
   if (checkError && checkError.code !== 'PGRST116') {
@@ -152,19 +146,27 @@ export async function ensurePersonalTeam(userId: string) {
   }
 
   if (existingTeam) {
+    // Sync personal_team_id on users table
+    await supabaseAdmin
+      .from('users')
+      .update({ personal_team_id: existingTeam.id })
+      .eq('id', userId)
+      .is('personal_team_id', null);
+
     return existingTeam.id;
   }
 
-  // Create personal team
+  const now = new Date().toISOString();
   const { data: newTeam, error: createError } = await supabaseAdmin
     .from('teams')
     .insert({
       id: `personal-${userId}`,
       name: 'Personal',
       description: 'Your personal workspace',
-      isPersonal: true,
-      ownerId: userId,
-      updatedAt: new Date().toISOString()
+      is_personal: true,
+      owner_id: userId,
+      updated_at: now,
+      created_at: now,
     })
     .select('id')
     .single();
@@ -173,35 +175,46 @@ export async function ensurePersonalTeam(userId: string) {
     throw createError;
   }
 
+  // Update user's personal_team_id
+  await supabaseAdmin
+    .from('users')
+    .update({ personal_team_id: newTeam.id, updated_at: now })
+    .eq('id', userId);
+
   return newTeam.id;
 }
 
-// Helper to format API responses (camelCase)
-export function formatVideoResponse(video: any) {
+// Format a post row (with optional media) into the legacy video response shape
+export function formatVideoResponse(post: any, media?: any) {
+  const m = media || post.media?.[0] || {};
   return {
-    id: video.id,
-    title: (video.filename || "").replace(/\.[^/.]+$/, ''),
+    id: post.id,
+    title: post.content || m.filename || 'Video Post',
     thumbnail: "",
-    status: video.status || "PROCESSING",
-    uploadedAt: video.uploadedAt,
-    updatedAt: video.updatedAt,
-    approvalRequestedAt: video.status === "PENDING" ? video.updatedAt : undefined,
-    publishedAt: video.status === "PUBLISHED" ? video.updatedAt : undefined,
-    duration: undefined,
+    status: post.status || "draft",
+    uploadedAt: post.created_at,
+    updatedAt: post.updated_at,
+    approvalRequestedAt: post.status === "pending_approval" ? post.updated_at : undefined,
+    publishedAt: post.status === "published" ? post.updated_at : undefined,
+    duration: m.duration_ms ? m.duration_ms / 1000 : undefined,
     views: undefined,
     likes: undefined,
-    s3Key: video.key,
-    thumbnailKey: video.thumbnailKey,
-    contentType: video.contentType,
-    sizeBytes: video.sizeBytes,
-    description: video.description,
-    visibility: video.visibility,
-    madeForKids: video.madeForKids,
+    s3Key: m.s3_key || post.metadata?.key,
+    key: m.s3_key || post.metadata?.key,
+    filename: m.filename || post.metadata?.filename,
+    thumbnailKey: post.metadata?.thumbnail_key || null,
+    contentType: m.content_type || post.metadata?.content_type,
+    sizeBytes: m.size_bytes || post.metadata?.size_bytes,
+    description: post.content,
+    visibility: post.metadata?.visibility || null,
+    madeForKids: post.metadata?.made_for_kids || false,
+    youtubeVideoId: post.metadata?.youtube_video_id || null,
+    youtubeThumbnailUploadStatus: post.metadata?.youtube_thumbnail_upload_status || null,
     uploader: {
-      id: video.userId,
-      name: video.uploaderName,
-      email: video.uploaderEmail,
-      image: video.uploaderImage
+      id: post.author_id,
+      name: post.uploaderName,
+      email: post.uploaderEmail,
+      image: post.uploaderImage
     }
   };
 }

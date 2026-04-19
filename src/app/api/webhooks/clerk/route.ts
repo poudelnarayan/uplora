@@ -63,15 +63,15 @@ export async function POST(req: NextRequest) {
           .from('users')
           .upsert({
             id: id,
-            clerkId: id,
+            clerk_id: id,
             email: userEmail || "",
             name: userName,
-            onboardingCompleted: false,
-            onboardingSkipped: false,
-            onboardingSeenAt: null,
-            updatedAt: new Date().toISOString()
+            onboarding_completed: false,
+            onboarding_skipped: false,
+            onboarding_seen_at: null,
+            updated_at: new Date().toISOString()
           }, {
-            onConflict: 'clerkId'
+            onConflict: 'clerk_id'
           });
 
         if (userError) {

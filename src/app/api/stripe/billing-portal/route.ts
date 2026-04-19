@@ -14,18 +14,17 @@ export async function POST(req: NextRequest) {
 
     // Get Stripe customer ID
     const { data: customer, error } = await supabaseAdmin
-      .from('stripeCustomers')
-      .select('customerId')
-      .eq('userId', userId)
+      .from('stripe_customers')
+      .select('customer_id')
+      .eq('user_id', userId)
       .single();
 
     if (error || !customer) {
       return NextResponse.json({ error: "No billing account found" }, { status: 404 });
     }
 
-    // Create billing portal session
     const session = await stripe.billingPortal.sessions.create({
-      customer: customer.customerId,
+      customer: customer.customer_id,
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/subscription`,
     });
 

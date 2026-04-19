@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { data: lock } = await supabaseAdmin
       .from('upload_locks')
       .select('*')
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .eq('key', key)
       .maybeSingle();
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         await supabaseAdmin
           .from('upload_locks')
           .delete()
-          .eq('userId', userId)
+          .eq('user_id', userId)
           .eq('key', key);
       } catch {}
     }

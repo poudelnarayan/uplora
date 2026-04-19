@@ -3,17 +3,24 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { findContentRowById, getTeamRoleForUser } from "../_shared";
+import { supabaseAdmin } from "@/lib/supabase";
+import { getTeamRoleForUser } from "../_shared";
 
 export async function GET(_req: NextRequest, context: { params: { id: string } }) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
   const { id } = context.params;
-  const found = await findContentRowById(id);
-  if (!found) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const teamId = found.row?.teamId;
+  const { data: post } = await supabaseAdmin
+    .from("posts")
+    .select("team_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const teamId = post.team_id;
   if (!teamId) return NextResponse.json({ error: "Not a team post" }, { status: 400 });
 
   const roleRes = await getTeamRoleForUser(String(teamId), userId);
@@ -21,5 +28,3 @@ export async function GET(_req: NextRequest, context: { params: { id: string } }
 
   return NextResponse.json({ role: roleRes.role });
 }
-
-

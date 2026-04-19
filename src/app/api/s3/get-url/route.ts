@@ -10,28 +10,18 @@ import { supabaseAdmin } from "@/lib/supabase";
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 async function getOwnerForKey(key: string) {
-  const lookups: Array<{ table: string; column: string }> = [
-    { table: "video_posts", column: "key" },
-    { table: "video_posts", column: "thumbnailKey" },
-    { table: "image_posts", column: "imageKey" },
-    { table: "reel_posts", column: "videoKey" },
-    { table: "reel_posts", column: "thumbnailKey" },
-  ];
+  // Check post_media for the s3_key, then join to posts for team/author
+  const { data, error } = await supabaseAdmin
+    .from("post_media")
+    .select("post_id, posts!inner(team_id, author_id)")
+    .eq("s3_key", key)
+    .maybeSingle();
 
-  for (const lookup of lookups) {
-    const { data, error } = await supabaseAdmin
-      .from(lookup.table)
-      .select("teamId, userId")
-      .eq(lookup.column, key)
-      .maybeSingle();
-
-    if (error && error.code !== "PGRST116") {
-      throw error;
-    }
-
-    if (data) return data as { teamId: string | null; userId: string };
+  if (error && error.code !== "PGRST116") throw error;
+  if (data) {
+    const post = (data as any).posts;
+    return { teamId: post?.team_id ?? null, userId: post?.author_id ?? null };
   }
-
   return null;
 }
 

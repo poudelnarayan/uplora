@@ -35,12 +35,12 @@ export async function POST(req: NextRequest) {
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
+        clerk_id: userId,
         email: clerkUser.emailAddresses[0]?.emailAddress || "",
         name: clerkUser.fullName || "",
         image: clerkUser.imageUrl || "",
-        updatedAt: new Date().toISOString()
-      }, { onConflict: 'clerkId' })
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'clerk_id' })
       .select()
       .single();
 
@@ -52,28 +52,25 @@ export async function POST(req: NextRequest) {
     // Resolve teamId: if not provided, use user's personal team
     if (!teamId) {
       // Try to use personalTeamId from users table
-      teamId = (user as any).personalTeamId || null;
+      teamId = (user as any).personal_team_id || null;
       if (!teamId) {
-        // Fallback: find personal team by ownerId
         const { data: pTeam } = await supabaseAdmin
           .from('teams')
           .select('id')
-          .eq('ownerId', user.id)
-          .eq('isPersonal', true)
+          .eq('owner_id', user.id)
+          .eq('is_personal', true)
           .single();
         teamId = pTeam?.id || null;
       }
     }
 
     if (!teamId) {
-      // As per requirement, always upload under a team (personal team if solo)
       return NextResponse.json({ error: "No team found for upload" }, { status: 400 });
     }
 
-    // Validate team access for provided/resolved teamId
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
-      .select('id, ownerId')
+      .select('id, owner_id')
       .eq('id', teamId)
       .single();
 
@@ -81,12 +78,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    if (team.ownerId !== user.id) {
+    if (team.owner_id !== user.id) {
       const { data: membership } = await supabaseAdmin
         .from('team_members')
         .select('id')
-        .eq('teamId', teamId)
-        .eq('userId', user.id)
+        .eq('team_id', teamId)
+        .eq('user_id', user.id)
         .single();
       if (!membership) {
         return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
@@ -121,16 +118,9 @@ export async function POST(req: NextRequest) {
       const { error: lockError } = await supabaseAdmin
         .from('upload_locks')
         .insert({
-          userId: user.id, 
+          user_id: user.id,
           key: finalKey,
-          metadata: JSON.stringify({
-            filename: safeName,
-            contentType,
-            teamId,
-            uploadId: out.UploadId,
-            videoId
-          }),
-          updatedAt: new Date().toISOString()
+          metadata: JSON.stringify({ filename: safeName, contentType, teamId, uploadId: out.UploadId, videoId }),
         });
         
       if (lockError) {

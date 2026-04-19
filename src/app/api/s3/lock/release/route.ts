@@ -13,7 +13,7 @@ export async function DELETE(req: NextRequest) {
       const { error: lockError } = await supabaseAdmin
         .from('upload_locks')
         .delete()
-        .eq('userId', user.clerkUserId);
+        .eq('user_id', user.clerkUserId);
 
       return createSuccessResponse({ success: true });
     } catch (e: unknown) {

@@ -26,13 +26,13 @@ export async function GET(request: NextRequest) {
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
+        clerk_id: userId,
+        email: userEmail || "",
+        name: userName,
         image: userImage,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       }, {
-        onConflict: 'clerkId'
+        onConflict: 'clerk_id'
       })
       .select()
       .single();
@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
         currentPeriodStart: new Date(),
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         cancelAtPeriodEnd: false,
-        trialStart: new Date(user.createdAt),
-        trialEnd: new Date(new Date(user.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        createdAt: new Date(user.createdAt),
+        trialStart: new Date(user.created_at),
+        trialEnd: new Date(new Date(user.created_at).getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        createdAt: new Date(user.created_at),
         updatedAt: new Date()
       },
       paymentMethods: [],

@@ -6,6 +6,8 @@ import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { broadcast } from "@/lib/realtime";
+import { VideoStatus } from "@/types/videoStatus";
+import { getVideoById, getTeamAndRole, updateVideoStatus } from "@/lib/video-utils";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -21,55 +23,44 @@ export async function POST(
     const { key: newKey, filename } = await req.json();
     if (!newKey || !filename) return NextResponse.json({ error: "key and filename required" }, { status: 400 });
 
-    const { data: video, error: videoError } = await supabaseAdmin
-      .from("video_posts")
-      .select("*")
-      .eq("id", id)
-      .single();
-    if (videoError || !video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    const video = await getVideoById(id);
+    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
-    // Permissions
     if (!video.teamId) {
       if (video.userId !== userId) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
     } else {
-      const { data: team } = await supabaseAdmin.from("teams").select("ownerId").eq("id", video.teamId).single();
-      if (team?.ownerId !== userId) {
-        const { data: membership } = await supabaseAdmin
-          .from("team_members")
-          .select("role,status")
-          .eq("teamId", video.teamId)
-          .eq("userId", userId)
-          .single();
-        const role = String((membership as any)?.role || "");
-        const status = String((membership as any)?.status || "");
-        if (status !== "ACTIVE" || (role !== "MANAGER" && role !== "ADMIN")) {
-          return NextResponse.json({ error: "Not allowed" }, { status: 403 });
-        }
+      const { role } = await getTeamAndRole(video.teamId, userId);
+      if (!role || !["OWNER", "ADMIN", "MANAGER"].includes(role)) {
+        return NextResponse.json({ error: "Not allowed" }, { status: 403 });
       }
     }
 
     const oldKey = video.key;
 
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from("video_posts")
-      .update({
-        key: newKey,
-        filename,
-        status: "PROCESSING",
-        requestedByUserId: null,
-        approvedByUserId: null,
-        updatedAt: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select()
-      .single();
+    // Update or insert media row with new key
+    const { data: existingMedia } = await supabaseAdmin
+      .from('post_media')
+      .select('id')
+      .eq('post_id', id)
+      .eq('media_type', 'video')
+      .maybeSingle();
 
-    if (updateError) {
-      console.error("[replace/complete] update error:", updateError);
-      return NextResponse.json({ error: "Failed to update video", details: updateError.message }, { status: 500 });
+    if (existingMedia) {
+      await supabaseAdmin
+        .from('post_media')
+        .update({ s3_key: newKey, filename })
+        .eq('id', existingMedia.id);
+    } else {
+      await supabaseAdmin
+        .from('post_media')
+        .insert({ post_id: id, media_type: 'video', s3_key: newKey, filename, position: 0 });
     }
 
-    // Best-effort delete old object
+    const updated = await updateVideoStatus(id, VideoStatus.PROCESSING, {
+      requested_by_user_id: null,
+      approved_by_user_id: null,
+    });
+
     if (oldKey && oldKey !== newKey) {
       try {
         await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: oldKey }));
@@ -80,15 +71,11 @@ export async function POST(
 
     broadcast({
       type: "video.status",
-      teamId: updated.teamId || null,
-      payload: { id: updated.id, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }
+      teamId: video.teamId || null,
+      payload: { id, status: "PROCESSING", requestedByUserId: null, approvedByUserId: null }
     });
-    if (updated.teamId) {
-      broadcast({
-        type: "post.status",
-        teamId: String(updated.teamId),
-        payload: { id: updated.id, status: "PROCESSING", contentType: "video" }
-      });
+    if (video.teamId) {
+      broadcast({ type: "post.status", teamId: video.teamId, payload: { id, status: "PROCESSING", contentType: "video" } });
     }
     return NextResponse.json({ ok: true, video: updated });
   } catch (e) {
@@ -96,5 +83,3 @@ export async function POST(
     return NextResponse.json({ error: "Failed to finalize replace" }, { status: 500 });
   }
 }
-
-

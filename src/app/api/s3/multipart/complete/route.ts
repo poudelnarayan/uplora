@@ -11,9 +11,10 @@ import { join } from "path";
 import { createWriteStream, createReadStream, unlinkSync } from "fs";
 import { spawn } from "child_process";
 import crypto from "crypto";
+import { syncUser } from "@/lib/video-utils";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
-const DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+const DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024;
 const maxFromEnv = Number(process.env.MAX_UPLOAD_BYTES || process.env.MAX_VIDEO_UPLOAD_BYTES);
 const MAX_UPLOAD_BYTES = Number.isFinite(maxFromEnv) && maxFromEnv > 0 ? maxFromEnv : DEFAULT_MAX_UPLOAD_BYTES;
 
@@ -27,14 +28,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "key, uploadId, parts required" }, { status: 400 });
   }
 
-  // Normalize parts shape and ensure ETag is quoted
   const normalizedParts = (parts as any[])
     .map((p: any) => {
       const partNumber = Number(p.PartNumber ?? p.partNumber);
       let etag: string | undefined = p.ETag ?? p.etag;
-      if (etag && !/^".*"$/.test(etag)) {
-        etag = `"${etag}"`;
-      }
+      if (etag && !/^".*"$/.test(etag)) etag = `"${etag}"`;
       return { PartNumber: partNumber, ETag: etag };
     })
     .filter((p) => Number.isFinite(p.PartNumber) && !!p.ETag)
@@ -49,53 +47,28 @@ export async function POST(req: NextRequest) {
       Bucket: process.env.S3_BUCKET!,
       Key: key,
       UploadId: uploadId,
-      MultipartUpload: {
-        Parts: normalizedParts,
-      },
+      MultipartUpload: { Parts: normalizedParts },
     }));
 
-    // Get user details from Clerk
     const client = await clerkClient();
-    const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
+    const user = await syncUser(userId, await client.users.getUser(userId));
 
-    // Ensure user exists in Supabase
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .upsert({
-        id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
-        image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
-      .select()
-      .single();
-
-    // Get upload lock to retrieve metadata (tolerate missing lock)
     const { data: uploadLock } = await supabaseAdmin
       .from('upload_locks')
       .select('*')
-      .eq('userId', user.id)
+      .eq('user_id', user.id)
       .eq('key', key)
       .maybeSingle();
 
-    // Parse metadata from upload lock if present; otherwise fallback to request body
-    const lockMeta: { filename?: string; contentType?: string; teamId?: string | null; videoId?: string; sizeBytes?: number } = uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
+    const lockMeta: { filename?: string; contentType?: string; teamId?: string | null; videoId?: string; sizeBytes?: number } =
+      uploadLock?.metadata ? JSON.parse(uploadLock.metadata) : {};
+
     const inferredFilename: string = (lockMeta.filename || originalFilenameFromReq || key.split('/').pop() || 'video.mp4') as string;
     const inferredContentType = lockMeta.contentType ?? contentType ?? 'application/octet-stream';
     const lockTeamId = (lockMeta.teamId !== undefined ? lockMeta.teamId : teamId) ?? null;
     const expectedSize = Number.isFinite(Number(lockMeta.sizeBytes ?? sizeBytes)) ? Number(lockMeta.sizeBytes ?? sizeBytes) : null;
-
     const title = String(inferredFilename || "").replace(/\.[^/.]+$/, "") || "Untitled";
 
-    // Derive teamId from metadata or key
-    // key pattern: <teamId>/videos/<uploadUuid>/...
     const m = key.match(/([^/]+)\/videos\/(.*?)\//);
     const teamIdFromKey = m && m[1] ? m[1] : null;
     const finalTeamId = lockTeamId ?? teamIdFromKey;
@@ -104,139 +77,120 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Could not resolve teamId for upload" }, { status: 400 });
     }
 
-    // Validate team access
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
-      .select('id, ownerId')
+      .select('id, owner_id')
       .eq('id', finalTeamId)
       .single();
+
     if (teamError || !team) {
-      console.error("Team check error:", teamError);
       return NextResponse.json({ error: "Team validation failed" }, { status: 500 });
     }
-    if (team.ownerId !== user.id) {
+
+    if (team.owner_id !== user.id) {
       const { data: membership } = await supabaseAdmin
         .from('team_members')
         .select('id')
-        .eq('teamId', finalTeamId)
-        .eq('userId', user.id)
+        .eq('team_id', finalTeamId)
+        .eq('user_id', user.id)
         .single();
       if (!membership) {
         return NextResponse.json({ error: "Not a member of this team" }, { status: 403 });
       }
     }
 
-    // Validate uploaded size before creating records
     let actualSize = 0;
     try {
       const head = await s3.send(new HeadObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
       actualSize = Number(head.ContentLength || 0);
-    } catch (headError) {
-      console.error("Failed to head uploaded object:", headError);
+    } catch {
       return NextResponse.json({ error: "Upload validation failed" }, { status: 500 });
     }
 
-    if (!actualSize) {
-      return NextResponse.json({ error: "Uploaded file has no size" }, { status: 400 });
-    }
+    if (!actualSize) return NextResponse.json({ error: "Uploaded file has no size" }, { status: 400 });
 
     if (actualSize > MAX_UPLOAD_BYTES) {
       try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
-      try {
-        await supabaseAdmin.from('upload_locks').delete().eq('userId', user.id).eq('key', key);
-      } catch {}
+      try { await supabaseAdmin.from('upload_locks').delete().eq('user_id', user.id).eq('key', key); } catch {}
       return NextResponse.json({ error: "File too large", maxBytes: MAX_UPLOAD_BYTES }, { status: 413 });
     }
 
     if (expectedSize !== null && actualSize !== expectedSize) {
       try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
-      try {
-        await supabaseAdmin.from('upload_locks').delete().eq('userId', user.id).eq('key', key);
-      } catch {}
+      try { await supabaseAdmin.from('upload_locks').delete().eq('user_id', user.id).eq('key', key); } catch {}
       return NextResponse.json({ error: "Uploaded size mismatch" }, { status: 400 });
     }
 
-    // Create the video record only after successful upload completion
-    // Use stable videoId from init (upload lock metadata) to keep S3 and DB in sync
     const newVideoId = (lockMeta.videoId as string | undefined) || crypto.randomUUID();
+    const now = new Date().toISOString();
 
-    // If replacing an existing video, preserve original ownership/team while updating media fields.
-    const { data: existingVideo } = await supabaseAdmin
-      .from("video_posts")
-      .select("id, userId, teamId, filename")
+    // Check if post already exists (re-upload case)
+    const { data: existingPost } = await supabaseAdmin
+      .from("posts")
+      .select("id, author_id, team_id, metadata")
       .eq("id", newVideoId)
       .maybeSingle();
 
-    const { data: video, error: videoError } = await supabaseAdmin
-      .from("video_posts")
-      .upsert(
-        {
-          id: newVideoId,
-          key,
-          filename: existingVideo?.filename || title,
-          contentType: inferredContentType,
-          sizeBytes: actualSize || (typeof sizeBytes === "number" ? sizeBytes : 0),
-          teamId: existingVideo?.teamId || finalTeamId,
-          userId: existingVideo?.userId || user.id,
-          status: "PROCESSING",
-          updatedAt: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      )
+    const { data: post, error: postError } = await supabaseAdmin
+      .from("posts")
+      .upsert({
+        id: newVideoId,
+        post_type: 'video',
+        status: 'draft',
+        author_id: existingPost?.author_id || user.id,
+        team_id: existingPost?.team_id || finalTeamId,
+        metadata: { ...(existingPost?.metadata || {}), video_status: 'PROCESSING', filename: existingPost?.metadata?.filename || title },
+        updated_at: now,
+        created_at: existingPost ? undefined : now,
+      }, { onConflict: "id" })
       .select()
       .single();
 
-    if (videoError) {
-      console.error("Video creation error:", videoError);
+    if (postError) {
+      console.error("Post creation error:", postError);
       return NextResponse.json({ error: "Failed to create video record" }, { status: 500 });
     }
 
-    // Clean up upload lock (best-effort)
-    try {
+    // Upsert post_media
+    const { data: existingMedia } = await supabaseAdmin
+      .from('post_media')
+      .select('id')
+      .eq('post_id', newVideoId)
+      .eq('media_type', 'video')
+      .maybeSingle();
+
+    if (existingMedia) {
       await supabaseAdmin
-        .from('upload_locks')
-        .delete()
-        .eq('userId', user.id)
-        .eq('key', key);
-    } catch {}
+        .from('post_media')
+        .update({ s3_key: key, filename: inferredFilename, content_type: inferredContentType, size_bytes: actualSize })
+        .eq('id', existingMedia.id);
+    } else {
+      await supabaseAdmin
+        .from('post_media')
+        .insert({ post_id: newVideoId, media_type: 'video', s3_key: key, filename: inferredFilename, content_type: inferredContentType, size_bytes: actualSize, position: 0 });
+    }
 
-    // Precompute canonical key: teams/<teamId>/videos/<videoId>/<originalFilename>
+    try { await supabaseAdmin.from('upload_locks').delete().eq('user_id', user.id).eq('key', key); } catch {}
+
     const fileNameForStorage: string = inferredFilename || "video.mp4";
-    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${video.id}/${fileNameForStorage}`;
+    const canonicalOriginalKey = `teams/${finalTeamId}/videos/${post.id}/${fileNameForStorage}`;
 
-    // Move original to canonical location using S3 CopyObject to avoid streaming header issues
     try {
       if (key !== canonicalOriginalKey) {
-        const copySource = `${process.env.S3_BUCKET!}/${encodeURI(key)}`;
         await s3.send(new CopyObjectCommand({
           Bucket: process.env.S3_BUCKET!,
           Key: canonicalOriginalKey,
-          CopySource: copySource,
+          CopySource: `${process.env.S3_BUCKET!}/${encodeURI(key)}`,
           MetadataDirective: "REPLACE",
           ContentType: inferredContentType,
         }));
+        try { await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key })); } catch {}
 
-        // Delete the temporary upload object to avoid directory mismatch
-        try {
-          await s3.send(new DeleteObjectCommand({
-            Bucket: process.env.S3_BUCKET!,
-            Key: key,
-          }));
-        } catch (delErr) {
-          console.warn("Failed to delete temp upload object:", delErr);
-        }
-
-        // Update video.key to canonical path
         await supabaseAdmin
-          .from('video_posts')
-          .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
-          .eq('id', video.id);
-      } else {
-        // Key is already canonical; ensure DB reflects it
-        await supabaseAdmin
-          .from('video_posts')
-          .update({ key: canonicalOriginalKey, updatedAt: new Date().toISOString() })
-          .eq('id', video.id);
+          .from('post_media')
+          .update({ s3_key: canonicalOriginalKey })
+          .eq('post_id', post.id)
+          .eq('media_type', 'video');
       }
     } catch (e) {
       console.error("Failed to move original to canonical location", e);
@@ -248,7 +202,6 @@ export async function POST(req: NextRequest) {
       const originalPath = join(tempDir, `original-${key.replace(/\W+/g, '-')}.mp4`);
       const optimizedPath = join(tempDir, `optimized-${key.replace(/\W+/g, '-')}.mp4`);
 
-      // Download original (prefer canonical, fallback to original key if needed)
       let getObj;
       try {
         getObj = await s3.send(new GetObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: canonicalOriginalKey }));
@@ -263,72 +216,43 @@ export async function POST(req: NextRequest) {
       await new Promise<void>((resolve, reject) => {
         const ws = createWriteStream(originalPath);
         body.pipe(ws);
-        ws.on("finish", () => resolve());
+        ws.on("finish", resolve);
         ws.on("error", reject);
       });
 
       await new Promise<void>((resolve, reject) => {
-        const ff = spawn("ffmpeg", [
-          "-y",
-          "-i", originalPath,
-          "-c:v", "libx264",
-          "-preset", "fast",
-          "-crf", "23",
-          "-maxrate", "3500k",
-          "-bufsize", "7000k",
-          "-c:a", "aac",
-          "-b:a", "128k",
-          "-movflags", "+faststart",
-          optimizedPath,
-        ]);
+        const ff = spawn("ffmpeg", ["-y", "-i", originalPath, "-c:v", "libx264", "-preset", "fast", "-crf", "23", "-maxrate", "3500k", "-bufsize", "7000k", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", optimizedPath]);
         ff.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)));
         ff.on("error", reject);
       });
 
-      // Upload optimized to a deterministic preview key
-      const previewKey = `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`;
-      await s3.send(new PutObjectCommand({
-        Bucket: process.env.S3_BUCKET!,
-        Key: previewKey,
-        Body: createReadStream(optimizedPath),
-        ContentType: "video/mp4",
-        CacheControl: "max-age=31536000",
-      }));
+      const previewKey = `teams/${finalTeamId}/videos/${post.id}/preview/web.mp4`;
+      await s3.send(new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: previewKey, Body: createReadStream(optimizedPath), ContentType: "video/mp4", CacheControl: "max-age=31536000" }));
 
       try { unlinkSync(originalPath); unlinkSync(optimizedPath); } catch {}
     } catch (e) {
       console.error("Preview optimization failed", e);
     }
 
-    // Broadcast after processing completes
-    broadcast({ 
-      type: "video.created", 
-      teamId: finalTeamId, 
-      payload: { id: video.id, title: video.filename }
-    });
+    broadcast({ type: "video.created", teamId: finalTeamId, payload: { id: post.id, title } });
 
-    return NextResponse.json({ ok: true, location: completed.Location ?? null, videoId: video.id, 
+    return NextResponse.json({
+      ok: true,
+      location: completed.Location ?? null,
+      videoId: post.id,
       keys: {
         baseOwner: finalTeamId,
         original: canonicalOriginalKey,
-        preview: `teams/${finalTeamId}/videos/${video.id}/preview/web.mp4`
+        preview: `teams/${finalTeamId}/videos/${post.id}/preview/web.mp4`
       }
     });
   } catch (e) {
     console.error("Multipart complete error:", e);
     try {
-      await s3.send(new AbortMultipartUploadCommand({
-        Bucket: process.env.S3_BUCKET!,
-        Key: key,
-        UploadId: uploadId,
-      }));
+      await s3.send(new AbortMultipartUploadCommand({ Bucket: process.env.S3_BUCKET!, Key: key, UploadId: uploadId }));
     } catch {}
     try {
-      await supabaseAdmin
-        .from('upload_locks')
-        .delete()
-        .eq('userId', userId)
-        .eq('key', key);
+      await supabaseAdmin.from('upload_locks').delete().eq('user_id', userId).eq('key', key);
     } catch {}
     return NextResponse.json({ error: "Complete failed" }, { status: 500 });
   }

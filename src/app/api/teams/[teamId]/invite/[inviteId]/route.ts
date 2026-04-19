@@ -26,9 +26,9 @@ export async function DELETE(
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('clerkId', userId)
+      .eq('clerk_id', userId)
       .single();
-    
+
     if (userError || !user) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.NOT_FOUND, "User not found"),
@@ -42,7 +42,7 @@ export async function DELETE(
       .select('*')
       .eq('id', teamId)
       .single();
-    
+
     if (teamError || !team) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found"),
@@ -51,7 +51,7 @@ export async function DELETE(
     }
 
     // Only team owner (creator) can manage invitations
-    if (team.ownerId !== user.id) {
+    if (team.owner_id !== user.id) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.FORBIDDEN, "Only the team owner can manage invitations"),
         { status: 403 }
@@ -63,7 +63,7 @@ export async function DELETE(
       .from('team_invites')
       .select('*')
       .eq('id', inviteId)
-      .eq('teamId', teamId)
+      .eq('team_id', teamId)
       .single();
 
     if (inviteError || !invitation) {
@@ -131,9 +131,9 @@ export async function POST(
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('clerkId', userId)
+      .eq('clerk_id', userId)
       .single();
-    
+
     if (userError || !user) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.NOT_FOUND, "User not found"),
@@ -147,7 +147,7 @@ export async function POST(
       .select('*')
       .eq('id', teamId)
       .single();
-    
+
     if (teamError || !team) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.NOT_FOUND, "Team not found"),
@@ -156,7 +156,7 @@ export async function POST(
     }
 
     // Only team owner (creator) can manage invitations
-    if (team.ownerId !== user.id) {
+    if (team.owner_id !== user.id) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.FORBIDDEN, "Only the team owner can manage invitations"),
         { status: 403 }
@@ -168,7 +168,7 @@ export async function POST(
       .from('team_invites')
       .select('*')
       .eq('id', inviteId)
-      .eq('teamId', teamId)
+      .eq('team_id', teamId)
       .single();
 
     if (inviteError || !invitation) {
@@ -181,7 +181,7 @@ export async function POST(
     // Update invitation timestamp
     const { error: updateError } = await supabaseAdmin
       .from('team_invites')
-      .update({ updatedAt: new Date().toISOString() })
+      .update({ updated_at: new Date().toISOString() })
       .eq('id', inviteId);
 
     if (updateError) {

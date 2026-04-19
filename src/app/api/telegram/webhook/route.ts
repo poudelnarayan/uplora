@@ -3,19 +3,15 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { normalizeSocialConnections } from "@/types/socialConnections";
 
 /**
  * POST /api/telegram/webhook
  *
- * Configure in Telegram:
- *   POST https://api.telegram.org/bot<token>/setWebhook?url=https://www.uplora.io/api/telegram/webhook
- *
  * Flow:
  * - User clicks /api/telegram/connect → gets deep-link https://t.me/<bot>?start=<code>
  * - User presses Start → Telegram sends /start <code> to this webhook
- * - We find the Uplora user who has socialConnections.telegram.pendingCode === <code>
- * - Store chatId + username and clear pendingCode
+ * - We find the social_accounts row where platform='telegram' and access_token = code
+ * - Store chatId + username and clear the pending code
  */
 export async function POST(req: NextRequest) {
   try {
@@ -33,49 +29,40 @@ export async function POST(req: NextRequest) {
     const code = (match[1] || "").trim();
     if (!code) return NextResponse.json({ ok: true });
 
-    // Find user by pendingCode (stored in JSON)
+    const now = new Date().toISOString();
+
+    // Find the social_accounts row with this pending code (stored in access_token)
     const { data: rows, error } = await supabaseAdmin
-      .from("users")
-      .select("id, clerkId, socialConnections")
-      .not("socialConnections", "is", null);
+      .from("social_accounts")
+      .select("id, token_expires_at, team_id")
+      .eq("platform", "telegram")
+      .eq("access_token", code)
+      .is("revoked_at", null);
 
     if (error) {
-      console.error("Telegram webhook: users query failed", error);
+      console.error("Telegram webhook: social_accounts query failed", error);
       return NextResponse.json({ ok: true });
     }
 
-    const now = Date.now();
-    let target: { clerkId: string; socialConnections: any } | null = null;
-    for (const r of rows || []) {
-      const sc = normalizeSocialConnections((r as any).socialConnections);
-      const pending = sc.telegram?.pendingCode;
-      const exp = sc.telegram?.pendingExpiresAt ? Date.parse(sc.telegram.pendingExpiresAt) : 0;
-      if (pending === code && (!exp || exp > now)) {
-        target = { clerkId: String((r as any).clerkId), socialConnections: sc };
-        break;
-      }
-    }
+    const target = (rows || []).find(row => {
+      if (!row.token_expires_at) return true;
+      return Date.parse(row.token_expires_at) > Date.now();
+    });
 
     if (!target) return NextResponse.json({ ok: true });
 
-    const next = {
-      ...target.socialConnections,
-      telegram: {
-        ...(target.socialConnections.telegram || {}),
-        connectedAt: new Date().toISOString(),
-        chatId: String(chatId),
-        username: username ? String(username) : null,
-        pendingCode: null,
-        pendingExpiresAt: null,
-      },
-    };
-
+    // Update with chatId and clear pending code
     await supabaseAdmin
-      .from("users")
-      .update({ socialConnections: next, updatedAt: new Date().toISOString() })
-      .eq("clerkId", target.clerkId);
+      .from("social_accounts")
+      .update({
+        external_account_id: String(chatId),
+        display_name: username ? String(username) : null,
+        access_token: '',
+        token_expires_at: null,
+        updated_at: now,
+      })
+      .eq("id", target.id);
 
-    // Send a confirmation message back to the user
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (token) {
       try {
@@ -84,7 +71,7 @@ export async function POST(req: NextRequest) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
-            text: "✅ Telegram connected to Uplora. You’ll receive approval requests here.",
+            text: "✅ Telegram connected to Uplora. You'll receive approval requests here.",
           }),
         });
       } catch {}
@@ -96,5 +83,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 }
-
-

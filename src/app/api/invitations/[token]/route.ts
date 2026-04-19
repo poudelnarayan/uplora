@@ -8,47 +8,32 @@ export async function GET(
 ) {
   try {
     const { token } = context.params;
-    
+
     const { data: invitation, error } = await supabaseAdmin
       .from('team_invites')
-      .select(`
-        *,
-        teams (
-          name,
-          description
-        )
-      `)
+      .select(`*, teams (name, description)`)
       .eq('token', token)
       .eq('status', 'PENDING')
-      .gt('expiresAt', new Date().toISOString())
+      .gt('expires_at', new Date().toISOString())
       .single();
 
     if (error || !invitation) {
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.NOT_FOUND, "Invitation not found or expired"),
-        { status: 404 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.NOT_FOUND, "Invitation not found or expired"), { status: 404 });
     }
 
-    // Best-effort fetch inviter details (do not fail invite loading if missing)
     let inviter: { name: string; email: string } = { name: "", email: "" };
     try {
-      if (invitation.inviterId) {
+      if (invitation.inviter_id) {
         const { data: inviterUser } = await supabaseAdmin
           .from("users")
           .select("name,email")
-          .eq("id", invitation.inviterId)
+          .eq("id", invitation.inviter_id)
           .single();
         if (inviterUser) {
-          inviter = {
-            name: inviterUser.name || "",
-            email: inviterUser.email || "",
-          };
+          inviter = { name: inviterUser.name || "", email: inviterUser.email || "" };
         }
       }
-    } catch (e) {
-      console.warn("Invite: failed to fetch inviter info (non-fatal)", e);
-    }
+    } catch {}
 
     return NextResponse.json(createSuccessResponse({
       id: invitation.id,
@@ -59,13 +44,10 @@ export async function GET(
         description: invitation.teams?.description || "",
       },
       inviter,
-      expiresAt: invitation.expiresAt,
+      expiresAt: invitation.expires_at,
     }));
   } catch (error) {
     console.error("Error fetching invitation:", error);
-    return NextResponse.json(
-      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"),
-      { status: 500 }
-    );
+    return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Internal server error"), { status: 500 });
   }
 }

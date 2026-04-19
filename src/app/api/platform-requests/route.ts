@@ -34,12 +34,12 @@ export async function POST(request: NextRequest) {
       try {
         const { error } = await supabaseAdmin.from("platform_requests").insert({
           id,
-          platformName,
-          platformUrl: platformUrl || null,
+          platform_name: platformName,
+          platform_url: platformUrl || null,
           details: details || null,
-          userId: supabaseUser.id,
+          user_id: supabaseUser.id,
           email: requesterEmail || null,
-          createdAt,
+          created_at: createdAt,
         });
         if (error) {
           // If table doesn't exist, keep flow working via email/logging

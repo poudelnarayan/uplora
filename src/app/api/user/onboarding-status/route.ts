@@ -9,17 +9,17 @@ export async function GET(req: NextRequest) {
     const { clerkUserId } = await getAuthenticatedUserSafe();
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('onboardingCompleted, onboardingSkipped, onboardingSeenAt')
-      .eq('clerkId', clerkUserId)
+      .select('onboarding_completed, onboarding_skipped, onboarding_seen_at')
+      .eq('clerk_id', clerkUserId)
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       return NextResponse.json({ error: "Failed to fetch onboarding status" }, { status: 500 });
     }
 
-    const onboardingCompleted = Boolean(user?.onboardingCompleted);
-    const onboardingSkipped = Boolean(user?.onboardingSkipped);
-    const onboardingSeenAt = user?.onboardingSeenAt ?? null;
+    const onboardingCompleted = Boolean(user?.onboarding_completed);
+    const onboardingSkipped = Boolean(user?.onboarding_skipped);
+    const onboardingSeenAt = user?.onboarding_seen_at ?? null;
     const shouldShowOnboarding = !onboardingCompleted && !onboardingSkipped;
 
     return NextResponse.json({
@@ -48,25 +48,25 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    let update: Record<string, any> = { updatedAt: now };
+    let update: Record<string, any> = { updated_at: now };
 
     if (action === "seen") {
-      update.onboardingSeenAt = now;
+      update.onboarding_seen_at = now;
     } else if (action === "skip") {
-      update.onboardingSeenAt = now;
-      update.onboardingSkipped = true;
-      update.onboardingCompleted = false;
+      update.onboarding_seen_at = now;
+      update.onboarding_skipped = true;
+      update.onboarding_completed = false;
     } else if (action === "complete") {
-      update.onboardingSeenAt = now;
-      update.onboardingCompleted = true;
-      update.onboardingSkipped = false;
+      update.onboarding_seen_at = now;
+      update.onboarding_completed = true;
+      update.onboarding_skipped = false;
     }
 
     const { data: updatedUser, error } = await supabaseAdmin
       .from("users")
       .update(update)
-      .eq("clerkId", clerkUserId)
-      .select("onboardingCompleted, onboardingSkipped, onboardingSeenAt")
+      .eq("clerk_id", clerkUserId)
+      .select("onboarding_completed, onboarding_skipped, onboarding_seen_at")
       .maybeSingle();
 
     if (error) {
@@ -76,9 +76,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const onboardingCompleted = Boolean(updatedUser?.onboardingCompleted);
-    const onboardingSkipped = Boolean(updatedUser?.onboardingSkipped);
-    const onboardingSeenAt = updatedUser?.onboardingSeenAt ?? null;
+    const onboardingCompleted = Boolean(updatedUser?.onboarding_completed);
+    const onboardingSkipped = Boolean(updatedUser?.onboarding_skipped);
+    const onboardingSeenAt = updatedUser?.onboarding_seen_at ?? null;
 
     return NextResponse.json({
       success: true,

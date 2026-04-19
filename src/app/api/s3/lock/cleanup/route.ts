@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const { data: deleted, error } = await supabaseAdmin
       .from('upload_locks')
       .delete()
-      .lt('createdAt', oneHourAgo.toISOString())
+      .lt('created_at', oneHourAgo.toISOString())
       .select();
 
     if (error) {

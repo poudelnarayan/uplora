@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { broadcast } from "@/lib/realtime";
+import { getVideoById, syncUser, getTeamAndRole, updateVideoMetadata, videoStatusToDb } from "@/lib/video-utils";
 
 export async function GET(
   req: NextRequest,
@@ -15,103 +16,41 @@ export async function GET(
     if (!userId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
     const { id } = context.params;
 
-    // Get user details from Clerk and sync with Supabase
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
+    const user = await syncUser(userId, clerkUser);
 
-    // Ensure user exists in Supabase
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .upsert({
-        id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
-        image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
-      .select()
-      .single();
+    const video = await getVideoById(id);
+    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
-    if (userError) {
-      console.error("User sync error:", userError);
-      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    // Access check
+    let hasAccess = video.userId === user.id;
+    if (!hasAccess && video.teamId) {
+      const { team, role } = await getTeamAndRole(video.teamId, user.id);
+      hasAccess = !!role;
     }
 
-    const { data: v, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .select(`
-        *,
-        users!videos_userId_fkey (
-          id,
-          name,
-          email,
-          image
-        )
-      `)
-      .eq('id', id)
-      .single();
-
-    if (videoError || !v) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
-
-    // Check access: owner or team member/owner if team video
-    let hasAccess = v.userId === user.id; // Video uploader access
-    if (!hasAccess && v.teamId) {
-      // If team video, allow team owner or any member
-      const { data: team, error: teamError } = await supabaseAdmin
-        .from('teams')
-        .select('*')
-        .eq('id', v.teamId)
-        .single();
-
-      if (team && team.ownerId === user.id) {
-        hasAccess = true;
-      } else {
-        const { data: membership, error: membershipError } = await supabaseAdmin
-          .from('team_members')
-          .select('*')
-          .eq('teamId', v.teamId)
-          .eq('userId', user.id)
-          .single();
-        hasAccess = !!membership;
-      }
-    }
-    
     if (!hasAccess) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
     return NextResponse.json({
-      id: v.id,
-      key: v.key,
-      filename: v.filename,
-      contentType: v.contentType,
-      status: v.status || "PROCESSING",
-      uploadedAt: v.uploadedAt,
-      updatedAt: v.updatedAt,
-      teamId: v.teamId || undefined,
-      requestedByUserId: v.requestedByUserId || null,
-      approvedByUserId: v.approvedByUserId || null,
-      // Include metadata fields
-      description: v.description || "",
-      visibility: v.visibility || "public",
-      madeForKids: v.madeForKids || false,
-      thumbnailKey: v.thumbnailKey || null,
-      // YouTube fields
-      youtubeVideoId: (v as any).youtubeVideoId || null,
-      youtubeThumbnailUploadStatus: (v as any).youtubeThumbnailUploadStatus || null,
-      youtubeThumbnailUploadError: (v as any).youtubeThumbnailUploadError || null,
-      uploader: {
-        id: v.users.id,
-        name: v.users.name,
-        email: v.users.email,
-        image: v.users.image
-      }
+      id: video.id,
+      key: video.key,
+      filename: video.filename,
+      contentType: video.contentType,
+      status: video.status,
+      uploadedAt: video.createdAt,
+      updatedAt: video.updatedAt,
+      teamId: video.teamId || undefined,
+      requestedByUserId: video.requestedByUserId,
+      approvedByUserId: video.approvedByUserId,
+      description: video.description || "",
+      visibility: video.visibility || "public",
+      madeForKids: video.madeForKids,
+      thumbnailKey: video.thumbnailKey,
+      youtubeVideoId: video.youtubeVideoId,
+      youtubeThumbnailUploadStatus: video.youtubeThumbnailUploadStatus,
+      youtubeThumbnailUploadError: video.youtubeThumbnailUploadError,
+      uploader: { id: video.userId },
     });
   } catch (e) {
     return NextResponse.json({ error: "Failed to get video" }, { status: 500 });
@@ -128,86 +67,33 @@ export async function PATCH(
     const { id } = context.params;
     const body = await req.json();
 
-    // Get user details from Clerk and sync with Supabase
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
-    const userEmail = clerkUser.emailAddresses[0]?.emailAddress;
-    const userName = clerkUser.fullName || clerkUser.firstName || "";
-    const userImage = clerkUser.imageUrl || "";
+    const user = await syncUser(userId, clerkUser);
 
-    // Ensure user exists in Supabase
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .upsert({
-        id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
-        image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
-      .select()
-      .single();
+    const video = await getVideoById(id);
+    if (!video) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
-    if (userError) {
-      console.error("User sync error:", userError);
-      return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
-    }
-
-    // Check access: owner or team member (team owner included)
-    const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (videoError || !video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
-
-    let hasAccess = video.userId === user.id; // Uploader (personal owner)
-    let team: { ownerId: string } | null = null;
+    let hasAccess = video.userId === user.id;
+    let team: any = null;
     if (!hasAccess && video.teamId) {
-      // Team owner has access
-      const { data: teamData, error: teamError } = await supabaseAdmin
-        .from('teams')
-        .select('ownerId')
-        .eq('id', video.teamId)
-        .single();
-
-      if (teamData?.ownerId === user.id) {
-        hasAccess = true;
-        team = teamData;
-      } else {
-        // Check if user is a member of the video's team
-        const { data: membership, error: membershipError } = await supabaseAdmin
-          .from('team_members')
-          .select('*')
-          .eq('teamId', video.teamId)
-          .eq('userId', user.id)
-          .single();
-        hasAccess = !!membership;
-      }
+      const res = await getTeamAndRole(video.teamId, user.id);
+      team = res.team;
+      hasAccess = !!res.role;
     }
-    
+
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // If video is awaiting approval/publish, lock edits for non-owners (uploader for personal, team owner for team videos)
-    if (String(video.status || "").toUpperCase() === 'PENDING' || String(video.status || "").toUpperCase() === 'APPROVED') {
+    // Lock if pending/approved (only owner can edit)
+    const lockedStatuses = ['pending_approval', 'approved'];
+    if (lockedStatuses.includes(video.dbStatus)) {
       let isOwner = video.userId === user.id;
       if (video.teamId && !isOwner) {
-        // use previously fetched team when available
         if (!team) {
-          const { data: teamData, error: teamError } = await supabaseAdmin
-            .from('teams')
-            .select('ownerId')
-            .eq('id', video.teamId)
-            .single();
-          team = teamData;
+          const res = await getTeamAndRole(video.teamId, user.id);
+          team = res.team;
         }
-        if (team?.ownerId === user.id) isOwner = true;
+        if (team?.owner_id === user.id) isOwner = true;
       }
       if (!isOwner) {
         return NextResponse.json({ error: "Video is locked for review/publish. Only the owner can edit." }, { status: 403 });
@@ -215,73 +101,76 @@ export async function PATCH(
     }
 
     const { title, description, visibility, madeForKids, thumbnailKey, status } = body as {
-      title?: string;
-      description?: string;
-      visibility?: string;
-      madeForKids?: boolean;
-      thumbnailKey?: string | null;
-      status?: string;
+      title?: string; description?: string; visibility?: string;
+      madeForKids?: boolean; thumbnailKey?: string | null; status?: string;
     };
 
-    // Optional: owner-only status revert from PENDING -> PROCESSING
-    let statusData: { status?: any; requestedByUserId?: string | null; approvedByUserId?: string | null } = {};
+    const now = new Date().toISOString();
+    const postUpdate: any = { updated_at: now };
+    const metaUpdate: any = { ...video.metadata };
+
+    if (typeof description === 'string') postUpdate.content = description;
+    if (typeof title === 'string' && title.length) {
+      metaUpdate.filename = title;
+      postUpdate.content = postUpdate.content ?? description ?? video.description;
+    }
+    if (typeof visibility === 'string') metaUpdate.visibility = visibility;
+    if (typeof madeForKids === 'boolean') metaUpdate.made_for_kids = madeForKids;
+
+    // Update thumbnail in post_media
+    if (typeof thumbnailKey === 'string' || thumbnailKey === null) {
+      if (thumbnailKey) {
+        const { data: existingThumb } = await supabaseAdmin
+          .from('post_media')
+          .select('id')
+          .eq('post_id', id)
+          .eq('media_type', 'thumbnail')
+          .maybeSingle();
+
+        if (existingThumb) {
+          await supabaseAdmin.from('post_media').update({ s3_key: thumbnailKey }).eq('id', existingThumb.id);
+        } else {
+          await supabaseAdmin.from('post_media').insert({
+            post_id: id, media_type: 'thumbnail', s3_key: thumbnailKey, position: 0,
+          });
+        }
+      } else if (thumbnailKey === null) {
+        await supabaseAdmin.from('post_media').delete().eq('post_id', id).eq('media_type', 'thumbnail');
+      }
+    }
+
+    // Owner can revert to PROCESSING
+    let statusData: any = null;
     if (typeof status === 'string') {
-      // Determine if current user is the owner of this video/team
       let isOwnerOfVideo = video.userId === user.id;
       if (!isOwnerOfVideo && video.teamId) {
-        const { data: teamData, error: teamError } = await supabaseAdmin
-          .from('teams')
-          .select('*')
-          .eq('id', video.teamId)
-          .single();
-        if (teamData?.ownerId === user.id) isOwnerOfVideo = true;
+        if (!team) { const res = await getTeamAndRole(video.teamId, user.id); team = res.team; }
+        if (team?.owner_id === user.id) isOwnerOfVideo = true;
       }
-      // Allow only reverting to PROCESSING by owner
       if (isOwnerOfVideo && status.toUpperCase() === 'PROCESSING') {
-        statusData = { status: 'PROCESSING', requestedByUserId: null, approvedByUserId: null };
+        postUpdate.status = 'draft';
+        metaUpdate.video_status = 'PROCESSING';
+        metaUpdate.requested_by_user_id = null;
+        metaUpdate.approved_by_user_id = null;
+        statusData = 'PROCESSING';
       }
     }
 
-    const updateData: any = {
-      updatedAt: new Date().toISOString()
-    };
-
-    if (typeof title === 'string' && title.length) updateData.filename = title;
-    if (typeof description === 'string') updateData.description = description;
-    if (typeof visibility === 'string') updateData.visibility = visibility;
-    if (typeof madeForKids === 'boolean') updateData.madeForKids = madeForKids;
-    if (typeof thumbnailKey === 'string' || thumbnailKey === null) updateData.thumbnailKey = thumbnailKey;
-    if (statusData.status) updateData.status = statusData.status;
-    if (statusData.requestedByUserId !== undefined) updateData.requestedByUserId = statusData.requestedByUserId;
-    if (statusData.approvedByUserId !== undefined) updateData.approvedByUserId = statusData.approvedByUserId;
+    postUpdate.metadata = metaUpdate;
 
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('video_posts')
-      .update(updateData)
+      .from('posts')
+      .update(postUpdate)
       .eq('id', id)
-      .select()
+      .select('*, post_media(*)')
       .single();
 
-    if (updateError) {
-      console.error("Error updating video:", updateError);
-      return NextResponse.json({ error: "Failed to update video" }, { status: 500 });
-    }
+    if (updateError) return NextResponse.json({ error: "Failed to update video" }, { status: 500 });
 
-    // Broadcast updates with status information
-    if (statusData.status) {
-      // Status change event
-      broadcast({ 
-        type: "video.status", 
-        teamId: updated.teamId || null, 
-        payload: { id: updated.id, status: statusData.status }
-      });
+    if (statusData) {
+      broadcast({ type: "video.status", teamId: video.teamId || null, payload: { id, status: statusData } });
     } else {
-      // General update event
-      broadcast({ 
-        type: "video.updated", 
-        teamId: updated.teamId || null, 
-        payload: { id: updated.id }
-      });
+      broadcast({ type: "video.updated", teamId: video.teamId || null, payload: { id } });
     }
 
     return NextResponse.json({ ok: true, video: updated });

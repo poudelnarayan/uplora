@@ -34,11 +34,11 @@ export async function POST(req: NextRequest) {
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
+        clerk_id: userId,
         email: "",
         name: "",
-        updatedAt: new Date().toISOString()
-      }, { onConflict: 'clerkId' })
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'clerk_id' })
       .select()
       .single();
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const { data: existingLock } = await supabaseAdmin
       .from('upload_locks')
       .select('*')
-      .eq('userId', user.id)
+      .eq('user_id', user.id)
       .single();
     
     if (existingLock) {
@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
       const { data: pTeam } = await supabaseAdmin
         .from('teams')
         .select('id')
-        .eq('ownerId', user.id)
-        .eq('isPersonal', true)
+        .eq('owner_id', user.id)
+        .eq('is_personal', true)
         .single();
       teamId = pTeam?.id || null;
       if (!teamId) {
@@ -87,12 +87,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Team not found" }, { status: 404 });
       }
       
-      if (team.ownerId !== user.id) {
+      if (team.owner_id !== user.id) {
         const { data: membership, error: memberError } = await supabaseAdmin
           .from('team_members')
-          .select('*')
-          .eq('teamId', teamId)
-          .eq('userId', user.id)
+          .select('id')
+          .eq('team_id', teamId)
+          .eq('user_id', user.id)
           .single();
         
         if (memberError || !membership) {
@@ -113,8 +113,8 @@ export async function POST(req: NextRequest) {
     // Create upload lock with metadata for completion
     const { error: lockError } = await supabaseAdmin
       .from('upload_locks')
-      .insert({ 
-        userId: user.id, 
+      .insert({
+        user_id: user.id,
         key: finalKey,
         metadata: JSON.stringify({
           filename: safeName,

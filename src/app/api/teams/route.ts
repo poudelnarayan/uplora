@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { safeAuth } from "@/lib/clerk-supabase-utils";
-import { auth } from "@clerk/nextjs/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
@@ -12,102 +11,66 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await safeAuth();
     if (!userId) {
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
-        { status: 401 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"), { status: 401 });
     }
 
-    // Get user details from Clerk (no server API key required)
     const userInfo = await currentUser();
     if (!userInfo) {
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
-        { status: 401 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"), { status: 401 });
     }
     const userEmail = userInfo.emailAddresses?.[0]?.emailAddress || "";
     const userName = userInfo.fullName || userInfo.firstName || "";
     const userImage = userInfo.imageUrl || "";
 
-    // Environment validation to avoid silent failures in production
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error("Team creation misconfiguration: Missing Supabase env vars.", {
-        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      });
       return NextResponse.json(
-        createErrorResponse(
-          ErrorCodes.INTERNAL_ERROR,
-          "Server configuration error. Please set Supabase URL and Service Role key."
-        ),
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Server configuration error. Please set Supabase URL and Service Role key."),
         { status: 500 }
       );
     }
 
-    // Ensure user exists in database
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
+        clerk_id: userId,
+        email: userEmail || "",
+        name: userName,
         image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'clerk_id' })
       .select()
       .single();
 
     if (userError) {
       console.error("User sync error:", userError);
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to sync user"),
-        { status: 500 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to sync user"), { status: 500 });
     }
 
     const body = await request.json();
-
-    // Basic validation
-    const { name, description, platforms } = body;
+    const { name, description } = body;
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Team name is required"),
-        { status: 400 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Team name is required"), { status: 400 });
     }
 
-    // Check for duplicate team names for this user
     const { data: existingTeam, error: checkError } = await supabaseAdmin
       .from('teams')
       .select('id')
-      .eq('ownerId', user.id)
+      .eq('owner_id', user.id)
       .eq('name', name.trim())
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error("Supabase error:", checkError);
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to check existing teams"),
-        { status: 500 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to check existing teams"), { status: 500 });
     }
 
     if (existingTeam) {
       return NextResponse.json(
-        createErrorResponse(
-          ErrorCodes.VALIDATION_ERROR, 
-          "You already have a team with this name", 
-          { name: "Team name already exists" }
-        ),
+        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "You already have a team with this name", { name: "Team name already exists" }),
         { status: 400 }
       );
     }
 
-    // Create new team (always a team workspace, not personal)
     const teamId = `team-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const now = new Date().toISOString();
     const { data: team, error: createError } = await supabaseAdmin
@@ -116,55 +79,44 @@ export async function POST(request: NextRequest) {
         id: teamId,
         name: name.trim(),
         description: description?.trim() || "",
-        platforms: platforms || [],
-        ownerId: user.id,
-        isPersonal: false, // Team workspaces are never personal
-        createdAt: now,
-        updatedAt: now
+        owner_id: user.id,
+        is_personal: false,
+        created_at: now,
+        updated_at: now
       })
       .select()
       .single();
 
     if (createError) {
       console.error("Supabase error:", createError);
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create team"),
-        { status: 500 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create team"), { status: 500 });
     }
 
-    // Add the owner as a team member with ADMIN role (since enum doesn't include OWNER)
+    const memberId = `tm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const { error: memberError } = await supabaseAdmin
       .from('team_members')
       .upsert({
-        id: user.id, // Use Clerk user ID as the member ID
-        teamId: team.id,
-        userId: user.id,
-        role: 'ADMIN', // Use ADMIN since OWNER is not in the enum
+        id: memberId,
+        team_id: team.id,
+        user_id: user.id,
+        role: 'OWNER',
         status: 'ACTIVE',
-        joinedAt: now,
-        updatedAt: now // Add required updatedAt field
-      }, {
-        onConflict: 'id,teamId' // Handl e conflicts on both id and teamId
-      });
+        joined_at: now,
+        updated_at: now
+      }, { onConflict: 'team_id,user_id' });
 
     if (memberError) {
       console.error("Failed to add owner as team member:", memberError);
-      // Don't fail the request, but log the error
     }
 
-    // Realtime notify all connected clients to refresh team lists
-    broadcast({
-      type: "team.created",
-      payload: { id: team.id, name: team.name, description: team.description },
-    });
+    broadcast({ type: "team.created", payload: { id: team.id, name: team.name, description: team.description } });
 
     return NextResponse.json(createSuccessResponse({
       data: {
         id: team.id,
         name: team.name,
         description: team.description,
-        createdAt: team.createdAt,
+        createdAt: team.created_at,
         isPersonal: false,
         isOwner: true,
         role: 'OWNER'
@@ -172,10 +124,7 @@ export async function POST(request: NextRequest) {
     }));
   } catch (error) {
     console.error("Team creation error:", error);
-    return NextResponse.json(
-      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create team"),
-      { status: 500 }
-    );
+    return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to create team"), { status: 500 });
   }
 }
 
@@ -183,72 +132,51 @@ export async function GET(request: NextRequest) {
   try {
     const { userId } = await safeAuth();
     if (!userId) {
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
-        { status: 401 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"), { status: 401 });
     }
 
-    // Get user details from Clerk (no server API key required)
     const userInfo = await currentUser();
     if (!userInfo) {
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"),
-        { status: 401 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.UNAUTHORIZED, "Authentication required"), { status: 401 });
     }
     const userEmail = userInfo.emailAddresses?.[0]?.emailAddress || "";
     const userName = userInfo.fullName || userInfo.firstName || "";
     const userImage = userInfo.imageUrl || "";
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error("Teams GET misconfiguration: Missing Supabase env vars.", {
-        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      });
       return NextResponse.json(
-        createErrorResponse(
-          ErrorCodes.INTERNAL_ERROR,
-          "Server configuration error. Please set Supabase URL and Service Role key."
-        ),
+        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Server configuration error. Please set Supabase URL and Service Role key."),
         { status: 500 }
       );
     }
 
-    // Ensure user exists in database
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
+        clerk_id: userId,
+        email: userEmail || "",
+        name: userName,
         image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'clerk_id' })
       .select()
       .single();
 
     if (userError) {
       console.error("User sync error:", userError);
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to sync user"),
-        { status: 500 }
-      );
+      return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to sync user"), { status: 500 });
     }
 
-    // Ensure user has a personal workspace
+    // Ensure personal workspace exists
     let { data: personalTeam, error: personalError } = await supabaseAdmin
       .from('teams')
       .select('*')
-      .eq('ownerId', user.id)
-      .eq('isPersonal', true)
+      .eq('owner_id', user.id)
+      .eq('is_personal', true)
       .single();
 
     if (personalError && personalError.code === 'PGRST116') {
-      // Create personal workspace if it doesn't exist
       const personalTeamId = `personal-${user.id}`;
       const now = new Date().toISOString();
       const { data: newPersonalTeam, error: createError } = await supabaseAdmin
@@ -257,10 +185,10 @@ export async function GET(request: NextRequest) {
           id: personalTeamId,
           name: `${userName}'s Personal Workspace`,
           description: "Your personal workspace for individual content",
-          ownerId: user.id,
-          isPersonal: true,
-          createdAt: now,
-          updatedAt: now
+          owner_id: user.id,
+          is_personal: true,
+          created_at: now,
+          updated_at: now
         })
         .select()
         .single();
@@ -269,86 +197,57 @@ export async function GET(request: NextRequest) {
         console.error("Personal workspace creation error:", createError);
       } else {
         personalTeam = newPersonalTeam;
-        
-        // Update user's personal team ID
         await supabaseAdmin
           .from('users')
-          .update({ personalTeamId: personalTeam.id })
+          .update({ personal_team_id: personalTeam.id })
           .eq('id', user.id);
       }
     }
 
-    // Get teams where user is owner
     const { data: ownedTeams, error: ownedError } = await supabaseAdmin
       .from('teams')
       .select('*')
-      .eq('ownerId', user.id)
-      .order('createdAt', { ascending: false });
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false });
 
     if (ownedError) {
-      console.error("Owned teams error:", ownedError);
       return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch owned teams"), { status: 500 });
     }
 
-    // Get teams where user is a member (production schema uses snake_case: team_members)
     const { data: memberTeams, error: memberError } = await supabaseAdmin
       .from('teams')
-      .select(`
-        *,
-        team_members!inner (
-          role,
-          status,
-          userId
-        )
-      `)
-      .eq('team_members.userId', user.id)
-      // Do NOT filter by status at the SQL level using string values (status is an enum).
-      // We'll filter ACTIVE rows safely in JS below to avoid enum cast errors.
-      .order('createdAt', { ascending: false });
+      .select(`*, team_members!inner (role, status, user_id)`)
+      .eq('team_members.user_id', user.id)
+      .order('created_at', { ascending: false });
 
     if (memberError) {
       console.error("Member teams error:", memberError);
       return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch member teams"), { status: 500 });
     }
 
-    // Merge and deduplicate teams
     const allTeams = [...(ownedTeams || []), ...(memberTeams || [])];
-    const uniqueTeams = allTeams.filter((team, index, self) =>
-      index === self.findIndex(t => t.id === team.id)
-    );
+    const uniqueTeams = allTeams.filter((team, index, self) => index === self.findIndex(t => t.id === team.id));
 
-    // Fetch active members for all teams (so UI can show correct member count immediately)
     const teamIds = uniqueTeams.map(t => t.id).filter(Boolean);
     const membersByTeamId = new Map<string, Array<{ id: string; name: string; email: string; role: string; avatar: string }>>();
+
     if (teamIds.length > 0) {
       const { data: memberRows, error: membersError } = await supabaseAdmin
         .from("team_members")
-        .select(`
-          teamId,
-          role,
-          status,
-          userId,
-          users (
-            id,
-            name,
-            email,
-            image
-          )
-        `)
-        .in("teamId", teamIds);
+        .select(`team_id, role, status, user_id, users (id, name, email, image)`)
+        .in("team_id", teamIds);
 
       if (membersError) {
         console.error("Team members fetch error:", membersError);
       } else {
         for (const row of memberRows || []) {
-          // Only count ACTIVE members in members_data
           const status = String((row as any).status || "").toUpperCase();
           if (status !== "ACTIVE") continue;
-          const teamId = (row as any).teamId as string;
+          const teamId = (row as any).team_id as string;
           const u = (row as any).users || {};
           const list = membersByTeamId.get(teamId) || [];
           list.push({
-            id: String((row as any).userId || u.id || ""),
+            id: String((row as any).user_id || u.id || ""),
             name: String(u.name || ""),
             email: String(u.email || ""),
             role: String((row as any).role || "MEMBER"),
@@ -368,13 +267,12 @@ export async function GET(request: NextRequest) {
         id: team.id,
         name: team.name,
         description: team.description,
-        platforms: (team as any).platforms || [],
-        isPersonal: team.isPersonal || false,
-        createdAt: team.createdAt,
-        updatedAt: team.updatedAt,
-        ownerId: team.ownerId,
-        isOwner: team.ownerId === user.id,
-        role: team.ownerId === user.id ? 'OWNER' :
+        isPersonal: team.is_personal || false,
+        createdAt: team.created_at,
+        updatedAt: team.updated_at,
+        ownerId: team.owner_id,
+        isOwner: team.owner_id === user.id,
+        role: team.owner_id === user.id ? 'OWNER' :
           activeMembership?.role || (team as any).team_members?.[0]?.role || 'MEMBER',
         members_data,
         memberCount: members_data.length,
@@ -384,9 +282,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(createSuccessResponse({ data: formattedTeams }));
   } catch (error) {
     console.error("Teams fetch error:", error);
-    return NextResponse.json(
-      createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch teams"),
-      { status: 500 }
-    );
+    return NextResponse.json(createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to fetch teams"), { status: 500 });
   }
 }

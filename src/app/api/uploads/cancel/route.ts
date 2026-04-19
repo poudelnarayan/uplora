@@ -41,11 +41,13 @@ export async function POST(req: NextRequest) {
       // Remove provisional video row if present and still not associated with a full file
       if (videoId) {
         try {
+          // Delete post_media first (FK), then posts
+          await supabaseAdmin.from('post_media').delete().eq('post_id', videoId);
           const { error: deleteError } = await supabaseAdmin
-            .from('video_posts')
+            .from('posts')
             .delete()
             .eq('id', videoId)
-            .eq('userId', supabaseUser.id);
+            .eq('author_id', supabaseUser.id);
 
           if (deleteError) {
             console.error("Failed to delete video:", deleteError);
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest) {
         const { error: lockError } = await supabaseAdmin
           .from('upload_locks')
           .delete()
-          .eq('userId', supabaseUser.id);
+          .eq('user_id', supabaseUser.id);
 
         if (lockError) {
           console.error("Failed to delete upload lock:", lockError);

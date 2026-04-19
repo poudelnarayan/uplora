@@ -20,13 +20,15 @@ async function assertAuthorizedForKey(key: string) {
   if (role && ["admin", "editor"].includes(role)) return { userId };
 
   // Otherwise ensure the user can access the video by team membership or ownership
-  const { data: video } = await supabaseAdmin
-    .from('video_posts')
-    .select('id, teamId, userId')
-    .eq('key', key)
+  const { data: media } = await supabaseAdmin
+    .from('post_media')
+    .select('post_id, posts!inner(id, team_id, author_id)')
+    .eq('s3_key', key)
     .maybeSingle();
 
-  if (!video) throw Object.assign(new Error("Not found"), { status: 404 });
+  if (!media) throw Object.assign(new Error("Not found"), { status: 404 });
+
+  const video = { teamId: (media as any).posts?.team_id ?? null, userId: (media as any).posts?.author_id };
 
   if (video.teamId) {
     const access = await checkTeamAccess(video.teamId, userId);

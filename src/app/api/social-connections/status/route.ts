@@ -20,19 +20,18 @@ export async function GET(req: Request) {
     if (teamId) {
       const { data: team } = await supabaseAdmin
         .from("teams")
-        .select("id, ownerId, name")
+        .select("id, owner_id, name")
         .eq("id", teamId)
         .maybeSingle();
 
       if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
-      // Validate requester has access to this team
-      if (team.ownerId !== userId) {
+      if (team.owner_id !== userId) {
         const { data: membership } = await supabaseAdmin
           .from("team_members")
-          .select("userId, status")
-          .eq("teamId", teamId)
-          .eq("userId", userId)
+          .select("user_id, status")
+          .eq("team_id", teamId)
+          .eq("user_id", userId)
           .maybeSingle();
 
         const st = String((membership as any)?.status || "").toUpperCase();
@@ -41,7 +40,7 @@ export async function GET(req: Request) {
         }
       }
 
-      const sc = await getUserSocialConnections(String(team.ownerId));
+      const sc = await getUserSocialConnections(String(team.owner_id));
 
       const connected = new Set<string>();
       if (sc.facebook?.userAccessToken || sc.facebook?.accessToken) connected.add("facebook");
@@ -56,7 +55,7 @@ export async function GET(req: Request) {
       const { data: owner } = await supabaseAdmin
         .from("users")
         .select("name, email")
-        .eq("clerkId", String(team.ownerId))
+        .eq("id", String(team.owner_id))
         .maybeSingle();
 
       return NextResponse.json({

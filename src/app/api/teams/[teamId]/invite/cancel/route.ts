@@ -36,13 +36,13 @@ export async function POST(
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
+        clerk_id: userId,
+        email: userEmail || "",
+        name: userName,
         image: userImage,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       }, {
-        onConflict: 'clerkId'
+        onConflict: 'clerk_id'
       })
       .select()
       .single();
@@ -63,7 +63,7 @@ export async function POST(
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    if (team.ownerId !== currentUser.id) {
+    if (team.owner_id !== currentUser.id) {
       return NextResponse.json({ error: "Only the team owner can cancel invitations" }, { status: 403 });
     }
 
@@ -71,7 +71,7 @@ export async function POST(
     let query = supabaseAdmin
       .from('team_invites')
       .select('*')
-      .eq('teamId', teamId)
+      .eq('team_id', teamId)
       .eq('status', 'PENDING');
 
     if (id) {
@@ -88,7 +88,7 @@ export async function POST(
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('team_invites')
-      .update({ status: 'REJECTED', updatedAt: new Date().toISOString() })
+      .update({ status: 'REJECTED', updated_at: new Date().toISOString() })
       .eq('id', invite.id)
       .select()
       .single();
@@ -98,7 +98,7 @@ export async function POST(
       return NextResponse.json({ error: "Failed to cancel invitation" }, { status: 500 });
     }
 
-    broadcast({ type: "team.invite.cancelled", teamId: updated.teamId, payload: { id: updated.id } });
+    broadcast({ type: "team.invite.cancelled", teamId: updated.team_id, payload: { id: updated.id } });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error cancelling invitation:", error);

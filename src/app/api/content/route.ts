@@ -16,11 +16,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get user from database
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('clerkId', userId)
+      .eq('clerk_id', userId)
       .single();
 
     if (userError || !user) {
@@ -31,331 +30,193 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-      let teamId = searchParams.get('teamId');
-      const types = searchParams.get('types')?.split(',') || ['video', 'image', 'text', 'reel'];
-      const status = searchParams.get('status') || 'ALL';
-      const sortBy = searchParams.get('sortBy') || 'newest';
-      const limit = parseInt(searchParams.get('limit') || '50');
-      const offset = parseInt(searchParams.get('offset') || '0');
+    let teamId = searchParams.get('teamId');
+    const types = searchParams.get('types')?.split(',') || ['video', 'image', 'text', 'reel'];
+    const status = searchParams.get('status') || 'ALL';
+    const sortBy = searchParams.get('sortBy') || 'newest';
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-      // Default to personal workspace when teamId is omitted
-      if (!teamId) {
-        const { data: pTeam } = await supabaseAdmin
-          .from('teams')
-          .select('id')
-          .eq('ownerId', user.id)
-          .eq('isPersonal', true)
-          .single();
-        teamId = pTeam?.id || null;
-      }
+    if (!teamId) {
+      const { data: pTeam } = await supabaseAdmin
+        .from('teams')
+        .select('id')
+        .eq('owner_id', user.id)
+        .eq('is_personal', true)
+        .single();
+      teamId = pTeam?.id || null;
+    }
 
-      if (!teamId) {
+    if (!teamId) {
+      return NextResponse.json(
+        createErrorResponse('TEAM_NOT_FOUND', 'No team found for this user'),
+        { status: 400 }
+      );
+    }
+
+    // Validate team access
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .single();
+
+    if (teamError || !team) {
+      return NextResponse.json(
+        createErrorResponse('TEAM_NOT_FOUND', 'Team not found'),
+        { status: 404 }
+      );
+    }
+
+    if (team.owner_id !== user.id) {
+      const { data: membership } = await supabaseAdmin
+        .from('team_members')
+        .select('*')
+        .eq('team_id', teamId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!membership) {
         return NextResponse.json(
-          createErrorResponse('TEAM_NOT_FOUND', 'No team found for this user'),
-          { status: 400 }
+          createErrorResponse('ACCESS_DENIED', 'Not a member of this team'),
+          { status: 403 }
         );
       }
+    }
 
-      // Validate team access
-      if (teamId) {
-        const { data: team, error: teamError } = await supabaseAdmin
-          .from('teams')
-          .select('*')
-          .eq('id', teamId)
-          .single();
-        
-        if (teamError || !team) {
-          return NextResponse.json(
-            createErrorResponse('TEAM_NOT_FOUND', 'Team not found'),
-            { status: 404 }
-          );
-        }
-        
-        if (team.ownerId !== user.id) {
-          const { data: membership, error: memberError } = await supabaseAdmin
-            .from('team_members')
-            .select('*')
-            .eq('teamId', teamId)
-            .eq('userId', user.id)
-            .single();
-          
-          if (memberError || !membership) {
-            return NextResponse.json(
-              createErrorResponse('ACCESS_DENIED', 'Not a member of this team'),
-              { status: 403 }
-            );
-          }
-        }
-      }
+    // Build query on unified posts table
+    let query = supabaseAdmin
+      .from('posts')
+      .select(`
+        id,
+        post_type,
+        content,
+        status,
+        scheduled_for,
+        published_at,
+        folder_path,
+        metadata,
+        author_id,
+        team_id,
+        created_at,
+        updated_at,
+        post_media (
+          id,
+          media_type,
+          s3_key,
+          filename,
+          content_type,
+          size_bytes,
+          duration_ms,
+          position
+        )
+      `)
+      .eq('team_id', teamId)
+      .in('post_type', types);
 
-      const allContent = [];
+    if (status !== 'ALL') {
+      const mappedStatus = mapToDbStatus(status);
+      query = query.eq('status', mappedStatus);
+    }
 
-      // Fetch videos
-      if (types.includes('video')) {
-        let videoQuery = supabaseAdmin
-          .from('video_posts')
-          .select(`
-            id,
-            key,
-            filename,
-            contentType,
-            sizeBytes,
-            status,
-            description,
-            visibility,
-            madeForKids,
-            updatedAt,
-            thumbnailKey,
-            userId,
-            teamId,
-            requestedByUserId,
-            approvedByUserId
-          `)
-          .eq('teamId', teamId);
+    switch (sortBy) {
+      case 'newest':
+        query = query.order('created_at', { ascending: false });
+        break;
+      case 'oldest':
+        query = query.order('created_at', { ascending: true });
+        break;
+      case 'title':
+        query = query.order('content', { ascending: true });
+        break;
+      case 'status':
+        query = query.order('status', { ascending: true });
+        break;
+    }
 
-        if (status !== 'ALL') {
-          // For APPROVAL_REQUESTED, also include legacy PENDING with requestedByUserId
-          if (status === 'APPROVAL_REQUESTED') {
-            videoQuery = videoQuery.or(`status.eq.APPROVAL_REQUESTED,and(status.eq.PENDING,requestedByUserId.not.is.null)`);
-          } else {
-            videoQuery = videoQuery.eq('status', status);
-          }
-        }
+    const { data: posts, error: postsError } = await query.range(offset, offset + limit - 1);
 
-          // Apply sorting
-          switch (sortBy) {
-            case 'newest':
-              videoQuery = videoQuery.order('updatedAt', { ascending: false });
-              break;
-            case 'oldest':
-              videoQuery = videoQuery.order('updatedAt', { ascending: true });
-              break;
-            case 'title':
-              videoQuery = videoQuery.order('filename', { ascending: true });
-              break;
-            case 'status':
-              videoQuery = videoQuery.order('status', { ascending: true });
-              break;
-          }
-
-        const { data: videos, error: videoError } = await videoQuery
-          .range(offset, offset + limit - 1);
-
-        if (videoError) {
-          console.error('Video fetch error:', videoError);
-        } else {
-          allContent.push(...(videos || []).map(video => ({
-            ...video,
-            type: 'video' as const,
-            title: video.description || video.filename || 'Video Post',
-            content: video.description || video.filename || 'Video content',
-            createdAt: video.updatedAt, // Use updatedAt as createdAt for videos
-            platforms: [], // Videos don't have platforms in this table
-            scheduledFor: null, // Videos don't have scheduledFor in this table
-            metadata: null, // Videos don't have metadata in this table
-            thumbnail: video.thumbnailKey ? `/api/s3/get-url?key=${encodeURIComponent(video.thumbnailKey)}` : null
-          })));
-        }
-      }
-
-      // Fetch image posts
-      if (types.includes('image')) {
-        let imageQuery = supabaseAdmin
-          .from('image_posts')
-          .select(`
-            id,
-            content,
-            status,
-            platforms,
-            createdAt,
-            updatedAt,
-            scheduledFor,
-            imageKey,
-            metadata,
-            userId,
-            teamId
-          `)
-          .eq('teamId', teamId);
-
-        if (status !== 'ALL') {
-          imageQuery = imageQuery.eq('status', status);
-        }
-
-        // Apply sorting
-        switch (sortBy) {
-          case 'newest':
-            imageQuery = imageQuery.order('createdAt', { ascending: false });
-            break;
-          case 'oldest':
-            imageQuery = imageQuery.order('createdAt', { ascending: true });
-            break;
-          case 'title':
-            imageQuery = imageQuery.order('content', { ascending: true });
-            break;
-          case 'status':
-            imageQuery = imageQuery.order('status', { ascending: true });
-            break;
-        }
-
-        const { data: images, error: imageError } = await imageQuery
-          .range(offset, offset + limit - 1);
-
-        if (imageError) {
-          console.error('Image fetch error:', imageError);
-        } else {
-          allContent.push(...(images || []).map(image => ({
-            ...image,
-            type: 'image' as const,
-            title: image.content?.substring(0, 50) + (image.content && image.content.length > 50 ? '...' : '') || 'Image Post',
-            thumbnail: image.imageKey ? `/api/s3/get-url?key=${encodeURIComponent(image.imageKey)}` : null
-          })));
-        }
-      }
-
-      // Fetch text posts
-      if (types.includes('text')) {
-        let textQuery = supabaseAdmin
-          .from('text_posts')
-          .select(`
-            id,
-            content,
-            status,
-            platforms,
-            createdAt,
-            updatedAt,
-            scheduledFor,
-            metadata,
-            userId,
-            teamId
-          `)
-          .eq('teamId', teamId);
-
-        if (status !== 'ALL') {
-          textQuery = textQuery.eq('status', status);
-        }
-
-        // Apply sorting
-        switch (sortBy) {
-          case 'newest':
-            textQuery = textQuery.order('createdAt', { ascending: false });
-            break;
-          case 'oldest':
-            textQuery = textQuery.order('createdAt', { ascending: true });
-            break;
-          case 'title':
-            textQuery = textQuery.order('content', { ascending: true });
-            break;
-          case 'status':
-            textQuery = textQuery.order('status', { ascending: true });
-            break;
-        }
-
-        const { data: texts, error: textError } = await textQuery
-          .range(offset, offset + limit - 1);
-
-        if (textError) {
-          console.error('Text fetch error:', textError);
-        } else {
-          allContent.push(...(texts || []).map(text => ({
-            ...text,
-            type: 'text' as const,
-            title: text.content?.substring(0, 50) + (text.content && text.content.length > 50 ? '...' : '') || 'Text Post'
-          })));
-        }
-      }
-
-      // Fetch reel posts
-      if (types.includes('reel')) {
-        let reelQuery = supabaseAdmin
-          .from('reel_posts')
-          .select(`
-            id,
-            title,
-            content,
-            status,
-            platforms,
-            createdAt,
-            updatedAt,
-            scheduledFor,
-            videoKey,
-            metadata,
-            userId,
-            teamId
-          `)
-          .eq('teamId', teamId);
-
-        if (status !== 'ALL') {
-          reelQuery = reelQuery.eq('status', status);
-        }
-
-        // Apply sorting
-        switch (sortBy) {
-          case 'newest':
-            reelQuery = reelQuery.order('createdAt', { ascending: false });
-            break;
-          case 'oldest':
-            reelQuery = reelQuery.order('createdAt', { ascending: true });
-            break;
-          case 'title':
-            reelQuery = reelQuery.order('title', { ascending: true });
-            break;
-          case 'status':
-            reelQuery = reelQuery.order('status', { ascending: true });
-            break;
-        }
-
-        const { data: reels, error: reelError } = await reelQuery
-          .range(offset, offset + limit - 1);
-
-        if (reelError) {
-          console.error('Reel fetch error:', reelError);
-        } else {
-          allContent.push(...(reels || []).map(reel => ({
-            ...reel,
-            type: 'reel' as const,
-            thumbnail: reel.videoKey ? `/api/s3/get-url?key=${encodeURIComponent(reel.videoKey)}` : null
-          })));
-        }
-      }
-
-      // Sort combined results if needed
-      if (sortBy === 'newest') {
-        allContent.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      } else if (sortBy === 'oldest') {
-        allContent.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-      } else if (sortBy === 'title') {
-        allContent.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-      } else if (sortBy === 'status') {
-        allContent.sort((a, b) => a.status.localeCompare(b.status));
-      }
-
-      // Get user info for uploaders (avoid Set iteration for older targets)
-      const userIds = Object.keys(
-        allContent.reduce((acc: Record<string, true>, item: any) => {
-          if (item.userId) acc[item.userId] = true;
-          return acc;
-        }, {})
-      );
-      const { data: users } = await supabaseAdmin
-        .from('users')
-        .select('id, name, email, image')
-        .in('id', userIds);
-
-      const userMap = new Map(users?.map(user => [user.id, user]) || []);
-
-      // Add uploader info to content
-      const contentWithUsers = allContent.map(item => ({
-        ...item,
-        uploader: userMap.get(item.userId)
-      }));
-
+    if (postsError) {
+      console.error('Posts fetch error:', postsError);
       return NextResponse.json(
-        createSuccessResponse({
-          content: contentWithUsers,
-          total: allContent.length,
-          hasMore: allContent.length === limit
-        })
+        createErrorResponse('INTERNAL_ERROR', 'Failed to fetch content'),
+        { status: 500 }
       );
+    }
+
+    // Fetch uploader info
+    const userIds = [...new Set((posts || []).map((p: any) => p.author_id).filter(Boolean))];
+    const { data: users } = await supabaseAdmin
+      .from('users')
+      .select('id, name, email, image')
+      .in('id', userIds);
+
+    const userMap = new Map(users?.map(u => [u.id, u]) || []);
+
+    const content = (posts || []).map((post: any) => {
+      const primaryMedia = (post.post_media || [])
+        .filter((m: any) => m.media_type !== 'thumbnail')
+        .sort((a: any, b: any) => a.position - b.position)[0];
+      const thumbnailMedia = (post.post_media || [])
+        .find((m: any) => m.media_type === 'thumbnail');
+
+      const thumbnailKey = thumbnailMedia?.s3_key || post.metadata?.thumbnail_key || null;
+      const mediaKey = primaryMedia?.s3_key || post.metadata?.key || null;
+
+      return {
+        id: post.id,
+        type: post.post_type,
+        content: post.content,
+        status: mapFromDbStatus(post.status, post.post_type),
+        platforms: post.metadata?.platforms || [],
+        scheduledFor: post.scheduled_for,
+        createdAt: post.created_at,
+        updatedAt: post.updated_at,
+        teamId: post.team_id,
+        userId: post.author_id,
+        metadata: post.metadata,
+        folderPath: post.folder_path,
+        // type-specific convenience fields
+        title: post.post_type === 'reel'
+          ? (post.metadata?.title || post.content?.substring(0, 50) || 'Reel')
+          : post.content?.substring(0, 50) || `${post.post_type} Post`,
+        // media
+        key: mediaKey,
+        filename: primaryMedia?.filename || post.metadata?.filename || null,
+        contentType: primaryMedia?.content_type || post.metadata?.content_type || null,
+        sizeBytes: primaryMedia?.size_bytes || post.metadata?.size_bytes || null,
+        imageKey: post.post_type === 'image' ? mediaKey : null,
+        videoKey: post.post_type === 'reel' ? mediaKey : null,
+        thumbnailKey,
+        thumbnail: thumbnailKey
+          ? `/api/s3/get-url?key=${encodeURIComponent(thumbnailKey)}`
+          : mediaKey
+            ? `/api/s3/get-url?key=${encodeURIComponent(mediaKey)}`
+            : null,
+        // video-specific fields
+        description: post.content,
+        visibility: post.metadata?.visibility || null,
+        madeForKids: post.metadata?.made_for_kids || false,
+        requestedByUserId: post.metadata?.requested_by_user_id || null,
+        approvedByUserId: post.metadata?.approved_by_user_id || null,
+        uploader: userMap.get(post.author_id),
+      };
+    });
+
+    // Sort combined results
+    if (sortBy === 'newest') {
+      content.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortBy === 'oldest') {
+      content.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+
+    return NextResponse.json(
+      createSuccessResponse({
+        content,
+        total: content.length,
+        hasMore: content.length === limit
+      })
+    );
 
   } catch (error) {
     console.error('Content fetch error:', error);
@@ -364,4 +225,35 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Map legacy uppercase status values → new lowercase DB enum values
+export function mapToDbStatus(status: string): string {
+  const map: Record<string, string> = {
+    'DRAFT': 'draft',
+    'PROCESSING': 'draft',
+    'READY_TO_PUBLISH': 'draft',
+    'PENDING': 'pending_approval',
+    'APPROVAL_REQUESTED': 'pending_approval',
+    'APPROVAL_APPROVED': 'approved',
+    'APPROVED': 'approved',
+    'SCHEDULED': 'scheduled',
+    'POSTED': 'published',
+    'PUBLISHED': 'published',
+    'REJECTED': 'rejected',
+  };
+  return map[status.toUpperCase()] ?? status.toLowerCase();
+}
+
+// Map new DB enum values → legacy uppercase values expected by frontend
+export function mapFromDbStatus(dbStatus: string, postType?: string): string {
+  const map: Record<string, string> = {
+    'draft': postType === 'video' ? 'PROCESSING' : 'DRAFT',
+    'pending_approval': 'APPROVAL_REQUESTED',
+    'approved': 'APPROVAL_APPROVED',
+    'scheduled': 'SCHEDULED',
+    'published': 'POSTED',
+    'rejected': 'REJECTED',
+  };
+  return map[dbStatus] ?? dbStatus.toUpperCase();
 }

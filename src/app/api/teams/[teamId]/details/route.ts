@@ -24,7 +24,7 @@ export async function GET(
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('clerkId', userId)
+      .eq('clerk_id', userId)
       .single();
 
     if (userError || !user) {
@@ -49,14 +49,14 @@ export async function GET(
     }
 
     // Check if user has access (owner or member)
-    let hasAccess = team.ownerId === user.id;
+    let hasAccess = team.owner_id === user.id;
     
     if (!hasAccess) {
       const { data: membership } = await supabaseAdmin
         .from('team_members')
         .select('id')
-        .eq('teamId', teamId)
-        .eq('userId', user.id)
+        .eq('team_id', teamId)
+        .eq('user_id', user.id)
         .eq('status', 'ACTIVE')
         .single();
       
@@ -74,7 +74,7 @@ export async function GET(
     const { data: owner, error: ownerError } = await supabaseAdmin
       .from('users')
       .select('id, name, email, image')
-      .eq('id', team.ownerId)
+      .eq('id', team.owner_id)
       .single();
 
     // Get team members
@@ -92,15 +92,15 @@ export async function GET(
           image
         )
       `)
-      .eq('teamId', teamId)
-      .order('joinedAt', { ascending: true });
+      .eq('team_id', teamId)
+      .order('joined_at', { ascending: true });
 
     // Get team invitations
     const { data: invites, error: invitesError } = await supabaseAdmin
       .from('team_invites')
       .select('*')
-      .eq('teamId', teamId)
-      .order('createdAt', { ascending: false });
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false });
 
     return NextResponse.json(createSuccessResponse({
       team: {
@@ -108,15 +108,15 @@ export async function GET(
         name: team.name,
         description: team.description,
         owner: owner || null,
-        createdAt: team.createdAt,
-        ownerId: team.ownerId,
-        isPersonal: team.isPersonal
+        createdAt: team.created_at,
+        ownerId: team.owner_id,
+        isPersonal: team.is_personal
       },
       members: (members || []).map(m => ({
         id: m.id,
         role: m.role,
         status: m.status,
-        joinedAt: m.joinedAt,
+        joinedAt: m.joined_at,
         user: m.users
       })),
       invites: invites || []

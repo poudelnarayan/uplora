@@ -5,6 +5,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 import { broadcast } from "@/lib/realtime";
+import { mapToDbStatus } from "@/app/api/content/route";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user details from Clerk
     const userInfo = await currentUser();
     if (!userInfo) {
       return NextResponse.json(
@@ -26,22 +26,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { 
-      type, // 'image', 'text', 'reel', 'video'
+    const {
+      type,
       title,
       content,
       teamId,
       platforms,
       scheduledFor,
-      imageUrl,
       imageKey,
-      videoUrl,
       videoKey,
       thumbnailKey,
       metadata = {}
     } = body;
 
-    // Validation
     if (!type || !['image', 'text', 'reel', 'video'].includes(type)) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Valid post type is required"),
@@ -49,7 +46,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Title is required only for reel and video posts
     if ((type === 'reel' || type === 'video') && (!title || typeof title !== 'string' || title.trim().length === 0)) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Post title is required"),
@@ -69,13 +65,13 @@ export async function POST(request: NextRequest) {
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
+        clerk_id: userId,
         email: userInfo.emailAddresses?.[0]?.emailAddress || "",
         name: userInfo.fullName || userInfo.firstName || "",
         image: userInfo.imageUrl || "",
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       }, {
-        onConflict: 'clerkId'
+        onConflict: 'clerk_id'
       })
       .select()
       .single();
@@ -102,8 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user has access to this team
-    const isOwner = team.ownerId === user.id;
+    const isOwner = team.owner_id === user.id;
     let hasAccess = isOwner;
     let membershipRole: string | null = null;
 
@@ -111,8 +106,8 @@ export async function POST(request: NextRequest) {
       const { data: membership } = await supabaseAdmin
         .from('team_members')
         .select('role, status')
-        .eq('teamId', teamId)
-        .eq('userId', user.id)
+        .eq('team_id', teamId)
+        .eq('user_id', user.id)
         .eq('status', 'ACTIVE')
         .single();
 
@@ -127,113 +122,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Role-based workflow:
-    // - OWNER/ADMIN/MANAGER can schedule immediately
-    // - EDITOR (and other non-privileged roles) can only save drafts and must request approval
     const role = isOwner ? "OWNER" : (membershipRole || "MEMBER");
     const canAutoSchedule = ["OWNER", "ADMIN", "MANAGER"].includes(role);
     const scheduledForValue = canAutoSchedule ? (scheduledFor || null) : null;
-    const initialStatus = scheduledForValue ? "SCHEDULED" : "DRAFT";
+    const initialStatus = scheduledForValue ? "scheduled" : "draft";
 
-    // Create the post
+    let folderPath: string | null = null;
+    if (type === 'image') folderPath = `teams/${teamId}/images/`;
+    else if (type === 'reel') folderPath = `teams/${teamId}/reels/`;
+    else if (type === 'video') folderPath = `teams/${teamId}/videos/`;
+
     const postId = `post-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const now = new Date().toISOString();
 
-    // Determine the S3 folder structure for media files
-    let folderPath = null;
-    if (type === 'image') {
-      folderPath = `teams/${teamId}/images/`;
-    } else if (type === 'reel') {
-      folderPath = `teams/${teamId}/reels/`;
-    } else if (type === 'video') {
-      folderPath = `teams/${teamId}/videos/`;
-    }
-    // Text posts don't need folderPath as they're stored in Supabase only
+    // Build metadata
+    const postMetadata: any = {
+      ...metadata,
+      platforms: platforms || [],
+    };
+    if (type === 'reel' && title) postMetadata.title = title.trim();
+    if (type === 'video' && title) postMetadata.title = title.trim();
 
-    // Create post in the appropriate table based on type
-    let post, createError;
-
-    if (type === 'text') {
-      // Text posts table
-      const { data: textPost, error: textError } = await supabaseAdmin
-        .from('text_posts')
-        .insert({
-          id: postId,
-          content: content?.trim() || "",
-          teamId: teamId,
-          userId: user.id,
-          platforms: platforms || [],
-          scheduledFor: scheduledForValue,
-          status: initialStatus,
-          metadata: metadata,
-          createdAt: now,
-          updatedAt: now
-        })
-        .select()
-        .single();
-      
-      post = textPost;
-      createError = textError;
-      
-    } else if (type === 'image') {
-      // Image posts table
-      const { data: imagePost, error: imageError } = await supabaseAdmin
-        .from('image_posts')
-        .insert({
-          id: postId,
-          content: content?.trim() || "",
-          teamId: teamId,
-          userId: user.id,
-          platforms: platforms || [],
-          scheduledFor: scheduledForValue,
-          status: initialStatus,
-          folderPath: folderPath,
-          imageUrl: imageUrl || null,
-          imageKey: imageKey || null,
-          metadata: metadata,
-          createdAt: now,
-          updatedAt: now
-        })
-        .select()
-        .single();
-      
-      post = imagePost;
-      createError = imageError;
-      
-    } else if (type === 'reel') {
-      // Reels table
-      const { data: reelPost, error: reelError } = await supabaseAdmin
-        .from('reel_posts')
-        .insert({
-          id: postId,
-          title: title.trim(),
-          content: content?.trim() || "",
-          teamId: teamId,
-          userId: user.id,
-          platforms: platforms || [],
-          scheduledFor: scheduledForValue,
-          status: initialStatus,
-          folderPath: folderPath,
-          videoUrl: videoUrl || null,
-          videoKey: videoKey || null,
-          thumbnailKey: thumbnailKey || null,
-          metadata: metadata,
-          createdAt: now,
-          updatedAt: now
-        })
-        .select()
-        .single();
-      
-      post = reelPost;
-      createError = reelError;
-      
-    } else {
-      // For video type, redirect to existing video upload system
-      return NextResponse.json(
-        createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Use /make-post/video for video uploads"),
-        { status: 400 }
-      );
-    }
+    // Insert unified post
+    const { data: post, error: createError } = await supabaseAdmin
+      .from('posts')
+      .insert({
+        id: postId,
+        post_type: type,
+        content: content?.trim() || "",
+        team_id: teamId,
+        author_id: user.id,
+        status: initialStatus,
+        scheduled_for: scheduledForValue,
+        folder_path: folderPath,
+        metadata: postMetadata,
+        created_at: now,
+        updated_at: now,
+      })
+      .select()
+      .single();
 
     if (createError) {
       console.error("Post creation error:", createError);
@@ -243,50 +170,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Broadcast the post creation
-    const broadcastPayload: any = { 
-      id: post.id, 
-      type: post.type,
-      teamId: post.teamId
-    };
+    // Insert media into post_media table
+    const mediaInserts: any[] = [];
 
-    // Only include title for reel and video posts
-    if ((type === 'reel' || type === 'video') && post.title) {
-      broadcastPayload.title = post.title;
+    if (type === 'image' && imageKey) {
+      mediaInserts.push({
+        post_id: postId,
+        media_type: 'image',
+        s3_key: imageKey,
+        position: 0,
+        created_at: now,
+      });
+    } else if (type === 'reel' && videoKey) {
+      mediaInserts.push({
+        post_id: postId,
+        media_type: 'video',
+        s3_key: videoKey,
+        position: 0,
+        created_at: now,
+      });
+      if (thumbnailKey) {
+        mediaInserts.push({
+          post_id: postId,
+          media_type: 'thumbnail',
+          s3_key: thumbnailKey,
+          position: 0,
+          created_at: now,
+        });
+      }
     }
-    
-    // Only include folderPath for non-text posts (media files)
-    if (type !== 'text' && post.folderPath) {
-      broadcastPayload.folderPath = post.folderPath;
+
+    if (mediaInserts.length > 0) {
+      await supabaseAdmin.from('post_media').insert(mediaInserts);
     }
 
     broadcast({
       type: "post.created",
-      payload: broadcastPayload,
+      payload: {
+        id: post.id,
+        type: post.post_type,
+        teamId: post.team_id,
+        ...(folderPath ? { folderPath } : {}),
+        ...(title ? { title } : {}),
+      },
     });
 
-    const responseData: any = {
-      id: post.id,
-      type: type,
-      content: post.content,
-      teamId: post.teamId,
-      platforms: post.platforms,
-      status: post.status,
-      createdAt: post.createdAt
-    };
-
-    // Only include folderPath for non-text posts (media files)
-    if (type !== 'text' && post.folderPath) {
-      responseData.folderPath = post.folderPath;
-    }
-
-    // Only include title for reel and video posts
-    if ((type === 'reel' || type === 'video') && post.title) {
-      responseData.title = post.title;
-    }
-
     return NextResponse.json(createSuccessResponse({
-      data: responseData
+      data: {
+        id: post.id,
+        type: post.post_type,
+        content: post.content,
+        teamId: post.team_id,
+        platforms: post.metadata?.platforms || [],
+        status: post.status,
+        createdAt: post.created_at,
+        ...(folderPath ? { folderPath } : {}),
+        ...(title ? { title } : {}),
+      }
     }));
 
   } catch (error) {

@@ -1,11 +1,9 @@
 export const runtime = "nodejs";
-
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-
-import { supabaseAdmin } from "@/lib/supabase";
+import { getVideoById, updateVideoMetadata } from "@/lib/video-utils";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -17,41 +15,20 @@ export async function POST(req: NextRequest) {
   if (!videoId) return NextResponse.json({ error: "videoId required" }, { status: 400 });
 
   try {
-    // For now, just mark as processed and create a mock web-optimized key
-    const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .select('*')
-      .eq('id', videoId)
-      .eq('userId', userId)
-      .single();
-    
-    if (videoError || !video) {
+    const video = await getVideoById(videoId);
+    if (!video || video.userId !== userId) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Create a web-optimized key (same as original for now, but marked)
-    const webOptimizedKey = video.key.replace('uploads/', 'web-optimized/');
-    
-    // Update web-optimized marker (without touching workflow status)
-    const { error: updateError } = await supabaseAdmin
-      .from('video_posts')
-      .update({ 
-        // Store web key in filename field temporarily
-        filename: video.filename + ` [WEB:${webOptimizedKey}]`
-      })
-      .eq('id', videoId);
-    
-    if (updateError) {
-      console.error("Failed to update video:", updateError);
-      return NextResponse.json({ error: "Failed to update video" }, { status: 500 });
-    }
+    const webOptimizedKey = video.key ? video.key.replace('uploads/', 'web-optimized/') : null;
 
-    return NextResponse.json({ 
-      success: true, 
+    await updateVideoMetadata(videoId, { web_optimized_key: webOptimizedKey });
+
+    return NextResponse.json({
+      success: true,
       originalKey: video.key,
-      webOptimizedKey: webOptimizedKey
+      webOptimizedKey,
     });
-
   } catch (error) {
     console.error("Video processing error:", error);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });

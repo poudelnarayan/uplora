@@ -25,7 +25,7 @@ export async function POST(
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('clerkId', userId)
+      .eq('clerk_id', userId)
       .single();
     
     if (userError || !user) {
@@ -50,7 +50,7 @@ export async function POST(
     }
 
     // Prevent owner from leaving their own team
-    if (team.ownerId === user.id) {
+    if (team.owner_id === user.id) {
       return NextResponse.json(
         createErrorResponse(ErrorCodes.FORBIDDEN, "Team owners cannot leave their own team. Transfer ownership or delete the team instead."),
         { status: 403 }
@@ -61,8 +61,8 @@ export async function POST(
     const { data: membership, error: membershipError } = await supabaseAdmin
       .from('team_members')
       .select('*')
-      .eq('teamId', teamId)
-      .eq('userId', user.id)
+      .eq('team_id', teamId)
+      .eq('user_id', user.id)
       .single();
 
     if (membershipError || !membership) {
@@ -76,8 +76,8 @@ export async function POST(
     const { error: removeError } = await supabaseAdmin
       .from('team_members')
       .delete()
-      .eq('teamId', teamId)
-      .eq('userId', user.id);
+      .eq('team_id', teamId)
+      .eq('user_id', user.id);
 
     if (removeError) {
       console.error("Error removing user from team:", removeError);

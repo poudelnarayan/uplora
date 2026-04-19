@@ -4,8 +4,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string
 
-
-
 // Client-side Supabase client (for browser)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -22,13 +20,13 @@ export async function getSupabaseUser(clerkUserId: string) {
   const { data: user, error } = await supabaseAdmin
     .from('users')
     .select('*')
-          .eq('clerkId', clerkUserId)
+    .eq('clerk_id', clerkUserId)
     .single()
-  
-  if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+
+  if (error && error.code !== 'PGRST116') {
     throw error
   }
-  
+
   return user
 }
 
@@ -41,20 +39,18 @@ export async function upsertSupabaseUser(clerkUserId: string, userData: {
   const { data, error } = await supabaseAdmin
     .from('users')
     .upsert({
-              id: clerkUserId, // Use Clerk user ID as the primary key
-        clerkId: clerkUserId,
-        email: userData.email,
-        name: userData.name || null,
-        image: userData.image || null,
-        updatedAt: new Date().toISOString()
+      id: clerkUserId,
+      clerk_id: clerkUserId,
+      email: userData.email,
+      name: userData.name || null,
+      image: userData.image || null,
+      updated_at: new Date().toISOString()
     }, {
-      onConflict: 'clerkId'
+      onConflict: 'clerk_id'
     })
     .select()
     .single()
-  
+
   if (error) throw error
   return data
 }
-
-

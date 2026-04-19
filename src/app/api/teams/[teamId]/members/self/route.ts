@@ -29,13 +29,13 @@ export async function DELETE(
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
+        clerk_id: userId,
+        email: userEmail || "",
+        name: userName,
         image: userImage,
-        updatedAt: new Date().toISOString()
+        updated_at: new Date().toISOString()
       }, {
-        onConflict: 'clerkId'
+        onConflict: 'clerk_id'
       })
       .select()
       .single();
@@ -55,15 +55,15 @@ export async function DELETE(
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    if (team.ownerId === user.id) {
+    if (team.owner_id === user.id) {
       return NextResponse.json({ error: "Owner cannot leave their own team" }, { status: 403 });
     }
 
     const { data: member, error: memberError } = await supabaseAdmin
       .from('team_members')
       .select('*')
-      .eq('teamId', teamId)
-      .eq('userId', user.id)
+      .eq('team_id', teamId)
+      .eq('user_id', user.id)
       .single();
 
     if (memberError || !member) {

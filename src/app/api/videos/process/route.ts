@@ -26,25 +26,28 @@ export async function POST(req: NextRequest) {
 
   try {
     // Get video record
-    const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .select('*')
+    const { data: postRow } = await supabaseAdmin
+      .from('posts')
+      .select('id, author_id, metadata, post_media!inner(s3_key, filename)')
       .eq('id', videoId)
-      .eq('userId', userId)
+      .eq('post_type', 'video')
       .single();
-    
-    if (videoError || !video) {
+
+    const video = postRow ? {
+      id: postRow.id,
+      userId: postRow.author_id,
+      key: (postRow as any).post_media?.[0]?.s3_key ?? null,
+      filename: (postRow as any).post_media?.[0]?.filename ?? 'video',
+      metadata: postRow.metadata,
+    } : null;
+
+    if (!video || video.userId !== userId) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Skip if already processed
-    if (video.status === "PROCESSING" || video.key.includes("-web-optimized")) {
+    if (!video.key || video.key.includes("-web-optimized")) {
       return NextResponse.json({ message: "Already processing or processed" });
     }
-
-    // NOTE: Do NOT modify `video_posts.status` here.
-    // `status` is a user-facing workflow state (Processing / Ready / etc).
-    // Web-optimization is a separate concern and must not downgrade READY/PENDING/APPROVED.
 
     // Download original from S3
     const tempDir = tmpdir();
@@ -99,11 +102,8 @@ export async function POST(req: NextRequest) {
 
     // Update database with web-optimized key (without touching workflow status)
     const { error: finalUpdateError } = await supabaseAdmin
-      .from('video_posts')
-      .update({ 
-        // Store web-optimized key in filename for now (you might want to add webOptimizedKey column)
-        filename: `${video.filename} [WEB:${optimizedKey}]`
-      })
+      .from('posts')
+      .update({ metadata: { ...(video.metadata || {}), web_optimized_key: optimizedKey }, updated_at: new Date().toISOString() })
       .eq('id', videoId);
     
     if (finalUpdateError) {

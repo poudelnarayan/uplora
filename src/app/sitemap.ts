@@ -15,16 +15,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let videoRoutes: MetadataRoute.Sitemap = [];
   try {
     const { data: videos } = await supabaseAdmin
-      .from('video_posts')
-      .select('id, updatedAt, visibility, status')
-      .eq('status', 'PUBLISHED')
-      .order('updatedAt', { ascending: false })
+      .from('posts')
+      .select('id, updated_at, metadata, status')
+      .eq('post_type', 'video')
+      .eq('status', 'published')
+      .order('updated_at', { ascending: false })
       .limit(1000);
 
     if (videos && Array.isArray(videos)) {
       videoRoutes = videos
-        .filter((v: any) => !v.visibility || v.visibility === 'public')
-        .map((v: any) => ({ url: `${siteUrl}/videos/${v.id}`, lastModified: new Date(v.updatedAt) }));
+        .filter((v: any) => !v.metadata?.visibility || v.metadata.visibility === 'public')
+        .map((v: any) => ({ url: `${siteUrl}/videos/${v.id}`, lastModified: new Date(v.updated_at) }));
     }
   } catch {
     // ignore db issues for sitemap
@@ -32,5 +33,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [...staticRoutes, ...videoRoutes];
 }
-
-

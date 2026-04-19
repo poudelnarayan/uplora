@@ -11,60 +11,47 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // First check user's subscription status in users table
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('hasActiveSubscription, subscriptionStatus, subscriptionPlan')
+      .select('has_active_subscription, subscription_status, subscription_plan')
       .eq('id', userId)
       .single();
 
-    // Get detailed subscription info from Stripe tables
     const { data: customer } = await supabaseAdmin
-      .from('stripeCustomers')
-      .select(`
-        customerId,
-        stripeSubscriptions (
-          subscriptionId,
-          priceId,
-          status,
-          currentPeriodStart,
-          currentPeriodEnd,
-          cancelAtPeriodEnd,
-          paymentMethodBrand,
-          paymentMethodLast4
-        )
-      `)
-      .eq('userId', userId)
+      .from('stripe_customers')
+      .select('customer_id')
+      .eq('user_id', userId)
       .single();
 
-    // If no Stripe customer record, return user table status
     if (!customer) {
       return NextResponse.json({
-        hasSubscription: user?.hasActiveSubscription || false,
-        status: user?.subscriptionStatus || null,
-        trialActive: user?.subscriptionStatus === 'trialing',
+        hasSubscription: user?.has_active_subscription || false,
+        status: user?.subscription_status || null,
+        trialActive: user?.subscription_status === 'trialing',
         trialDaysRemaining: 0,
-        plan: user?.subscriptionPlan || null,
+        plan: user?.subscription_plan || null,
       });
     }
 
-    const subscription = customer.stripeSubscriptions?.[0];
-    
-    // If no Stripe subscription, return user table status
+    const { data: subscription } = await supabaseAdmin
+      .from('stripe_subscriptions')
+      .select('subscription_id, price_id, status, current_period_start, current_period_end, cancel_at_period_end, payment_method_brand, payment_method_last4')
+      .eq('customer_id', customer.customer_id)
+      .single();
+
     if (!subscription) {
       return NextResponse.json({
-        hasSubscription: user?.hasActiveSubscription || false,
-        status: user?.subscriptionStatus || null,
-        trialActive: user?.subscriptionStatus === 'trialing',
+        hasSubscription: user?.has_active_subscription || false,
+        status: user?.subscription_status || null,
+        trialActive: user?.subscription_status === 'trialing',
         trialDaysRemaining: 0,
-        plan: user?.subscriptionPlan || null,
+        plan: user?.subscription_plan || null,
       });
     }
 
-    // Calculate trial info
     const isTrialing = subscription.status === 'trialing';
-    const trialDaysRemaining = isTrialing && subscription.currentPeriodEnd
-      ? Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    const trialDaysRemaining = isTrialing && subscription.current_period_end
+      ? Math.max(0, Math.ceil((new Date(subscription.current_period_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
       : 0;
 
     return NextResponse.json({
@@ -72,21 +59,17 @@ export async function GET(req: NextRequest) {
       status: subscription.status,
       trialActive: isTrialing,
       trialDaysRemaining,
-      currentPeriodEnd: subscription.currentPeriodEnd,
-      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-      currentPriceId: subscription.priceId,
-      plan: user?.subscriptionPlan || null,
+      currentPeriodEnd: subscription.current_period_end,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPriceId: subscription.price_id,
+      plan: user?.subscription_plan || null,
       paymentMethod: {
-        brand: subscription.paymentMethodBrand,
-        last4: subscription.paymentMethodLast4,
+        brand: subscription.payment_method_brand,
+        last4: subscription.payment_method_last4,
       },
     });
-
   } catch (error) {
     console.error('Subscription status error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get subscription status' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get subscription status' }, { status: 500 });
   }
 }

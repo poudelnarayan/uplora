@@ -37,14 +37,12 @@ export async function POST(req: NextRequest) {
       .from('users')
       .upsert({
         id: userId,
-        clerkId: userId,
-        email: userEmail || "", 
-        name: userName, 
+        clerk_id: userId,
+        email: userEmail || "",
+        name: userName,
         image: userImage,
-        updatedAt: new Date().toISOString()
-      }, {
-        onConflict: 'clerkId'
-      })
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'clerk_id' })
       .select()
       .single();
     if (userError) {
@@ -53,32 +51,32 @@ export async function POST(req: NextRequest) {
 
     // Resolve video and teamId
     const { data: video, error: videoError } = await supabaseAdmin
-      .from('video_posts')
-      .select('id, teamId, userId')
+      .from('posts')
+      .select('id, team_id, author_id')
       .eq('id', videoId)
+      .eq('post_type', 'video')
       .single();
     if (videoError || !video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    const finalTeamId = video.teamId;
+    const finalTeamId = video.team_id;
     if (!finalTeamId) {
       return NextResponse.json({ error: "Video must belong to a team (personal team included)" }, { status: 400 });
     }
 
-    // Access check: owner or member
     const { data: team } = await supabaseAdmin
       .from('teams')
-      .select('ownerId')
+      .select('owner_id')
       .eq('id', finalTeamId)
       .single();
-    let allowed = team?.ownerId === user.id;
+    let allowed = team?.owner_id === user.id;
     if (!allowed) {
       const { data: membership } = await supabaseAdmin
         .from('team_members')
         .select('id')
-        .eq('teamId', finalTeamId)
-        .eq('userId', user.id)
+        .eq('team_id', finalTeamId)
+        .eq('user_id', user.id)
         .maybeSingle();
       allowed = !!membership;
     }

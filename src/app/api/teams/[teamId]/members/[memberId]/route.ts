@@ -31,7 +31,7 @@ export async function PATCH(
       // Load team
       const { data: team, error: teamErr } = await supabaseAdmin
         .from('teams')
-        .select('id, ownerId')
+        .select('id, owner_id')
         .eq('id', teamId)
         .single();
       if (teamErr || !team) {
@@ -41,24 +41,24 @@ export async function PATCH(
       // Load member (memberId is userId in the UI)
       const { data: member, error: memErr } = await supabaseAdmin
         .from('team_members')
-        .select('id, userId, teamId')
-        .eq('teamId', teamId)
-        .eq('userId', memberId)
+        .select('id, user_id, team_id')
+        .eq('team_id', teamId)
+        .eq('user_id', memberId)
         .single();
-      if (memErr || !member || member.teamId !== teamId) {
+      if (memErr || !member || member.team_id !== teamId) {
         return createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found");
       }
 
       // Prevent modifying owner
-      if (member.userId === team.ownerId) {
+      if (member.user_id === team.owner_id) {
         return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Cannot modify the owner");
       }
 
       const { error: updErr } = await supabaseAdmin
         .from('team_members')
-        .update({ status: requestedStatus, updatedAt: new Date().toISOString() })
-        .eq('teamId', teamId)
-        .eq('userId', memberId);
+        .update({ status: requestedStatus, updated_at: new Date().toISOString() })
+        .eq('team_id', teamId)
+        .eq('user_id', memberId);
       if (updErr) {
         return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to update member status");
       }
@@ -96,7 +96,7 @@ export async function DELETE(
       // Load team to check owner and name
       const { data: team, error: teamErr } = await supabaseAdmin
         .from('teams')
-        .select('id, ownerId, name')
+        .select('id, owner_id, name')
         .eq('id', teamId)
         .single();
       if (teamErr || !team) {
@@ -106,16 +106,16 @@ export async function DELETE(
       // Load member (memberId is userId in the UI)
       const { data: member, error: memErr } = await supabaseAdmin
         .from('team_members')
-        .select('id, userId, teamId')
-        .eq('teamId', teamId)
-        .eq('userId', memberId)
+        .select('id, user_id, team_id')
+        .eq('team_id', teamId)
+        .eq('user_id', memberId)
         .single();
-      if (memErr || !member || member.teamId !== teamId) {
+      if (memErr || !member || member.team_id !== teamId) {
         return createErrorResponse(ErrorCodes.NOT_FOUND, "Member not found");
       }
 
       // Prevent removing owner
-      if (member.userId === team.ownerId) {
+      if (member.user_id === team.owner_id) {
         return createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Cannot remove the owner");
       }
 
@@ -123,33 +123,33 @@ export async function DELETE(
       const { data: removedUser, error: userErr } = await supabaseAdmin
         .from('users')
         .select('email, name')
-        .eq('id', member.userId)
+        .eq('id', member.user_id)
         .single();
 
       // Delete membership
       const { error: delErr } = await supabaseAdmin
         .from('team_members')
         .delete()
-        .eq('teamId', teamId)
-        .eq('userId', memberId);
+        .eq('team_id', teamId)
+        .eq('user_id', memberId);
       if (delErr) {
         return createErrorResponse(ErrorCodes.INTERNAL_ERROR, "Failed to remove member");
       }
 
       // Also remove any invites for this user/email (cleanup Supabase invite records)
       try {
-        // By inviteeId (accepted invites) and by email (pending invites)
+        // By invitee_id (accepted invites) and by email (pending invites)
         await supabaseAdmin
           .from("team_invites")
           .delete()
-          .eq("teamId", teamId)
-          .eq("inviteeId", member.userId);
+          .eq("team_id", teamId)
+          .eq("invitee_id", member.user_id);
 
         if (removedUser?.email) {
           await supabaseAdmin
             .from("team_invites")
             .delete()
-            .eq("teamId", teamId)
+            .eq("team_id", teamId)
             .eq("email", String(removedUser.email).toLowerCase());
         }
       } catch (e) {

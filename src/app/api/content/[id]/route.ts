@@ -5,8 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { S3Client, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase";
-
-type ContentType = "text" | "image" | "reel" | "video";
+import { mapToDbStatus, mapFromDbStatus } from "@/app/api/content/route";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -44,43 +43,47 @@ async function deleteS3KeyOrFolder(key: string, kind: "videos" | "reels" | "imag
 }
 
 async function findPostById(id: string) {
-  // Try each table until found
-  const tables: Array<{ name: string; type: ContentType }> = [
-    { name: "video_posts", type: "video" },
-    { name: "text_posts", type: "text" },
-    { name: "image_posts", type: "image" },
-    { name: "reel_posts", type: "reel" },
-  ];
+  const { data, error } = await supabaseAdmin
+    .from('posts')
+    .select(`
+      *,
+      post_media (
+        id,
+        media_type,
+        s3_key,
+        filename,
+        content_type,
+        size_bytes,
+        duration_ms,
+        position
+      )
+    `)
+    .eq('id', id)
+    .maybeSingle();
 
-  for (const t of tables) {
-    const { data, error } = await supabaseAdmin
-      .from(t.name)
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-    if (data) return { table: t.name, type: t.type, row: data };
-    if (error && error.code !== 'PGRST116') {
-      throw new Error(error.message || `Failed reading ${t.name}`);
-    }
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(error.message || 'Failed reading post');
   }
-  return null;
+  if (!data) return null;
+
+  return { row: data, type: data.post_type as string };
 }
 
 async function ensureAccess(userId: string, row: any): Promise<boolean> {
   if (!row) return false;
-  if (row.userId === userId) return true;
-  if (row.teamId) {
+  if (row.author_id === userId) return true;
+  if (row.team_id) {
     const { data: team } = await supabaseAdmin
       .from('teams')
-      .select('id, ownerId')
-      .eq('id', row.teamId)
+      .select('id, owner_id')
+      .eq('id', row.team_id)
       .single();
-    if (team?.ownerId === userId) return true;
+    if (team?.owner_id === userId) return true;
     const { data: membership } = await supabaseAdmin
       .from('team_members')
-      .select('userId')
-      .eq('teamId', row.teamId)
-      .eq('userId', userId)
+      .select('user_id')
+      .eq('team_id', row.team_id)
+      .eq('user_id', userId)
       .maybeSingle();
     if (membership) return true;
   }
@@ -90,29 +93,60 @@ async function ensureAccess(userId: string, row: any): Promise<boolean> {
 type Role = "OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | "MEMBER";
 async function getRole(userId: string, row: any): Promise<Role> {
   if (!row) return "MEMBER";
-  // Personal content: creator can manage it.
-  if (!row.teamId) {
-    return row.userId === userId ? "OWNER" : "MEMBER";
+  if (!row.team_id) {
+    return row.author_id === userId ? "OWNER" : "MEMBER";
   }
 
   const { data: team } = await supabaseAdmin
     .from("teams")
-    .select("id, ownerId")
-    .eq("id", row.teamId)
+    .select("id, owner_id")
+    .eq("id", row.team_id)
     .single();
-  if (team?.ownerId === userId) return "OWNER";
+  if (team?.owner_id === userId) return "OWNER";
 
   const { data: membership } = await supabaseAdmin
     .from("team_members")
     .select("role, status")
-    .eq("teamId", row.teamId)
-    .eq("userId", userId)
+    .eq("team_id", row.team_id)
+    .eq("user_id", userId)
     .eq("status", "ACTIVE")
     .maybeSingle();
 
   const r = (membership as any)?.role;
   if (r === "ADMIN" || r === "MANAGER" || r === "EDITOR") return r;
   return "MEMBER";
+}
+
+function formatPostResponse(row: any) {
+  const primaryMedia = (row.post_media || [])
+    .filter((m: any) => m.media_type !== 'thumbnail')
+    .sort((a: any, b: any) => a.position - b.position)[0];
+  const thumbnailMedia = (row.post_media || [])
+    .find((m: any) => m.media_type === 'thumbnail');
+
+  return {
+    ...row,
+    type: row.post_type,
+    status: mapFromDbStatus(row.status, row.post_type),
+    userId: row.author_id,
+    teamId: row.team_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    scheduledFor: row.scheduled_for,
+    platforms: row.metadata?.platforms || [],
+    key: primaryMedia?.s3_key || row.metadata?.key || null,
+    filename: primaryMedia?.filename || row.metadata?.filename || null,
+    contentType: primaryMedia?.content_type || row.metadata?.content_type || null,
+    sizeBytes: primaryMedia?.size_bytes || row.metadata?.size_bytes || null,
+    imageKey: row.post_type === 'image' ? (primaryMedia?.s3_key || null) : null,
+    videoKey: row.post_type === 'reel' ? (primaryMedia?.s3_key || null) : null,
+    thumbnailKey: thumbnailMedia?.s3_key || row.metadata?.thumbnail_key || null,
+    description: row.content,
+    visibility: row.metadata?.visibility || null,
+    madeForKids: row.metadata?.made_for_kids || false,
+    requestedByUserId: row.metadata?.requested_by_user_id || null,
+    approvedByUserId: row.metadata?.approved_by_user_id || null,
+  };
 }
 
 export async function GET(
@@ -130,7 +164,7 @@ export async function GET(
     const allowed = await ensureAccess(userId, found.row);
     if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    return NextResponse.json({ ...found.row, type: found.type });
+    return NextResponse.json(formatPostResponse(found.row));
   } catch (e) {
     console.error('GET /api/content/[id] error', e);
     return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 });
@@ -158,32 +192,48 @@ export async function PATCH(
     const role = await getRole(userId, found.row);
     const canManagePublishing = ["OWNER", "ADMIN", "MANAGER"].includes(role);
 
-    // Editors (and other non-privileged roles) must use the approval flow.
-    // Once a post is PENDING, editors should not be able to modify it until approved/sent back.
-    if (!canManagePublishing && String(found.row?.status || "").toUpperCase() === "PENDING") {
+    // Lock pending_approval posts for non-privileged users
+    if (!canManagePublishing && found.row?.status === "pending_approval") {
       return NextResponse.json({ error: "Content is pending approval and is locked." }, { status: 423 });
     }
 
-    const updateData: any = { updatedAt: new Date().toISOString() };
-    if (typeof content === 'string') updateData.content = content;
-    if (found.type === "video" && typeof description === "string") updateData.description = description;
-    if (Array.isArray(platforms)) updateData.platforms = platforms;
-    if (found.type === 'reel' && typeof title === 'string') updateData.title = title;
-    if (found.type === 'image' && (typeof imageKey === 'string' || imageKey === null)) updateData.imageKey = imageKey;
-    if (found.type === 'reel' && (typeof videoKey === 'string' || videoKey === null)) updateData.videoKey = videoKey;
-    if (scheduledFor !== undefined) updateData.scheduledFor = scheduledFor;
-    // Only privileged roles can change status directly.
-    if (canManagePublishing && typeof status === 'string') updateData.status = status;
-    if (metadata && typeof metadata === 'object') updateData.metadata = metadata;
+    const now = new Date().toISOString();
+    const updateData: any = { updated_at: now };
+    const metadataUpdate: any = { ...(found.row.metadata || {}) };
 
-    // Auto set status to SCHEDULED when scheduling provided and not explicitly overridden
-    if (canManagePublishing && scheduledFor && !status) updateData.status = 'SCHEDULED';
+    if (typeof content === 'string') updateData.content = content;
+    if (typeof description === 'string') updateData.content = description;
+    if (scheduledFor !== undefined) updateData.scheduled_for = scheduledFor;
+    if (canManagePublishing && scheduledFor && !status) updateData.status = 'scheduled';
+    if (canManagePublishing && typeof status === 'string') {
+      updateData.status = mapToDbStatus(status);
+    }
+
+    if (Array.isArray(platforms)) metadataUpdate.platforms = platforms;
+    if (found.type === 'reel' && typeof title === 'string') metadataUpdate.title = title;
+    if (metadata && typeof metadata === 'object') Object.assign(metadataUpdate, metadata);
+    updateData.metadata = metadataUpdate;
+
+    // Update media keys in post_media table
+    if (found.type === 'image' && (typeof imageKey === 'string' || imageKey === null)) {
+      if (imageKey) {
+        await upsertPostMedia(id, 'image', imageKey);
+      }
+    }
+    if (found.type === 'reel' && (typeof videoKey === 'string' || videoKey === null)) {
+      if (videoKey) {
+        await upsertPostMedia(id, 'video', videoKey);
+      }
+    }
 
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from(found.table)
+      .from('posts')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        post_media (id, media_type, s3_key, filename, content_type, size_bytes, duration_ms, position)
+      `)
       .single();
 
     if (updateError) {
@@ -191,7 +241,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
     }
 
-    return NextResponse.json({ ...updated, type: found.type });
+    return NextResponse.json(formatPostResponse(updated));
   } catch (e) {
     console.error('PATCH /api/content/[id] error', e);
     return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
@@ -213,32 +263,35 @@ export async function DELETE(
     const allowed = await ensureAccess(userId, found.row);
     if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    // Best-effort: delete associated media from S3 first
+    // Best-effort S3 cleanup
     try {
-      if (found.type === "video") {
-        const key = String((found.row as any)?.key || "");
-        const thumbnailKey = (found.row as any)?.thumbnailKey as string | null | undefined;
-        if (key) await deleteS3KeyOrFolder(key, "videos");
-        if (thumbnailKey) {
-          await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: thumbnailKey }));
+      const media = found.row.post_media || [];
+      for (const m of media) {
+        const key = m.s3_key;
+        if (!key) continue;
+        if (m.media_type === 'thumbnail') {
+          await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key }));
+        } else if (found.type === 'video') {
+          await deleteS3KeyOrFolder(key, 'videos');
+        } else if (found.type === 'image') {
+          await deleteS3KeyOrFolder(key, 'images');
+        } else if (found.type === 'reel') {
+          await deleteS3KeyOrFolder(key, 'reels');
         }
-      } else if (found.type === "image") {
-        const key = (found.row as any)?.imageKey as string | null | undefined;
-        if (key) await deleteS3KeyOrFolder(key, "images");
-      } else if (found.type === "reel") {
-        const key = (found.row as any)?.videoKey as string | null | undefined;
-        const thumbnailKey = (found.row as any)?.thumbnailKey as string | null | undefined;
-        if (key) await deleteS3KeyOrFolder(key, "reels");
-        if (thumbnailKey) {
-          await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: thumbnailKey }));
-        }
+      }
+      // Also check metadata for legacy keys
+      const metaKey = found.row.metadata?.key || found.row.metadata?.thumbnail_key;
+      if (metaKey) {
+        await s3.send(new DeleteObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: metaKey }));
       }
     } catch (s3Err) {
       console.error("S3 cleanup error for content delete", { id, type: found.type, err: s3Err });
-      // Continue; DB delete still happens.
     }
 
-    const { error: delError } = await supabaseAdmin.from(found.table).delete().eq("id", id);
+    // Delete post_media rows first (FK constraint)
+    await supabaseAdmin.from('post_media').delete().eq('post_id', id);
+
+    const { error: delError } = await supabaseAdmin.from('posts').delete().eq('id', id);
 
     if (delError) {
       console.error('Delete error', delError);
@@ -252,5 +305,22 @@ export async function DELETE(
   }
 }
 
+async function upsertPostMedia(postId: string, mediaType: string, s3Key: string) {
+  const { data: existing } = await supabaseAdmin
+    .from('post_media')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('media_type', mediaType)
+    .maybeSingle();
 
-
+  if (existing) {
+    await supabaseAdmin
+      .from('post_media')
+      .update({ s3_key: s3Key })
+      .eq('id', existing.id);
+  } else {
+    await supabaseAdmin
+      .from('post_media')
+      .insert({ post_id: postId, media_type: mediaType, s3_key: s3Key, position: 0 });
+  }
+}
