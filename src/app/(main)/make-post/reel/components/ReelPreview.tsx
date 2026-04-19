@@ -23,7 +23,7 @@ export default function ReelPreview({ selectedVideo, content, title }: ReelPrevi
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
 
   return (
-    <div className="space-y-6 sticky top-12">
+    <div className="space-y-6 xl:sticky xl:top-8">
       {/* Header row */}
       <div className="flex items-center justify-between px-2">
         <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Live Context Preview</h3>

@@ -220,7 +220,7 @@ function MakePostReelsContent() {
         style={{ background: "radial-gradient(circle at 50% -20%, hsl(var(--muted)) 0%, hsl(var(--background)) 100%)" }}
       >
         {/* ── Page header ──────────────────────────────────────────────── */}
-        <header className="w-full pt-12 pb-6 flex flex-col items-center gap-2 px-6">
+        <header className="w-full pt-10 pb-5 flex flex-col items-center gap-2 px-6">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Short Reel</p>
           <h2 className="text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
             Create Short Reel
@@ -242,12 +242,18 @@ function MakePostReelsContent() {
         </header>
 
         {/* ── Main grid ────────────────────────────────────────────────── */}
-        <section className="w-full px-6 pb-24">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <section className="w-full px-6 pb-28">
+          <div className="max-w-[1480px] mx-auto">
 
-              {/* Left column */}
-              <div className={`lg:col-span-7 space-y-8 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+            {/*
+              Mobile:  single column stack
+              lg:      2 cols — [upload+platforms | caption+actions] + preview below
+              xl:      3 cols — upload+platforms | caption+actions | preview
+            */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_320px] gap-8 xl:gap-10 items-start">
+
+              {/* ── Col 1: Upload + Platforms ── */}
+              <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 <ReelUploadArea
                   dragActive={dragActive}
                   selectedVideo={selectedVideo}
@@ -261,6 +267,10 @@ function MakePostReelsContent() {
                   selected={selectedPlatforms}
                   onChange={setSelectedPlatforms}
                 />
+              </div>
+
+              {/* ── Col 2: Title + Caption + Actions ── */}
+              <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 <ReelPostDetails
                   title={title}
                   content={content}
@@ -285,8 +295,8 @@ function MakePostReelsContent() {
                 />
               </div>
 
-              {/* Right column — preview */}
-              <div className="lg:col-span-5">
+              {/* ── Col 3: Phone preview — spans 2 cols on lg (centered), own col on xl ── */}
+              <div className="lg:col-span-2 xl:col-span-1 flex xl:block justify-center">
                 <ReelPreview
                   selectedVideo={selectedVideo}
                   content={content}
