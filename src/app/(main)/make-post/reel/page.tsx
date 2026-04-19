@@ -251,7 +251,7 @@ function MakePostReelsContent() {
             Right col — Actions → Phone → Platforms
         */}
         <section className="px-6 lg:px-10 xl:px-14 pb-28">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px] gap-8 xl:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-8 xl:gap-10 items-start">
 
             {/* ── Left: upload + caption ── */}
             <div className={`space-y-6 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
