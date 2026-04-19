@@ -1,6 +1,5 @@
 "use client";
 
-import { Type, PenLine } from "lucide-react";
 import ReelCaptionEditor from "./ReelCaptionEditor";
 
 interface ReelPostDetailsProps {
@@ -21,43 +20,35 @@ export default function ReelPostDetails({
   locked,
 }: ReelPostDetailsProps) {
   return (
-    <div className="space-y-5">
-
-      {/* Title field */}
-      <div className="space-y-2.5">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-            <Type className="h-3 w-3 text-primary" />
-          </div>
-          <label className="text-xs font-bold uppercase tracking-wider text-foreground">Title</label>
+    <section className="flex flex-col gap-5">
+      {/* Title */}
+      <div>
+        <div className="flex items-center justify-between mb-2.5">
+          <label htmlFor="reel-title" className="text-sm font-medium">
+            Title
+          </label>
+          <span className="text-xs text-muted-foreground">
+            {title.length}/100
+          </span>
         </div>
         <input
+          id="reel-title"
           value={title}
-          onChange={e => onTitleChange(e.target.value)}
-          placeholder="Enter a compelling title…"
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="A compelling title…"
+          maxLength={100}
           disabled={locked}
-          className="w-full bg-background/60 border border-border/50 focus:border-primary/50 focus:bg-background rounded-xl px-4 py-3 text-foreground font-semibold text-base placeholder:text-muted-foreground/35 focus:ring-2 focus:ring-primary/10 outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-background border border-border/60 focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10 rounded-lg px-3.5 py-2.5 text-[15px] outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
-
-      {/* Divider */}
-      <div className="border-t border-border/30" />
 
       {/* Caption */}
-      <div className="space-y-2.5">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-            <PenLine className="h-3 w-3 text-primary" />
-          </div>
-          <label className="text-xs font-bold uppercase tracking-wider text-foreground">Caption & Details</label>
-        </div>
-        <ReelCaptionEditor
-          content={content}
-          onChange={onContentChange}
-          selectedPlatforms={selectedPlatforms}
-          locked={locked}
-        />
-      </div>
-    </div>
+      <ReelCaptionEditor
+        content={content}
+        onChange={onContentChange}
+        selectedPlatforms={selectedPlatforms}
+        locked={locked}
+      />
+    </section>
   );
 }

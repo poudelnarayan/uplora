@@ -1,6 +1,7 @@
 "use client";
 
-import { CloudUpload, X, Film, CheckCircle2, Play, RotateCcw } from "lucide-react";
+import { forwardRef } from "react";
+import { UploadCloud, Film, X, Replace } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReelUploadAreaProps {
@@ -18,139 +19,124 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function ReelUploadArea({
-  dragActive,
-  selectedVideo,
-  selectedFile,
-  onDrag,
-  onDrop,
-  onFileChange,
-  onClear,
-}: ReelUploadAreaProps) {
-  return (
-    <div className="space-y-3">
-      {/* Section header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-            <Film className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-xs font-bold uppercase tracking-wider text-foreground">Video File</span>
-        </div>
-        <span className="text-[0.65rem] text-muted-foreground/60 font-medium">MP4 · MOV · max 500 MB</span>
-      </div>
+const ReelUploadArea = forwardRef<HTMLInputElement, ReelUploadAreaProps>(
+  function ReelUploadArea(
+    {
+      dragActive,
+      selectedVideo,
+      selectedFile,
+      onDrag,
+      onDrop,
+      onFileChange,
+      onClear,
+    },
+    ref
+  ) {
+    return (
+      <section>
+        <SectionHeader title="Video" hint="MP4 · MOV · up to 500 MB" />
 
-      {selectedVideo ? (
-        /* ── Uploaded state ── */
-        <div className="relative rounded-xl overflow-hidden bg-black/95 border border-border/20 group" style={{ aspectRatio: "16/9" }}>
-          <video
-            src={selectedVideo}
-            className="w-full h-full object-cover"
-            controls
-            muted
-            loop
-            playsInline
-          />
-
-          {/* Overlay gradient on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-          {/* Top controls */}
-          <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-            {/* Replace button */}
-            <label className="w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-sm flex items-center justify-center text-white transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-95">
-              <RotateCcw className="h-3.5 w-3.5" />
-              <input
-                type="file"
-                accept="video/mp4,video/mov,video/quicktime"
-                onChange={onFileChange}
-                className="hidden"
+        {selectedVideo && selectedFile ? (
+          <div className="bg-background border border-border/60 rounded-xl p-3 flex gap-3">
+            <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-black shrink-0">
+              <video
+                src={selectedVideo}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
               />
-            </label>
-            {/* Clear button */}
-            <button
-              onClick={onClear}
-              className="w-8 h-8 rounded-lg bg-black/60 hover:bg-destructive/80 backdrop-blur-sm flex items-center justify-center text-white transition-all border border-white/10 hover:border-destructive/30 active:scale-95"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Bottom file info bar */}
-          {selectedFile && (
-            <div className="absolute bottom-0 inset-x-0 px-4 py-2.5 bg-gradient-to-t from-black/80 to-transparent flex items-center gap-2 min-w-0">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-white text-xs font-semibold truncate">{selectedFile.name}</span>
-              </div>
-              <span className="text-white/40 text-[0.65rem] font-medium shrink-0 ml-auto tabular-nums">
-                {formatBytes(selectedFile.size)}
-              </span>
             </div>
-          )}
-        </div>
-      ) : (
-        /* ── Empty / drag-drop state ── */
-        <div
-          className={cn(
-            "relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer group overflow-hidden",
-            dragActive
-              ? "border-primary bg-primary/5 shadow-glow"
-              : "border-border/40 hover:border-primary/40 hover:bg-muted/20"
-          )}
-          style={{ minHeight: 220 }}
-          onDragEnter={onDrag}
-          onDragLeave={onDrag}
-          onDragOver={onDrag}
-          onDrop={onDrop}
-        >
-          {/* Subtle background pattern */}
-          <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
-            style={{
-              backgroundImage: "radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)",
-              backgroundSize: "24px 24px",
-            }}
-          />
-
-          <input
-            type="file"
-            accept="video/mp4,video/mov,video/quicktime"
-            onChange={onFileChange}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-          />
-
-          <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center pointer-events-none select-none relative">
-            {/* Icon with animated ring */}
-            <div className="relative mb-5">
-              <div className={cn(
-                "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300",
-                dragActive
-                  ? "bg-primary scale-110 shadow-glow"
-                  : "bg-muted/60 group-hover:bg-primary/10 group-hover:scale-105"
-              )}>
+            <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {selectedFile.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {formatBytes(selectedFile.size)}
+                </p>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <label className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer">
+                  <Replace className="h-3.5 w-3.5" />
+                  Replace
+                  <input
+                    ref={ref}
+                    type="file"
+                    accept="video/mp4,video/mov,video/quicktime"
+                    onChange={onFileChange}
+                    className="hidden"
+                  />
+                </label>
+                <button
+                  onClick={onClear}
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "relative rounded-xl border border-dashed transition-colors overflow-hidden",
+              dragActive
+                ? "border-foreground/40 bg-muted/60"
+                : "border-border/80 hover:border-border bg-background"
+            )}
+            onDragEnter={onDrag}
+            onDragLeave={onDrag}
+            onDragOver={onDrag}
+            onDrop={onDrop}
+          >
+            <input
+              ref={ref}
+              type="file"
+              accept="video/mp4,video/mov,video/quicktime"
+              onChange={onFileChange}
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+            />
+            <div className="py-10 px-6 flex flex-col items-center justify-center text-center pointer-events-none">
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-xl grid place-items-center mb-3 transition-colors",
+                  dragActive
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
                 {dragActive ? (
-                  <Film className="h-7 w-7 text-white" />
+                  <Film className="h-5 w-5" />
                 ) : (
-                  <CloudUpload className="h-7 w-7 text-muted-foreground group-hover:text-primary stroke-[1.5] transition-colors" />
+                  <UploadCloud className="h-5 w-5" />
                 )}
               </div>
-              {/* Pulse ring on drag */}
-              {dragActive && (
-                <div className="absolute inset-0 rounded-2xl border-2 border-primary animate-ping opacity-30" />
-              )}
+              <p className="text-sm font-medium">
+                {dragActive ? "Release to upload" : "Drop your video here"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                or{" "}
+                <span className="text-foreground font-medium underline underline-offset-2">
+                  browse files
+                </span>{" "}
+                — 9:16 recommended, max 60s
+              </p>
             </div>
-
-            <p className="font-bold text-sm text-foreground mb-1">
-              {dragActive ? "Drop to upload" : "Drag & drop your video"}
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
-              or <span className="text-primary font-semibold cursor-pointer hover:underline">browse files</span>
-              <br />
-              <span className="text-muted-foreground/50">9:16 ratio · max 60 seconds · MP4 or MOV</span>
-            </p>
           </div>
-        </div>
-      )}
+        )}
+      </section>
+    );
+  }
+);
+
+export default ReelUploadArea;
+
+function SectionHeader({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="flex items-center justify-between mb-2.5">
+      <h3 className="text-sm font-medium">{title}</h3>
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </div>
   );
 }
