@@ -243,15 +243,25 @@ function MakePostReelsContent() {
 
         {/* ── Main grid ────────────────────────────────────────────────── */}
         {/*
-          Mobile  (< lg):  single column
-          lg      (1024+):  2 cols — left: video+platforms | right: caption+actions+preview
-          2xl     (1536+):  3 cols — video+platforms | caption+actions | preview
+          Mobile (< lg):
+            – Single column, no phone preview
+            – Stack: Upload → Caption → Platforms → Actions
+
+          Laptop (lg–xl):
+            – Two columns: [form content | phone preview sticky right]
+            – Form rows: Upload → Caption → Platforms → Actions
+
+          Wide (xl+):
+            – Two columns: [form content | phone preview sticky right]
+            – Form rows: Upload → [Platforms + Caption side-by-side] → Actions
         */}
         <section className="px-6 lg:px-10 xl:px-14 pb-28">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr] 2xl:grid-cols-[420px_1fr_320px] gap-8 xl:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_300px] gap-8 xl:gap-12 items-start">
 
-            {/* ── Col 1: Upload + Platforms ── */}
-            <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+            {/* ── Left: all form content ── */}
+            <div className={`space-y-6 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+
+              {/* Row 1: Video upload — always full width */}
               <ReelUploadArea
                 dragActive={dragActive}
                 selectedVideo={selectedVideo}
@@ -261,30 +271,35 @@ function MakePostReelsContent() {
                 onFileChange={handleFileChange}
                 onClear={() => { setSelectedVideo(null); setSelectedFile(null); }}
               />
-              <ReelPlatformSelector
-                selected={selectedPlatforms}
-                onChange={setSelectedPlatforms}
-              />
-              {/* Preview lives under platforms on lg, but is its own col on 2xl */}
-              <div className="2xl:hidden">
-                <ReelPreview
-                  selectedVideo={selectedVideo}
-                  content={content}
-                  title={title}
-                />
-              </div>
-            </div>
 
-            {/* ── Col 2: Title + Caption + Actions ── */}
-            <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
-              <ReelPostDetails
-                title={title}
-                content={content}
-                onTitleChange={setTitle}
-                onContentChange={setContent}
-                selectedPlatforms={selectedPlatforms}
-                locked={locked}
-              />
+              {/*
+                Row 2 + 3:
+                  – Mobile / Laptop (< xl): Caption stacked above Platforms
+                  – Wide (xl+):            Platforms left  +  Caption right, side-by-side
+                Use CSS order to flip without duplicating JSX.
+              */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Caption — first on mobile/laptop, second col on wide */}
+                <div className="xl:order-2">
+                  <ReelPostDetails
+                    title={title}
+                    content={content}
+                    onTitleChange={setTitle}
+                    onContentChange={setContent}
+                    selectedPlatforms={selectedPlatforms}
+                    locked={locked}
+                  />
+                </div>
+                {/* Platforms — second on mobile/laptop, first col on wide */}
+                <div className="xl:order-1">
+                  <ReelPlatformSelector
+                    selected={selectedPlatforms}
+                    onChange={setSelectedPlatforms}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3 / 4: Action buttons */}
               <ReelActionBar
                 onPublish={() => save(false)}
                 onDraft={() => save(true)}
@@ -301,8 +316,8 @@ function MakePostReelsContent() {
               />
             </div>
 
-            {/* ── Col 3: Preview — only visible at 2xl, hidden below ── */}
-            <div className="hidden 2xl:block">
+            {/* ── Right: phone preview — hidden on mobile, sticky on lg+ ── */}
+            <div className="hidden lg:block">
               <ReelPreview
                 selectedVideo={selectedVideo}
                 content={content}

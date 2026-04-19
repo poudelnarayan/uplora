@@ -1,7 +1,6 @@
 "use client";
 
-import { Play, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Plus, Smartphone, Monitor } from "lucide-react";
-import { useState } from "react";
+import { Play, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Plus } from "lucide-react";
 
 interface ReelPreviewProps {
   selectedVideo: string | null;
@@ -20,39 +19,16 @@ function formatCaption(text: string) {
 }
 
 export default function ReelPreview({ selectedVideo, content, title }: ReelPreviewProps) {
-  const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
-
   return (
-    <div className="space-y-6 2xl:sticky 2xl:top-8">
-      {/* Header row */}
-      <div className="flex items-center justify-between gap-4 px-1">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary whitespace-nowrap">Live Preview</h3>
-        <div className="flex p-1.5 bg-white rounded-full shadow-lg gap-1 border border-primary/5 shrink-0">
-          <button
-            onClick={() => setDevice("mobile")}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-              device === "mobile" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            <Smartphone className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setDevice("desktop")}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-              device === "desktop" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            <Monitor className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+    <div className="space-y-4 sticky top-8">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-primary text-center">Live Preview</p>
 
-      {/* Phone frame */}
       <div className="flex justify-center">
-        <div className="w-[260px] 2xl:w-[280px]">
-          {/* The mock phone */}
-          <div className="aspect-[9/16] bg-black rounded-[3rem] relative overflow-hidden border-[10px] border-foreground shadow-[0px_50px_100px_rgba(0,0,0,0.15)] ring-1 ring-white/10">
-            {/* Video / placeholder */}
+        <div className="w-[260px]">
+          {/* Phone shell */}
+          <div className="aspect-[9/16] bg-black rounded-[3rem] relative overflow-hidden border-[10px] border-foreground shadow-[0px_40px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/10">
+
+            {/* Video or placeholder gradient */}
             {selectedVideo ? (
               <video src={selectedVideo} className="w-full h-full object-cover" muted loop autoPlay playsInline />
             ) : (
@@ -61,20 +37,19 @@ export default function ReelPreview({ selectedVideo, content, title }: ReelPrevi
               </div>
             )}
 
-            {/* Overlay gradient top */}
+            {/* Gradient overlays */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
             {/* Top bar */}
             <div className="absolute top-4 left-5 right-5 flex justify-between items-center text-white">
               <span className="text-[0.6rem] font-black uppercase tracking-widest">Reels</span>
-              <div className="w-5 h-5 flex items-center justify-center opacity-80">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
-                  <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-                </svg>
-              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4 opacity-80">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+              </svg>
             </div>
 
-            {/* Right actions */}
+            {/* Right action icons */}
             <div className="absolute right-3 bottom-24 flex flex-col items-center gap-5">
               <div className="relative">
                 <div className="w-9 h-9 rounded-full bg-white/20 border-2 border-white flex items-center justify-center">
@@ -109,8 +84,8 @@ export default function ReelPreview({ selectedVideo, content, title }: ReelPrevi
             </div>
           </div>
 
-          <p className="text-[0.65rem] font-bold text-center text-muted-foreground/40 uppercase tracking-widest mt-3">
-            Mockup visualization only
+          <p className="text-[0.62rem] font-bold text-center text-muted-foreground/35 uppercase tracking-widest mt-3">
+            Mockup only
           </p>
         </div>
       </div>
