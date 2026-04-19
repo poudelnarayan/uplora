@@ -102,14 +102,9 @@ export default function OnboardingPage() {
 
   const handleSkip = async () => {
     if (isSkipping) return;
-    try {
-      setIsSkipping(true);
-      await skipOnboarding();
-      window.location.href = "/dashboard";
-    } catch (error) {
-      console.error("Skip onboarding failed:", error);
-      setIsSkipping(false);
-    }
+    setIsSkipping(true);
+    await skipOnboarding();
+    window.location.href = "/dashboard";
   };
 
   const handleCreateTeam = async () => {
@@ -162,17 +157,12 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setIsCompleting(true);
-    try {
-      await completeOnboarding({
-        role: role ?? undefined,
-        goal: goal ?? undefined,
-        teamSize,
-      });
-      window.location.href = "/dashboard";
-    } catch (error) {
-      console.error("Complete onboarding failed:", error);
-      setIsCompleting(false);
-    }
+    await completeOnboarding({
+      role: role ?? undefined,
+      goal: goal ?? undefined,
+      teamSize,
+    });
+    window.location.href = "/dashboard";
   };
 
   // Validation for each step
