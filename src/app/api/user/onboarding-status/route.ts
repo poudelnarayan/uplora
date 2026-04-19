@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const { clerkUserId } = await getAuthenticatedUserSafe();
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('onboarding_completed, onboarding_skipped, onboarding_seen_at')
+      .select('onboarding_completed, onboarding_skipped, onboarding_seen_at, onboarding_role, onboarding_goal, onboarding_team_size')
       .eq('clerk_id', clerkUserId)
       .maybeSingle();
 
@@ -26,10 +26,12 @@ export async function GET(req: NextRequest) {
       onboardingCompleted,
       onboardingSkipped,
       onboardingSeenAt,
-      shouldShowOnboarding
+      shouldShowOnboarding,
+      onboardingRole: user?.onboarding_role ?? null,
+      onboardingGoal: user?.onboarding_goal ?? null,
+      onboardingTeamSize: user?.onboarding_team_size ?? null,
     });
-
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -48,25 +50,32 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    let update: Record<string, any> = { updated_at: now };
+    const update: Record<string, any> = { updated_at: now };
 
     if (action === "seen") {
       update.onboarding_seen_at = now;
+
     } else if (action === "skip") {
       update.onboarding_seen_at = now;
       update.onboarding_skipped = true;
       update.onboarding_completed = false;
+
     } else if (action === "complete") {
       update.onboarding_seen_at = now;
       update.onboarding_completed = true;
       update.onboarding_skipped = false;
+
+      // Persist answers collected during onboarding steps
+      if (body.role) update.onboarding_role = String(body.role);
+      if (body.goal) update.onboarding_goal = String(body.goal);
+      if (body.teamSize) update.onboarding_team_size = String(body.teamSize);
     }
 
     const { data: updatedUser, error } = await supabaseAdmin
       .from("users")
       .update(update)
       .eq("clerk_id", clerkUserId)
-      .select("onboarding_completed, onboarding_skipped, onboarding_seen_at")
+      .select("onboarding_completed, onboarding_skipped, onboarding_seen_at, onboarding_role, onboarding_goal, onboarding_team_size")
       .maybeSingle();
 
     if (error) {
@@ -78,17 +87,18 @@ export async function POST(req: NextRequest) {
 
     const onboardingCompleted = Boolean(updatedUser?.onboarding_completed);
     const onboardingSkipped = Boolean(updatedUser?.onboarding_skipped);
-    const onboardingSeenAt = updatedUser?.onboarding_seen_at ?? null;
 
     return NextResponse.json({
       success: true,
       onboardingCompleted,
       onboardingSkipped,
-      onboardingSeenAt,
-      shouldShowOnboarding: !onboardingCompleted && !onboardingSkipped
+      onboardingSeenAt: updatedUser?.onboarding_seen_at ?? null,
+      onboardingRole: updatedUser?.onboarding_role ?? null,
+      onboardingGoal: updatedUser?.onboarding_goal ?? null,
+      onboardingTeamSize: updatedUser?.onboarding_team_size ?? null,
+      shouldShowOnboarding: !onboardingCompleted && !onboardingSkipped,
     });
-
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

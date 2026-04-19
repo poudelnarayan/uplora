@@ -14,7 +14,6 @@ import {
   Video,
   Wand2
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
 import ParticleBackground from "@/app/components/ui/ParticleBackground";
@@ -68,7 +67,6 @@ const teamSizeOptions = [
 ];
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const { user, isLoaded } = useUser();
   const {
     shouldShowOnboarding,
@@ -103,12 +101,11 @@ export default function OnboardingPage() {
   // We'll handle redirects manually after skip/complete actions
 
   const handleSkip = async () => {
-    if (isSkipping) return; // Prevent multiple clicks
+    if (isSkipping) return;
     try {
       setIsSkipping(true);
       await skipOnboarding();
-      // Use window.location to force a full page reload and prevent loops
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Skip onboarding failed:", error);
       setIsSkipping(false);
@@ -166,9 +163,12 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setIsCompleting(true);
     try {
-      await completeOnboarding();
-      // Use window.location to force a full page reload and prevent loops
-      window.location.href = "/";
+      await completeOnboarding({
+        role: role ?? undefined,
+        goal: goal ?? undefined,
+        teamSize,
+      });
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Complete onboarding failed:", error);
       setIsCompleting(false);

@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+
+interface OnboardingData {
+  role?: string;
+  goal?: string;
+  teamSize?: string;
+}
 
 export function useOnboarding() {
   const { user, isLoaded } = useUser();
-  const router = useRouter();
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState<boolean | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [onboardingSkipped, setOnboardingSkipped] = useState(false);
@@ -15,26 +19,17 @@ export function useOnboarding() {
 
   const checkOnboardingStatus = async () => {
     try {
-      const response = await fetch('/api/user/onboarding-status', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
+      const response = await fetch('/api/user/onboarding-status');
       if (response.ok) {
         const data = await response.json();
-        const shouldShow = Boolean(data.shouldShowOnboarding);
-        setShouldShowOnboarding(shouldShow);
+        setShouldShowOnboarding(Boolean(data.shouldShowOnboarding));
         setOnboardingCompleted(Boolean(data.onboardingCompleted));
         setOnboardingSkipped(Boolean(data.onboardingSkipped));
         setOnboardingSeenAt(data.onboardingSeenAt ?? null);
       } else {
-        // On error, assume they need onboarding (safer default)
         setShouldShowOnboarding(true);
       }
-    } catch (error) {
-      // On error, assume they need onboarding (safer default)
+    } catch {
       setShouldShowOnboarding(true);
     } finally {
       setIsLoading(false);
@@ -49,14 +44,11 @@ export function useOnboarding() {
     if (!user) {
       setIsLoading(false);
       setShouldShowOnboarding(false);
-      setOnboardingCompleted(false);
-      setOnboardingSkipped(false);
-      setOnboardingSeenAt(null);
       return;
     }
-
     checkOnboardingStatus();
-  }, [user, isLoaded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isLoaded]);
 
   const markOnboardingSeen = async () => {
     try {
@@ -71,33 +63,21 @@ export function useOnboarding() {
     }
   };
 
-  const redirectToOnboarding = () => {
-    router.push('/onboarding');
-  };
-
-  const completeOnboarding = async () => {
+  const completeOnboarding = async (data?: OnboardingData) => {
     const response = await fetch('/api/user/onboarding-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'complete' }),
+      body: JSON.stringify({ action: 'complete', ...data }),
     });
 
     const responseData = await response.json().catch(() => ({}));
-
     if (!response.ok) {
-      throw new Error(
-        (responseData as any)?.error || 'Failed to mark onboarding completed'
-      );
+      throw new Error((responseData as any)?.error || 'Failed to complete onboarding');
     }
 
-    // Update state immediately
     setShouldShowOnboarding(false);
     setOnboardingCompleted(true);
     setOnboardingSkipped(false);
-
-    // Refresh status from server to ensure consistency
-    await checkOnboardingStatus();
-
     return responseData;
   };
 
@@ -109,25 +89,17 @@ export function useOnboarding() {
     });
     const responseData = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        (responseData as any)?.error || 'Failed to skip onboarding'
-      );
+      throw new Error((responseData as any)?.error || 'Failed to skip onboarding');
     }
 
-    // Update state immediately
     setShouldShowOnboarding(false);
     setOnboardingSkipped(true);
     setOnboardingCompleted(false);
-
-    // Refresh status from server to ensure consistency
-    await checkOnboardingStatus();
-
     return responseData;
   };
 
   return {
     shouldShowOnboarding,
-    redirectToOnboarding,
     completeOnboarding,
     skipOnboarding,
     markOnboardingSeen,
@@ -135,6 +107,6 @@ export function useOnboarding() {
     onboardingCompleted,
     onboardingSkipped,
     onboardingSeenAt,
-    refresh: checkOnboardingStatus
+    refresh: checkOnboardingStatus,
   };
 }
