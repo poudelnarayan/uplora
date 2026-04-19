@@ -314,6 +314,14 @@ function MakePostReelsContent() {
                 locked={locked}
               />
 
+              {/* Wide screen (xl+): platforms sit just below caption in left column */}
+              <div className="hidden xl:block">
+                <ReelPlatformSelector
+                  selected={selectedPlatforms}
+                  onChange={setSelectedPlatforms}
+                />
+              </div>
+
               {/* Mobile-only: platforms + action buttons at bottom */}
               <div className="sm:hidden space-y-4">
                 <ReelPlatformSelector
@@ -350,17 +358,20 @@ function MakePostReelsContent() {
               </div>
             </div>
 
-            {/* ── Right 40%: phone preview + platforms (hidden on mobile) ── */}
+            {/* ── Right 40%: phone preview (hidden on mobile) ── */}
             <div className="hidden sm:flex flex-col gap-5 sticky top-6">
               <ReelPreview
                 selectedVideo={selectedVideo}
                 content={content}
                 title={title}
               />
-              <ReelPlatformSelector
-                selected={selectedPlatforms}
-                onChange={setSelectedPlatforms}
-              />
+              {/* Laptop only (sm–xl): platforms below phone. On xl+ they live in left col. */}
+              <div className="xl:hidden">
+                <ReelPlatformSelector
+                  selected={selectedPlatforms}
+                  onChange={setSelectedPlatforms}
+                />
+              </div>
             </div>
 
           </div>
