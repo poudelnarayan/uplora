@@ -251,6 +251,7 @@ function MakePostReelsContent() {
                 <ReelUploadArea
                   dragActive={dragActive}
                   selectedVideo={selectedVideo}
+                  selectedFile={selectedFile}
                   onDrag={handleDrag}
                   onDrop={handleDrop}
                   onFileChange={handleFileChange}
@@ -265,6 +266,7 @@ function MakePostReelsContent() {
                   content={content}
                   onTitleChange={setTitle}
                   onContentChange={setContent}
+                  selectedPlatforms={selectedPlatforms}
                   locked={locked}
                 />
                 <ReelActionBar

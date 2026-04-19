@@ -1,80 +1,115 @@
 "use client";
 
-import { CloudUpload, X } from "lucide-react";
+import { CloudUpload, X, Video, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReelUploadAreaProps {
   dragActive: boolean;
   selectedVideo: string | null;
+  selectedFile: File | null;
   onDrag: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
 }
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function ReelUploadArea({
   dragActive,
   selectedVideo,
+  selectedFile,
   onDrag,
   onDrop,
   onFileChange,
   onClear,
 }: ReelUploadAreaProps) {
   return (
-    <div className="bg-white p-2 rounded-[2rem] shadow-[0px_30px_60px_rgba(0,88,190,0.06)] border border-white hover:border-primary/10 transition-all group cursor-pointer">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Video File</p>
+        <span className="text-[0.7rem] text-muted-foreground font-medium">MP4 · MOV · 9:16 ratio</span>
+      </div>
+
       {selectedVideo ? (
-        <div className="relative rounded-[1.75rem] overflow-hidden aspect-[9/16] max-h-72 flex items-center justify-center bg-black">
+        <div className="relative bg-black rounded-3xl overflow-hidden" style={{ aspectRatio: "9/16", maxHeight: 340 }}>
           <video
             src={selectedVideo}
             className="w-full h-full object-cover"
             controls
             muted
             loop
+            playsInline
           />
-          <button
-            onClick={onClear}
-            className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <span className="absolute top-3 left-3 bg-primary/80 text-white text-[0.65rem] font-black px-2 py-1 rounded-full uppercase tracking-wider">
-            9:16
-          </span>
+          {/* Overlay top bar */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-3 bg-gradient-to-b from-black/60 to-transparent">
+            <span className="bg-primary text-white text-[0.6rem] font-black px-2 py-1 rounded-full uppercase tracking-wider">
+              9:16
+            </span>
+            <button
+              onClick={onClear}
+              className="w-7 h-7 bg-black/60 hover:bg-black/90 rounded-full flex items-center justify-center text-white transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {/* File info bar */}
+          {selectedFile && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span className="text-white text-[0.65rem] font-semibold truncate">{selectedFile.name}</span>
+                <span className="text-white/60 text-[0.6rem] shrink-0">{formatBytes(selectedFile.size)}</span>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div
           className={cn(
-            "border-2 border-dashed rounded-[1.75rem] py-16 flex flex-col items-center justify-center text-center transition-all",
+            "relative border-2 border-dashed rounded-3xl transition-all cursor-pointer group",
             dragActive
-              ? "border-primary/60 bg-primary/[0.03]"
-              : "border-border/40 group-hover:bg-primary/[0.02]"
+              ? "border-primary bg-primary/5 scale-[0.99]"
+              : "border-border/50 hover:border-primary/50 hover:bg-primary/[0.02]"
           )}
+          style={{ minHeight: 260 }}
           onDragEnter={onDrag}
           onDragLeave={onDrag}
           onDragOver={onDrag}
           onDrop={onDrop}
         >
-          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-            <CloudUpload className="h-9 w-9 text-primary stroke-[1.5]" />
-          </div>
-          <h4 className="text-2xl font-bold mb-3 text-foreground">Drop your video here</h4>
-          <p className="text-muted-foreground text-sm mb-8 max-w-xs mx-auto leading-relaxed">
-            High-quality MP4 or MOV recommended.<br />
-            9:16 aspect ratio only. Max 60 seconds.
-          </p>
           <input
             type="file"
-            accept="video/*"
+            accept="video/mp4,video/mov,video/quicktime"
             onChange={onFileChange}
-            className="hidden"
-            id="reel-video-upload"
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
           />
-          <label
-            htmlFor="reel-video-upload"
-            className="bg-primary text-white font-bold px-10 py-4 rounded-full shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 cursor-pointer"
-          >
-            Browse Files
-          </label>
+          <div className="flex flex-col items-center justify-center h-full py-14 px-6 text-center pointer-events-none">
+            <div className={cn(
+              "w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-500",
+              dragActive ? "bg-primary scale-110" : "bg-primary/8 group-hover:bg-primary/12 group-hover:scale-105"
+            )}>
+              {dragActive
+                ? <Video className="h-7 w-7 text-white" />
+                : <CloudUpload className="h-7 w-7 text-primary stroke-[1.5]" />
+              }
+            </div>
+            <p className="font-bold text-base text-foreground mb-1.5">
+              {dragActive ? "Drop to upload" : "Drop video here"}
+            </p>
+            <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+              or <span className="text-primary font-semibold">browse files</span><br />
+              Max 60 seconds · 9:16 aspect ratio
+            </p>
+            <div className="flex items-center gap-2 text-[0.7rem] text-muted-foreground/60 font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-muted/60">MP4</span>
+              <span className="px-2 py-0.5 rounded-full bg-muted/60">MOV</span>
+              <span className="px-2 py-0.5 rounded-full bg-muted/60">≤ 500 MB</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
