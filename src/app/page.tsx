@@ -11,8 +11,6 @@ import FAQSection from "@/app/components/Landing/FAQSection";
 import ContactSection from "@/app/components/Landing/ContactSection";
 import ReviewsSection from "@/app/components/Landing/ReviewsSection";
 
-export const dynamic = 'force-dynamic';
-
 export default function Home() {
   return (
     <div className="theme-landing">
