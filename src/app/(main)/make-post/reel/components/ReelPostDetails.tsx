@@ -20,22 +20,21 @@ export default function ReelPostDetails({
   locked,
 }: ReelPostDetailsProps) {
   return (
-    <div className="bg-white p-6 lg:p-8 xl:p-10 rounded-[2rem] shadow-[0px_30px_60px_rgba(0,88,190,0.04)] space-y-8">
+    <div className="space-y-4">
+
       {/* Title */}
-      <div>
-        <label className="block text-xs font-black text-primary uppercase tracking-[0.2em] mb-4">
-          Reel Title
-        </label>
+      <div className="space-y-2">
+        <label className="text-xs font-black uppercase tracking-[0.18em] text-primary">Title</label>
         <input
           value={title}
           onChange={e => onTitleChange(e.target.value)}
-          placeholder="Enter a compelling title..."
+          placeholder="Enter a compelling title…"
           disabled={locked}
-          className="w-full bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-2xl px-8 py-5 text-foreground font-semibold focus:ring-0 transition-all outline-none text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-background border border-border/60 focus:border-primary/40 rounded-xl px-4 py-3 text-foreground font-semibold text-base placeholder:text-muted-foreground/40 focus:ring-0 outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
-      {/* Caption — smart editor */}
+      {/* Caption */}
       <ReelCaptionEditor
         content={content}
         onChange={onContentChange}

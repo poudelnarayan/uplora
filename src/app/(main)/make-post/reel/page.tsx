@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useTeam } from "@/context/TeamContext";
 import { useNotifications } from "@/app/components/ui/Notification";
@@ -10,7 +11,6 @@ import { InlineSpinner } from "@/app/components/ui/loading-spinner";
 import ReelUploadArea from "./components/ReelUploadArea";
 import ReelPlatformSelector from "./components/ReelPlatformSelector";
 import ReelPostDetails from "./components/ReelPostDetails";
-import ReelActionBar from "./components/ReelActionBar";
 import ReelPreview from "./components/ReelPreview";
 
 function MakePostReelsContent() {
@@ -20,7 +20,6 @@ function MakePostReelsContent() {
   const { selectedTeamId, selectedTeam } = useTeam();
   const { addNotification } = useNotifications();
 
-  // Form state
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Instagram", "TikTok"]);
@@ -28,11 +27,9 @@ function MakePostReelsContent() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  // Status / workflow state
   const [postStatus, setPostStatus] = useState<string | null>(null);
   const [role, setRole] = useState<"OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | null>(null);
 
-  // Loading flags
   const [loadingExisting, setLoadingExisting] = useState(!!editId);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDrafting, setIsDrafting] = useState(false);
@@ -41,8 +38,11 @@ function MakePostReelsContent() {
   const [isApproving, setIsApproving] = useState(false);
 
   const locked = !!editId && postStatus === "PENDING" && role === "EDITOR";
+  const busy = isPublishing || isDrafting || isUploading;
 
-  // ── Load existing post for edit mode ──────────────────────────────────────
+  const showRequestApproval = !!editId && role === "EDITOR" && postStatus !== "PENDING";
+  const showApprove = !!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role);
+
   useEffect(() => {
     if (!editId) return;
     const load = async () => {
@@ -72,7 +72,6 @@ function MakePostReelsContent() {
     load();
   }, [editId, addNotification]);
 
-  // ── Drag & drop ────────────────────────────────────────────────────────────
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -99,7 +98,6 @@ function MakePostReelsContent() {
     reader.readAsDataURL(file);
   };
 
-  // ── S3 upload ──────────────────────────────────────────────────────────────
   const uploadToS3 = async (file: File): Promise<string> => {
     const presignRes = await fetch("/api/s3/presign-reel", {
       method: "POST",
@@ -113,7 +111,6 @@ function MakePostReelsContent() {
     return key;
   };
 
-  // ── Save (publish or draft) ────────────────────────────────────────────────
   const save = async (asDraft: boolean) => {
     if (!selectedTeamId && !editId) {
       addNotification({ type: "error", title: "No Team Selected", message: "Please select a team first" });
@@ -123,7 +120,6 @@ function MakePostReelsContent() {
       addNotification({ type: "error", title: "Title Required", message: "Please enter a title" });
       return;
     }
-
     asDraft ? setIsDrafting(true) : setIsPublishing(true);
     try {
       let videoKey: string | null = null;
@@ -132,7 +128,6 @@ function MakePostReelsContent() {
         videoKey = await uploadToS3(selectedFile);
         setIsUploading(false);
       }
-
       let res: Response;
       if (editId) {
         res = await fetch(`/api/content/${editId}`, {
@@ -147,10 +142,8 @@ function MakePostReelsContent() {
           body: JSON.stringify({ type: "reel", title, content, teamId: selectedTeamId, platforms: selectedPlatforms, videoKey, metadata: {} }),
         });
       }
-
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || result.error || "Failed to save");
-
       addNotification({
         type: "success",
         title: editId ? "Post Updated!" : asDraft ? "Draft Saved!" : "Post Published!",
@@ -166,7 +159,6 @@ function MakePostReelsContent() {
     }
   };
 
-  // ── Approval workflow ──────────────────────────────────────────────────────
   const requestApproval = async () => {
     if (!editId) {
       addNotification({ type: "error", title: "Save first", message: "Save the post before requesting approval." });
@@ -213,48 +205,97 @@ function MakePostReelsContent() {
     );
   }
 
+  const publishLabel = isUploading
+    ? "Uploading…"
+    : isPublishing
+    ? "Saving…"
+    : selectedPlatforms.length > 0
+    ? `Publish to ${selectedPlatforms.length} Platform${selectedPlatforms.length > 1 ? "s" : ""}`
+    : "Publish";
+
   return (
     <AppShell>
       <div
         className="min-h-screen"
-        style={{ background: "radial-gradient(ellipse 80% 40% at 50% -10%, hsl(var(--muted)) 0%, hsl(var(--background)) 70%)" }}
+        style={{ background: "radial-gradient(ellipse 80% 50% at 60% -5%, hsl(var(--muted)) 0%, hsl(var(--background)) 65%)" }}
       >
-        {/* ── Page header ──────────────────────────────────────────────── */}
-        <header className="px-6 lg:px-10 xl:px-14 pt-10 pb-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-            <div>
-              <p className="text-[0.7rem] font-black uppercase tracking-[0.22em] text-primary mb-1">Short Reel</p>
-              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-foreground leading-none">
-                Create Short Reel
-              </h1>
-              <p className="text-sm text-muted-foreground font-medium mt-2">
-                Vertical video · Max 60 seconds · 9:16 ratio
-              </p>
-            </div>
-            {editId && postStatus === "PENDING" && (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 font-medium max-w-sm shrink-0">
-                {role === "EDITOR"
-                  ? "Awaiting approval — editing locked."
-                  : "Awaiting your approval. Use the Approve button below."}
-              </div>
+
+        {/* ── Top header bar — title left, action buttons right ── */}
+        <header className="px-6 lg:px-10 xl:px-14 pt-8 pb-6 flex items-center justify-between gap-6">
+
+          {/* Left: title block */}
+          <div className="min-w-0">
+            <p className="text-[0.65rem] font-black uppercase tracking-[0.24em] text-primary mb-0.5">Short Reel</p>
+            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight text-foreground leading-none truncate">
+              Create Short Reel
+            </h1>
+            <p className="text-xs text-muted-foreground font-medium mt-1.5 hidden sm:block">
+              Vertical video · 60 s max · 9:16
+            </p>
+          </div>
+
+          {/* Right: action buttons — hidden on mobile (shown at bottom instead) */}
+          <div className={`hidden sm:flex items-center gap-3 shrink-0 ${locked ? "opacity-60 pointer-events-none" : ""}`}>
+            {showApprove && (
+              <button
+                onClick={approve}
+                disabled={!!isApproving || busy}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50 active:scale-95"
+              >
+                {isApproving && <Loader2 className="h-4 w-4 animate-spin" />}
+                Approve &amp; Publish
+              </button>
             )}
+            {showRequestApproval && (
+              <button
+                onClick={requestApproval}
+                disabled={!!isRequestingApproval || busy}
+                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 active:scale-95"
+              >
+                {isRequestingApproval && <Loader2 className="h-4 w-4 animate-spin" />}
+                Request Approval
+              </button>
+            )}
+            <button
+              onClick={() => save(true)}
+              disabled={busy}
+              className="flex items-center gap-2 bg-background border border-border hover:bg-muted text-foreground font-semibold text-sm px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 active:scale-95"
+            >
+              {isDrafting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save Draft
+            </button>
+            <button
+              onClick={() => save(false)}
+              disabled={busy}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-primary/25 transition-all disabled:opacity-50 active:scale-95"
+            >
+              {(isPublishing || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
+              {publishLabel}
+            </button>
           </div>
         </header>
 
-        {/* ── Main grid ────────────────────────────────────────────────── */}
+        {/* Pending banner */}
+        {editId && postStatus === "PENDING" && (
+          <div className="px-6 lg:px-10 xl:px-14 pb-4">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 font-medium">
+              {role === "EDITOR"
+                ? "Awaiting approval — editing is locked until approved or returned."
+                : "This post is awaiting your approval. Use the Approve button above."}
+            </div>
+          </div>
+        )}
+
+        {/* ── Main two-column grid ── */}
         {/*
-          Mobile (< lg):
-            Single column — Upload → Caption → Platforms → Actions. No phone.
-
-          Laptop + Wide (lg+):
-            Left col  — Upload → Caption (full width)
-            Right col — Actions → Phone → Platforms
+          Mobile (< sm):  single column — no phone preview, actions at bottom
+          sm / lg+:       left 60% content  |  right 40% phone+platforms
         */}
-        <section className="px-6 lg:px-10 xl:px-14 pb-28">
-          <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-8 xl:gap-10 items-start">
+        <section className="px-6 lg:px-10 xl:px-14 pb-24">
+          <div className="grid grid-cols-1 sm:grid-cols-[60%_40%] gap-6 lg:gap-8 xl:gap-10 items-start">
 
-            {/* ── Left: upload + caption ── */}
-            <div className={`space-y-6 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+            {/* ── Left 60%: upload + caption ── */}
+            <div className={`space-y-5 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
               <ReelUploadArea
                 dragActive={dragActive}
                 selectedVideo={selectedVideo}
@@ -273,53 +314,49 @@ function MakePostReelsContent() {
                 locked={locked}
               />
 
-              {/* Mobile only: platforms + actions shown inline */}
-              <div className="lg:hidden space-y-6">
+              {/* Mobile-only: platforms + action buttons at bottom */}
+              <div className="sm:hidden space-y-4">
                 <ReelPlatformSelector
                   selected={selectedPlatforms}
                   onChange={setSelectedPlatforms}
                 />
-                <ReelActionBar
-                  onPublish={() => save(false)}
-                  onDraft={() => save(true)}
-                  onRequestApproval={requestApproval}
-                  onApprove={approve}
-                  isPublishing={isPublishing}
-                  isDrafting={isDrafting}
-                  isUploading={isUploading}
-                  isRequestingApproval={isRequestingApproval}
-                  isApproving={isApproving}
-                  showRequestApproval={!!editId && role === "EDITOR" && postStatus !== "PENDING"}
-                  showApprove={!!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role)}
-                  selectedPlatforms={selectedPlatforms}
-                />
+                <div className={`flex flex-col gap-3 ${locked ? "opacity-60 pointer-events-none" : ""}`}>
+                  {showApprove && (
+                    <button onClick={approve} disabled={!!isApproving || busy}
+                      className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-4 rounded-2xl transition-all disabled:opacity-50">
+                      {isApproving && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Approve &amp; Publish
+                    </button>
+                  )}
+                  {showRequestApproval && (
+                    <button onClick={requestApproval} disabled={!!isRequestingApproval || busy}
+                      className="w-full flex items-center justify-center gap-2 bg-amber-500 text-white font-bold py-4 rounded-2xl transition-all disabled:opacity-50">
+                      {isRequestingApproval && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Request Approval
+                    </button>
+                  )}
+                  <div className="flex gap-3">
+                    <button onClick={() => save(false)} disabled={busy}
+                      className="flex-1 flex items-center justify-center gap-2 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50">
+                      {(isPublishing || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {publishLabel}
+                    </button>
+                    <button onClick={() => save(true)} disabled={busy}
+                      className="px-6 py-4 rounded-2xl bg-muted text-foreground font-semibold transition-all disabled:opacity-50">
+                      {isDrafting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Draft"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* ── Right: Actions → Phone → Platforms  (hidden on mobile) ── */}
-            <div className={`hidden lg:flex lg:flex-col lg:gap-6 sticky top-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
-              {/* Publish / Save draft at top */}
-              <ReelActionBar
-                onPublish={() => save(false)}
-                onDraft={() => save(true)}
-                onRequestApproval={requestApproval}
-                onApprove={approve}
-                isPublishing={isPublishing}
-                isDrafting={isDrafting}
-                isUploading={isUploading}
-                isRequestingApproval={isRequestingApproval}
-                isApproving={isApproving}
-                showRequestApproval={!!editId && role === "EDITOR" && postStatus !== "PENDING"}
-                showApprove={!!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role)}
-                selectedPlatforms={selectedPlatforms}
-              />
-              {/* Phone preview */}
+            {/* ── Right 40%: phone preview + platforms (hidden on mobile) ── */}
+            <div className="hidden sm:flex flex-col gap-5 sticky top-6">
               <ReelPreview
                 selectedVideo={selectedVideo}
                 content={content}
                 title={title}
               />
-              {/* Platform selector below phone */}
               <ReelPlatformSelector
                 selected={selectedPlatforms}
                 onChange={setSelectedPlatforms}

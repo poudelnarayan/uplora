@@ -114,8 +114,8 @@ export default function ReelCaptionEditor({
     <div className="space-y-5">
       {/* Label + counters — stacked so counters never fight the label for space */}
       <div className="space-y-2">
-        <label className="block text-xs font-black text-primary uppercase tracking-[0.2em]">
-          Caption &amp; Story
+        <label className="block text-xs font-black uppercase tracking-[0.18em] text-primary">
+          Caption
         </label>
         {activePlatforms.length > 0 && (
           <div className="flex gap-2 flex-wrap">
@@ -144,10 +144,10 @@ export default function ReelCaptionEditor({
       <textarea
         value={content}
         onChange={e => onChange(e.target.value)}
-        placeholder="What's this reel about? Use #hashtags and @mentions to increase reach..."
-        rows={7}
+        placeholder="What's this reel about? Use #hashtags and @mentions to increase reach…"
+        rows={6}
         disabled={locked}
-        className="w-full bg-surface-container-low border-2 border-transparent focus:border-primary/20 rounded-2xl px-8 py-6 text-foreground font-medium focus:ring-0 transition-all outline-none resize-none leading-relaxed text-base disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-background border border-border/60 focus:border-primary/40 rounded-xl px-4 py-3 text-foreground font-medium text-sm placeholder:text-muted-foreground/40 focus:ring-0 outline-none transition-colors resize-none leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
       />
 
       {/* Stats row */}
