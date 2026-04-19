@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useTeam } from "@/context/TeamContext";
 import { useRouter } from "next/navigation";
@@ -24,58 +24,67 @@ type ApprovalItem = {
 export default function ApprovalsPage() {
   const { selectedTeamId, selectedTeam } = useTeam();
   const router = useRouter();
-  const notifications = useNotifications();
+  // Destructure only addNotification — it's stable (useCallback inside the provider)
+  // Putting the whole `notifications` object in useEffect deps causes an infinite loop
+  // because a new object reference is created whenever any notification is added.
+  const { addNotification } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ApprovalItem[]>([]);
 
+  const load = useCallback(async () => {
+    if (!selectedTeamId) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        teamId: selectedTeamId,
+        types: "video,image,text,reel",
+        status: "APPROVAL_REQUESTED",
+        sortBy: "newest",
+        limit: "100",
+        offset: "0",
+      });
+      const res = await fetch(`/api/content?${params.toString()}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || data?.error || "Failed to load approvals");
+
+      const list: ApprovalItem[] = Array.isArray(data?.content) ? data.content : [];
+      setItems(list);
+    } catch (e) {
+      addNotification({
+        type: "error",
+        title: "Failed to load approvals",
+        message: e instanceof Error ? e.message : "Try again",
+      });
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTeamId, addNotification]);
+
   useEffect(() => {
-    const load = async () => {
-      if (!selectedTeamId) {
-        setItems([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          teamId: selectedTeamId,
-          types: "video,image,text,reel",
-          status: "APPROVAL_REQUESTED", // Use new status value
-          sortBy: "newest",
-          limit: "100",
-          offset: "0",
-        });
-        const res = await fetch(`/api/content?${params.toString()}`, { cache: "no-store" });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Failed to load approvals");
-
-        const list = Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : [];
-        setItems(list);
-      } catch (e) {
-        notifications.addNotification({
-          type: "error",
-          title: "Failed to load approvals",
-          message: e instanceof Error ? e.message : "Try again",
-        });
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     load();
-  }, [selectedTeamId, notifications]);
+  }, [load]);
 
-  const title = useMemo(() => selectedTeam?.name ? `${selectedTeam.name} • Approvals` : "Approvals", [selectedTeam?.name]);
+  const title = useMemo(
+    () => (selectedTeam?.name ? `${selectedTeam.name} • Approvals` : "Approvals"),
+    [selectedTeam?.name]
+  );
 
   const openItem = (it: ApprovalItem) => {
     if (it.type === "video") {
       router.push(`/videos/${it.id}`);
       return;
     }
-    const route = it.type === "text" ? "/make-post/text" : it.type === "image" ? "/make-post/image" : "/make-post/reel";
+    const route =
+      it.type === "text" ? "/make-post/text"
+      : it.type === "image" ? "/make-post/image"
+      : "/make-post/reel";
     router.push(`${route}?edit=${encodeURIComponent(it.id)}`);
   };
 
@@ -89,7 +98,7 @@ export default function ApprovalsPage() {
               Pending items that require owner/admin/manager approval before publishing.
             </p>
           </div>
-          <Button variant="outline" onClick={() => router.refresh()} disabled={loading}>
+          <Button variant="outline" onClick={load} disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
           </Button>
         </div>
@@ -115,7 +124,10 @@ export default function ApprovalsPage() {
                         ? (it.filename || "Video")
                         : (it.title || (it.content ? String(it.content).slice(0, 60) : "Post"));
                     return (
-                      <div key={it.id} className="flex items-center justify-between gap-4 border border-border rounded-lg p-4">
+                      <div
+                        key={it.id}
+                        className="flex items-center justify-between gap-4 border border-border rounded-lg p-4"
+                      >
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-foreground truncate">{displayTitle}</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -137,5 +149,3 @@ export default function ApprovalsPage() {
     </AppShell>
   );
 }
-
-
