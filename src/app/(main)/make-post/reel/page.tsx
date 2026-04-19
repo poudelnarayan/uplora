@@ -244,24 +244,17 @@ function MakePostReelsContent() {
         {/* ── Main grid ────────────────────────────────────────────────── */}
         {/*
           Mobile (< lg):
-            – Single column, no phone preview
-            – Stack: Upload → Caption → Platforms → Actions
+            Single column — Upload → Caption → Platforms → Actions. No phone.
 
-          Laptop (lg–xl):
-            – Two columns: [form content | phone preview sticky right]
-            – Form rows: Upload → Caption → Platforms → Actions
-
-          Wide (xl+):
-            – Two columns: [form content | phone preview sticky right]
-            – Form rows: Upload → [Platforms + Caption side-by-side] → Actions
+          Laptop + Wide (lg+):
+            Left col  — Upload → Caption (full width)
+            Right col — Actions → Phone → Platforms
         */}
         <section className="px-6 lg:px-10 xl:px-14 pb-28">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_300px] gap-8 xl:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_340px] gap-8 xl:gap-12 items-start">
 
-            {/* ── Left: all form content ── */}
+            {/* ── Left: upload + caption ── */}
             <div className={`space-y-6 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
-
-              {/* Row 1: Video upload — always full width */}
               <ReelUploadArea
                 dragActive={dragActive}
                 selectedVideo={selectedVideo}
@@ -271,35 +264,41 @@ function MakePostReelsContent() {
                 onFileChange={handleFileChange}
                 onClear={() => { setSelectedVideo(null); setSelectedFile(null); }}
               />
+              <ReelPostDetails
+                title={title}
+                content={content}
+                onTitleChange={setTitle}
+                onContentChange={setContent}
+                selectedPlatforms={selectedPlatforms}
+                locked={locked}
+              />
 
-              {/*
-                Row 2 + 3:
-                  – Mobile / Laptop (< xl): Caption stacked above Platforms
-                  – Wide (xl+):            Platforms left  +  Caption right, side-by-side
-                Use CSS order to flip without duplicating JSX.
-              */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Caption — first on mobile/laptop, second col on wide */}
-                <div className="xl:order-2">
-                  <ReelPostDetails
-                    title={title}
-                    content={content}
-                    onTitleChange={setTitle}
-                    onContentChange={setContent}
-                    selectedPlatforms={selectedPlatforms}
-                    locked={locked}
-                  />
-                </div>
-                {/* Platforms — second on mobile/laptop, first col on wide */}
-                <div className="xl:order-1">
-                  <ReelPlatformSelector
-                    selected={selectedPlatforms}
-                    onChange={setSelectedPlatforms}
-                  />
-                </div>
+              {/* Mobile only: platforms + actions shown inline */}
+              <div className="lg:hidden space-y-6">
+                <ReelPlatformSelector
+                  selected={selectedPlatforms}
+                  onChange={setSelectedPlatforms}
+                />
+                <ReelActionBar
+                  onPublish={() => save(false)}
+                  onDraft={() => save(true)}
+                  onRequestApproval={requestApproval}
+                  onApprove={approve}
+                  isPublishing={isPublishing}
+                  isDrafting={isDrafting}
+                  isUploading={isUploading}
+                  isRequestingApproval={isRequestingApproval}
+                  isApproving={isApproving}
+                  showRequestApproval={!!editId && role === "EDITOR" && postStatus !== "PENDING"}
+                  showApprove={!!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role)}
+                  selectedPlatforms={selectedPlatforms}
+                />
               </div>
+            </div>
 
-              {/* Row 3 / 4: Action buttons */}
+            {/* ── Right: Actions → Phone → Platforms  (hidden on mobile) ── */}
+            <div className={`hidden lg:flex lg:flex-col lg:gap-6 sticky top-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+              {/* Publish / Save draft at top */}
               <ReelActionBar
                 onPublish={() => save(false)}
                 onDraft={() => save(true)}
@@ -314,14 +313,16 @@ function MakePostReelsContent() {
                 showApprove={!!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role)}
                 selectedPlatforms={selectedPlatforms}
               />
-            </div>
-
-            {/* ── Right: phone preview — hidden on mobile, sticky on lg+ ── */}
-            <div className="hidden lg:block">
+              {/* Phone preview */}
               <ReelPreview
                 selectedVideo={selectedVideo}
                 content={content}
                 title={title}
+              />
+              {/* Platform selector below phone */}
+              <ReelPlatformSelector
+                selected={selectedPlatforms}
+                onChange={setSelectedPlatforms}
               />
             </div>
 

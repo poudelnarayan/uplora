@@ -20,13 +20,13 @@ function formatCaption(text: string) {
 
 export default function ReelPreview({ selectedVideo, content, title }: ReelPreviewProps) {
   return (
-    <div className="space-y-4 sticky top-8">
+    <div className="space-y-4">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-primary text-center">Live Preview</p>
 
       <div className="flex justify-center">
-        <div className="w-[260px]">
-          {/* Phone shell */}
-          <div className="aspect-[9/16] bg-black rounded-[3rem] relative overflow-hidden border-[10px] border-foreground shadow-[0px_40px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/10">
+        <div className="w-full max-w-[300px]">
+          {/* Phone shell — 9:19.5 matches modern smartphone proportions */}
+          <div className="bg-black rounded-[3rem] relative overflow-hidden border-[10px] border-foreground shadow-[0px_40px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/10" style={{ aspectRatio: "9/19.5" }}>
 
             {/* Video or placeholder gradient */}
             {selectedVideo ? (
