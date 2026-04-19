@@ -112,31 +112,32 @@ export default function ReelCaptionEditor({
 
   return (
     <div className="space-y-5">
-      {/* Label row */}
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-black text-primary uppercase tracking-[0.2em]">
+      {/* Label + counters — stacked so counters never fight the label for space */}
+      <div className="space-y-2">
+        <label className="block text-xs font-black text-primary uppercase tracking-[0.2em]">
           Caption &amp; Story
         </label>
-        {/* Per-platform char counters */}
-        <div className="flex gap-2 flex-wrap justify-end">
-          {activePlatforms.map(pid => {
-            const cfg = PLATFORM_CONFIG[pid];
-            if (!cfg) return null;
-            const over = content.length > cfg.charLimit;
-            return (
-              <span
-                key={pid}
-                className={`px-3 py-1.5 rounded-lg text-[0.62rem] font-black uppercase transition-colors ${
-                  over
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-primary/5 text-primary"
-                }`}
-              >
-                {PLATFORM_SHORT[pid]}: {content.length.toLocaleString()}/{cfg.charLimit.toLocaleString()}
-              </span>
-            );
-          })}
-        </div>
+        {activePlatforms.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {activePlatforms.map(pid => {
+              const cfg = PLATFORM_CONFIG[pid];
+              if (!cfg) return null;
+              const over = content.length > cfg.charLimit;
+              return (
+                <span
+                  key={pid}
+                  className={`px-3 py-1 rounded-lg text-[0.62rem] font-black uppercase whitespace-nowrap transition-colors ${
+                    over
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-primary/5 text-primary"
+                  }`}
+                >
+                  {PLATFORM_SHORT[pid]}: {content.length.toLocaleString()}/{cfg.charLimit.toLocaleString()}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Textarea */}
@@ -150,22 +151,22 @@ export default function ReelCaptionEditor({
       />
 
       {/* Stats row */}
-      <div className="flex items-center gap-4 text-[0.72rem] text-muted-foreground flex-wrap">
-        <span className="flex items-center gap-1.5">
-          <Hash className="h-3.5 w-3.5 text-primary/60" />
+      <div className="flex items-center gap-3 flex-wrap text-[0.72rem] text-muted-foreground">
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
+          <Hash className="h-3.5 w-3.5 text-primary/60 shrink-0" />
           <span className={hashtagCount > 0 ? "text-foreground font-semibold" : ""}>{hashtagCount} hashtags</span>
         </span>
-        <span className="flex items-center gap-1.5">
-          <AtSign className="h-3.5 w-3.5 text-primary/60" />
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
+          <AtSign className="h-3.5 w-3.5 text-primary/60 shrink-0" />
           <span className={mentionCount > 0 ? "text-foreground font-semibold" : ""}>{mentionCount} mentions</span>
         </span>
         {hasLinks && (
-          <span className="flex items-center gap-1.5">
-            <Link2 className="h-3.5 w-3.5 text-primary/60" />
+          <span className="flex items-center gap-1.5 whitespace-nowrap">
+            <Link2 className="h-3.5 w-3.5 text-primary/60 shrink-0" />
             <span className="text-foreground font-semibold">{links.length} link{links.length > 1 ? "s" : ""}</span>
           </span>
         )}
-        <span className="ml-auto text-muted-foreground/50">{content.length} chars</span>
+        <span className="text-muted-foreground/50 whitespace-nowrap">{content.length} chars</span>
       </div>
 
       {/* IG first-55-char preview */}

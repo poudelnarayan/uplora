@@ -23,11 +23,11 @@ export default function ReelPreview({ selectedVideo, content, title }: ReelPrevi
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
 
   return (
-    <div className="space-y-6 xl:sticky xl:top-8">
+    <div className="space-y-6 2xl:sticky 2xl:top-8">
       {/* Header row */}
-      <div className="flex items-center justify-between px-2">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Live Context Preview</h3>
-        <div className="flex p-1.5 bg-white rounded-full shadow-lg gap-1 border border-primary/5">
+      <div className="flex items-center justify-between gap-4 px-1">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary whitespace-nowrap">Live Preview</h3>
+        <div className="flex p-1.5 bg-white rounded-full shadow-lg gap-1 border border-primary/5 shrink-0">
           <button
             onClick={() => setDevice("mobile")}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
@@ -49,7 +49,7 @@ export default function ReelPreview({ selectedVideo, content, title }: ReelPrevi
 
       {/* Phone frame */}
       <div className="flex justify-center">
-        <div className="w-[280px]">
+        <div className="w-[260px] 2xl:w-[280px]">
           {/* The mock phone */}
           <div className="aspect-[9/16] bg-black rounded-[3rem] relative overflow-hidden border-[10px] border-foreground shadow-[0px_50px_100px_rgba(0,0,0,0.15)] ring-1 ring-white/10">
             {/* Video / placeholder */}

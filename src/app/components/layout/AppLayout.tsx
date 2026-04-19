@@ -501,7 +501,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </AnimatePresence>
 
         {/* Page content */}
-        <div className="flex flex-col">
+        <div className="flex flex-col min-h-screen">
           {/* Trial Banner - Hide on make-post flow to keep creation UI clean */}
           {(isTrialActive || isTrialExpired) && path !== "/subscription" && !path.startsWith("/make-post") && (
             <div className="px-4 lg:px-8 pt-6">
@@ -510,10 +510,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
               </div>
             </div>
           )}
-          
-          <div className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
-            <div className="max-w-6xl mx-auto w-full">{children}</div>
-          </div>
+
+          {/* make-post pages: no padding/max-width constraints, page owns its layout */}
+          {path.startsWith("/make-post") ? (
+            <div className="flex-1">{children}</div>
+          ) : (
+            <div className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
+              <div className="max-w-6xl mx-auto w-full">{children}</div>
+            </div>
+          )}
         </div>
       </main>
 

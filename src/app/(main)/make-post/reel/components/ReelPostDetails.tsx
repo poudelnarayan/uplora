@@ -20,7 +20,7 @@ export default function ReelPostDetails({
   locked,
 }: ReelPostDetailsProps) {
   return (
-    <div className="bg-white p-10 rounded-[2rem] shadow-[0px_30px_60px_rgba(0,88,190,0.04)] space-y-10">
+    <div className="bg-white p-6 lg:p-8 xl:p-10 rounded-[2rem] shadow-[0px_30px_60px_rgba(0,88,190,0.04)] space-y-8">
       {/* Title */}
       <div>
         <label className="block text-xs font-black text-primary uppercase tracking-[0.2em] mb-4">

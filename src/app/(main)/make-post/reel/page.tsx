@@ -217,94 +217,99 @@ function MakePostReelsContent() {
     <AppShell>
       <div
         className="min-h-screen"
-        style={{ background: "radial-gradient(circle at 50% -20%, hsl(var(--muted)) 0%, hsl(var(--background)) 100%)" }}
+        style={{ background: "radial-gradient(ellipse 80% 40% at 50% -10%, hsl(var(--muted)) 0%, hsl(var(--background)) 70%)" }}
       >
         {/* ── Page header ──────────────────────────────────────────────── */}
-        <header className="w-full pt-10 pb-5 flex flex-col items-center gap-2 px-6">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Short Reel</p>
-          <h2 className="text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
-            Create Short Reel
-          </h2>
-          <p className="text-muted-foreground font-medium flex items-center gap-2 mt-1">
-            Vertical video masterpiece
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-            Max 60 seconds
-          </p>
-
-          {/* Pending banner */}
-          {editId && postStatus === "PENDING" && (
-            <div className="mt-4 w-full max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800 text-center font-medium">
-              {role === "EDITOR"
-                ? "Awaiting approval — editing locked until approved or returned."
-                : "Awaiting your approval. Use the Approve button below."}
+        <header className="px-6 lg:px-10 xl:px-14 pt-10 pb-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <p className="text-[0.7rem] font-black uppercase tracking-[0.22em] text-primary mb-1">Short Reel</p>
+              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-foreground leading-none">
+                Create Short Reel
+              </h1>
+              <p className="text-sm text-muted-foreground font-medium mt-2">
+                Vertical video · Max 60 seconds · 9:16 ratio
+              </p>
             </div>
-          )}
+            {editId && postStatus === "PENDING" && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800 font-medium max-w-sm shrink-0">
+                {role === "EDITOR"
+                  ? "Awaiting approval — editing locked."
+                  : "Awaiting your approval. Use the Approve button below."}
+              </div>
+            )}
+          </div>
         </header>
 
         {/* ── Main grid ────────────────────────────────────────────────── */}
-        <section className="w-full px-6 pb-28">
-          <div className="max-w-[1480px] mx-auto">
+        {/*
+          Mobile  (< lg):  single column
+          lg      (1024+):  2 cols — left: video+platforms | right: caption+actions+preview
+          2xl     (1536+):  3 cols — video+platforms | caption+actions | preview
+        */}
+        <section className="px-6 lg:px-10 xl:px-14 pb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr] 2xl:grid-cols-[420px_1fr_320px] gap-8 xl:gap-10 items-start">
 
-            {/*
-              Mobile:  single column stack
-              lg:      2 cols — [upload+platforms | caption+actions] + preview below
-              xl:      3 cols — upload+platforms | caption+actions | preview
-            */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1fr_1fr_320px] gap-8 xl:gap-10 items-start">
-
-              {/* ── Col 1: Upload + Platforms ── */}
-              <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
-                <ReelUploadArea
-                  dragActive={dragActive}
-                  selectedVideo={selectedVideo}
-                  selectedFile={selectedFile}
-                  onDrag={handleDrag}
-                  onDrop={handleDrop}
-                  onFileChange={handleFileChange}
-                  onClear={() => { setSelectedVideo(null); setSelectedFile(null); }}
-                />
-                <ReelPlatformSelector
-                  selected={selectedPlatforms}
-                  onChange={setSelectedPlatforms}
-                />
-              </div>
-
-              {/* ── Col 2: Title + Caption + Actions ── */}
-              <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
-                <ReelPostDetails
-                  title={title}
-                  content={content}
-                  onTitleChange={setTitle}
-                  onContentChange={setContent}
-                  selectedPlatforms={selectedPlatforms}
-                  locked={locked}
-                />
-                <ReelActionBar
-                  onPublish={() => save(false)}
-                  onDraft={() => save(true)}
-                  onRequestApproval={requestApproval}
-                  onApprove={approve}
-                  isPublishing={isPublishing}
-                  isDrafting={isDrafting}
-                  isUploading={isUploading}
-                  isRequestingApproval={isRequestingApproval}
-                  isApproving={isApproving}
-                  showRequestApproval={!!editId && role === "EDITOR" && postStatus !== "PENDING"}
-                  showApprove={!!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role)}
-                  selectedPlatforms={selectedPlatforms}
-                />
-              </div>
-
-              {/* ── Col 3: Phone preview — spans 2 cols on lg (centered), own col on xl ── */}
-              <div className="lg:col-span-2 xl:col-span-1 flex xl:block justify-center">
+            {/* ── Col 1: Upload + Platforms ── */}
+            <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+              <ReelUploadArea
+                dragActive={dragActive}
+                selectedVideo={selectedVideo}
+                selectedFile={selectedFile}
+                onDrag={handleDrag}
+                onDrop={handleDrop}
+                onFileChange={handleFileChange}
+                onClear={() => { setSelectedVideo(null); setSelectedFile(null); }}
+              />
+              <ReelPlatformSelector
+                selected={selectedPlatforms}
+                onChange={setSelectedPlatforms}
+              />
+              {/* Preview lives under platforms on lg, but is its own col on 2xl */}
+              <div className="2xl:hidden">
                 <ReelPreview
                   selectedVideo={selectedVideo}
                   content={content}
                   title={title}
                 />
               </div>
-
             </div>
+
+            {/* ── Col 2: Title + Caption + Actions ── */}
+            <div className={`space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+              <ReelPostDetails
+                title={title}
+                content={content}
+                onTitleChange={setTitle}
+                onContentChange={setContent}
+                selectedPlatforms={selectedPlatforms}
+                locked={locked}
+              />
+              <ReelActionBar
+                onPublish={() => save(false)}
+                onDraft={() => save(true)}
+                onRequestApproval={requestApproval}
+                onApprove={approve}
+                isPublishing={isPublishing}
+                isDrafting={isDrafting}
+                isUploading={isUploading}
+                isRequestingApproval={isRequestingApproval}
+                isApproving={isApproving}
+                showRequestApproval={!!editId && role === "EDITOR" && postStatus !== "PENDING"}
+                showApprove={!!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role)}
+                selectedPlatforms={selectedPlatforms}
+              />
+            </div>
+
+            {/* ── Col 3: Preview — only visible at 2xl, hidden below ── */}
+            <div className="hidden 2xl:block">
+              <ReelPreview
+                selectedVideo={selectedVideo}
+                content={content}
+                title={title}
+              />
+            </div>
+
           </div>
         </section>
       </div>
