@@ -181,6 +181,7 @@ const SocialConnections = () => {
       if (success) {
         shouldRefetch = true;
         const msg =
+          success === "youtube_connected" ? "YouTube connected." :
           success === "facebook_connected" ? "Facebook connected." :
           success === "instagram_connected" ? "Instagram connected." :
           success === "tiktok_connected" ? "TikTok connected." :

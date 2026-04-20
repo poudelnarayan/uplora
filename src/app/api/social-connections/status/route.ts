@@ -26,7 +26,15 @@ export async function GET(req: Request) {
 
       if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
-      if (team.owner_id !== userId) {
+      // Resolve the current user's internal UUID to compare with team.owner_id (UUID)
+      const { data: currentUser } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("clerk_id", userId)
+        .maybeSingle();
+      const isOwner = currentUser?.id && team.owner_id === currentUser.id;
+
+      if (!isOwner) {
         const { data: membership } = await supabaseAdmin
           .from("team_members")
           .select("user_id, status")
@@ -40,7 +48,8 @@ export async function GET(req: Request) {
         }
       }
 
-      const sc = await getUserSocialConnections(String(team.owner_id));
+      // Pass team.id directly to bypass owner resolution — team is already known
+      const sc = await getUserSocialConnections(userId, team.id);
 
       const connected = new Set<string>();
       if (sc.facebook?.userAccessToken || sc.facebook?.accessToken) connected.add("facebook");

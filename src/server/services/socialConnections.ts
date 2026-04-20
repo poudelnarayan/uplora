@@ -20,14 +20,59 @@ import { normalizeSocialConnections, type SocialConnections } from "@/types/soci
  *                           selectedPageId for Facebook)
  */
 
-async function getPersonalTeamId(userId: string): Promise<string | null> {
+/**
+ * Resolve a Clerk user ID to the internal users.id (UUID).
+ * Returns null if the user row doesn't exist yet.
+ */
+async function getInternalUserId(clerkUserId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('clerk_id', clerkUserId)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+/**
+ * Get the personal team ID for a Clerk user.
+ * teams.owner_id stores the internal users.id UUID, not the Clerk ID.
+ *
+ * Includes a fallback for "phantom" teams created by old code that stored the
+ * Clerk ID directly in owner_id. If a phantom is found it is migrated in-place
+ * to use the correct internal UUID so subsequent calls take the fast path.
+ */
+async function getPersonalTeamId(clerkUserId: string): Promise<string | null> {
+  const internalId = await getInternalUserId(clerkUserId);
+  if (!internalId) return null;
+
+  // Primary path: owner_id holds the correct internal UUID
   const { data } = await supabaseAdmin
     .from('teams')
     .select('id')
-    .eq('owner_id', userId)
+    .eq('owner_id', internalId)
     .eq('is_personal', true)
     .maybeSingle();
-  return data?.id ?? null;
+
+  if (data?.id) return data.id;
+
+  // Fallback: old code stored the Clerk ID directly in owner_id ("phantom team")
+  const { data: phantom } = await supabaseAdmin
+    .from('teams')
+    .select('id')
+    .eq('owner_id', clerkUserId)
+    .eq('is_personal', true)
+    .maybeSingle();
+
+  if (phantom?.id) {
+    // Migrate the phantom team: fix owner_id to the correct internal UUID
+    await supabaseAdmin
+      .from('teams')
+      .update({ owner_id: internalId, updated_at: new Date().toISOString() })
+      .eq('id', phantom.id);
+    return phantom.id;
+  }
+
+  return null;
 }
 
 function rowsToConnections(rows: any[]): SocialConnections {
@@ -295,9 +340,11 @@ export async function updateUserSocialConnections(
   const resolvedTeamId = teamId ?? (await getPersonalTeamId(userId));
 
   if (!resolvedTeamId) {
-    // Create personal team on the fly
+    // ensurePersonalTeam expects the internal UUID, not the Clerk ID
+    const internalId = await getInternalUserId(userId);
+    if (!internalId) throw new Error(`No user row found for clerk_id=${userId}`);
     const { ensurePersonalTeam } = await import("@/lib/clerk-supabase-utils");
-    const newTeamId = await ensurePersonalTeam(userId);
+    const newTeamId = await ensurePersonalTeam(internalId);
     return updateUserSocialConnections(userId, updater, newTeamId);
   }
 
