@@ -1681,21 +1681,14 @@ export default function VideoPreviewPage() {
                       ) : (thumbPreview || currentThumbnailUrl) ? (
                         // Show thumbnail when available
                         <div className="relative w-64 h-36 rounded-lg overflow-hidden border-2 border-primary/20 bg-muted">
-                          <Image
-                            src={thumbPreview || (video?.thumbnailKey ? `/api/images/thumb?key=${encodeURIComponent(video.thumbnailKey)}&v=${encodeURIComponent(video?.updatedAt || video?.uploadedAt || "")}` : "")}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={thumbPreview || currentThumbnailUrl || ""}
                             alt="Video thumbnail"
-                            fill
-                            sizes="256px"
-                            className="object-cover"
-                            onLoadingComplete={() => setImageLoading(false)}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onLoad={() => setImageLoading(false)}
                             onError={() => {
-                              console.warn("Thumbnail failed to load; refreshing signed URL");
-                              if (video?.thumbnailKey) {
-                                try { videoCache.setThumbnailUrl(video.id, ""); } catch {}
-                                loadThumbnailUrl(video.thumbnailKey);
-                              } else {
-                                setCurrentThumbnailUrl(null);
-                              }
+                              console.warn("Thumbnail failed to load");
                               setImageLoading(false);
                             }}
                           />

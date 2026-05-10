@@ -142,7 +142,6 @@ const MakePostVideosInner = () => {
   const [tagInput, setTagInput] = useState("");
   const [category, setCategory] = useState("");
   const [privacy, setPrivacy] = useState("public");
-  const [isConnected, setIsConnected] = useState(false);
   const [channelTitle, setChannelTitle] = useState<string | null>(null);
   const [subscriberCount, setSubscriberCount] = useState<string | null>(null);
   const [s3Key, setS3Key] = useState<string | null>(null);
@@ -150,7 +149,6 @@ const MakePostVideosInner = () => {
   const [originalS3Key, setOriginalS3Key] = useState<string | null>(null);
   const [editObjectName, setEditObjectName] = useState<string | null>(null);
   const [editTeamId, setEditTeamId] = useState<string | null>(null);
-  const [isPublishing, setIsPublishing] = useState(false);
   const [savingMeta, setSavingMeta] = useState(false);
   const [savedThumbnailKey, setSavedThumbnailKey] = useState<string | null>(
     null,
@@ -379,7 +377,6 @@ const MakePostVideosInner = () => {
         const res = await fetch("/api/youtube/status", { cache: "no-store" });
         const data = await res.json();
         if (data?.isConnected) {
-          setIsConnected(true);
           setChannelTitle(data.channelTitle || null);
           setSubscriberCount(data.subscriberCount || null);
         }
@@ -685,25 +682,6 @@ const MakePostVideosInner = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // Intercept router navigation
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      if (hasUnsavedChanges && videoId) {
-        const confirmed = window.confirm(
-          "You have unsaved changes. Are you sure you want to leave? Your changes will be auto-saved, but you may lose recent edits.",
-        );
-        if (!confirmed) {
-          router.push(window.location.pathname);
-          return false;
-        }
-      }
-    };
-
-    // Note: Next.js router doesn't have a built-in way to intercept navigation
-    // We'll rely on beforeunload for browser navigation and show a confirmation
-    // For programmatic navigation, we'll handle it in the onClick handlers
-  }, [hasUnsavedChanges, videoId, router]);
-
   // Manual save function
   const persistVideoMeta = async () => {
     if (!videoId) {
@@ -717,55 +695,6 @@ const MakePostVideosInner = () => {
     setSavingMeta(true);
     await autoSaveMetadata(false);
     setSavingMeta(false);
-  };
-
-  const publishToYouTube = async () => {
-    if (!isConnected) {
-      notifications.addNotification({
-        type: "warning",
-        title: "Connect YouTube",
-        message: "Please connect your YouTube in Social first",
-      });
-      router.push("/social");
-      return;
-    }
-    if (!s3Key) {
-      notifications.addNotification({
-        type: "warning",
-        title: "Upload not finished",
-        message: "Please wait for the upload to complete before publishing.",
-      });
-      return;
-    }
-    try {
-      setIsPublishing(true);
-      const resp = await fetch("/api/youtube/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          key: s3Key,
-          title: title || "Untitled",
-          description,
-          privacyStatus: privacy,
-          madeForKids: false,
-        }),
-      });
-      const js = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(js.error || "Publish failed");
-      notifications.addNotification({
-        type: "success",
-        title: "Published to YouTube",
-        message: "Your video has been submitted",
-      });
-    } catch (e) {
-      notifications.addNotification({
-        type: "error",
-        title: "Publish failed",
-        message: e instanceof Error ? e.message : "Try again",
-      });
-    } finally {
-      setIsPublishing(false);
-    }
   };
 
   const removeTag = (tagToRemove: string) => {
