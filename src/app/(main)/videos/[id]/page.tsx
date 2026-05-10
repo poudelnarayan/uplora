@@ -18,6 +18,7 @@ import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
 import { TeamPlatformsBanner } from "@/app/components/teams/TeamPlatformsBanner";
+import { DisabledPlatformButton } from "@/app/components/teams/DisabledPlatformButton";
 export const dynamic = "force-dynamic";
 
 interface Video {
@@ -2079,23 +2080,24 @@ export default function VideoPreviewPage() {
                         </button>
                       </div>
                     ) : (
-                      // Locked state: team owner hasn't enabled YouTube for this team.
-                      // Render an explicit explanation rather than a disabled button so the
-                      // editor (or owner browsing a not-yet-enabled team) knows what to do.
-                      <div className="sm:col-span-2 lg:col-span-4 rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
-                        <div className="mt-0.5 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                          <Youtube className="h-4 w-4 text-amber-700" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-amber-900">
-                            YouTube isn't enabled for this team
-                          </div>
-                          <p className="text-xs text-amber-800 mt-1">
-                            {role === "OWNER"
-                              ? "Open Team settings → Platform Access and grant YouTube to enable publishing."
-                              : "Ask the team owner to enable YouTube under Team settings → Platform Access."}
-                          </p>
-                        </div>
+                      // Locked state: render the action as a disabled-looking button
+                      // with explanatory text directly underneath, matching the rest of
+                      // the platform-locked UX across the app.
+                      <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <DisabledPlatformButton
+                          platform="youtube"
+                          label="Publish to YouTube"
+                          role={role}
+                          teamName={teamName ?? null}
+                          size="lg"
+                        />
+                        <DisabledPlatformButton
+                          platform="youtube"
+                          label="Schedule"
+                          role={role}
+                          teamName={teamName ?? null}
+                          size="lg"
+                        />
                       </div>
                     )
                   )}
