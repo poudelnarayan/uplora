@@ -93,13 +93,13 @@ export const TeamCard = ({
         "
       >
         {/* HEADER */}
-        <CardHeader className="px-6 pt-6 pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex gap-4 min-w-0">
+        <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="flex gap-3 sm:gap-4 min-w-0">
               <div
-                className={`p-4 rounded-2xl bg-gradient-to-br ${team.color} text-white`}
+                className={`p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${team.color} text-white shrink-0`}
               >
-                <Users className="h-6 w-6" />
+                <Users className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
 
               <div className="min-w-0">
@@ -152,26 +152,26 @@ export const TeamCard = ({
         </CardHeader>
 
         {/* CONTENT */}
-        <CardContent className="px-6 pb-6 flex-1 flex flex-col gap-6">
+        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 flex-1 flex flex-col gap-3 sm:gap-6">
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
             <Stat label="Members" value={team.members_data.length} />
             <Stat label="Platforms" value={team.platforms.length} />
           </div>
 
           {/* Platforms */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {team.platforms.slice(0, 4).map((p) => {
               const Icon = platformIcons[p as keyof typeof platformIcons];
               return (
                 <span
                   key={p}
-                  className="inline-flex items-center gap-2 px-3 py-1.5
-                  text-xs rounded-full bg-primary/10 text-primary"
+                  className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1
+                  text-[10px] sm:text-xs rounded-full bg-primary/10 text-primary"
                 >
                   {Icon && <Icon className="h-3 w-3" />}
-                  {p}
-                  <CheckCircle2 className="h-3 w-3" />
+                  <span className="capitalize">{p}</span>
+                  <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 </span>
               );
             })}

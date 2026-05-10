@@ -186,20 +186,21 @@ const Scheduled = () => {
           className="min-h-full"
         >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-foreground">Scheduled</h1>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Clock className="h-4 w-4" />
-                Schedule New
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border">
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Scheduled</h1>
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <Button variant="outline" size="sm" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Schedule New</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner size="lg" />
@@ -207,27 +208,27 @@ const Scheduled = () => {
           ) : (
             <>
               {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{scheduledPosts.length}</div>
-              <p className="text-sm text-muted-foreground">Total Scheduled</p>
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{scheduledPosts.length}</div>
+              <p className="text-[10px] sm:text-sm text-muted-foreground">Total Scheduled</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">
                 {scheduledPosts.filter(p => parseInt(p.timeUntilPost) <= 1).length}
               </div>
-              <p className="text-sm text-muted-foreground">Due Today</p>
+              <p className="text-[10px] sm:text-sm text-muted-foreground">Due Today</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">
                 {scheduledPosts.filter(p => parseInt(p.timeUntilPost) <= 7).length}
               </div>
-              <p className="text-sm text-muted-foreground">This Week</p>
+              <p className="text-[10px] sm:text-sm text-muted-foreground">This Week</p>
             </CardContent>
           </Card>
         </div>

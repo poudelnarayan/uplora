@@ -119,25 +119,25 @@ export default function ApprovalsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+        <div className="flex items-start justify-between gap-2 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">{title}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
               Pending items that require owner/admin/manager approval before publishing.
             </p>
           </div>
-          <Button variant="outline" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="shrink-0 text-xs sm:text-sm">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
           </Button>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Awaiting Approval</CardTitle>
+            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="text-sm sm:text-base">Awaiting Approval</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
               {loading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -146,7 +146,7 @@ export default function ApprovalsPage() {
               ) : items.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-6">No pending approvals.</div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {items.map((it) => {
                     const displayTitle =
                       it.type === "video"
@@ -155,16 +155,16 @@ export default function ApprovalsPage() {
                     return (
                       <div
                         key={it.id}
-                        className="flex items-center justify-between gap-4 border border-border rounded-lg p-4"
+                        className="flex items-center justify-between gap-3 sm:gap-4 border border-border rounded-lg p-3 sm:p-4"
                       >
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-foreground truncate">{displayTitle}</div>
-                          <div className="text-xs text-muted-foreground mt-1">
+                          <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                             Type: {it.type} • Status: {it.status}
                           </div>
                         </div>
-                        <Button onClick={() => openItem(it)} className="shrink-0">
-                          Review <ArrowRight className="h-4 w-4 ml-2" />
+                        <Button size="sm" onClick={() => openItem(it)} className="shrink-0 text-xs sm:text-sm">
+                          Review <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
                         </Button>
                       </div>
                     );

@@ -237,11 +237,11 @@ const Timeline = () => {
           className="min-h-full"
         >
           {/* Header */}
-          <div className="px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-semibold text-foreground">Timeline</h1>
-                <span className="text-sm text-muted-foreground">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Timeline</h1>
+                <span className="text-xs sm:text-sm text-muted-foreground truncate">
                   {viewMode === 'month'
                     ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`
                     : `${calendarDays[0]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${calendarDays[6]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${currentDate.getFullYear()}`
@@ -325,11 +325,11 @@ const Timeline = () => {
                       {calendarDays.map((date, index) => {
                         const isTodayDay = isToday(date);
                         return (
-                          <div key={index} className="px-4 py-3 border-r border-border last:border-r-0 bg-muted/30">
-                            <div className={`text-sm font-semibold ${isTodayDay ? 'text-primary' : 'text-foreground'}`}>
+                          <div key={index} className="px-2 sm:px-4 py-2 sm:py-3 border-r border-border last:border-r-0 bg-muted/30">
+                            <div className={`text-[10px] sm:text-sm font-semibold ${isTodayDay ? 'text-primary' : 'text-foreground'}`}>
                               {dayNames[date.getDay()]}
                             </div>
-                            <div className={`text-2xl font-bold mt-1 ${isTodayDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <div className={`text-base sm:text-xl md:text-2xl font-bold mt-0.5 sm:mt-1 ${isTodayDay ? 'text-primary' : 'text-muted-foreground'}`}>
                               {date.getDate()}
                             </div>
                           </div>

@@ -304,11 +304,11 @@ function AllPostsInner() {
           className="min-h-full"
         >
           {/* Header */}
-          <div className="px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-semibold text-foreground">All Posts</h1>
-              <div className="flex items-center gap-3">
-                <div className="flex border border-border rounded-lg p-1">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+            <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground truncate">All Posts</h1>
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div className="hidden sm:flex border border-border rounded-lg p-1">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
@@ -327,31 +327,33 @@ function AllPostsInner() {
                   </Button>
                 </div>
                 <Link href="/make-post">
-                  <Button size="sm" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Post
+                  <Button size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">New Post</span>
+                    <span className="sm:hidden">New</span>
                   </Button>
                 </Link>
               </div>
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[160px] sm:min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search posts..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-9 sm:pl-10 h-9 sm:h-10 text-sm"
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 <Button
                   variant={filterType === 'all' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('all')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   All Types
                 </Button>
@@ -359,6 +361,7 @@ function AllPostsInner() {
                   variant={filterType === 'text' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('text')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Text
                 </Button>
@@ -366,6 +369,7 @@ function AllPostsInner() {
                   variant={filterType === 'image' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('image')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Image
                 </Button>
@@ -373,6 +377,7 @@ function AllPostsInner() {
                   variant={filterType === 'reel' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('reel')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Reel
                 </Button>
@@ -380,16 +385,18 @@ function AllPostsInner() {
                   variant={filterType === 'video' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('video')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Video
                 </Button>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 <Button
                   variant={filterStatus === 'all' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterStatus('all')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   All
                 </Button>
@@ -397,6 +404,7 @@ function AllPostsInner() {
                   variant={filterStatus === 'DRAFT' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterStatus('DRAFT')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Drafts
                 </Button>
@@ -404,6 +412,7 @@ function AllPostsInner() {
                   variant={filterStatus === 'PENDING' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterStatus('PENDING')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Pending
                 </Button>
@@ -411,6 +420,7 @@ function AllPostsInner() {
                   variant={filterStatus === 'SCHEDULED' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterStatus('SCHEDULED')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Scheduled
                 </Button>
@@ -418,6 +428,7 @@ function AllPostsInner() {
                   variant={filterStatus === 'PUBLISHED' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterStatus('PUBLISHED')}
+                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
                 >
                   Published
                 </Button>
@@ -426,7 +437,7 @@ function AllPostsInner() {
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {loading ? (
               <div className="flex justify-center items-center py-24">
                 <LoadingSpinner size="lg" />
@@ -450,7 +461,7 @@ function AllPostsInner() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6' : 'space-y-3 sm:space-y-4'}>
                     <AnimatePresence initial={false}>
                       {filteredPosts.map((post) => (
                         <motion.div

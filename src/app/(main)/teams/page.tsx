@@ -300,23 +300,25 @@ const Teams = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
           {/* Header */}
-          <div className="px-6 py-4 border-b border-border">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-semibold">Team Management</h1>
-                <p className="text-sm text-muted-foreground">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border">
+            <div className="flex justify-between items-center gap-2">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold truncate">Team Management</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                   Create teams, manage members, and control platform access
                 </p>
               </div>
 
-              <CreateTeamDialog
-                onCreateTeam={handleCreateTeam} isOpen={isCreateTeamOpen} onOpenChange={setIsCreateTeamOpen} isLoading={isCreatingTeam}
-              />
+              <div className="shrink-0">
+                <CreateTeamDialog
+                  onCreateTeam={handleCreateTeam} isOpen={isCreateTeamOpen} onOpenChange={setIsCreateTeamOpen} isLoading={isCreatingTeam}
+                />
+              </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+          <div className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
 
             {isLoading ? (
               <div className="flex justify-center py-20">
@@ -335,7 +337,7 @@ const Teams = () => {
                     </div>
 
                     <div className="
-                      relative grid gap-6
+                      relative grid gap-3 sm:gap-4 md:gap-6
                       grid-cols-1
                       sm:grid-cols-2
                       lg:grid-cols-2
@@ -364,7 +366,7 @@ const Teams = () => {
                     </div>
 
                     <div className="
-                      relative grid gap-6
+                      relative grid gap-3 sm:gap-4 md:gap-6
                       grid-cols-1
                       sm:grid-cols-2
                       lg:grid-cols-3

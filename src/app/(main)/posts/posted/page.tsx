@@ -209,29 +209,29 @@ const Posted = () => {
           className="min-h-full"
         >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-foreground">Posted</h1>
-            <div className="flex items-center gap-3">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Posted</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 border border-border rounded-md bg-background text-sm"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 border border-border rounded-md bg-background text-xs sm:text-sm"
               >
                 <option value="recent">Most Recent</option>
                 <option value="performance">Best Performance</option>
                 <option value="engagement">Most Engaged</option>
               </select>
-              <Button variant="outline" size="sm" className="gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Analytics
+              <Button variant="outline" size="sm" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Analytics</span>
               </Button>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner size="lg" />
@@ -239,47 +239,47 @@ const Posted = () => {
           ) : (
             <>
               {/* Overall Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-blue-500" />
-                <div>
-                  <div className="text-2xl font-bold">{totalMetrics.views.toLocaleString()}</div>
-                  <p className="text-sm text-muted-foreground">Total Views</p>
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{totalMetrics.views.toLocaleString()}</div>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground">Total Views</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <Heart className="h-4 w-4 text-red-500" />
-                <div>
-                  <div className="text-2xl font-bold">{totalMetrics.likes.toLocaleString()}</div>
-                  <p className="text-sm text-muted-foreground">Total Likes</p>
+                <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{totalMetrics.likes.toLocaleString()}</div>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground">Total Likes</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <Share className="h-4 w-4 text-green-500" />
-                <div>
-                  <div className="text-2xl font-bold">{totalMetrics.shares.toLocaleString()}</div>
-                  <p className="text-sm text-muted-foreground">Total Shares</p>
+                <Share className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{totalMetrics.shares.toLocaleString()}</div>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground">Total Shares</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-purple-500" />
-                <div>
-                  <div className="text-2xl font-bold">{postedContent.length}</div>
-                  <p className="text-sm text-muted-foreground">Total Posts</p>
+                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{postedContent.length}</div>
+                  <p className="text-[10px] sm:text-sm text-muted-foreground">Total Posts</p>
                 </div>
               </div>
             </CardContent>
