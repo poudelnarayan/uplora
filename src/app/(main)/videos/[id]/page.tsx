@@ -841,26 +841,59 @@ export default function VideoPreviewPage() {
   const requestApproval = async () => {
     if (!video) return;
     setSubmitting(true);
+
+    // Hard 20s ceiling so the button can't get stuck on "Working…" forever
+    // when the network or server hangs. The route itself returns in <1s.
+    const ctl = new AbortController();
+    const timeoutId = setTimeout(() => ctl.abort(), 20_000);
+
     try {
-      const response = await fetch(`/api/videos/${video.id}/request-approval`, { method: "POST" });
-      const js = await response.json().catch(() => ({}));
-      if (response.ok) {
-        setVideo({ ...video, status: VideoStatus.APPROVAL_REQUESTED, requestedByUserId: user?.id || video.requestedByUserId || null });
+      console.log("[requestApproval] POST /api/videos/" + video.id + "/request-approval");
+      const response = await fetch(`/api/videos/${video.id}/request-approval`, {
+        method: "POST",
+        signal: ctl.signal,
+        cache: "no-store",
+      });
+      const js = await response.json().catch(() => ({} as any));
+      console.log("[requestApproval] response", response.status, js);
+
+      if (response.ok && js?.ok !== false) {
+        setVideo({
+          ...video,
+          status: VideoStatus.APPROVAL_REQUESTED,
+          requestedByUserId: user?.id || video.requestedByUserId || null,
+        });
         notifications.addNotification({
           type: "success",
           title: "✅ Approval request sent!",
-          message: "Owner/admins have been notified."
+          message: "Owner/admins have been notified.",
         });
       } else {
-        throw new Error(js?.error || "Failed to send request");
+        const stepMsg = js?.step ? ` (at step: ${js.step})` : "";
+        const detailMsg = js?.detail?.message ? ` — ${js.detail.message}` : "";
+        const role = js?.detail?.role ? ` [role=${js.detail.role}]` : "";
+        const stat = js?.detail?.currentStatus ? ` [status=${js.detail.currentStatus}]` : "";
+        throw new Error(
+          `${js?.error || `HTTP ${response.status}`}${stepMsg}${detailMsg}${role}${stat}`
+        );
       }
     } catch (error) {
+      const isAbort =
+        (error instanceof DOMException && error.name === "AbortError") ||
+        (error instanceof Error && /aborted/i.test(error.message));
+      const message = isAbort
+        ? "Request timed out after 20s. Server is unreachable or stuck — check Vercel logs."
+        : error instanceof Error
+          ? error.message
+          : "Could not send publish request";
+      console.error("[requestApproval] error:", error);
       notifications.addNotification({
-        type: "error", 
+        type: "error",
         title: "❌ Request failed",
-        message: error instanceof Error ? error.message : "Could not send publish request"
+        message,
       });
     } finally {
+      clearTimeout(timeoutId);
       setSubmitting(false);
     }
   };
