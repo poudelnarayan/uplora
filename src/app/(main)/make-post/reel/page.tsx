@@ -436,9 +436,15 @@ function MakePostReelsContent() {
         </section>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            MOBILE BOTTOM ACTION BAR — glass morphism sticky bar
+            MOBILE BOTTOM ACTION BAR — glass morphism sticky bar.
+            Sits above the global mobile tab bar. The bottom offset is the
+            tab bar's height (4rem) plus the iOS safe-area inset, so this
+            bar tucks flush against the tab bar's top edge with no gap.
            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className={`sm:hidden fixed bottom-0 inset-x-0 z-20 border-t border-border/40 backdrop-blur-xl bg-card/90 px-4 py-3 safe-area-bottom ${locked ? "opacity-60 pointer-events-none" : ""}`}>
+        <div
+          className={`sm:hidden fixed inset-x-0 z-20 border-t border-border/40 backdrop-blur-xl bg-card/90 px-4 py-3 ${locked ? "opacity-60 pointer-events-none" : ""}`}
+          style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
+        >
           <div className="space-y-2">
             {/* Approval actions */}
             {showApprove && (

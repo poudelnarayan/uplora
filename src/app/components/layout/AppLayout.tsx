@@ -456,14 +456,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Main Content. min-w-0 + overflow-x-hidden are critical: without
           them, any child wider than the viewport (e.g. an unwrapped button
           row) widens the body and triggers mobile auto-zoom-out. The
-          pb on mobile leaves clearance for the bottom tab bar (skipped
-          on make-post, which renders its own bottom action bar). */}
-      <main
-        className={cn(
-          "flex-1 lg:ml-64 ml-0 min-w-0 overflow-x-hidden lg:pb-0",
-          path.startsWith("/make-post") ? "pb-0" : "pb-20",
-        )}
-      >
+          pb-20 leaves clearance for the persistent mobile bottom tab bar. */}
+      <main className="flex-1 lg:ml-64 ml-0 min-w-0 overflow-x-hidden pb-20 lg:pb-0">
 
 
         {/* Switching overlay */}
@@ -631,13 +625,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Mobile bottom tab bar — primary navigation on small screens.
-          Hidden on desktop (sidebar handles nav there) and during the
-          make-post flow (those pages have their own bottom action bars
-          and don't want a competing nav surface). The middle slot
-          (Create) gets a tinted background to mark it as the primary
-          CTA, mirroring post-bridge / Buffer / Hootsuite. */}
-      {!path.startsWith("/make-post") && (
+      {/* Mobile bottom tab bar — primary navigation on every page on small
+          screens. Hidden on desktop (sidebar handles nav there). The middle
+          slot (Create) gets a tinted background to mark it as the primary
+          CTA, mirroring post-bridge / Buffer / Hootsuite. Pages with their
+          own fixed bottom action bars (make-post/reel) are responsible for
+          sitting above this bar (offset by 64px). */}
       <nav
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -706,7 +699,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
-      )}
 
       {/* Modals */}
       <NotificationCenter

@@ -26,20 +26,21 @@ export default function MakePostPage() {
       <AppShell>
         <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
           <MotionDiv
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="min-h-full flex flex-col"
+            transition={{ duration: 0.2 }}
+            className="min-h-full"
           >
-            {/* Show editors what their team can publish to BEFORE they pick a content type. */}
-            <div className="px-4 sm:px-6 pt-4 sm:pt-6 max-w-5xl mx-auto w-full">
+            {/* Editors get the platform-allowlist banner before they pick a
+                content type — so they know whether YouTube / Instagram / etc.
+                are currently enabled for this workspace. */}
+            <div className="px-4 sm:px-6 pt-4 sm:pt-6 max-w-3xl mx-auto w-full">
               <TeamPlatformsBanner teamId={selectedTeamId} />
             </div>
-            <div className="flex-1 flex items-center justify-center">
-              <MakePostInterface
-                selectedTeam={selectedTeam}
-                selectedTeamId={selectedTeamId}
-              />
-            </div>
+            <MakePostInterface
+              selectedTeam={selectedTeam}
+              selectedTeamId={selectedTeamId}
+            />
           </MotionDiv>
         </div>
       </AppShell>
