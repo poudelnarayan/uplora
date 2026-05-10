@@ -16,7 +16,6 @@ import {
   Settings,
   ChevronsUpDown,
   Menu,
-  X,
   MessageCircle,
   Lightbulb,
   Plus,
@@ -358,12 +357,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-sidebar border-r border-sidebar-border overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-center h-16 px-4 border-b border-sidebar-border bg-sidebar">
-          <div className="flex items-center">
-            <Image src="/text-logo.png" alt="Uplora" width={240} height={60} className="h-16 w-auto" />
-          </div>
-        </div>
+        {/* Header — compact: icon mark + wordmark text. The wordmark image
+            on its own was eating ~64px of vertical space; this row is half
+            that and gives more room for nav. */}
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5 h-14 px-4 border-b border-sidebar-border bg-sidebar hover:bg-sidebar-accent/30 transition-colors"
+        >
+          <Image src="/icon.png" alt="" width={32} height={32} className="h-7 w-7 rounded-md shrink-0" />
+          <span className="font-semibold text-base tracking-tight text-sidebar-foreground">Uplora</span>
+        </Link>
 
         <nav className="flex-1 space-y-1 px-3 py-3 bg-sidebar">
           {/* Main Navigation */}
@@ -537,12 +540,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed inset-y-0 left-0 w-72 max-w-[85vw] border-r border-sidebar-border shadow-2xl z-50 lg:hidden flex flex-col bg-sidebar"
             >
-              <header className="h-auto flex items-center justify-center p-4 border-b border-sidebar-border bg-sidebar">
-                <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-14 w-auto rounded-md block" />
-                <button onClick={() => setMobileNavOpen(false)} className="absolute right-4 text-sidebar-foreground hover:text-sidebar-foreground p-2">
-                  <X className="w-4 h-4" />
-                </button>
-              </header>
+              {/* Drawer header — same compact icon + wordmark as desktop.
+                  No close button: the user closes the drawer by tapping the
+                  backdrop, picking a nav item, or hitting any tab in the
+                  bottom nav (which closes the drawer and routes). */}
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileNavOpen(false)}
+                className="flex items-center gap-2.5 h-14 px-4 border-b border-sidebar-border bg-sidebar"
+              >
+                <Image src="/icon.png" alt="" width={32} height={32} className="h-7 w-7 rounded-md shrink-0" />
+                <span className="font-semibold text-base tracking-tight text-sidebar-foreground">Uplora</span>
+              </Link>
               
               <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto no-scrollbar bg-sidebar">
                 {/* Main Navigation */}
