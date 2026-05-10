@@ -58,7 +58,6 @@ import {
 import { Separator } from "@/app/components/ui/separator";
 import RichTextEditor from "@/app/components/editor/RichTextEditor";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { InlineSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
@@ -1283,18 +1282,21 @@ const MakePostVideosInner = () => {
                   ) : (
                     <div className="space-y-3">
                       <div className="relative rounded-lg overflow-hidden group">
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={selectedThumbnail}
                           alt="Thumbnail"
-                          width={1280}
-                          height={720}
                           className="w-full h-40 object-contain bg-black"
                         />
                         <Button
                           variant="secondary"
                           size="sm"
                           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => setSelectedThumbnail(null)}
+                          onClick={() => {
+                            setSelectedThumbnail(null);
+                            setThumbFile(null);
+                            setSavedThumbnailKey(null);
+                          }}
                         >
                           <X className="h-4 w-4" />
                         </Button>
