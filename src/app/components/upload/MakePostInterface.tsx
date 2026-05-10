@@ -78,30 +78,28 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-12">
+    <div className="w-full max-w-6xl mx-auto space-y-6 sm:space-y-10 md:space-y-12 px-4 sm:px-6 py-6 sm:py-10">
       {/* Header Section */}
       <MotionDiv
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
-        className="text-center space-y-6"
+        className="text-center space-y-3 sm:space-y-6"
       >
-       
-        
         {/* Main Title */}
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15, delay: 0.1 }}
-          className="space-y-4"
+          className="space-y-2 sm:space-y-4"
         >
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
             <span className="text-foreground">Create </span>
             <span className="gradient-text">
               Amazing Content
             </span>
           </h1>
-          <p className="text-xl font-medium max-w-3xl mx-auto leading-relaxed text-muted-foreground">
+          <p className="text-sm sm:text-base md:text-xl font-medium max-w-3xl mx-auto leading-relaxed text-muted-foreground">
             Choose your content type and start building posts that engage your audience
           </p>
         </MotionDiv>
@@ -112,7 +110,7 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2, delay: 0.15 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto"
       >
         {contentTypes.map((type, index) => {
           const IconComponent = type.icon;
@@ -138,78 +136,75 @@ export default function MakePostInterface({ selectedTeam, selectedTeamId }: Make
                 transition: { duration: 0.05 }
               }}
               onClick={() => handlePostTypeClick(type.route)}
-              className={`group relative p-8 rounded-3xl border-2 cursor-pointer transition-all duration-100 shadow-xl hover:shadow-2xl bg-card ${t.border}`}
+              className={`group relative p-5 sm:p-7 md:p-8 rounded-2xl sm:rounded-3xl border-2 cursor-pointer transition-all duration-100 shadow-lg hover:shadow-2xl bg-card ${t.border}`}
             >
-              {/* Floating Emoji */}
+              {/* Floating Emoji — smaller and inset on mobile */}
               <MotionDiv
                 initial={{ scale: 0, rotate: -90 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ 
-                  duration: 0.15, 
+                transition={{
+                  duration: 0.15,
                   delay: 0.1 + index * 0.02,
                   type: "spring",
                   stiffness: 500,
                   damping: 20
                 }}
-                className={`absolute -top-6 -right-6 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-xl border-4 border-background ${t.bg}`}
+                className={`absolute -top-3 -right-3 sm:-top-6 sm:-right-6 w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-3xl shadow-xl border-2 sm:border-4 border-background ${t.bg}`}
               >
                 {type.emoji}
               </MotionDiv>
 
-              {/* Hover Arrow */}
+              {/* Hover Arrow — hidden on mobile (no hover on touch) */}
               <MotionDiv
                 initial={{ opacity: 0, x: -10, scale: 0.8 }}
-                whileHover={{ 
-                  opacity: 1, 
-                  x: 0, 
+                whileHover={{
+                  opacity: 1,
+                  x: 0,
                   scale: 1,
                   transition: { duration: 0.08 }
                 }}
-                className="absolute top-8 right-8"
+                className="absolute top-6 right-6 sm:top-8 sm:right-8 hidden sm:block"
               >
-                <div 
-                  className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${t.bg}`}
+                <div
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg ${t.bg}`}
                 >
-                  <ArrowRight className="w-6 h-6 text-white" />
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
               </MotionDiv>
 
               {/* Main Content */}
-              <div className="relative space-y-6">
+              <div className="relative space-y-3 sm:space-y-6">
                 {/* Icon */}
                 <MotionDiv
                   initial={{ scale: 0, rotate: -45 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ 
-                    duration: 0.15, 
+                  transition={{
+                    duration: 0.15,
                     delay: 0.08 + index * 0.02,
                     type: "spring",
                     stiffness: 400,
                     damping: 20
                   }}
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     rotate: 3,
                     transition: { duration: 0.08 }
                   }}
-                  className={`w-24 h-24 rounded-3xl mx-auto flex items-center justify-center shadow-xl ${t.bg}`}
+                  className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-3xl mx-auto flex items-center justify-center shadow-xl ${t.bg}`}
                 >
-                  <IconComponent className="w-12 h-12 text-white" />
+                  <IconComponent className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white" />
                 </MotionDiv>
-                
+
                 {/* Text Content */}
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-4">
                   <div className="text-center">
-                    <h3 className="text-2xl font-bold mb-2 text-foreground">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2 text-foreground">
                       {type.title}
                     </h3>
-                    <p className={`text-base font-semibold mb-3 ${t.text}`}>
+                    <p className={`text-xs sm:text-sm md:text-base font-semibold ${t.text}`}>
                       {type.subtitle}
                     </p>
-                    
                   </div>
-                  
-                 
                 </div>
               </div>
             </MotionDiv>

@@ -158,11 +158,11 @@ function SubscriptionSuccessContent() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-10 w-10 text-green-600" />
+            <div className="w-14 h-14 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <CheckCircle className="h-7 w-7 sm:h-10 sm:w-10 text-green-600" />
             </div>
-            <h1 className="text-4xl font-bold mb-4">Payment Successful!</h1>
-            <p className="text-xl text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Payment Successful!</h1>
+            <p className="text-sm sm:text-lg md:text-xl text-muted-foreground px-4">
               Welcome to Uplora! Your {isSubscription ? 'subscription' : 'purchase'} is now active.
             </p>
           </MotionDiv>

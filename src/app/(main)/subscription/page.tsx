@@ -149,8 +149,8 @@ export default function SubscriptionPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center space-y-4"
           >
-            <h1 className="text-4xl font-bold">Subscription Management</h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Subscription Management</h1>
+            <p className="text-sm sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
               Manage your Uplora subscription, billing, and plan upgrades.
             </p>
           </MotionDiv>

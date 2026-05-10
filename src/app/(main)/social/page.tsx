@@ -412,25 +412,26 @@ const SocialConnections = () => {
           className="min-h-full"
         >
           {/* Header */}
-          <div className="px-6 py-5 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-foreground">Social Media Connections</h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Connect accounts to publish content. Tokens are stored securely in your <span className="font-medium text-foreground">socialConnections</span>.
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground truncate">Social Media Connections</h1>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1">
+                  Connect accounts to publish content.
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" className="gap-2" onClick={() => setRequestOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  Request a platform
+              <div className="flex items-center gap-2 shrink-0">
+                <Button variant="outline" size="sm" className="gap-2 text-xs sm:text-sm" onClick={() => setRequestOpen(true)}>
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Request a platform</span>
+                  <span className="sm:hidden">Request</span>
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-10">
+          <div className="p-4 sm:p-6 space-y-6 sm:space-y-10">
             {/* Workspace-aware hint (team workspaces publish using owner connections) */}
             {isTeamWorkspace && !isTeamOwner && (
               <Card className="border border-border/60">
@@ -489,13 +490,13 @@ const SocialConnections = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                   {connectedPlatforms.map((platform) => (
                     <Card key={platform.id} className="hover:shadow-lg transition-all duration-200">
-                      <CardContent className="p-6">
+                      <CardContent className="p-4 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-muted flex items-center justify-center shrink-0">
                               {getPlatformIcon(platform.id)}
                             </div>
                             <div>
@@ -585,10 +586,10 @@ const SocialConnections = () => {
                 <p className="text-sm text-muted-foreground">Connect more accounts to publish everywhere.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 {availablePlatforms.map((platform) => (
                   <Card key={platform.id} className="hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">

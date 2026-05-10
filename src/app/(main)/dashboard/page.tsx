@@ -347,14 +347,14 @@ export default function Dashboard() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-primary rounded-2xl shadow-sage">
-                    <Sparkles className="w-8 h-8 text-white" />
+                  <div className="p-2 sm:p-3 bg-gradient-primary rounded-xl sm:rounded-2xl shadow-sage shrink-0">
+                    <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                   </div>
-                  <div>
-                    <h1 className="text-4xl font-display font-bold text-primary">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-primary truncate">
                       {selectedTeam?.name ? selectedTeam.name : "Personal Workspace"}
                     </h1>
-                    <p className="text-muted-foreground mt-1 text-lg">
+                    <p className="text-muted-foreground mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base lg:text-lg">
                       Manage your premium content in one elegant space
                     </p>
                   </div>
@@ -362,12 +362,11 @@ export default function Dashboard() {
               </div>
 
               {/* Filter Buttons */}
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
                 <Button
                   onClick={() => setTypeFilter(['text'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('text') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2"
-                  size="lg"
+                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
                 >
                   <FileText className="w-4 h-4" />
                   Text Post
@@ -375,8 +374,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['image'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('image') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2"
-                  size="lg"
+                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
                 >
                   <ImageIcon className="w-4 h-4" />
                   Image Post
@@ -384,8 +382,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['reel'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('reel') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2"
-                  size="lg"
+                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
                 >
                   <Play className="w-4 h-4" />
                   Reel
@@ -393,8 +390,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['video'])}
                   variant={selectedTypes.length === 1 && selectedTypes.includes('video') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2"
-                  size="lg"
+                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
                 >
                   <Video className="w-4 h-4" />
                   Video
@@ -402,8 +398,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setTypeFilter(['video', 'image', 'text', 'reel'])}
                   variant={selectedTypes.length === 4 ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2"
-                  size="lg"
+                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
                 >
                   <Star className="w-4 h-4" />
                   All Content
@@ -426,15 +421,15 @@ export default function Dashboard() {
               >
                 <Card className="glass-card border-2 border-primary/20 hover:border-primary/40 transition-luxury shadow-medium hover:shadow-gold overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-primary opacity-5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-6 relative z-10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Total Content</p>
-                        <p className="text-4xl font-display font-bold text-foreground">{content.length}</p>
-                        <p className="text-xs text-muted-foreground mt-2">All your creations</p>
+                  <CardContent className="p-4 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Total Content</p>
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">{content.length}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">All your creations</p>
                       </div>
-                      <div className="p-4 bg-gradient-primary rounded-2xl shadow-gold group-hover:animate-pulse-gold">
-                        <BarChart3 className="w-8 h-8 text-secondary" />
+                      <div className="p-2.5 sm:p-3 md:p-4 bg-gradient-primary rounded-xl sm:rounded-2xl shadow-gold group-hover:animate-pulse-gold shrink-0">
+                        <BarChart3 className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-secondary" />
                       </div>
                     </div>
                   </CardContent>
@@ -449,17 +444,17 @@ export default function Dashboard() {
               >
                 <Card className="glass-card border-2 border-accent/20 hover:border-accent/40 transition-luxury shadow-medium hover:shadow-emerald overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-accent opacity-5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-6 relative z-10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Published</p>
-                        <p className="text-4xl font-display font-bold text-foreground">
+                  <CardContent className="p-4 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Published</p>
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
                           {content.filter((c: any) => c.status === 'PUBLISHED').length}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">Live content</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">Live content</p>
                       </div>
-                      <div className="p-4 bg-gradient-accent rounded-2xl shadow-emerald group-hover:animate-pulse-gold">
-                        <TrendingUp className="w-8 h-8 text-white" />
+                      <div className="p-2.5 sm:p-3 md:p-4 bg-gradient-accent rounded-xl sm:rounded-2xl shadow-emerald group-hover:animate-pulse-gold shrink-0">
+                        <TrendingUp className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                       </div>
                     </div>
                   </CardContent>
@@ -474,17 +469,17 @@ export default function Dashboard() {
               >
                 <Card className="glass-card border-2 border-warning/20 hover:border-warning/40 transition-luxury shadow-medium hover:shadow-strong overflow-hidden relative">
                   <div className="absolute inset-0 bg-warning/5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-6 relative z-10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Scheduled</p>
-                        <p className="text-4xl font-display font-bold text-foreground">
+                  <CardContent className="p-4 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Scheduled</p>
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
                           {content.filter((c: any) => c.status === 'SCHEDULED').length}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">Coming soon</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">Coming soon</p>
                       </div>
-                      <div className="p-4 bg-warning/20 border-2 border-warning/30 rounded-2xl group-hover:animate-pulse-gold">
-                        <Calendar className="w-8 h-8 text-warning" />
+                      <div className="p-2.5 sm:p-3 md:p-4 bg-warning/20 border-2 border-warning/30 rounded-xl sm:rounded-2xl group-hover:animate-pulse-gold shrink-0">
+                        <Calendar className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-warning" />
                       </div>
                     </div>
                   </CardContent>
@@ -499,17 +494,17 @@ export default function Dashboard() {
               >
                 <Card className="glass-card border-2 border-muted/40 hover:border-muted/60 transition-luxury shadow-medium hover:shadow-strong overflow-hidden relative">
                   <div className="absolute inset-0 bg-muted/5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-6 relative z-10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Drafts</p>
-                        <p className="text-4xl font-display font-bold text-foreground">
+                  <CardContent className="p-4 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Drafts</p>
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
                           {content.filter((c: any) => c.status === 'DRAFT').length}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">In progress</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">In progress</p>
                       </div>
-                      <div className="p-4 bg-muted/20 border-2 border-muted/30 rounded-2xl group-hover:animate-pulse-gold">
-                        <FileText className="w-8 h-8 text-muted-foreground" />
+                      <div className="p-2.5 sm:p-3 md:p-4 bg-muted/20 border-2 border-muted/30 rounded-xl sm:rounded-2xl group-hover:animate-pulse-gold shrink-0">
+                        <FileText className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-muted-foreground" />
                       </div>
                     </div>
                   </CardContent>

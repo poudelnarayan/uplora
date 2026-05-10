@@ -17,6 +17,7 @@ import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
+import { TeamPlatformsBanner } from "@/app/components/teams/TeamPlatformsBanner";
 export const dynamic = "force-dynamic";
 
 interface Video {
@@ -1329,17 +1330,22 @@ export default function VideoPreviewPage() {
           embedUrl={canonicalUrl}
         />
       )}
-      <div className="space-y-6 max-w-[88rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between">
-          <h1 className="heading-2">Video Preview</h1>
+      <div className="space-y-4 sm:space-y-6 max-w-[88rem] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">Video Preview</h1>
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-muted transition-colors"
+            className="p-2 rounded-full hover:bg-muted transition-colors shrink-0"
             title="Close and go back"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
+
+        {/* Compact awareness strip — editors see immediately what platforms this team can publish to. */}
+        {video?.teamId && (
+          <TeamPlatformsBanner teamId={video.teamId} variant="compact" className="-mt-1" />
+        )}
         
         {/* Team Context & Uploader Info */}
         <div className="space-y-3">
@@ -1448,7 +1454,7 @@ export default function VideoPreviewPage() {
                   <div className="rounded-2xl border bg-card/60 backdrop-blur p-3 shadow-sm space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === VideoStatus.PROCESSING || !video.status) && (
-                    <button className="sm:col-span-2 lg:col-span-4 w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
+                    <button className="sm:col-span-2 lg:col-span-4 w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
                           {submitting ? "Working…" : "Mark ready to publish"}
                         </button>
                       )}
@@ -1498,7 +1504,7 @@ export default function VideoPreviewPage() {
                       {((role === "OWNER" || role === "ADMIN") || 
                         ((role === "EDITOR" || role === "MANAGER") && video.status === VideoStatus.APPROVAL_APPROVED)) && (
                         <button
-                          className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                          className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                           disabled={submitting}
                           onClick={approveOrPublish}
                         >
@@ -1535,14 +1541,14 @@ export default function VideoPreviewPage() {
                         <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <button
-                            className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             disabled={submitting}
                             onClick={approvePendingOnly}
                           >
                             {submitting ? "Approving…" : "Approve"}
                           </button>
                           <button
-                            className="w-full py-3 text-base font-semibold rounded-xl border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                             disabled={submitting}
                             onClick={async () => {
                               try {
@@ -1573,7 +1579,7 @@ export default function VideoPreviewPage() {
                 {/* Mobile: quick edit button just below the player */}
                 <div className="mt-2 px-2">
                   <button
-                    className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
+                    className="w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
                     onClick={() => {
                       const el = document.getElementById('edit-section');
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2002,7 +2008,7 @@ export default function VideoPreviewPage() {
               <div className="rounded-2xl border bg-card/60 backdrop-blur p-4 sm:p-5 shadow-sm space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {(role === "EDITOR" || role === "MANAGER") && video.teamId && (video.status === VideoStatus.PROCESSING || !video.status) && (
-                    <button className="sm:col-span-2 lg:col-span-4 w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
+                    <button className="sm:col-span-2 lg:col-span-4 w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting} onClick={markReady}>
                       {submitting ? "Working…" : "Mark ready to publish"}
                     </button>
                   )}
@@ -2056,7 +2062,7 @@ export default function VideoPreviewPage() {
                     youTubeAllowed ? (
                       <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                           disabled={submitting}
                           onClick={approveOrPublish}
                         >
@@ -2064,7 +2070,7 @@ export default function VideoPreviewPage() {
                           {submitting ? 'Working…' : 'Publish to YouTube'}
                         </button>
                         <button
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
                           disabled={submitting}
                           onClick={() => setShowScheduleModal(true)}
                         >
@@ -2100,14 +2106,14 @@ export default function VideoPreviewPage() {
                     <div className="text-xs font-semibold text-amber-800">Approval request by editor</div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button
-                        className="w-full py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         disabled={submitting}
                         onClick={approvePendingOnly}
                       >
                         {submitting ? "Approving…" : "Approve"}
                       </button>
                       <button
-                        className="w-full py-3 text-base font-semibold rounded-xl border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                         disabled={submitting}
                         onClick={async () => {
                           try {
@@ -2139,7 +2145,7 @@ export default function VideoPreviewPage() {
               {/* Delete post */}
               <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4 shadow-sm">
                 <button
-                  className="w-full inline-flex items-center justify-center gap-2 py-3 text-base font-semibold rounded-xl border border-red-400 bg-transparent text-red-700 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl border border-red-400 bg-transparent text-red-700 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={() => setDeletePostModalOpen(true)}
                   title="Delete the post entirely (Supabase + S3)"
                   disabled={deleting}
