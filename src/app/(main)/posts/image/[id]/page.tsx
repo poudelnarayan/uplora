@@ -11,6 +11,7 @@ import { ArrowLeft, Edit, Image as ImageIcon } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CopyField, formatDate, getStatusColor, MetadataTable } from "@/app/(main)/posts/_components/detail-utils";
 import { useTeam } from "@/context/TeamContext";
+import { getTeamDisplayName, PERSONAL_SPACE_LABEL } from "@/lib/teamDisplay";
 
 export default function ImagePostDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,9 +28,9 @@ export default function ImagePostDetailsPage() {
   const teamName = useMemo(() => {
     const tid = post?.teamId ? String(post.teamId) : null;
     if (!tid) return null;
-    if (personalTeam?.id === tid) return personalTeam.name || "Personal workspace";
+    if (personalTeam?.id === tid) return PERSONAL_SPACE_LABEL;
     const t = (teams || []).find((x) => x.id === tid);
-    return t?.name || null;
+    return t ? getTeamDisplayName(t, personalTeam?.id) : null;
   }, [post?.teamId, teams, personalTeam]);
 
   useEffect(() => {

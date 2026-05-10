@@ -14,6 +14,7 @@ import { NextSeoNoSSR, VideoJsonLdNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { videoCache } from "@/lib/videoCache";
 import { ThumbnailShimmer } from "@/app/components/ui/Shimmer";
 import { useTeam } from "@/context/TeamContext";
+import { getTeamDisplayName } from "@/lib/teamDisplay";
 import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
@@ -56,7 +57,7 @@ export default function VideoPreviewPage() {
   const router = useRouter();
   const { user } = useUser();
   const notifications = useNotifications();
-  const { teams } = useTeam();
+  const { teams, personalTeam } = useTeam();
   const [video, setVideo] = useState<Video | null>(null);
   // Resolve the team owning THIS video (not the active workspace) so the lock state
   // matches what the server will actually accept on publish.
@@ -175,10 +176,15 @@ export default function VideoPreviewPage() {
         if (v?.id) {
           setVideo(v);
           
-          // Set team name if video belongs to a team
+          // Set team name if video belongs to a team — normalize the
+          // personal team's stored name to "Personal Space" for display.
           if (v.teamId) {
-            const team = teams.find(t => t.id === v.teamId);
-            setTeamName(team?.name || null);
+            if (personalTeam && personalTeam.id === v.teamId) {
+              setTeamName(getTeamDisplayName(personalTeam, personalTeam.id));
+            } else {
+              const team = teams.find(t => t.id === v.teamId);
+              setTeamName(team ? getTeamDisplayName(team, personalTeam?.id) : null);
+            }
           } else {
             setTeamName(null);
           }

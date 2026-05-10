@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, ArrowLeft, Sparkles, ChevronRight, Layers, Clock, Film } from "lucide-react";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useTeam } from "@/context/TeamContext";
+import { getTeamDisplayName, PERSONAL_SPACE_LABEL } from "@/lib/teamDisplay";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { InlineSpinner } from "@/app/components/ui/loading-spinner";
 
@@ -17,7 +18,7 @@ function MakePostReelsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
-  const { selectedTeamId, selectedTeam } = useTeam();
+  const { selectedTeamId, selectedTeam, personalTeam } = useTeam();
   const { addNotification } = useNotifications();
 
   const [title, setTitle] = useState("");
@@ -266,7 +267,7 @@ function MakePostReelsContent() {
                   <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40">
                     <Layers className="h-3.5 w-3.5 text-primary" />
                     <span className="text-xs font-semibold text-foreground max-w-[140px] truncate">
-                      {selectedTeam.name?.includes("Personal Workspace") ? "Personal" : selectedTeam.name}
+                      {getTeamDisplayName(selectedTeam, personalTeam?.id)}
                     </span>
                   </div>
                 )}
@@ -358,7 +359,7 @@ function MakePostReelsContent() {
                 {selectedTeam && (
                   <span className="md:hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/60 border border-border/40 text-xs font-semibold text-foreground">
                     <Layers className="h-3 w-3 text-primary" />
-                    {selectedTeam.name?.includes("Personal Workspace") ? "Personal" : selectedTeam.name}
+                    {getTeamDisplayName(selectedTeam, personalTeam?.id)}
                   </span>
                 )}
               </div>

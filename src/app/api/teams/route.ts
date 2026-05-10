@@ -196,8 +196,8 @@ export async function GET(request: NextRequest) {
         .from('teams')
         .insert({
           id: personalTeamId,
-          name: `${userName}'s Personal Workspace`,
-          description: "Your personal workspace for individual content",
+          name: "Personal Space",
+          description: "Your personal space for individual content",
           owner_id: user.id,
           is_personal: true,
           created_at: now,

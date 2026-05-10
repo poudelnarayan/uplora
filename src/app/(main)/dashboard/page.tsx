@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
+import { getTeamDisplayName } from "@/lib/teamDisplay";
 import { formatPostContent } from "@/lib/formatPostContent";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
@@ -57,7 +58,7 @@ function greetingFor(name?: string | null) {
 
 export default function Dashboard() {
   const { user } = useUser();
-  const { selectedTeamId, selectedTeam } = useTeam();
+  const { selectedTeamId, selectedTeam, personalTeam } = useTeam();
   const { getCachedContent, setCachedContent, isStale, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   const router = useRouter();
@@ -303,7 +304,7 @@ export default function Dashboard() {
     );
   }
 
-  const teamName = selectedTeam?.name || "Personal Workspace";
+  const teamName = getTeamDisplayName(selectedTeam, personalTeam?.id);
   const greeting = greetingFor(user?.firstName || user?.fullName);
 
   const statusLabel: Record<string, string> = {

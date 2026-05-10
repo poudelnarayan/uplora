@@ -52,6 +52,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
+import { getTeamDisplayName, PERSONAL_SPACE_LABEL } from "@/lib/teamDisplay";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
@@ -90,8 +91,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const workspaces = useMemo(() => {
     const list: Array<{ id: string; name: string }> = [];
-    if (personalTeam?.id) list.push({ id: personalTeam.id, name: personalTeam.name || "Personal Workspace" });
-    for (const t of teams || []) list.push({ id: t.id, name: t.name });
+    if (personalTeam?.id) list.push({ id: personalTeam.id, name: PERSONAL_SPACE_LABEL });
+    for (const t of teams || []) list.push({ id: t.id, name: getTeamDisplayName(t, personalTeam?.id) });
     return list;
   }, [teams, personalTeam]);
 
@@ -288,7 +289,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               {user?.fullName || user?.primaryEmailAddress?.emailAddress || "Account"}
             </div>
             <div className="text-[11px] text-sidebar-foreground/60 truncate">
-              {selectedTeam?.name || "Personal Workspace"}
+              {getTeamDisplayName(selectedTeam, personalTeam?.id)}
             </div>
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
