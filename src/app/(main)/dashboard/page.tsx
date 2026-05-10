@@ -10,7 +10,7 @@ import { formatPostContent } from "@/lib/formatPostContent";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
 import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
-import { PageLoader, CardSkeleton } from "@/app/components/ui/loading-spinner";
+import { PageLoader, CardSkeleton, Skeleton } from "@/app/components/ui/loading-spinner";
 import { Button } from "@/app/components/ui/button";
 import {
   BarChart3,
@@ -341,51 +341,53 @@ export default function Dashboard() {
         </MotionDiv>
 
         {/* NEEDS ATTENTION — only renders when there's something */}
-        <NeedsAttention
-          pendingApprovals={canApprove ? counts.awaitingApproval : 0}
-          draftsReady={counts.drafts}
-          failedPosts={counts.failed}
-        />
+        {!loading && (
+          <NeedsAttention
+            pendingApprovals={canApprove ? counts.awaitingApproval : 0}
+            draftsReady={counts.drafts}
+            failedPosts={counts.failed}
+          />
+        )}
 
-        {/* STAT TILES — clickable, double as status filters */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          <StatTile
-            label="Total"
-            value={counts.total}
-            hint="All content"
-            Icon={BarChart3}
-            tone="bg-primary/10 text-primary"
-            onClick={() => setStatusFilter("ALL")}
-            active={selectedStatus === "ALL"}
-          />
-          <StatTile
-            label="Published"
-            value={counts.published}
-            hint="Live"
-            Icon={TrendingUp}
-            tone="bg-emerald-500/10 text-emerald-600"
-            onClick={() => setStatusFilter("PUBLISHED")}
-            active={selectedStatus === "PUBLISHED"}
-          />
-          <StatTile
-            label="Scheduled"
-            value={counts.scheduled}
-            hint="Upcoming"
-            Icon={Calendar}
-            tone="bg-amber-500/10 text-amber-600"
-            onClick={() => setStatusFilter("SCHEDULED")}
-            active={selectedStatus === "SCHEDULED"}
-          />
-          <StatTile
-            label="Drafts"
-            value={counts.drafts}
-            hint="In progress"
-            Icon={FileText}
-            tone="bg-sky-500/10 text-sky-600"
-            onClick={() => setStatusFilter("DRAFT")}
-            active={selectedStatus === "DRAFT"}
-          />
-        </div>
+        {/* STAT TILES — skeleton during load so we don't flash "0" */}
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-border/60 bg-card p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Skeleton className="h-8 w-8 sm:h-10 sm:w-10" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-6 w-12" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            <StatTile
+              label="Total" value={counts.total} hint="All content" Icon={BarChart3}
+              tone="bg-primary/10 text-primary"
+              onClick={() => setStatusFilter("ALL")} active={selectedStatus === "ALL"}
+            />
+            <StatTile
+              label="Published" value={counts.published} hint="Live" Icon={TrendingUp}
+              tone="bg-emerald-500/10 text-emerald-600"
+              onClick={() => setStatusFilter("PUBLISHED")} active={selectedStatus === "PUBLISHED"}
+            />
+            <StatTile
+              label="Scheduled" value={counts.scheduled} hint="Upcoming" Icon={Calendar}
+              tone="bg-amber-500/10 text-amber-600"
+              onClick={() => setStatusFilter("SCHEDULED")} active={selectedStatus === "SCHEDULED"}
+            />
+            <StatTile
+              label="Drafts" value={counts.drafts} hint="In progress" Icon={FileText}
+              tone="bg-sky-500/10 text-sky-600"
+              onClick={() => setStatusFilter("DRAFT")} active={selectedStatus === "DRAFT"}
+            />
+          </div>
+        )}
 
         {/* FILTER BAR */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -393,7 +395,9 @@ export default function Dashboard() {
             <TypeFilter selected={selectedTypes} onChange={setSelectedTypes} />
           </div>
           <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-            {loading ? "Loading…" : (
+            {loading ? (
+              <Skeleton className="h-3 w-32" />
+            ) : (
               <>
                 {content.length}{" "}
                 <span className="hidden sm:inline">of {Math.max(totalCount, content.length)}</span>{" "}
@@ -405,14 +409,7 @@ export default function Dashboard() {
 
         {/* CONTENT */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton className="hidden sm:block" />
-            <CardSkeleton className="hidden lg:block" />
-            <CardSkeleton className="hidden lg:block" />
-          </div>
+          <DashboardLoadingGrid />
         ) : content.length === 0 ? (
           <EmptyState selectedStatus={selectedStatus} />
         ) : (
@@ -434,6 +431,24 @@ export default function Dashboard() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+// ============================================================================
+// DashboardLoadingGrid — shape-match the real ContentCard grid so the
+// skeleton looks like the page that's about to appear, not three blank tiles.
+// Renders 6 cards on lg, 4 on sm, 2 on mobile to roughly fill the viewport.
+// ============================================================================
+function DashboardLoadingGrid() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <CardSkeleton />
+      <CardSkeleton />
+      <CardSkeleton className="hidden sm:block" />
+      <CardSkeleton className="hidden sm:block" />
+      <CardSkeleton className="hidden lg:block" />
+      <CardSkeleton className="hidden lg:block" />
+    </div>
   );
 }
 

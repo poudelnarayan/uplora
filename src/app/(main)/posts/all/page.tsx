@@ -30,8 +30,18 @@ function AllPostsInner() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  // Initial filter values come from the URL once on first render. We do NOT
+  // re-read searchParams on subsequent renders — doing so would clobber
+  // user-selected filters back to whatever the URL says (the bug where
+  // clicking "All" on /posts/all?status=DRAFT did nothing).
+  const [filterType, setFilterType] = useState<string>(() => {
+    const t = searchParams.get("type");
+    return t && ["all", "text", "image", "reel", "video"].includes(t) ? t : "all";
+  });
+  const [filterStatus, setFilterStatus] = useState<string>(() => {
+    const s = searchParams.get("status");
+    return s && ["all", "DRAFT", "PENDING", "SCHEDULED", "PUBLISHED", "PROCESSING"].includes(s) ? s : "all";
+  });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
@@ -44,13 +54,9 @@ function AllPostsInner() {
   const [postToDelete, setPostToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Allow deep-linking: /posts/all?type=video&status=PENDING
-  useEffect(() => {
-    const t = searchParams.get("type");
-    const s = searchParams.get("status");
-    if (t && ["all", "text", "image", "reel", "video"].includes(t)) setFilterType(t);
-    if (s && ["all", "DRAFT", "PENDING", "SCHEDULED", "PUBLISHED", "PROCESSING"].includes(s)) setFilterStatus(s);
-  }, [searchParams]);
+  // (Deep-link defaults are read in the useState initializers above. We
+  // intentionally don't keep a useEffect listening to `searchParams` because
+  // it would overwrite user clicks back to the URL value on every render.)
 
   const fetchContent = useCallback(async () => {
     if (!selectedTeamId) {
