@@ -35,7 +35,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { useTeam } from "@/context/TeamContext";
@@ -297,12 +296,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        side={variant === "sidebar" ? "top" : "top"}
+        side="top"
         sideOffset={8}
-        className="w-[--radix-dropdown-menu-trigger-width] min-w-[240px] max-w-[320px]"
+        className="w-[--radix-dropdown-menu-trigger-width] min-w-[240px] max-w-[320px] p-0 overflow-hidden"
       >
         {workspaces.length > 0 && (
-          <>
+          <div className="bg-sidebar-accent/40 dark:bg-sidebar-accent/30 px-1 pt-1 pb-1 border-b border-border">
             <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Workspaces
             </DropdownMenuLabel>
@@ -311,40 +310,44 @@ export default function AppShell({ children }: { children: ReactNode }) {
               return (
                 <DropdownMenuItem
                   key={w.id}
-                  className="gap-2 cursor-pointer"
+                  className={cn(
+                    "gap-2 cursor-pointer",
+                    active && "bg-sidebar-primary/15 text-sidebar-primary focus:bg-sidebar-primary/20 focus:text-sidebar-primary",
+                  )}
                   onSelect={() => {
                     if (variant === "drawer") setMobileNavOpen(false);
                     if (!active) startWorkspaceSwitch(w.id);
                   }}
                 >
                   <span className="flex-1 truncate">{w.name}</span>
-                  {active && <Check className="h-4 w-4 text-primary shrink-0" />}
+                  {active && <Check className="h-4 w-4 shrink-0" />}
                 </DropdownMenuItem>
               );
             })}
-            <DropdownMenuSeparator />
-          </>
+          </div>
         )}
-        <DropdownMenuItem asChild>
-          <Link
-            href="/settings"
-            onClick={() => variant === "drawer" && setMobileNavOpen(false)}
-            className="gap-2 cursor-pointer"
+        <div className="p-1">
+          <DropdownMenuItem asChild>
+            <Link
+              href="/settings"
+              onClick={() => variant === "drawer" && setMobileNavOpen(false)}
+              className="gap-2 cursor-pointer"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+            onSelect={() => {
+              if (variant === "drawer") setMobileNavOpen(false);
+              signOut();
+            }}
           >
-            <Settings className="h-4 w-4" />
-            <span>Settings</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 cursor-pointer text-destructive focus:text-destructive"
-          onSelect={() => {
-            if (variant === "drawer") setMobileNavOpen(false);
-            signOut();
-          }}
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Sign out</span>
-        </DropdownMenuItem>
+            <LogOut className="h-4 w-4" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -452,31 +455,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
           them, any child wider than the viewport (e.g. an unwrapped button
           row) widens the body and triggers mobile auto-zoom-out. */}
       <main className="flex-1 lg:ml-64 ml-0 min-w-0 overflow-x-hidden">
-        {/* Mobile Top Bar - Only for mobile */}
-        <div className="lg:hidden sticky top-0 z-30 bg-card backdrop-blur-sm border-b border-border">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              {/* Mobile menu button */}
-              <button
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-
-              {/* Mobile logo */}
-              <div className="flex-1 flex justify-center">
-                <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-10 w-auto" />
-              </div>
-
-              {/* spacer to balance center logo */}
-              <div className="w-9" />
-            </div>
-
-            {/* Workspace switching has moved into the mobile drawer
-                (alongside account/settings/sign-out) — keeps the top bar
-                clean for content. */}
+        {/* Mobile Top Bar — slim, just the menu trigger. The Uplora logo
+            lives inside the drawer header (and the desktop sidebar), so
+            we don't repeat it here. Keeps content space maximized. */}
+        <div className="lg:hidden sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border">
+          <div className="px-2 py-2 flex items-center">
+            <button
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
