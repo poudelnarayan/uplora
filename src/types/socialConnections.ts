@@ -10,17 +10,21 @@ import { z } from "zod";
  * Design:
  * - Use `.passthrough()` so older/newer fields don't break parsing.
  * - Use `normalizeSocialConnections()` (non-throwing) in runtime paths.
+ * - All datetime fields accept ISO with timezone offset (Postgres/Supabase
+ *   default format `2026-04-19T18:10:14.956+00:00`). Strict `Z`-only parsing
+ *   silently dropped every connection from the DB.
  */
+const isoDatetime = () => z.string().datetime({ offset: true });
 
 export const facebookConnectionSchema = z
   .object({
-    connectedAt: z.string().datetime().optional(),
+    connectedAt: isoDatetime().optional(),
     userId: z.union([z.string(), z.number()]).transform(String).optional(),
     userName: z.string().nullable().optional(),
 
     // Tokens (some older code used accessToken; new code prefers userAccessToken)
     userAccessToken: z.string().optional(),
-    userTokenExpiresAt: z.string().datetime().nullable().optional(),
+    userTokenExpiresAt: isoDatetime().nullable().optional(),
     accessToken: z.string().optional(),
 
     // Page selection + token
@@ -49,13 +53,13 @@ export const facebookConnectionSchema = z
 
 export const instagramConnectionSchema = z
   .object({
-    connectedAt: z.string().datetime().optional(),
+    connectedAt: isoDatetime().optional(),
 
     // IG Business Login flow fields
     instagramUserId: z.string().optional(),
     businessAccountId: z.string().nullable().optional(),
     accessToken: z.string().optional(),
-    tokenExpiresAt: z.string().datetime().nullable().optional(),
+    tokenExpiresAt: isoDatetime().nullable().optional(),
 
     // Older/FB-linkage fields (kept for compatibility)
     pageId: z.string().optional(),
@@ -68,22 +72,22 @@ export const socialConnectionsSchema = z
     instagram: instagramConnectionSchema.nullable().optional(),
     telegram: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
         chatId: z.string().optional(),
         username: z.string().nullable().optional(),
         // One-time code used to link Telegram chat -> Uplora user (set by /api/telegram/connect)
         pendingCode: z.string().nullable().optional(),
-        pendingExpiresAt: z.string().datetime().nullable().optional(),
+        pendingExpiresAt: isoDatetime().nullable().optional(),
       })
       .passthrough()
       .nullable()
       .optional(),
     youtube: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
         accessToken: z.string().optional(),
         refreshToken: z.string().optional(),
-        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        tokenExpiresAt: isoDatetime().nullable().optional(),
         scope: z.string().nullable().optional(),
 
         // Channel info (for nicer UI)
@@ -96,12 +100,12 @@ export const socialConnectionsSchema = z
       .optional(),
     twitter: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
 
         // Encrypted tokens
         encryptedAccessToken: z.string().optional(),
         encryptedRefreshToken: z.string().optional(),
-        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        tokenExpiresAt: isoDatetime().nullable().optional(),
 
         // X user
         userId: z.string().nullable().optional(),
@@ -116,9 +120,9 @@ export const socialConnectionsSchema = z
       .optional(),
     linkedin: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
         accessToken: z.string().optional(),
-        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        tokenExpiresAt: isoDatetime().nullable().optional(),
 
         // LinkedIn member id / author URN
         memberId: z.string().optional(),
@@ -136,11 +140,11 @@ export const socialConnectionsSchema = z
       .optional(),
     pinterest: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
         accessToken: z.string().optional(),
         refreshToken: z.string().optional(),
-        tokenExpiresAt: z.string().datetime().nullable().optional(),
-        refreshTokenExpiresAt: z.string().datetime().nullable().optional(),
+        tokenExpiresAt: isoDatetime().nullable().optional(),
+        refreshTokenExpiresAt: isoDatetime().nullable().optional(),
         scope: z.string().nullable().optional(),
 
         // Basic profile
@@ -153,9 +157,9 @@ export const socialConnectionsSchema = z
       .optional(),
     threads: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
         accessToken: z.string().optional(),
-        tokenExpiresAt: z.string().datetime().nullable().optional(),
+        tokenExpiresAt: isoDatetime().nullable().optional(),
         threadsUserId: z.string().optional(),
         scope: z.string().nullable().optional(),
       })
@@ -164,13 +168,13 @@ export const socialConnectionsSchema = z
       .optional(),
     tiktok: z
       .object({
-        connectedAt: z.string().datetime().optional(),
+        connectedAt: isoDatetime().optional(),
 
         // TikTok OAuth tokens
         accessToken: z.string().optional(),
         refreshToken: z.string().optional(),
-        tokenExpiresAt: z.string().datetime().nullable().optional(),
-        refreshTokenExpiresAt: z.string().datetime().nullable().optional(),
+        tokenExpiresAt: isoDatetime().nullable().optional(),
+        refreshTokenExpiresAt: isoDatetime().nullable().optional(),
 
         // TikTok user profile
         openId: z.string().optional(),

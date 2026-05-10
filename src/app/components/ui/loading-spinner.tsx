@@ -62,14 +62,14 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 };
 
 // Inline loading spinner for buttons and small spaces
-export const InlineSpinner: React.FC<{ size?: 'sm' | 'md'; className?: string }> = ({
+export const InlineSpinner: React.FC<{ size?: 'xs' | 'sm' | 'md'; className?: string }> = ({
   size = 'sm',
   className
 }) => (
   <div
     className={cn(
       'animate-spin rounded-full border-2 border-border border-t-primary',
-      size === 'sm' ? 'w-4 h-4' : 'w-5 h-5',
+      size === 'xs' ? 'w-3 h-3 border' : size === 'sm' ? 'w-4 h-4' : 'w-5 h-5',
       className
     )}
   />

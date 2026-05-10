@@ -120,7 +120,7 @@ function MakePostReelsContent() {
       addNotification({ type: "error", title: "Title Required", message: "Please enter a title" });
       return;
     }
-    asDraft ? setIsDrafting(true) : setIsPublishing(true);
+    if (asDraft) setIsDrafting(true); else setIsPublishing(true);
     try {
       let videoKey: string | null = null;
       if (selectedFile) {

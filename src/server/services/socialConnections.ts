@@ -351,15 +351,24 @@ export async function updateUserSocialConnections(
   const current = await getUserSocialConnections(userId, resolvedTeamId);
   const next = updater(current);
 
-  // Upsert each changed platform
   const platforms = ['youtube', 'twitter', 'facebook', 'instagram', 'linkedin',
     'pinterest', 'threads', 'tiktok', 'telegram'] as const;
 
   for (const platform of platforms) {
-    const conn = (next as any)[platform];
-    if (!conn) continue;
+    const nextConn = (next as any)[platform];
+    const currentConn = (current as any)[platform];
 
-    const row = connectionToRow(resolvedTeamId, userId, platform, conn);
+    // null/undefined in `next` while `current` had a value → disconnect.
+    // Without this, calling updater that sets `platform: null` was a no-op
+    // and disconnect routes silently left the row active.
+    if (!nextConn) {
+      if (currentConn) {
+        await disconnectPlatform(userId, platform, resolvedTeamId);
+      }
+      continue;
+    }
+
+    const row = connectionToRow(resolvedTeamId, userId, platform, nextConn);
 
     const { data: existing } = await supabaseAdmin
       .from('social_accounts')
