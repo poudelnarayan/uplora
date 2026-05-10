@@ -10,9 +10,18 @@ import { useNotifications } from "@/app/components/ui/Notification";
 import { InlineSpinner } from "@/app/components/ui/loading-spinner";
 
 import ReelUploadArea from "./components/ReelUploadArea";
-import ReelPlatformSelector from "./components/ReelPlatformSelector";
 import ReelPostDetails from "./components/ReelPostDetails";
 import ReelPreview from "./components/ReelPreview";
+import { PlatformGrid } from "@/app/components/upload/PlatformGrid";
+import { useTeamPlatforms } from "@/hooks/use-team-platforms";
+
+// Reel-eligible platforms — the ones that accept short vertical video.
+const REEL_PLATFORMS = [
+  { id: "Instagram", label: "Instagram",      key: "instagram", limit: 2200 },
+  { id: "TikTok",    label: "TikTok",         key: "tiktok",    limit: 2200 },
+  { id: "YouTube",   label: "YouTube Shorts", key: "youtube",   limit: 5000 },
+  { id: "Facebook",  label: "Facebook",       key: "facebook",  limit: 63206 },
+] as const;
 
 function MakePostReelsContent() {
   const router = useRouter();
@@ -20,6 +29,13 @@ function MakePostReelsContent() {
   const editId = searchParams.get("edit");
   const { selectedTeamId, selectedTeam, personalTeam } = useTeam();
   const { addNotification } = useNotifications();
+  const { isPersonal, has, team: teamFromHook } = useTeamPlatforms();
+  const isPlatformLocked = (key: string) => !isPersonal && !has(key as any);
+  const togglePlatform = (id: string) => {
+    const def = REEL_PLATFORMS.find((p) => p.id === id);
+    if (def && isPlatformLocked(def.key) && !selectedPlatforms.includes(id)) return;
+    setSelectedPlatforms((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]);
+  };
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -365,11 +381,14 @@ function MakePostReelsContent() {
               </div>
             </div>
 
-            {/* Right: Horizontal platform pills (desktop) */}
+            {/* Right: compact platform tiles (desktop) */}
             <div className="hidden lg:block">
-              <ReelPlatformSelector
+              <PlatformGrid
+                items={[...REEL_PLATFORMS]}
                 selected={selectedPlatforms}
-                onChange={setSelectedPlatforms}
+                onToggle={togglePlatform}
+                isLocked={isPlatformLocked}
+                teamName={teamFromHook?.name || selectedTeam?.name || null}
               />
             </div>
           </div>
@@ -413,10 +432,13 @@ function MakePostReelsContent() {
 
               {/* Mobile/tablet: platforms */}
               <div className="lg:hidden">
-                <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-soft">
-                  <ReelPlatformSelector
+                <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-soft">
+                  <PlatformGrid
+                    items={[...REEL_PLATFORMS]}
                     selected={selectedPlatforms}
-                    onChange={setSelectedPlatforms}
+                    onToggle={togglePlatform}
+                    isLocked={isPlatformLocked}
+                    teamName={teamFromHook?.name || selectedTeam?.name || null}
                   />
                 </div>
               </div>

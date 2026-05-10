@@ -60,7 +60,10 @@ export function PlatformGrid({
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {/* Outer pt-2 + pr-2 give the corner badges (-top-2/-right-2) room
+          to breathe instead of clipping into adjacent tiles or the card
+          edge. Gap-3 keeps tiles cleanly separated even with badges. */}
+      <div className="flex flex-wrap gap-3 pt-2 pr-2">
         {items.map(({ id, label: name, key, limit }) => {
           const Icon = (platformIcons as Record<string, React.ComponentType<{ className?: string }>>)[key];
           const active = selected.includes(id);
@@ -97,15 +100,17 @@ export function PlatformGrid({
                 <span className="text-xs font-semibold">{name.slice(0, 2)}</span>
               )}
 
-              {/* Active check badge — small, tucked into top-right */}
+              {/* Active check badge — pulled outside the tile with a card-
+                  colored ring so it always reads cleanly even on a busy
+                  background. */}
               {active && !lockedHere && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm border-2 border-card">
+                <span className="absolute -top-2 -right-2 h-[18px] w-[18px] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm ring-2 ring-card">
                   <Check className="h-2.5 w-2.5" strokeWidth={3} />
                 </span>
               )}
               {/* Locked badge */}
               {lockedHere && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-muted-foreground/80 text-background flex items-center justify-center shadow-sm border-2 border-card">
+                <span className="absolute -top-2 -right-2 h-[18px] w-[18px] rounded-full bg-muted-foreground/80 text-background flex items-center justify-center shadow-sm ring-2 ring-card">
                   <Lock className="h-2.5 w-2.5" strokeWidth={2.5} />
                 </span>
               )}

@@ -326,17 +326,26 @@ function AllPostsInner() {
           animate={{ opacity: 1, y: 0 }}
           className="min-h-full"
         >
-          {/* Header */}
-          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:sticky lg:top-0 lg:z-10">
-            <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground truncate">All Posts</h1>
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Header — compact: title row, search, then two horizontally
+              scrollable chip rows for type and status. The previous
+              double-row of full Buttons was eating ~140px on mobile. */}
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:sticky lg:top-0 lg:z-10 space-y-3">
+            {/* Title row */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground truncate">All posts</h1>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {loading ? "Loading…" : `${filteredPosts.length} ${filteredPosts.length === 1 ? "post" : "posts"}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
                 <div className="hidden sm:flex border border-border rounded-lg p-1">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className="px-3"
+                    className="h-8 px-2.5"
+                    aria-label="Grid view"
                   >
                     <Grid className="h-4 w-4" />
                   </Button>
@@ -344,118 +353,60 @@ function AllPostsInner() {
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className="px-3"
+                    className="h-8 px-2.5"
+                    aria-label="List view"
                   >
                     <List className="h-4 w-4" />
                   </Button>
                 </div>
                 <Link href="/make-post">
-                  <Button size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-                    <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">New Post</span>
+                  <Button size="sm" className="h-9 gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">New post</span>
                     <span className="sm:hidden">New</span>
                   </Button>
                 </Link>
               </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <div className="relative flex-1 min-w-[160px] sm:min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+            {/* Search + filter chips */}
+            <div className="space-y-2.5">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search posts..."
+                  placeholder="Search posts…"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 sm:pl-10 h-9 sm:h-10 text-sm"
+                  className="pl-9 h-10 text-sm"
                 />
               </div>
 
-              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                <Button
-                  variant={filterType === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('all')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  All Types
-                </Button>
-                <Button
-                  variant={filterType === 'text' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('text')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Text
-                </Button>
-                <Button
-                  variant={filterType === 'image' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('image')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Image
-                </Button>
-                <Button
-                  variant={filterType === 'reel' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('reel')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Reel
-                </Button>
-                <Button
-                  variant={filterType === 'video' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('video')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Video
-                </Button>
-              </div>
-
-              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                <Button
-                  variant={filterStatus === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus('all')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filterStatus === 'DRAFT' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus('DRAFT')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Drafts
-                </Button>
-                <Button
-                  variant={filterStatus === 'PENDING' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus('PENDING')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Pending
-                </Button>
-                <Button
-                  variant={filterStatus === 'SCHEDULED' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus('SCHEDULED')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Scheduled
-                </Button>
-                <Button
-                  variant={filterStatus === 'PUBLISHED' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus('PUBLISHED')}
-                  className="text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3"
-                >
-                  Published
-                </Button>
-              </div>
+              {/* Type chips — single horizontal scroll row, no wrap */}
+              <FilterChipRow
+                label="Type"
+                value={filterType}
+                onChange={(v) => setFilterType(v as typeof filterType)}
+                options={[
+                  { value: "all",   label: "All" },
+                  { value: "text",  label: "Text" },
+                  { value: "image", label: "Image" },
+                  { value: "reel",  label: "Reel" },
+                  { value: "video", label: "Video" },
+                ]}
+              />
+              {/* Status chips */}
+              <FilterChipRow
+                label="Status"
+                value={filterStatus}
+                onChange={(v) => setFilterStatus(v as typeof filterStatus)}
+                options={[
+                  { value: "all",       label: "All" },
+                  { value: "DRAFT",     label: "Drafts" },
+                  { value: "PENDING",   label: "Pending" },
+                  { value: "SCHEDULED", label: "Scheduled" },
+                  { value: "PUBLISHED", label: "Published" },
+                ]}
+              />
             </div>
           </div>
 
@@ -716,6 +667,50 @@ function AllPostsInner() {
         </DialogContent>
       </Dialog>
     </AppShell>
+  );
+}
+
+/**
+ * Single horizontal-scrollable chip row used for the type and status
+ * filters. Replaces the old wrapping row of full <Button> components —
+ * a single 32px row instead of two 36px rows of stacked buttons.
+ */
+function FilterChipRow({
+  label, value, onChange, options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: Array<{ value: string; label: string }>;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0 w-14">
+        {label}
+      </span>
+      <div className="flex-1 -mx-1 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 px-1">
+          {options.map((opt) => {
+            const active = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange(opt.value)}
+                aria-pressed={active}
+                className={`shrink-0 inline-flex items-center px-3 h-8 rounded-full text-xs font-medium transition-colors ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/50 text-foreground/80 hover:bg-muted border border-border/40"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 

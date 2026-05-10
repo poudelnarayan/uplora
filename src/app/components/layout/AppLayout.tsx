@@ -364,7 +364,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           href="/dashboard"
           className="flex items-center justify-center h-14 px-4 border-b border-sidebar-border bg-sidebar hover:bg-sidebar-accent/30 transition-colors"
         >
-          <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-7 w-auto" priority />
+          <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-10 w-auto" priority />
         </Link>
 
         <nav className="flex-1 space-y-1 px-3 py-3 bg-sidebar">
@@ -548,7 +548,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setMobileNavOpen(false)}
                 className="flex items-center justify-center h-14 px-4 border-b border-sidebar-border bg-sidebar"
               >
-                <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-7 w-auto" priority />
+                <Image src="/text-logo.png" alt="Uplora" width={200} height={50} className="h-10 w-auto" priority />
               </Link>
               
               <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto no-scrollbar bg-sidebar">

@@ -7,7 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import { getTeamDisplayName } from "@/lib/teamDisplay";
-import { formatPostContent } from "@/lib/formatPostContent";
+import { stripPostMarkup } from "@/lib/formatPostContent";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
 import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
@@ -541,13 +541,13 @@ function ContentCard({
               {item.title || item.filename || "Untitled"}
             </h3>
             {item.content && (
-              <p
-                className="text-sm text-muted-foreground line-clamp-2 mb-3 [&_strong]:text-foreground [&_em]:text-foreground"
-                // Render the same inline formatting (bold, italic, hashtags,
-                // links, timestamps) that the live preview on /videos/[id]
-                // shows so the dashboard isn't a downgraded-looking duplicate.
-                dangerouslySetInnerHTML={{ __html: formatPostContent(item.content) }}
-              />
+              // Card previews show plain text only — markdown markers
+              // (`_italic_`, `**bold**`) and hashtag chips read as noise at
+              // thumbnail size. Full formatting still appears on the post
+              // detail page where there's space for it.
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3 whitespace-pre-line">
+                {stripPostMarkup(item.content)}
+              </p>
             )}
 
             {/* Meta row */}

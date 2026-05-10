@@ -763,8 +763,10 @@ const MakePostVideosInner = () => {
   return (
     <AppShell>
       <div className="min-h-screen bg-background">
-        {/* Header — fixed only on desktop; on mobile the AppShell top bar is already sticky */}
-        <div className="bg-card/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
+        {/* Header — sticky on desktop. Was previously lg:fixed with a
+            hardcoded lg:right-44 that left a dead strip on the right; now
+            it scrolls with the page like every other make-post variant. */}
+        <div className="bg-card/80 backdrop-blur-sm border-b border-border/20 lg:sticky lg:top-0 lg:z-40">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -936,11 +938,11 @@ const MakePostVideosInner = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="bg-black rounded-lg overflow-hidden group relative">
+                    <div className="bg-black rounded-lg overflow-hidden group relative" style={{ aspectRatio: "16 / 9" }}>
                       <video
                         src={selectedVideo || previewVideoUrl || undefined}
                         controls
-                        className="w-full h-40 object-contain"
+                        className="w-full h-full object-contain"
                       />
                       <Button
                         variant="secondary"
@@ -1210,12 +1212,12 @@ const MakePostVideosInner = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="relative rounded-lg overflow-hidden group">
+                      <div className="relative rounded-lg overflow-hidden group bg-black" style={{ aspectRatio: "16 / 9" }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img loading="lazy"
                           src={selectedThumbnail}
                           alt="Thumbnail"
-                          className="w-full h-40 object-contain bg-black"
+                          className="w-full h-full object-contain"
                         />
                         <Button
                           variant="secondary"

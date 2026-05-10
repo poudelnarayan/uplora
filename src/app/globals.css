@@ -354,11 +354,19 @@
   }
 
   html, body {
-    /* Prevents any child overflow from widening the document, which is
-       what triggers mobile auto-zoom-out on wider-than-viewport content. */
-    overflow-x: hidden;
+    /* `overflow-x: clip` (not hidden!) is the right tool here: it stops
+       horizontal overflow from triggering the mobile auto-zoom-out, but
+       — unlike `hidden` — it DOESN'T also force `overflow-y: auto` on
+       body, which on iOS Safari hijacks momentum scrolling and produces
+       the "scroll feels stuck" behavior. With `clip`, the browser uses
+       its native document scroll for vertical, and we just clip stray
+       horizontal bleed. */
+    overflow-x: clip;
     max-width: 100vw;
   }
+
+  /* Smooth iOS momentum scroll on any internal scroll containers. */
+  html { -webkit-text-size-adjust: 100%; }
 
   body {
     @apply bg-background text-foreground;
@@ -367,6 +375,9 @@
        captions and meta rows are comfortable to read without zoom. */
     font-size: 15px;
     line-height: 1.5;
+    /* Make sure the document is the scroll container on mobile. */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
   }
 
   @media (min-width: 1024px) {
