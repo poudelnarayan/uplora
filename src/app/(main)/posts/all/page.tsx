@@ -242,11 +242,24 @@ function AllPostsInner() {
     }
   };
 
+  // The API maps DB `draft` to "PROCESSING" for video posts (and "DRAFT" for
+  // text/image/reel). We want a single "Drafts" filter bucket that catches
+  // both — otherwise the dashboard's "Awaiting your action → drafts ready to
+  // publish" link to /posts/all?status=DRAFT shows zero results when only
+  // video drafts exist.
+  const matchesStatusFilter = (postStatus: string, filter: string) => {
+    if (filter === "all") return true;
+    if (filter === "DRAFT") return postStatus === "DRAFT" || postStatus === "PROCESSING" || postStatus === "READY_TO_PUBLISH";
+    if (filter === "PROCESSING") return postStatus === "PROCESSING" || postStatus === "DRAFT";
+    if (filter === "PENDING") return postStatus === "PENDING" || postStatus === "APPROVAL_REQUESTED";
+    return postStatus === filter;
+  };
+
   const filteredPosts = posts.filter(post => {
     const matchesSearch = (post.title && post.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (post.content && post.content.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = filterType === "all" || post.type === filterType;
-    const matchesStatus = filterStatus === "all" || post.status === filterStatus;
+    const matchesStatus = matchesStatusFilter(post.status, filterStatus);
     return matchesSearch && matchesType && matchesStatus;
   });
 

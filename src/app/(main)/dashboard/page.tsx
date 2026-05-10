@@ -197,6 +197,25 @@ export default function Dashboard() {
 
   // ---------- Content actions ----------
   const handleEditContent = (item: any) => {
+    // Approved / published / scheduled items can't be edited via the make-post
+    // editor — the server's PATCH endpoint rejects metadata edits once the
+    // post leaves draft state for non-owners. Route to the preview page so
+    // the user gets the correct affordances (e.g. "Send back for editing").
+    const status = String(item.status || "").toUpperCase();
+    const editorWouldBeLocked =
+      status === "APPROVAL_APPROVED" ||
+      status === "APPROVAL_REQUESTED" ||
+      status === "PENDING" ||
+      status === "PUBLISHED" ||
+      status === "POSTED" ||
+      status === "SCHEDULED";
+
+    if (editorWouldBeLocked) {
+      if (item.type === "video") router.push(`/videos/${item.id}`);
+      else router.push(`/posts/${item.id}`);
+      return;
+    }
+
     const editRoutes: Record<string, string> = {
       text: "/make-post/text",
       image: "/make-post/image",

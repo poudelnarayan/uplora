@@ -32,6 +32,25 @@ export async function GET(
 
     if (!hasAccess) return NextResponse.json({ error: "Video not found" }, { status: 404 });
 
+    // Resolve uploader profile so the preview can show name/email/image
+    // (instead of just an id, which made the "Uploaded by" line look empty).
+    let uploader: { id: string; name: string | null; email: string | null; image: string | null } = {
+      id: video.userId,
+      name: null,
+      email: null,
+      image: null,
+    };
+    if (video.userId) {
+      const { data: u } = await supabaseAdmin
+        .from("users")
+        .select("id, name, email, image")
+        .eq("id", video.userId)
+        .maybeSingle();
+      if (u) {
+        uploader = { id: u.id, name: u.name ?? null, email: u.email ?? null, image: u.image ?? null };
+      }
+    }
+
     return NextResponse.json({
       id: video.id,
       key: video.key,
@@ -52,7 +71,7 @@ export async function GET(
       youtubeVideoId: video.youtubeVideoId,
       youtubeThumbnailUploadStatus: video.youtubeThumbnailUploadStatus,
       youtubeThumbnailUploadError: video.youtubeThumbnailUploadError,
-      uploader: { id: video.userId },
+      uploader,
     });
   } catch (e) {
     return NextResponse.json({ error: "Failed to get video" }, { status: 500 });

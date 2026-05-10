@@ -455,7 +455,7 @@ function MakePostImageContent() {
                 ) : (
                   <div className="space-y-4">
                     <div className="relative rounded-lg overflow-hidden group">
-                      <img
+                      <img loading="lazy"
                         src={selectedImage}
                         alt="Selected"
                         className="w-full h-48 object-cover"
@@ -540,7 +540,7 @@ function MakePostImageContent() {
                                 {/* Image */}
                                 {selectedImage ? (
                                   <div className="aspect-square">
-                                    <img 
+                                    <img loading="lazy" 
                                       src={selectedImage} 
                                       alt="Preview" 
                                       className="w-full h-full object-cover"
@@ -629,7 +629,7 @@ function MakePostImageContent() {
                                 {/* Image */}
                                 {selectedImage ? (
                                   <div className="aspect-video">
-                                    <img 
+                                    <img loading="lazy" 
                                       src={selectedImage} 
                                       alt="Preview" 
                                       className="w-full h-full object-cover"
@@ -697,7 +697,7 @@ function MakePostImageContent() {
 
                                     {selectedImage && (
                                       <div className="aspect-video bg-gray-100 rounded-xl mb-3 overflow-hidden">
-                                        <img 
+                                        <img loading="lazy" 
                                           src={selectedImage} 
                                           alt="Preview" 
                                           className="w-full h-full object-cover"
@@ -764,7 +764,7 @@ function MakePostImageContent() {
 
                                 {selectedImage && (
                                   <div className="aspect-video">
-                                    <img 
+                                    <img loading="lazy" 
                                       src={selectedImage} 
                                       alt="Preview" 
                                       className="w-full h-full object-cover"

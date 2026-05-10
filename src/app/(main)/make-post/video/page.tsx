@@ -1212,7 +1212,7 @@ const MakePostVideosInner = () => {
                     <div className="space-y-3">
                       <div className="relative rounded-lg overflow-hidden group">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <img loading="lazy"
                           src={selectedThumbnail}
                           alt="Thumbnail"
                           className="w-full h-40 object-contain bg-black"
@@ -1272,7 +1272,7 @@ const MakePostVideosInner = () => {
                             className="w-full h-full object-contain bg-black"
                           />
                         ) : selectedThumbnail ? (
-                          <img
+                          <img loading="lazy"
                             src={selectedThumbnail}
                             alt="Preview"
                             className="w-full h-full object-contain bg-black"

@@ -17,7 +17,6 @@ import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
-import { TeamPlatformsBanner } from "@/app/components/teams/TeamPlatformsBanner";
 import { DisabledPlatformButton } from "@/app/components/teams/DisabledPlatformButton";
 export const dynamic = "force-dynamic";
 
@@ -338,17 +337,31 @@ export default function VideoPreviewPage() {
     return () => { try { es?.close(); } catch {} };
   }, [id, hasUnsavedChanges, isSaving, router, notifications]);
 
+  // Single source of truth for "this user cannot edit metadata right now".
+  // The server's PATCH /api/videos/[id] route enforces the same rule — UI must
+  // not let users type into fields that the server will reject on save.
+  // Locked when:
+  //  - editor/manager + video is awaiting approval (must wait for approval)
+  //  - editor/manager + video is approved (only owner can edit after approval)
+  const isMetadataLocked = !!video && role !== "OWNER" && role !== "ADMIN" && (
+    video.status === VideoStatus.APPROVAL_REQUESTED ||
+    video.status === VideoStatus.APPROVAL_APPROVED ||
+    String(video.status || "").toUpperCase() === "PENDING"
+  );
+
   // Auto-save function
   const autoSave = async (showNotification = false) => {
     if (!video || !hasUnsavedChanges) return;
-    // Lock editors when awaiting publish
-    if (role === "EDITOR" && (video.status === VideoStatus.APPROVAL_REQUESTED || video.status === "PENDING")) {
+    if (isMetadataLocked) {
       if (showNotification) {
-        notifications.addNotification({ type: "warning", title: "Awaiting publish", message: "This video is awaiting owner approval. Editors cannot edit until it's sent back to Processing." });
+        const reason = video.status === VideoStatus.APPROVAL_APPROVED
+          ? "This video is approved. Only the team owner can edit metadata after approval."
+          : "This video is awaiting owner approval. Editors cannot edit until it's sent back to Processing.";
+        notifications.addNotification({ type: "warning", title: "Locked", message: reason });
       }
       return;
     }
-    
+
     setIsSaving(true);
     try {
       // Handle thumbnail upload if needed
@@ -1343,11 +1356,6 @@ export default function VideoPreviewPage() {
           </button>
         </div>
 
-        {/* Compact awareness strip — editors see immediately what platforms this team can publish to. */}
-        {video?.teamId && (
-          <TeamPlatformsBanner teamId={video.teamId} variant="compact" className="-mt-1" />
-        )}
-        
         {/* Team Context & Uploader Info */}
         <div className="space-y-3">
           {teamName && (
@@ -1597,7 +1605,17 @@ export default function VideoPreviewPage() {
                   <StatusChip status={getDisplayStatus(video)} />
                 </div>
               
-                <div className={`card p-3 sm:p-6 space-y-4 sm:space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === VideoStatus.APPROVAL_REQUESTED ? "opacity-60 pointer-events-none select-none" : ""}`}>
+                {isMetadataLocked && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800/40 px-3 py-2 flex items-center gap-2 text-xs sm:text-sm text-amber-900 dark:text-amber-200">
+                    <Shield className="h-4 w-4 shrink-0" />
+                    <span>
+                      {video.status === VideoStatus.APPROVAL_APPROVED
+                        ? "This video is approved. Only the team owner can edit metadata. Ask the owner to send it back for editing if you need changes."
+                        : "This video is awaiting approval. Editing is locked until it's sent back to Processing."}
+                    </span>
+                  </div>
+                )}
+                <div className={`card p-3 sm:p-6 space-y-4 sm:space-y-5 bg-muted/10 border border-border/60 ${isMetadataLocked ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 {/* Save status + action (moved away from under-video controls) */}
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-xs">

@@ -96,12 +96,15 @@ export async function GET(req: NextRequest) {
     });
 
     if (redirect) {
-      // 302 so the browser fetches the signed URL directly. Cache header lets
-      // the browser reuse the redirect without re-hitting our route during
-      // grids of many thumbnails.
+      // 302 so the browser fetches the signed URL directly. The signed URL is
+      // valid for up to 24h (thumbs) / 1h (videos) — there's no reason to
+      // re-hit our route every 5 minutes just to re-sign. Cache the redirect
+      // for ~1h on thumbs (heavy fan-out across grids) and ~5min on heavier
+      // media so we don't keep an obsolete signed URL too long if S3 perms
+      // change.
       return NextResponse.redirect(signedUrl, {
         status: 302,
-        headers: { "Cache-Control": isThumb ? "private, max-age=300" : "private, max-age=60" },
+        headers: { "Cache-Control": isThumb ? "private, max-age=3600" : "private, max-age=300" },
       });
     }
     return NextResponse.json({ url: signedUrl });
