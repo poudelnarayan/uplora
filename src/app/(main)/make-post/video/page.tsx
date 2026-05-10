@@ -549,16 +549,19 @@ const MakePostVideosInner = () => {
     async (silent = true) => {
       if (!videoId) return;
 
+      const needsThumbnailUpload = !!(thumbFile && !savedThumbnailKey);
       const currentMetadata = JSON.stringify({
         title,
         description,
         privacy,
         tags,
         category,
+        thumbFingerprint: thumbFile ? `${thumbFile.name}:${thumbFile.size}` : null,
+        savedThumbnailKey,
       });
 
-      // Skip if nothing changed
-      if (currentMetadata === lastSavedMetadataRef.current) {
+      // Skip if nothing changed AND no pending thumbnail upload
+      if (currentMetadata === lastSavedMetadataRef.current && !needsThumbnailUpload) {
         setHasUnsavedChanges(false);
         return;
       }
@@ -568,13 +571,13 @@ const MakePostVideosInner = () => {
 
       try {
         let thumbnailKey: string | undefined = undefined;
-        if (thumbFile && !savedThumbnailKey) {
+        if (needsThumbnailUpload) {
           const presign = await fetch("/api/s3/presign-thumbnail", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              filename: thumbFile.name,
-              contentType: thumbFile.type,
+              filename: thumbFile!.name,
+              contentType: thumbFile!.type,
               videoId,
             }),
           });
@@ -582,11 +585,14 @@ const MakePostVideosInner = () => {
             const { putUrl, key } = await presign.json();
             await fetch(putUrl, {
               method: "PUT",
-              headers: { "Content-Type": thumbFile.type },
-              body: thumbFile,
+              headers: { "Content-Type": thumbFile!.type },
+              body: thumbFile!,
             });
             thumbnailKey = key;
             setSavedThumbnailKey(key);
+          } else {
+            const err = await presign.json().catch(() => ({}));
+            throw new Error(err?.error || "Thumbnail presign failed");
           }
         }
 
@@ -664,7 +670,7 @@ const MakePostVideosInner = () => {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [videoId, title, description, privacy, tags, category, autoSaveMetadata]);
+  }, [videoId, title, description, privacy, tags, category, thumbFile, savedThumbnailKey, autoSaveMetadata]);
 
   // Navigation guard - warn before leaving page
   useEffect(() => {
