@@ -6,7 +6,7 @@ import AppShell from "@/app/components/layout/AppLayout";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { PageLoader, Skeleton } from "@/app/components/ui/loading-spinner";
 import { ArrowLeft, Edit, FileText } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CopyField, formatDate, getStatusColor, MetadataTable } from "@/app/(main)/posts/_components/detail-utils";
@@ -94,9 +94,7 @@ export default function TextPostDetailsPage() {
 
         <div className="p-6">
           {loading ? (
-            <div className="flex justify-center items-center py-24">
-              <LoadingSpinner size="lg" />
-            </div>
+            <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="aspect-video w-full" /><Skeleton className="h-4 w-3/4" /><Skeleton className="h-4 w-1/2" /></div>
           ) : !post ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center text-muted-foreground">Post not found.</CardContent>

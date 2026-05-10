@@ -10,7 +10,7 @@ import { Badge } from "@/app/components/ui/badge";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { PageLoader, Skeleton } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
 import Link from "next/link";
 
@@ -313,8 +313,10 @@ const Timeline = () => {
           {/* Calendar Grid */}
           <div className="p-3 sm:p-6">
             {loading ? (
-              <div className="flex justify-center items-center py-24">
-                <LoadingSpinner size="lg" />
+              <div className="rounded-xl border border-border/60 bg-card p-3 sm:p-4 space-y-3">
+                {[0,1,2,3,4,5].map(i => (
+                  <div key={i} className="flex items-center gap-3"><Skeleton className="h-12 w-12" /><div className="flex-1 space-y-2"><Skeleton className="h-3 w-1/3" /><Skeleton className="h-3 w-2/3" /></div></div>
+                ))}
               </div>
             ) : (
               <>

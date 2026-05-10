@@ -107,19 +107,19 @@ export default function SubscriptionPage() {
       <NextSeoNoSSR title="Pricing" description="Plans for solo creators and teams" noindex nofollow />
 
       <AppShell>
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12">
-          {/* Hero */}
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+          {/* Hero — tighter than before, no oversized vertical spacing */}
           <MotionDiv
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="text-center space-y-3 sm:space-y-4"
+            className="text-center space-y-1.5 sm:space-y-2 mb-4 sm:mb-6"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
               Plans that grow with your team
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-              Pick a plan that fits how you publish today. Upgrade or downgrade any time — cancel any time.
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
+              Pick a plan that fits how you publish today. Upgrade or downgrade any time.
             </p>
           </MotionDiv>
 
@@ -129,18 +129,19 @@ export default function SubscriptionPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: 0.05 }}
+              className="mb-6"
             >
               <SubscriptionManager subscriptionStatus={subscriptionStatus} onRefresh={fetchSubscriptionStatus} />
             </MotionDiv>
           )}
 
-          {/* Billing toggle */}
-          <div className="flex justify-center">
+          {/* Billing toggle — tight spacing on both sides */}
+          <div className="flex justify-center mb-4 sm:mb-5">
             <BillingToggle value={billing} onChange={setBilling} />
           </div>
 
           {/* Plan cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mb-8 sm:mb-10">
             {PLANS.map((plan) => (
               <PlanCard
                 key={plan.id}
@@ -154,7 +155,7 @@ export default function SubscriptionPage() {
           </div>
 
           {/* Trust strip */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-muted-foreground">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-muted-foreground mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-1.5">
               <Shield className="h-4 w-4 text-emerald-600" />
               Stripe-secured payments
@@ -170,12 +171,14 @@ export default function SubscriptionPage() {
           </div>
 
           {/* Comparison table — desktop only, mobile users have the per-card list above */}
-          <div className="hidden md:block">
+          <div className="hidden md:block mb-10">
             <ComparisonTable billing={billing} currentPlanId={currentPlan?.id || null} />
           </div>
 
           {/* AI features teaser */}
-          <AIPathTeaser />
+          <div className="mb-8 sm:mb-10">
+            <AIPathTeaser />
+          </div>
 
           {/* FAQ */}
           <FAQ />

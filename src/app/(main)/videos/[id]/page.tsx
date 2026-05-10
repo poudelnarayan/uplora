@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Shield, CheckCircle, Clock, Upload, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube, XCircle, Loader2 } from "lucide-react";
+import { Shield, CheckCircle, Clock, Image as ImageIcon, Link as LinkIcon, Hash, Check, AlertCircle, Bold, Italic, Type, Clock3, X, ArrowLeft, Users, User, Edit3, Trash2, Youtube, XCircle, Loader2, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import ConfirmationModal from "@/app/components/ui/ConfirmationModal";
 import { StatusChip, getDisplayStatus } from "@/app/components/ui/StatusChip";
@@ -18,7 +18,7 @@ import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
 import { formatPostContent } from "@/lib/formatPostContent";
-import { DisabledPlatformButton } from "@/app/components/teams/DisabledPlatformButton";
+import { DisabledPlatformButton, DisabledPlatformGroup } from "@/app/components/teams/DisabledPlatformButton";
 export const dynamic = "force-dynamic";
 
 interface Video {
@@ -1386,7 +1386,7 @@ export default function VideoPreviewPage() {
                         </>
                       ) : (
                         <>
-                          <Upload className="w-3 h-3" />
+                          <RefreshCw className="w-3 h-3" />
                           Replace
                         </>
                       )}
@@ -1480,16 +1480,30 @@ export default function VideoPreviewPage() {
                       )}
 
                       {/* Owner/Admin: always show publish. Editor/Manager: only show when status is APPROVAL_APPROVED */}
-                      {((role === "OWNER" || role === "ADMIN") || 
+                      {((role === "OWNER" || role === "ADMIN") ||
                         ((role === "EDITOR" || role === "MANAGER") && video.status === VideoStatus.APPROVAL_APPROVED)) && (
-                        <button
-                          className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
-                          disabled={submitting}
-                          onClick={approveOrPublish}
-                        >
-                          <Youtube className="h-5 w-5" />
-                          {submitting ? 'Working…' : 'Publish to YouTube'}
-                        </button>
+                        youTubeAllowed ? (
+                          <button
+                            className="sm:col-span-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                            disabled={submitting}
+                            onClick={approveOrPublish}
+                          >
+                            <Youtube className="h-5 w-5" />
+                            {submitting ? 'Working…' : 'Publish to YouTube'}
+                          </button>
+                        ) : (
+                          <div className="sm:col-span-2">
+                            <DisabledPlatformGroup platform="youtube" role={role} teamName={teamName ?? null}>
+                              <DisabledPlatformButton
+                                platform="youtube"
+                                label="Publish to YouTube"
+                                size="md"
+                                buttonOnly
+                                className="sm:col-span-2"
+                              />
+                            </DisabledPlatformGroup>
+                          </div>
+                        )
                       )}
 
                       {/* Thumbnail retry button - show if video is uploaded but thumbnail failed */}
@@ -1555,18 +1569,23 @@ export default function VideoPreviewPage() {
                     )}
                   </div>
                 </div>
-                {/* Mobile: quick edit button just below the player */}
-                <div className="mt-2 px-2">
-                  <button
-                    className="w-full py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
-                    onClick={() => {
-                      const el = document.getElementById('edit-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                  >
-                    <Edit3 className="w-4 h-4 mr-1" /> Edit Video
-                  </button>
-                </div>
+                {/* Mobile: quick edit button just below the player.
+                    Hidden when metadata is locked (editor/manager + awaiting/approved)
+                    so we don't send users to a form they can't edit. */}
+                {!isMetadataLocked && (
+                  <div className="mt-2 px-2">
+                    <button
+                      className="inline-flex w-full items-center justify-center gap-2 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm hover:from-blue-400 hover:to-indigo-500 transition-colors"
+                      onClick={() => {
+                        const el = document.getElementById('edit-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span>Edit Video</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div id="edit-section" className="order-2 lg:order-none lg:col-span-7 space-y-3 -mx-2 sm:mx-0">
@@ -1891,7 +1910,7 @@ export default function VideoPreviewPage() {
                 {/* Replace/Delete buttons above video (desktop) */}
                 <div className="flex items-center gap-2 mb-3">
                   <button
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-border hover:bg-muted text-foreground font-semibold text-sm shadow-sm transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-muted text-foreground font-semibold text-sm shadow-sm transition-all disabled:opacity-60"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={replacing}
                     title="Replace video"
@@ -1903,7 +1922,7 @@ export default function VideoPreviewPage() {
                       </>
                     ) : (
                       <>
-                        <Upload className="w-4 h-4" />
+                        <RefreshCw className="w-4 h-4" />
                         Replace Video
                       </>
                     )}
@@ -2068,24 +2087,24 @@ export default function VideoPreviewPage() {
                         </button>
                       </div>
                     ) : (
-                      // Locked state: render the action as a disabled-looking button
-                      // with explanatory text directly underneath, matching the rest of
-                      // the platform-locked UX across the app.
-                      <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <DisabledPlatformButton
-                          platform="youtube"
-                          label="Publish to YouTube"
-                          role={role}
-                          teamName={teamName ?? null}
-                          size="lg"
-                        />
-                        <DisabledPlatformButton
-                          platform="youtube"
-                          label="Schedule"
-                          role={role}
-                          teamName={teamName ?? null}
-                          size="lg"
-                        />
+                      // Locked: two disabled-looking buttons with ONE shared
+                      // explanation below. Group component handles role-aware
+                      // copy (different message for owner vs editor).
+                      <div className="sm:col-span-2 lg:col-span-4">
+                        <DisabledPlatformGroup platform="youtube" role={role} teamName={teamName ?? null}>
+                          <DisabledPlatformButton
+                            platform="youtube"
+                            label="Publish to YouTube"
+                            size="lg"
+                            buttonOnly
+                          />
+                          <DisabledPlatformButton
+                            platform="youtube"
+                            label="Schedule"
+                            size="lg"
+                            buttonOnly
+                          />
+                        </DisabledPlatformGroup>
                       </div>
                     )
                   )}

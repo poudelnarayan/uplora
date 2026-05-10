@@ -879,14 +879,14 @@ const MakePostVideosInner = () => {
           )}
 
         <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 lg:pt-24">
-          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-5">
               {/* Video Upload */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-4">
+              <Card className="rounded-2xl border-border/50 shadow-soft">
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-4">
-                    <CardTitle className="text-base">Upload Video</CardTitle>
+                    <CardTitle className="text-base font-semibold text-foreground">Upload Video</CardTitle>
                     {activeUpload ? (
                       <div className="text-xs text-muted-foreground truncate max-w-[12rem]">
                         {activeUpload.status === "uploading" ||
@@ -1065,9 +1065,9 @@ const MakePostVideosInner = () => {
               </Card>
 
               {/* Video Details */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base">Video Details</CardTitle>
+              <Card className="rounded-2xl border-border/50 shadow-soft">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-foreground">Video Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -1178,9 +1178,9 @@ const MakePostVideosInner = () => {
               </Card>
 
               {/* Thumbnail */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base">Thumbnail</CardTitle>
+              <Card className="rounded-2xl border-border/50 shadow-soft">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-foreground">Thumbnail</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {!selectedThumbnail ? (
@@ -1236,7 +1236,7 @@ const MakePostVideosInner = () => {
               </Card>
 
               {/* Settings & Scheduling */}
-              <Card className="shadow-sm">
+              <Card className="rounded-2xl border-border/50 shadow-soft">
                 <CardContent className="p-4 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center justify-between">

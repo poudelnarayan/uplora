@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/app/components/layout/AppLayout";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { PageLoader } from "@/app/components/ui/loading-spinner";
 import { useNotifications } from "@/app/components/ui/Notification";
 
 export default function PostDetailsPage() {
@@ -50,11 +50,7 @@ export default function PostDetailsPage() {
 
   return (
     <AppShell>
-      <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
-        <div className="flex justify-center items-center py-24">
-          <LoadingSpinner size="lg" />
-        </div>
-      </div>
+      <PageLoader />
     </AppShell>
   );
 }

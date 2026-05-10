@@ -10,7 +10,7 @@ import { Badge } from "@/app/components/ui/badge";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { PageLoader, CardSkeleton, Skeleton } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
 const MotionDiv = motion.div as any;
 
@@ -202,8 +202,15 @@ const Scheduled = () => {
         {/* Content */}
         <div className="p-3 sm:p-6">
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <LoadingSpinner size="lg" />
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                {[0,1,2].map(i => (
+                  <div key={i} className="rounded-xl border border-border/60 bg-card p-3 sm:p-4 space-y-2"><Skeleton className="h-6 w-12" /><Skeleton className="h-3 w-24" /></div>
+                ))}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <CardSkeleton /><CardSkeleton className="hidden sm:block" /><CardSkeleton className="hidden lg:block" />
+              </div>
             </div>
           ) : (
             <>

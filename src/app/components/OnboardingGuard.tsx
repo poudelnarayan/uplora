@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { InlineSpinner } from '@/app/components/ui/loading-spinner';
+import { InlineSpinner, PageLoader } from '@/app/components/ui/loading-spinner';
 
 interface OnboardingGuardProps {
   children: React.ReactNode;
@@ -62,16 +62,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     router.push('/onboarding');
   }, [isLoaded, user, shouldSkipOnboarding, isLoading, shouldShowOnboarding, pathname, router]);
 
-  // Show loading spinner while checking (only for authenticated users on protected pages)
+  // Show loading skeleton while checking (only for authenticated users on
+  // protected pages). Uses the shared PageLoader so this matches every other
+  // initial-load surface in the app — skeleton grid instead of a lonely
+  // centered spinner.
   if (isChecking || (isLoaded && user && !shouldSkipOnboarding && isLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <InlineSpinner size="md" />
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // Only redirect to onboarding if:
@@ -81,12 +77,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   // 4. Not already on onboarding page
   if (isLoaded && user && !shouldSkipOnboarding && !isLoading && shouldShowOnboarding && !pathname.startsWith('/onboarding')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <InlineSpinner size="md" />
-          <p className="mt-4 text-muted-foreground">Redirecting to onboarding...</p>
-        </div>
-      </div>
+      <PageLoader text="Redirecting to onboarding…" />
     );
   }
 

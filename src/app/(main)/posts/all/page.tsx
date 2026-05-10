@@ -10,7 +10,7 @@ import { Input } from "@/app/components/ui/input";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { PageLoader, CardSkeleton } from "@/app/components/ui/loading-spinner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
 import { Label } from "@/app/components/ui/label";
@@ -458,8 +458,13 @@ function AllPostsInner() {
           {/* Content */}
           <div className="p-3 sm:p-6">
             {loading ? (
-              <div className="flex justify-center items-center py-24">
-                <LoadingSpinner size="lg" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton className="hidden sm:block" />
+                <CardSkeleton className="hidden sm:block" />
+                <CardSkeleton className="hidden lg:block" />
+                <CardSkeleton className="hidden lg:block" />
               </div>
             ) : (
               <>
