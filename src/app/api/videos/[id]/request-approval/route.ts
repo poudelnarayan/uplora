@@ -53,52 +53,7 @@ export async function POST(
       approved_by_user_id: null,
     });
 
-    // Notify team owner + admins
-    try {
-      const { data: ownerRow } = await supabaseAdmin
-        .from('users')
-        .select('id, email, name')
-        .eq('id', team.owner_id)
-        .single();
-
-      const { data: adminRows } = await supabaseAdmin
-        .from('team_members')
-        .select(`role, status, users (id, name, email)`)
-        .eq('team_id', team.id)
-        .eq('status', 'ACTIVE')
-        .eq('role', 'ADMIN');
-
-      const recipients = new Map<string, { email: string; name?: string }>();
-      if (ownerRow?.email) recipients.set(ownerRow.email, { email: ownerRow.email, name: ownerRow.name || undefined });
-      for (const r of adminRows || []) {
-        const u = (r as any).users;
-        if (u?.email) recipients.set(String(u.email), { email: String(u.email), name: u.name || undefined });
-      }
-
-      const videoTitle = video.filename?.replace(/\.[^/.]+$/, '') || video.description || 'Video';
-      const videoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/videos/${id}`;
-      const subject = `📝 Approval Request: ${videoTitle}`;
-      const html = `<div><h2>📝 Video Approval Request</h2>
-        <p><strong>Requester:</strong> ${me.name || me.email}</p>
-        <p><strong>Video:</strong> ${videoTitle}</p>
-        <p><strong>Team:</strong> ${team.name}</p>
-        <p><a href="${videoUrl}">Review video</a></p></div>`;
-      const text = `Approval Request\nRequester: ${me.name || me.email}\nVideo: ${videoTitle}\nTeam: ${team.name}\n${videoUrl}`;
-
-      for (const r of recipients.values()) {
-        try { await sendMail({ to: r.email, subject, html, text }); } catch {}
-      }
-
-      // Optional Telegram
-      try {
-        const sc = await getUserSocialConnections(String(team.owner_id));
-        const chatId = sc.telegram?.chatId;
-        if (chatId) {
-          await sendTelegramMessageToChat(chatId, `📝 Approval Request\nTeam: ${team.name}\nRequester: ${me.name || me.email}\nVideo: ${videoTitle}\n${videoUrl}`);
-        }
-      } catch {}
-    } catch {}
-
+    // Broadcast immediately so the owner's UI updates without waiting for slow IO.
     broadcast({
       type: "video.status",
       teamId: video.teamId,
@@ -110,8 +65,82 @@ export async function POST(
       payload: { id, status: VideoStatus.APPROVAL_REQUESTED, contentType: "video" }
     });
 
+    // Fire-and-forget notifications. Email sending was blocking the response by
+    // ~30-40s per recipient when SMTP misbehaves (e.g. Fastmail account suspended);
+    // the editor saw "Working…" forever and the DB write looked like a no-op.
+    void notifyApprovers(team, video, id, me).catch((err) => {
+      console.error("[request-approval] notify failed:", err);
+    });
+
     return NextResponse.json({ ok: true, status: VideoStatus.APPROVAL_REQUESTED, video: updated });
   } catch (e) {
+    console.error("[request-approval] error:", e);
     return NextResponse.json({ error: "Failed to request approval" }, { status: 500 });
   }
+}
+
+async function notifyApprovers(team: any, video: any, id: string, me: any) {
+  const { data: ownerRow } = await supabaseAdmin
+    .from('users')
+    .select('id, email, name')
+    .eq('id', team.owner_id)
+    .single();
+
+  const { data: adminRows } = await supabaseAdmin
+    .from('team_members')
+    .select(`role, status, users (id, name, email)`)
+    .eq('team_id', team.id)
+    .eq('status', 'ACTIVE')
+    .eq('role', 'ADMIN');
+
+  const recipients = new Map<string, { email: string; name?: string }>();
+  if (ownerRow?.email) recipients.set(ownerRow.email, { email: ownerRow.email, name: ownerRow.name || undefined });
+  for (const r of adminRows || []) {
+    const u = (r as any).users;
+    if (u?.email) recipients.set(String(u.email), { email: String(u.email), name: u.name || undefined });
+  }
+
+  const videoTitle = video.filename?.replace(/\.[^/.]+$/, '') || video.description || 'Video';
+  const videoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/videos/${id}`;
+  const subject = `📝 Approval Request: ${videoTitle}`;
+  const html = `<div><h2>📝 Video Approval Request</h2>
+    <p><strong>Requester:</strong> ${me.name || me.email}</p>
+    <p><strong>Video:</strong> ${videoTitle}</p>
+    <p><strong>Team:</strong> ${team.name}</p>
+    <p><a href="${videoUrl}">Review video</a></p></div>`;
+  const text = `Approval Request\nRequester: ${me.name || me.email}\nVideo: ${videoTitle}\nTeam: ${team.name}\n${videoUrl}`;
+
+  // Run all email + telegram sends in PARALLEL with a hard 10s ceiling each, so a
+  // hung SMTP can't ever stall the request again.
+  const sends: Promise<unknown>[] = [];
+  for (const r of Array.from(recipients.values())) {
+    sends.push(
+      withTimeout(sendMail({ to: r.email, subject, html, text }), 10_000)
+        .catch((err) => console.error("[request-approval] email send failed:", r.email, err?.message || err))
+    );
+  }
+
+  sends.push((async () => {
+    try {
+      const sc = await getUserSocialConnections(String(team.owner_id));
+      const chatId = sc.telegram?.chatId;
+      if (chatId) {
+        await withTimeout(
+          sendTelegramMessageToChat(chatId, `📝 Approval Request\nTeam: ${team.name}\nRequester: ${me.name || me.email}\nVideo: ${videoTitle}\n${videoUrl}`),
+          10_000
+        );
+      }
+    } catch (err: any) {
+      console.error("[request-approval] telegram send failed:", err?.message || err);
+    }
+  })());
+
+  await Promise.allSettled(sends);
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
 }
