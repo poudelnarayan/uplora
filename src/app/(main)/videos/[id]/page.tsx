@@ -1388,14 +1388,14 @@ export default function VideoPreviewPage() {
         ) : !video ? (
           <div className="text-muted-foreground">Video not found</div>
         ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
             {/* On mobile, video first; on desktop, editor left */}
               <div className="lg:hidden order-1">
                 <div className="card p-2">
                   {/* Replace/Delete buttons above video (mobile) */}
                   <div className="flex items-center gap-2 mb-2">
                     <button
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-border px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-card border border-border px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm hover:bg-muted transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={replacing}
                       title="Replace video"
@@ -1596,7 +1596,7 @@ export default function VideoPreviewPage() {
                   <StatusChip status={getDisplayStatus(video)} />
                 </div>
               
-                <div className={`card p-4 sm:p-6 space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === VideoStatus.APPROVAL_REQUESTED ? "opacity-60 pointer-events-none select-none" : ""}`}>
+                <div className={`card p-3 sm:p-6 space-y-4 sm:space-y-5 bg-muted/10 border border-border/60 ${role === "EDITOR" && video.status === VideoStatus.APPROVAL_REQUESTED ? "opacity-60 pointer-events-none select-none" : ""}`}>
                 {/* Save status + action (moved away from under-video controls) */}
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-xs">
@@ -2172,7 +2172,7 @@ export default function VideoPreviewPage() {
       {/* Schedule Video Modal */}
       {showScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 space-y-6">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md mx-4 p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -2275,7 +2275,7 @@ export default function VideoPreviewPage() {
       {/* Override publish modal */}
       {showOverrideModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-6 space-y-5">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5">
             <div className="flex items-start gap-3">
               <div className="mt-1">
                 <AlertCircle className="w-6 h-6 text-amber-500" />

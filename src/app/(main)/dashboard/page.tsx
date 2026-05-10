@@ -625,28 +625,76 @@ function ContentPreview({ item }: { item: any }) {
   const isVideo = item.type === "video";
   const isReel = item.type === "reel";
   const isImage = item.type === "image";
-  const url = item.imageUrl || item.thumbnailUrl || item.thumbnail;
 
-  if ((isVideo || isReel || isImage) && url) {
+  // The /api/content `thumbnail` field already prefers thumbnailKey when present
+  // and falls back to mediaKey. For images that's fine, but for videos the
+  // fallback would be the video file URL — which can't render in <img>.
+  // Resolve explicitly here so we never render a broken image.
+  const thumbUrl =
+    item.thumbnailKey
+      ? `/api/s3/get-url?key=${encodeURIComponent(item.thumbnailKey)}`
+      : (isImage ? (item.imageUrl || item.thumbnail) : null);
+
+  const videoUrl =
+    (isVideo || isReel) && (item.videoKey || item.key)
+      ? `/api/s3/get-url?key=${encodeURIComponent(item.videoKey || item.key)}`
+      : null;
+
+  // Image post: just show the image
+  if (isImage && thumbUrl) {
     return (
       <div className="aspect-video bg-muted relative overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
-        {(isVideo || isReel) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/10 transition-colors">
-            <span className="w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center">
-              <Play className="w-5 h-5 text-white ml-0.5" />
-            </span>
-          </div>
-        )}
+        <img src={thumbUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
       </div>
     );
   }
 
-  // Placeholder for text or missing media — keeps card heights consistent
+  // Video / Reel: prefer thumbnail (lighter), fall back to <video> first frame
+  if (isVideo || isReel) {
+    if (thumbUrl) {
+      return (
+        <div className="aspect-video bg-muted relative overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={thumbUrl} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center">
+              <Play className="w-5 h-5 text-white ml-0.5" />
+            </span>
+          </div>
+        </div>
+      );
+    }
+    if (videoUrl) {
+      // Use the actual media file as a poster source — preload="metadata"
+      // grabs only the first frame, no full download.
+      return (
+        <div className="aspect-video bg-muted relative overflow-hidden">
+          <video
+            src={videoUrl}
+            preload="metadata"
+            muted
+            playsInline
+            className="w-full h-full object-cover bg-black"
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center">
+              <Play className="w-5 h-5 text-white ml-0.5" />
+            </span>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Final placeholder — text posts or missing media
   return (
     <div className="aspect-video bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
-      <FileText className="w-8 h-8 text-muted-foreground/40" />
+      {isVideo || isReel ? (
+        <Video className="w-8 h-8 text-muted-foreground/40" />
+      ) : (
+        <FileText className="w-8 h-8 text-muted-foreground/40" />
+      )}
     </div>
   );
 }
