@@ -1,26 +1,59 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
-const MotionDiv = motion.div as any;
 import EmailVerificationBanner from "@/app/components/pages/Dashboard/EmailVerificationBanner";
 import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
 import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
 import { Button } from "@/app/components/ui/button";
-import { BarChart3, TrendingUp, Users, Calendar, FileText, Image as ImageIcon, Video, Play, Edit, Trash2, Clock, Send, MoreVertical, CreditCard, Sparkles, Star } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import {
+  BarChart3,
+  TrendingUp,
+  Calendar,
+  FileText,
+  Image as ImageIcon,
+  Video,
+  Play,
+  Edit,
+  Trash2,
+  Clock,
+  Send,
+  MoreVertical,
+  Sparkles,
+  Plus,
+  ArrowRight,
+} from "lucide-react";
+import { Card, CardContent } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
-import ParticleBackground from "@/app/components/ui/ParticleBackground";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/app/components/ui/dropdown-menu";
+import AppShell from "@/app/components/layout/AppLayout";
+import { StatTile } from "@/app/components/pages/Dashboard/StatTile";
+import { TypeFilter } from "@/app/components/pages/Dashboard/TypeFilter";
+import { NeedsAttention } from "@/app/components/pages/Dashboard/NeedsAttention";
+
+const MotionDiv = motion.div as any;
 
 export const dynamic = "force-dynamic";
 
-import AppShell from "@/app/components/layout/AppLayout";
+const ALL_TYPES = ["video", "image", "text", "reel"];
+
+function greetingFor(name?: string | null) {
+  const h = new Date().getHours();
+  const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  return name ? `${part}, ${name.split(" ")[0]}` : part;
+}
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -28,123 +61,150 @@ export default function Dashboard() {
   const { getCachedContent, setCachedContent, isStale, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   const router = useRouter();
-  
-  // Content state
+
+  // ---------- Data ----------
   const [content, setContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
-  
-  // Filter state
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(['video', 'image', 'text', 'reel']);
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
-  
-  // Email verification state
+
+  // ---------- Filters ----------
+  // selectedTypes: empty array = "all types" (matches existing API behavior of
+  // sending the full list). UI shows pill chips that toggle.
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(ALL_TYPES);
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+
+  // ---------- Email verification ----------
   const [showEmailBanner, setShowEmailBanner] = useState(true);
   const [resendingEmail, setResendingEmail] = useState(false);
 
-  // Function to resend verification email
   const handleResendVerification = async () => {
     if (!user?.emailAddresses?.[0]) return;
-    
     setResendingEmail(true);
     try {
       notifications.addNotification({
         type: "success",
         title: "Verification email sent",
-        message: "Please check your inbox and spam folder"
+        message: "Please check your inbox and spam folder",
       });
-    } catch (error) {
+    } catch {
       notifications.addNotification({
         type: "error",
         title: "Failed to send email",
-        message: "Please try again later"
+        message: "Please try again later",
       });
     } finally {
       setResendingEmail(false);
     }
   };
 
-  // Fetch all content
+  // ---------- Fetch ----------
   const fetchContent = useCallback(async () => {
     if (!selectedTeamId) {
       setLoading(false);
       return;
     }
-    
-    // Check cache first
-    const cachedContent = getCachedContent(selectedTeamId, selectedTypes, selectedStatus);
-    if (cachedContent && !isStale(selectedTeamId, selectedTypes, selectedStatus)) {
+    const types = selectedTypes.length === 0 ? ALL_TYPES : selectedTypes;
+
+    const cachedContent = getCachedContent(selectedTeamId, types, selectedStatus);
+    if (cachedContent && !isStale(selectedTeamId, types, selectedStatus)) {
       setContent(cachedContent);
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     try {
       const params = new URLSearchParams({
         teamId: selectedTeamId,
-        types: selectedTypes.join(','),
+        types: types.join(","),
         status: selectedStatus,
-        sortBy: 'newest',
-        limit: '100'
+        sortBy: "newest",
+        limit: "100",
       });
 
       const response = await fetch(`/api/content?${params}`);
-      
       const result = await response.json();
-      
+
       if (response.ok) {
         const contentData = result.content || [];
         setContent(contentData);
         setTotalCount(result.total || 0);
-        
-        // Cache the result
-        setCachedContent(selectedTeamId, selectedTypes, selectedStatus, contentData, result.total || 0);
+        setCachedContent(selectedTeamId, types, selectedStatus, contentData, result.total || 0);
       } else {
-        throw new Error(result.message || 'Failed to fetch content');
+        throw new Error(result.message || "Failed to fetch content");
       }
-    } catch (error) {
+    } catch {
       notifications.addNotification({
         type: "error",
         title: "Failed to load content",
-        message: "Please try refreshing the page"
+        message: "Please try refreshing the page",
       });
     } finally {
       setLoading(false);
     }
   }, [selectedTeamId, selectedTypes, selectedStatus, notifications, getCachedContent, setCachedContent, isStale]);
 
-  // Filter functions
-  const toggleTypeFilter = (type: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
-  };
+  useEffect(() => {
+    fetchContent();
+  }, [fetchContent]);
 
-  const setTypeFilter = (types: string[]) => {
-    setSelectedTypes(types);
-  };
-
-  const setStatusFilter = (status: string) => {
-    setSelectedStatus(status);
-  };
-
-  // Content action functions
-  const handleEditContent = (item: any) => {
-    // Navigate to edit page based on content type
-    const editRoutes = {
-      text: '/make-post/text',
-      image: '/make-post/image', 
-      reel: '/make-post/reel',
-      video: '/make-post/video'
-    };
-    
-    const route = editRoutes[item.type as keyof typeof editRoutes];
-    if (route) {
-      window.location.href = `${route}?edit=${item.id}`;
+  // Realtime updates
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/events?teamId=${encodeURIComponent(selectedTeamId)}`);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || "{}");
+          if (!evt?.type) return;
+          if (!evt.type.startsWith("post.") && !evt.type.startsWith("video.")) return;
+          invalidateCache(selectedTeamId);
+          fetchContent();
+        } catch {
+          // ignore
+        }
+      };
+      es.onerror = () => { try { es?.close(); } catch {} es = null; };
+    } catch {
+      // ignore
     }
+    return () => { try { es?.close(); } catch {} };
+  }, [selectedTeamId, fetchContent, invalidateCache]);
+
+  // ---------- Status filter via stat tiles ----------
+  // Click a stat tile to filter to its status; click again to clear back to ALL.
+  const setStatusFilter = (status: string) => {
+    setSelectedStatus((prev) => (prev === status ? "ALL" : status));
+  };
+
+  // ---------- Derived counts ----------
+  const counts = useMemo(() => {
+    const c = { total: content.length, published: 0, scheduled: 0, drafts: 0, awaitingApproval: 0, failed: 0 };
+    for (const item of content) {
+      const s = String(item.status || "").toUpperCase();
+      if (s === "PUBLISHED" || s === "POSTED") c.published++;
+      else if (s === "SCHEDULED") c.scheduled++;
+      else if (s === "DRAFT" || s === "PROCESSING") c.drafts++;
+      if (s === "APPROVAL_REQUESTED" || s === "PENDING") c.awaitingApproval++;
+      if (s === "FAILED") c.failed++;
+    }
+    return c;
+  }, [content]);
+
+  const role = String((selectedTeam as any)?.role || "").toUpperCase();
+  const canApprove = role === "OWNER" || role === "ADMIN";
+
+  // ---------- Content actions ----------
+  const handleEditContent = (item: any) => {
+    const editRoutes: Record<string, string> = {
+      text: "/make-post/text",
+      image: "/make-post/image",
+      reel: "/make-post/reel",
+      video: "/make-post/video",
+    };
+    const route = editRoutes[item.type];
+    if (route) router.push(`${route}?edit=${item.id}`);
   };
 
   const openPostDetails = (item: any) => {
@@ -155,714 +215,438 @@ export default function Dashboard() {
 
   const handleDeleteContent = async (item: any) => {
     try {
-      const response = await fetch(`/api/content/${item.id}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/content/${item.id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Failed to delete content");
+      notifications.addNotification({
+        type: "success",
+        title: "Content deleted",
+        message: `${item.type} post has been deleted successfully`,
       });
-
-      if (response.ok) {
-        notifications.addNotification({
-          type: "success",
-          title: "Content deleted",
-          message: `${item.type} post has been deleted successfully`
-        });
-        
-        // Remove from cache and update UI
-        setContent(prev => prev.filter((c: any) => c.id !== item.id));
-        setTotalCount(prev => prev - 1);
-      } else {
-        throw new Error('Failed to delete content');
-      }
-    } catch (error) {
+      setContent((prev) => prev.filter((c: any) => c.id !== item.id));
+      setTotalCount((prev) => prev - 1);
+    } catch {
       notifications.addNotification({
         type: "error",
         title: "Failed to delete content",
-        message: "Please try again later"
+        message: "Please try again later",
       });
     }
   };
 
   const handlePublishContent = async (item: any) => {
     try {
-      const response = await fetch(`/api/content/${item.id}/publish`, {
-        method: 'POST',
+      const response = await fetch(`/api/content/${item.id}/publish`, { method: "POST" });
+      if (!response.ok) throw new Error("Failed to publish content");
+      notifications.addNotification({
+        type: "success",
+        title: "Content published",
+        message: `${item.type} post has been published successfully`,
       });
-
-      if (response.ok) {
-        notifications.addNotification({
-          type: "success",
-          title: "Content published",
-          message: `${item.type} post has been published successfully`
-        });
-        
-        // Update status in cache and UI
-        setContent(prev => prev.map((c: any) => 
-          c.id === item.id ? { ...c, status: 'PUBLISHED' } : c
-        ));
-      } else {
-        throw new Error('Failed to publish content');
-      }
-    } catch (error) {
+      setContent((prev) => prev.map((c: any) => (c.id === item.id ? { ...c, status: "PUBLISHED" } : c)));
+    } catch {
       notifications.addNotification({
         type: "error",
         title: "Failed to publish content",
-        message: "Please try again later"
+        message: "Please try again later",
       });
     }
   };
 
   const handleScheduleContent = async (item: any) => {
     try {
-      const input = window.prompt('Schedule time (YYYY-MM-DD HH:mm, 24h)');
+      const input = window.prompt("Schedule time (YYYY-MM-DD HH:mm, 24h)");
       if (!input) return;
-      const parsed = new Date(input.replace(' ', 'T'));
+      const parsed = new Date(input.replace(" ", "T"));
       if (isNaN(parsed.getTime())) {
-        notifications.addNotification({ type: 'error', title: 'Invalid time', message: 'Use format YYYY-MM-DD HH:mm' });
+        notifications.addNotification({ type: "error", title: "Invalid time", message: "Use format YYYY-MM-DD HH:mm" });
         return;
       }
       const scheduledFor = parsed.toISOString();
       const res = await fetch(`/api/content/${item.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scheduledFor, status: 'SCHEDULED' }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledFor, status: "SCHEDULED" }),
       });
-      if (!res.ok) throw new Error('Failed to schedule');
+      if (!res.ok) throw new Error("Failed to schedule");
       const updated = await res.json();
-      setContent(prev => prev.map((c: any) => c.id === item.id ? { ...c, scheduledFor: updated.scheduledFor, status: 'SCHEDULED' } : c));
-      notifications.addNotification({ type: 'success', title: 'Scheduled', message: 'Post scheduled successfully' });
-    } catch (e) {
-      notifications.addNotification({ type: 'error', title: 'Schedule failed', message: 'Try again' });
+      setContent((prev) => prev.map((c: any) => (c.id === item.id ? { ...c, scheduledFor: updated.scheduledFor, status: "SCHEDULED" } : c)));
+      notifications.addNotification({ type: "success", title: "Scheduled", message: "Post scheduled successfully" });
+    } catch {
+      notifications.addNotification({ type: "error", title: "Schedule failed", message: "Try again" });
     }
   };
 
   const handleDuplicateContent = async (item: any) => {
     try {
-      const response = await fetch('/api/content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...item,
-          title: `${item.title} (Copy)`,
-          status: 'DRAFT'
-        }),
+      const response = await fetch("/api/content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...item, title: `${item.title} (Copy)`, status: "DRAFT" }),
       });
-
-      if (response.ok) {
-        notifications.addNotification({
-          type: "success",
-          title: "Content duplicated",
-          message: `${item.type} post has been duplicated successfully`
-        });
-        
-        // Refresh content
-        fetchContent();
-      } else {
-        throw new Error('Failed to duplicate content');
-      }
-    } catch (error) {
+      if (!response.ok) throw new Error("Failed to duplicate content");
+      notifications.addNotification({
+        type: "success",
+        title: "Content duplicated",
+        message: `${item.type} post has been duplicated successfully`,
+      });
+      fetchContent();
+    } catch {
       notifications.addNotification({
         type: "error",
         title: "Failed to duplicate content",
-        message: "Please try again later"
+        message: "Please try again later",
       });
     }
   };
 
-  // Load content when filters change
-  useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
-
-  // Realtime: listen to post.* events for the current team and refresh
-  useEffect(() => {
-    if (!selectedTeamId) return;
-    let es: EventSource | null = null;
-    try {
-      const url = `/api/events?teamId=${encodeURIComponent(selectedTeamId)}`;
-      es = new EventSource(url);
-      es.onmessage = (ev) => {
-        try {
-          const evt = JSON.parse(ev.data || "{}");
-          if (!evt?.type) return;
-          if (!evt.type.startsWith("post.") && !evt.type.startsWith("video.")) return;
-          // Invalidate cache and refetch to keep counts/metrics live
-          invalidateCache(selectedTeamId);
-          fetchContent();
-          notifications.addNotification({
-            type: "info",
-            title: "Live update",
-            message: evt.type === "post.status" || evt.type === "video.status" ? "Status updated" : "Content updated",
-          });
-        } catch {
-          // ignore parse errors
-        }
-      };
-      es.onerror = () => {
-        try { es?.close(); } catch {}
-        es = null;
-      };
-    } catch {
-      // ignore SSE setup errors
-    }
-    return () => {
-      try { es?.close(); } catch {}
-    };
-  }, [selectedTeamId, fetchContent, invalidateCache, notifications]);
-
-  
-  // Show loading while team context is initializing
+  // ---------- Render ----------
   if (!selectedTeamId && selectedTeam === null) {
     return <PageLoader />;
   }
 
+  const teamName = selectedTeam?.name || "Personal Workspace";
+  const greeting = greetingFor(user?.firstName || user?.fullName);
+
+  const statusLabel: Record<string, string> = {
+    ALL: "All posts",
+    DRAFT: "Drafts",
+    PUBLISHED: "Published",
+    SCHEDULED: "Scheduled",
+    PROCESSING: "Processing",
+    APPROVAL_REQUESTED: "Awaiting approval",
+  };
+
   return (
-    <>
-      <AppShell>
+    <AppShell>
       <NextSeoNoSSR title="Dashboard" noindex nofollow />
 
-      <div className="relative min-h-screen">
-        {/* Luxury Particle Background */}
-        <ParticleBackground particleCount={40} />
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
+        {showEmailBanner && user && !user.emailAddresses?.[0]?.verification?.status && (
+          <EmailVerificationBanner
+            show={showEmailBanner}
+            onResend={handleResendVerification}
+            onDismiss={() => setShowEmailBanner(false)}
+            isResending={resendingEmail}
+          />
+        )}
 
-        {/* Main Content Container */}
-        <div className="relative z-10">
-          {/* Email Verification Banner */}
-          {showEmailBanner && user && !user.emailAddresses?.[0]?.verification?.status && (
-            <EmailVerificationBanner
-              show={showEmailBanner}
-              onResend={handleResendVerification}
-              onDismiss={() => setShowEmailBanner(false)}
-              isResending={resendingEmail}
-            />
-          )}
+        {/* HERO — greeting + primary CTA */}
+        <MotionDiv
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4"
+        >
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-muted-foreground">{greeting}</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate flex items-center gap-2">
+              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+              <span className="truncate">{teamName}</span>
+            </h1>
+          </div>
+          <div className="flex gap-2 sm:gap-3">
+            <Link href="/make-post" className="flex-1 sm:flex-initial">
+              <Button className="w-full sm:w-auto gap-2 shadow-sm">
+                <Plus className="h-4 w-4" />
+                <span>Create</span>
+              </Button>
+            </Link>
+          </div>
+        </MotionDiv>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Luxury Header with Gradient */}
-            <MotionDiv
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-10"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 sm:p-3 bg-gradient-primary rounded-xl sm:rounded-2xl shadow-sage shrink-0">
-                    <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-primary truncate">
-                      {selectedTeam?.name ? selectedTeam.name : "Personal Workspace"}
-                    </h1>
-                    <p className="text-muted-foreground mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base lg:text-lg">
-                      Manage your premium content in one elegant space
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {/* NEEDS ATTENTION — only renders when there's something */}
+        <NeedsAttention
+          pendingApprovals={canApprove ? counts.awaitingApproval : 0}
+          draftsReady={counts.drafts}
+          failedPosts={counts.failed}
+        />
 
-              {/* Filter Buttons */}
-              <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
-                <Button
-                  onClick={() => setTypeFilter(['text'])}
-                  variant={selectedTypes.length === 1 && selectedTypes.includes('text') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
-                >
-                  <FileText className="w-4 h-4" />
-                  Text Post
-                </Button>
-                <Button
-                  onClick={() => setTypeFilter(['image'])}
-                  variant={selectedTypes.length === 1 && selectedTypes.includes('image') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
-                >
-                  <ImageIcon className="w-4 h-4" />
-                  Image Post
-                </Button>
-                <Button
-                  onClick={() => setTypeFilter(['reel'])}
-                  variant={selectedTypes.length === 1 && selectedTypes.includes('reel') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
-                >
-                  <Play className="w-4 h-4" />
-                  Reel
-                </Button>
-                <Button
-                  onClick={() => setTypeFilter(['video'])}
-                  variant={selectedTypes.length === 1 && selectedTypes.includes('video') ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
-                >
-                  <Video className="w-4 h-4" />
-                  Video
-                </Button>
-                <Button
-                  onClick={() => setTypeFilter(['video', 'image', 'text', 'reel'])}
-                  variant={selectedTypes.length === 4 ? 'default' : 'outline'}
-                  className="gap-2 hover-sage transition-luxury border-2 text-xs sm:text-sm h-9 sm:h-11 px-3 sm:px-6"
-                >
-                  <Star className="w-4 h-4" />
-                  All Content
-                </Button>
-              </div>
-            </MotionDiv>
-          
-            {/* Luxury Stats Cards with Glassmorphism */}
-            <MotionDiv
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"
-            >
-              {/* Total Content Card */}
-              <MotionDiv
-                whileHover={{ y: -8, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="group"
-              >
-                <Card className="glass-card border-2 border-primary/20 hover:border-primary/40 transition-luxury shadow-medium hover:shadow-gold overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-primary opacity-5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-4 sm:p-6 relative z-10">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Total Content</p>
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">{content.length}</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">All your creations</p>
-                      </div>
-                      <div className="p-2.5 sm:p-3 md:p-4 bg-gradient-primary rounded-xl sm:rounded-2xl shadow-gold group-hover:animate-pulse-gold shrink-0">
-                        <BarChart3 className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-secondary" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </MotionDiv>
+        {/* STAT TILES — clickable, double as status filters */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <StatTile
+            label="Total"
+            value={counts.total}
+            hint="All content"
+            Icon={BarChart3}
+            tone="bg-primary/10 text-primary"
+            onClick={() => setStatusFilter("ALL")}
+            active={selectedStatus === "ALL"}
+          />
+          <StatTile
+            label="Published"
+            value={counts.published}
+            hint="Live"
+            Icon={TrendingUp}
+            tone="bg-emerald-500/10 text-emerald-600"
+            onClick={() => setStatusFilter("PUBLISHED")}
+            active={selectedStatus === "PUBLISHED"}
+          />
+          <StatTile
+            label="Scheduled"
+            value={counts.scheduled}
+            hint="Upcoming"
+            Icon={Calendar}
+            tone="bg-amber-500/10 text-amber-600"
+            onClick={() => setStatusFilter("SCHEDULED")}
+            active={selectedStatus === "SCHEDULED"}
+          />
+          <StatTile
+            label="Drafts"
+            value={counts.drafts}
+            hint="In progress"
+            Icon={FileText}
+            tone="bg-sky-500/10 text-sky-600"
+            onClick={() => setStatusFilter("DRAFT")}
+            active={selectedStatus === "DRAFT"}
+          />
+        </div>
 
-              {/* Published Card */}
-              <MotionDiv
-                whileHover={{ y: -8, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="group"
-              >
-                <Card className="glass-card border-2 border-accent/20 hover:border-accent/40 transition-luxury shadow-medium hover:shadow-emerald overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-accent opacity-5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-4 sm:p-6 relative z-10">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Published</p>
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
-                          {content.filter((c: any) => c.status === 'PUBLISHED').length}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">Live content</p>
-                      </div>
-                      <div className="p-2.5 sm:p-3 md:p-4 bg-gradient-accent rounded-xl sm:rounded-2xl shadow-emerald group-hover:animate-pulse-gold shrink-0">
-                        <TrendingUp className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </MotionDiv>
-
-              {/* Scheduled Card */}
-              <MotionDiv
-                whileHover={{ y: -8, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="group"
-              >
-                <Card className="glass-card border-2 border-warning/20 hover:border-warning/40 transition-luxury shadow-medium hover:shadow-strong overflow-hidden relative">
-                  <div className="absolute inset-0 bg-warning/5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-4 sm:p-6 relative z-10">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Scheduled</p>
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
-                          {content.filter((c: any) => c.status === 'SCHEDULED').length}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">Coming soon</p>
-                      </div>
-                      <div className="p-2.5 sm:p-3 md:p-4 bg-warning/20 border-2 border-warning/30 rounded-xl sm:rounded-2xl group-hover:animate-pulse-gold shrink-0">
-                        <Calendar className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-warning" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </MotionDiv>
-
-              {/* Drafts Card */}
-              <MotionDiv
-                whileHover={{ y: -8, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="group"
-              >
-                <Card className="glass-card border-2 border-muted/40 hover:border-muted/60 transition-luxury shadow-medium hover:shadow-strong overflow-hidden relative">
-                  <div className="absolute inset-0 bg-muted/5 group-hover:opacity-10 transition-luxury" />
-                  <CardContent className="p-4 sm:p-6 relative z-10">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] sm:text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Drafts</p>
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
-                          {content.filter((c: any) => c.status === 'DRAFT').length}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">In progress</p>
-                      </div>
-                      <div className="p-2.5 sm:p-3 md:p-4 bg-muted/20 border-2 border-muted/30 rounded-xl sm:rounded-2xl group-hover:animate-pulse-gold shrink-0">
-                        <FileText className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-muted-foreground" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </MotionDiv>
-            </MotionDiv>
-
-            {/* Luxury Status Filters */}
-            <MotionDiv
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-8"
-            >
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <div className="w-1 h-6 bg-gradient-primary rounded-full" />
-                Filter by Status
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  onClick={() => setStatusFilter('ALL')}
-                  variant={selectedStatus === 'ALL' ? 'default' : 'outline'}
-                  size="default"
-                  className="hover-gold transition-luxury border-2"
-                >
-                  All Status
-                </Button>
-                <Button
-                  onClick={() => setStatusFilter('DRAFT')}
-                  variant={selectedStatus === 'DRAFT' ? 'default' : 'outline'}
-                  size="default"
-                  className="hover-gold transition-luxury border-2"
-                >
-                  Drafts
-                </Button>
-                <Button
-                  onClick={() => setStatusFilter('PUBLISHED')}
-                  variant={selectedStatus === 'PUBLISHED' ? 'default' : 'outline'}
-                  size="default"
-                  className="hover-gold transition-luxury border-2"
-                >
-                  Published
-                </Button>
-                <Button
-                  onClick={() => setStatusFilter('SCHEDULED')}
-                  variant={selectedStatus === 'SCHEDULED' ? 'default' : 'outline'}
-                  size="default"
-                  className="hover-gold transition-luxury border-2"
-                >
-                  Scheduled
-                </Button>
-                <Button
-                  onClick={() => setStatusFilter('PROCESSING')}
-                  variant={selectedStatus === 'PROCESSING' ? 'default' : 'outline'}
-                  size="default"
-                  className="hover-gold transition-luxury border-2"
-                >
-                  Processing
-                </Button>
-              </div>
-            </MotionDiv>
-
-            {/* Luxury Content Display */}
-            <MotionDiv
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card className="glass-card border-2 border-primary/10 shadow-strong">
-                <CardHeader className="border-b border-border/50">
-                  <CardTitle className="text-2xl font-display flex items-center gap-3">
-                    <div className="w-1.5 h-8 bg-gradient-primary rounded-full" />
-                    Your Premium Content
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                {loading ? (
-                  <div className="flex justify-center items-center py-12">
-                    <LoadingSpinner size="lg" />
-                  </div>
-                ) : content.length === 0 ? (
-                  <MotionDiv
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center py-16"
-                  >
-                    <div className="w-24 h-24 bg-gradient-primary rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-gold animate-float">
-                      <Sparkles className="w-12 h-12 text-secondary" />
-                    </div>
-                    <h3 className="text-2xl font-display font-bold text-foreground mb-3">No content yet</h3>
-                    <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
-                      Begin your creative journey by crafting your first masterpiece
-                    </p>
-                    <div className="flex gap-4 justify-center flex-wrap">
-                      <Button
-                        onClick={() => window.location.href = '/make-post/text'}
-                        variant="outline"
-                        className="gap-2 hover-gold transition-luxury border-2"
-                        size="lg"
-                      >
-                        <FileText className="w-5 h-5" />
-                        Create Text Post
-                      </Button>
-                      <Button
-                        onClick={() => window.location.href = '/make-post/image'}
-                        variant="outline"
-                        className="gap-2 hover-gold transition-luxury border-2"
-                        size="lg"
-                      >
-                        <ImageIcon className="w-5 h-5" />
-                        Create Image Post
-                      </Button>
-                      <Button
-                        onClick={() => window.location.href = '/make-post/reel'}
-                        variant="outline"
-                        className="gap-2 hover-gold transition-luxury border-2"
-                        size="lg"
-                      >
-                        <Play className="w-5 h-5" />
-                        Create Reel
-                      </Button>
-                      <Button
-                        onClick={() => window.location.href = '/subscription'}
-                        className="gap-2 gradient-primary hover-lift transition-luxury shadow-gold"
-                        size="lg"
-                      >
-                        <Sparkles className="w-5 h-5" />
-                        Upgrade Plan
-                      </Button>
-                    </div>
-                  </MotionDiv>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {content.map((item: any, index: number) => (
-                      <MotionDiv
-                        key={item.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: index * 0.05 }}
-                        whileHover={{ y: -8 }}
-                        className="group"
-                      >
-                        <Card
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => openPostDetails(item)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              openPostDetails(item);
-                            }
-                          }}
-                          className="overflow-hidden glass-card border-2 border-primary/10 hover:border-primary/30 transition-luxury shadow-medium hover:shadow-gold relative cursor-pointer"
-                        >
-                          <CardContent className="p-0">
-                            {/* Content Preview with Overlay */}
-                            {item.type === 'image' && item.imageUrl && (
-                              <div className="h-48 bg-gradient-to-br from-muted/30 to-muted/10 relative overflow-hidden">
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-luxury"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-luxury" />
-                              </div>
-                            )}
-                            {item.type === 'video' && item.thumbnailUrl && (
-                              <div className="h-48 bg-gradient-to-br from-muted/30 to-muted/10 relative overflow-hidden">
-                                <img
-                                  src={item.thumbnailUrl}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-luxury"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-luxury" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center shadow-gold group-hover:scale-110 transition-luxury">
-                                    <Play className="w-8 h-8 text-secondary ml-1" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {item.type === 'reel' && item.thumbnailUrl && (
-                              <div className="h-48 bg-gradient-to-br from-muted/30 to-muted/10 relative overflow-hidden">
-                                <img
-                                  src={item.thumbnailUrl}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-luxury"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-luxury" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-16 h-16 bg-gradient-accent rounded-full flex items-center justify-center shadow-emerald group-hover:scale-110 transition-luxury">
-                                    <Play className="w-8 h-8 text-white ml-1" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {item.type === 'text' && (
-                              <div className="h-48 bg-gradient-to-br from-primary/10 via-accent/5 to-muted/10 relative overflow-hidden flex items-center justify-center">
-                                <FileText className="w-16 h-16 text-primary opacity-20 group-hover:opacity-40 transition-luxury group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-luxury" />
-                              </div>
-                            )}
-                          
-                          <div className="p-5 bg-gradient-subtle/50">
-                            {/* Luxury Header */}
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                {item.type === 'video' && (
-                                  <div className="p-1.5 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                    <Video className="w-4 h-4 text-red-600" />
-                                  </div>
-                                )}
-                                {item.type === 'image' && (
-                                  <div className="p-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                                    <ImageIcon className="w-4 h-4 text-blue-600" />
-                                  </div>
-                                )}
-                                {item.type === 'text' && (
-                                  <div className="p-1.5 bg-green-500/10 border border-green-500/20 rounded-lg">
-                                    <FileText className="w-4 h-4 text-green-600" />
-                                  </div>
-                                )}
-                                {item.type === 'reel' && (
-                                  <div className="p-1.5 bg-accent/10 border border-accent/20 rounded-lg">
-                                    <Play className="w-4 h-4 text-accent" />
-                                  </div>
-                                )}
-                                <Badge variant="outline" className="text-xs capitalize border-2 font-medium">
-                                  {item.type}
-                                </Badge>
-                              </div>
-                              <Badge
-                                variant={
-                                  item.status === 'PUBLISHED' ? 'default' :
-                                  item.status === 'DRAFT' ? 'secondary' :
-                                  item.status === 'SCHEDULED' ? 'outline' :
-                                  'destructive'
-                                }
-                                className="text-xs font-semibold px-3 py-1"
-                              >
-                                {item.status}
-                              </Badge>
-                            </div>
-
-                            {/* Title and Content */}
-                            <h3 className="font-semibold text-foreground mb-2 line-clamp-2 text-base">
-                              {item.title}
-                            </h3>
-                            {item.content && (
-                              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                                {item.content}
-                              </p>
-                            )}
-
-                            {/* Luxury Metadata */}
-                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-4 pt-2 border-t border-border/50">
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                              </div>
-                              {item.platforms && item.platforms.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-gold" />
-                                  <span className="font-medium">{item.platforms.length} platform{item.platforms.length > 1 ? 's' : ''}</span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Luxury Action Buttons */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={(e) => { e.stopPropagation(); handleEditContent(item); }}
-                                  className="h-9 px-3 hover-gold transition-luxury border-2 gap-1.5"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                  <span className="text-xs font-medium">Edit</span>
-                                </Button>
-
-                                {item.status === 'DRAFT' && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={(e) => { e.stopPropagation(); handlePublishContent(item); }}
-                                    className="h-9 px-3 gradient-accent transition-luxury gap-1.5"
-                                  >
-                                    <Send className="w-3.5 h-3.5" />
-                                    <span className="text-xs font-medium">Publish</span>
-                                  </Button>
-                                )}
-
-                                {item.status === 'DRAFT' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={(e) => { e.stopPropagation(); handleScheduleContent(item); }}
-                                    className="h-9 px-3 hover-gold transition-luxury border-2 gap-1.5"
-                                  >
-                                    <Calendar className="w-3.5 h-3.5" />
-                                  </Button>
-                                )}
-                              </div>
-                              
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="ghost" className="h-9 w-9 p-0 hover-gold transition-luxury" onClick={(e) => e.stopPropagation()}>
-                                    <MoreVertical className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="glass-card border-2 shadow-strong" onClick={(e) => e.stopPropagation()}>
-                                  <DropdownMenuItem onClick={() => handleEditContent(item)} className="cursor-pointer">
-                                    <Edit className="w-4 h-4 mr-2 text-primary" />
-                                    <span className="font-medium">Edit</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDuplicateContent(item)} className="cursor-pointer">
-                                    <FileText className="w-4 h-4 mr-2 text-accent" />
-                                    <span className="font-medium">Duplicate</span>
-                                  </DropdownMenuItem>
-                                  {item.status === 'DRAFT' && (
-                                    <DropdownMenuItem onClick={() => handlePublishContent(item)} className="cursor-pointer">
-                                      <Send className="w-4 h-4 mr-2 text-success" />
-                                      <span className="font-medium">Publish Now</span>
-                                    </DropdownMenuItem>
-                                  )}
-                                  {item.status === 'DRAFT' && (
-                                    <DropdownMenuItem onClick={() => handleScheduleContent(item)} className="cursor-pointer">
-                                      <Calendar className="w-4 h-4 mr-2 text-warning" />
-                                      <span className="font-medium">Schedule</span>
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator className="bg-border/50" />
-                                  <DropdownMenuItem
-                                    onClick={() => handleDeleteContent(item)}
-                                    className="text-destructive focus:text-destructive cursor-pointer"
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    <span className="font-medium">Delete</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        </CardContent>
-                        </Card>
-                      </MotionDiv>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </MotionDiv>
+        {/* FILTER BAR */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <TypeFilter selected={selectedTypes} onChange={setSelectedTypes} />
+          </div>
+          <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+            {loading ? "Loading…" : (
+              <>
+                {content.length}{" "}
+                <span className="hidden sm:inline">of {Math.max(totalCount, content.length)}</span>{" "}
+                <span>· {statusLabel[selectedStatus] || selectedStatus}</span>
+              </>
+            )}
           </div>
         </div>
-        </div>
-        </AppShell>
-    </>
+
+        {/* CONTENT */}
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : content.length === 0 ? (
+          <EmptyState selectedStatus={selectedStatus} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {content.map((item: any, index: number) => (
+              <ContentCard
+                key={item.id}
+                item={item}
+                index={index}
+                onOpen={openPostDetails}
+                onEdit={handleEditContent}
+                onPublish={handlePublishContent}
+                onSchedule={handleScheduleContent}
+                onDuplicate={handleDuplicateContent}
+                onDelete={handleDeleteContent}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
+
+// ============================================================================
+// EmptyState
+// ============================================================================
+function EmptyState({ selectedStatus }: { selectedStatus: string }) {
+  const isFiltered = selectedStatus !== "ALL";
+  return (
+    <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-6 py-12 sm:py-16 text-center">
+      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+        <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+      </div>
+      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+        {isFiltered ? `No ${selectedStatus.toLowerCase()} posts` : "Nothing here yet"}
+      </h3>
+      <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto mb-5">
+        {isFiltered
+          ? "Try changing the status filter, or create something new."
+          : "Create your first post to start publishing across your platforms."}
+      </p>
+      <div className="flex gap-2 justify-center flex-wrap">
+        <Link href="/make-post">
+          <Button size="sm" className="gap-1.5">
+            <Plus className="w-4 h-4" />
+            New post
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// ContentCard — slimmer, mobile-first card
+// ============================================================================
+function ContentCard({
+  item, index, onOpen, onEdit, onPublish, onSchedule, onDuplicate, onDelete,
+}: {
+  item: any; index: number;
+  onOpen: (i: any) => void;
+  onEdit: (i: any) => void;
+  onPublish: (i: any) => void;
+  onSchedule: (i: any) => void;
+  onDuplicate: (i: any) => void;
+  onDelete: (i: any) => void;
+}) {
+  const status = String(item.status || "").toUpperCase();
+  const statusVariant: any =
+    status === "PUBLISHED" || status === "POSTED" ? "default" :
+    status === "DRAFT" ? "secondary" :
+    status === "SCHEDULED" ? "outline" :
+    status === "FAILED" ? "destructive" : "outline";
+  const isDraft = status === "DRAFT" || status === "PROCESSING";
+
+  return (
+    <MotionDiv
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
+    >
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={() => onOpen(item)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(item); }
+        }}
+        className="overflow-hidden border border-border/60 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
+      >
+        <CardContent className="p-0">
+          {/* Visual */}
+          <ContentPreview item={item} />
+
+          {/* Body */}
+          <div className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <TypeIndicator type={item.type} />
+              <Badge variant={statusVariant} className="text-[10px] sm:text-xs font-semibold">
+                {status || "—"}
+              </Badge>
+            </div>
+
+            <h3 className="font-semibold text-sm sm:text-base text-foreground line-clamp-2 mb-1">
+              {item.title || item.filename || "Untitled"}
+            </h3>
+            {item.content && (
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.content}</p>
+            )}
+
+            {/* Meta row */}
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-3 pt-2 border-t border-border/60">
+              <span className="inline-flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {new Date(item.createdAt).toLocaleDateString()}
+              </span>
+              {item.platforms?.length > 0 && (
+                <span>{item.platforms.length} platform{item.platforms.length > 1 ? "s" : ""}</span>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-1.5">
+                <Button
+                  size="sm" variant="outline"
+                  className="h-8 px-2.5 text-xs gap-1"
+                  onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                >
+                  <Edit className="w-3 h-3" /> Edit
+                </Button>
+                {isDraft && (
+                  <Button
+                    size="sm"
+                    className="h-8 px-2.5 text-xs gap-1"
+                    onClick={(e) => { e.stopPropagation(); onPublish(item); }}
+                  >
+                    <Send className="w-3 h-3" /> Publish
+                  </Button>
+                )}
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm" variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={() => onEdit(item)}>
+                    <Edit className="w-4 h-4 mr-2" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDuplicate(item)}>
+                    <FileText className="w-4 h-4 mr-2" /> Duplicate
+                  </DropdownMenuItem>
+                  {isDraft && (
+                    <DropdownMenuItem onClick={() => onSchedule(item)}>
+                      <Calendar className="w-4 h-4 mr-2" /> Schedule
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onDelete(item)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </MotionDiv>
+  );
+}
+
+function TypeIndicator({ type }: { type: string }) {
+  const map: Record<string, { Icon: any; cls: string; label: string }> = {
+    video: { Icon: Video,     cls: "bg-red-500/10 text-red-600",    label: "Video" },
+    image: { Icon: ImageIcon, cls: "bg-blue-500/10 text-blue-600",   label: "Image" },
+    text:  { Icon: FileText,  cls: "bg-emerald-500/10 text-emerald-600", label: "Text" },
+    reel:  { Icon: Play,      cls: "bg-purple-500/10 text-purple-600", label: "Reel" },
+  };
+  const def = map[type] || map.text;
+  const { Icon, cls, label } = def;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium ${cls}`}>
+      <Icon className="w-3 h-3" />
+      {label}
+    </span>
+  );
+}
+
+function ContentPreview({ item }: { item: any }) {
+  const isVideo = item.type === "video";
+  const isReel = item.type === "reel";
+  const isImage = item.type === "image";
+  const url = item.imageUrl || item.thumbnailUrl || item.thumbnail;
+
+  if ((isVideo || isReel || isImage) && url) {
+    return (
+      <div className="aspect-video bg-muted relative overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+        {(isVideo || isReel) && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/10 transition-colors">
+            <span className="w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center">
+              <Play className="w-5 h-5 text-white ml-0.5" />
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Placeholder for text or missing media — keeps card heights consistent
+  return (
+    <div className="aspect-video bg-gradient-to-br from-muted/40 to-muted/10 flex items-center justify-center">
+      <FileText className="w-8 h-8 text-muted-foreground/40" />
+    </div>
   );
 }
