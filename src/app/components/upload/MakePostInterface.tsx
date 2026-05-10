@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   FileText,
@@ -11,10 +12,12 @@ import {
   Linkedin,
   Twitter,
   Youtube,
+  Settings2,
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useTeamPlatforms, type Platform } from "@/hooks/use-team-platforms";
 
 const MotionDiv = motion.div as any;
 
@@ -48,7 +51,18 @@ const ThreadsIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-type PlatformId = "facebook" | "twitter" | "linkedin" | "threads" | "instagram" | "pinterest" | "tiktok" | "youtube";
+type PlatformId = Platform & ("facebook" | "twitter" | "linkedin" | "threads" | "instagram" | "pinterest" | "tiktok" | "youtube");
+
+const PLATFORM_LABEL: Record<PlatformId, string> = {
+  facebook: "Facebook",
+  twitter: "X",
+  linkedin: "LinkedIn",
+  threads: "Threads",
+  instagram: "Instagram",
+  pinterest: "Pinterest",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+};
 
 const PLATFORM_RENDER: Record<PlatformId, ({ className }: { className?: string }) => React.ReactElement> = {
   facebook: (p) => <Facebook {...p} />,
@@ -88,13 +102,28 @@ const CONTENT_TYPES: ContentType[] = [
 
 export default function MakePostInterface({ selectedTeam }: MakePostInterfaceProps) {
   const router = useRouter();
+  const { team, isPersonal, has } = useTeamPlatforms();
+
   const handle = (route: string) => router.push(route);
+  const platformAllowed = (p: PlatformId) => isPersonal || has(p);
+
+  // Owners on a team workspace see a quiet "Manage access" affordance below
+  // the cards if any platform is locked. Editors / personal-workspace users
+  // get nothing — there's nothing to act on for them at this step.
+  const isOwner = !!team && (team.role === "OWNER" || (team as any).isOwner === true);
+  const lockedPlatformsAcrossCards = Array.from(
+    new Set(
+      Object.values(TYPE_PLATFORMS)
+        .flat()
+        .filter((p) => !platformAllowed(p)),
+    ),
+  );
+  const showManageHint = !isPersonal && lockedPlatformsAcrossCards.length > 0;
+  const teamSettingsHref = team ? `/teams?team=${encodeURIComponent(team.id)}` : "/teams";
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-5 sm:space-y-6">
-      {/* Header — minimal, just the action and the destination workspace.
-          The marketing-style "Create Amazing Content" hero made every visit
-          feel like a landing page; this is the create surface, get to it. */}
+      {/* Header — minimal: action + destination workspace. */}
       <MotionDiv
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,9 +140,10 @@ export default function MakePostInterface({ selectedTeam }: MakePostInterfacePro
         </p>
       </MotionDiv>
 
-      {/* Content type cards — stacked, dashed border, platform icons under
-          each title showing where the post can land. Mirrors the
-          post-bridge / Buffer pattern that the user pointed at. */}
+      {/* Content type cards — dashed border, platform icons under each title.
+          Locked platform icons are dimmed to ~25% so the user can see at a
+          glance which platforms aren't enabled for this workspace, without
+          a separate banner repeating the same information. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {CONTENT_TYPES.map((type, index) => {
           const Icon = type.Icon;
@@ -153,13 +183,30 @@ export default function MakePostInterface({ selectedTeam }: MakePostInterfacePro
                 </p>
               </div>
 
-              {/* Platform icon row — desaturated, just a visual cue of where
-                  this kind of post can publish. Not interactive. */}
-              <div className="flex items-center gap-2 sm:gap-2.5 mt-1 text-muted-foreground/70 group-hover:text-muted-foreground transition-colors">
+              {/* Platform icon row — dimmed icons = not enabled for this
+                  workspace; full-opacity = enabled. No lock badge per icon
+                  (keeps the row visually quiet); the workspace-level hint
+                  below the grid explains the dimming once. */}
+              <div className="flex items-center gap-2 sm:gap-2.5 mt-1">
                 {platforms.map((p) => {
                   const Render = PLATFORM_RENDER[p];
+                  const allowed = platformAllowed(p);
                   return (
-                    <span key={p} className="inline-flex h-5 w-5 sm:h-[18px] sm:w-[18px] items-center justify-center" aria-hidden>
+                    <span
+                      key={p}
+                      title={
+                        allowed
+                          ? PLATFORM_LABEL[p]
+                          : `${PLATFORM_LABEL[p]} — not enabled for this workspace`
+                      }
+                      className={cn(
+                        "inline-flex h-5 w-5 sm:h-[18px] sm:w-[18px] items-center justify-center transition-opacity",
+                        allowed
+                          ? "text-muted-foreground/80 group-hover:text-foreground/80"
+                          : "text-muted-foreground/25",
+                      )}
+                      aria-hidden
+                    >
                       <Render className="h-full w-full" />
                     </span>
                   );
@@ -169,6 +216,28 @@ export default function MakePostInterface({ selectedTeam }: MakePostInterfacePro
           );
         })}
       </div>
+
+      {/* Workspace allowlist hint — single line, contextual.
+          - Owners get a tappable "Manage access" link to fix it now.
+          - Editors get a passive note so they know why icons are faded.
+          - Personal workspaces never see this (nothing to lock). */}
+      {showManageHint && (
+        <div className="flex items-center justify-between gap-3 px-1">
+          <p className="text-xs text-muted-foreground">
+            Faded icons aren&apos;t enabled for{" "}
+            <span className="text-foreground font-medium">{team?.name}</span>.
+          </p>
+          {isOwner && (
+            <Link
+              href={teamSettingsHref}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline shrink-0"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+              Manage access
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

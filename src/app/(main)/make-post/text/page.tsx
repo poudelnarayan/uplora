@@ -10,8 +10,6 @@ import {
   Type,
   Clock,
   Eye,
-  Check,
-  Lock,
   Hash,
 } from "lucide-react";
 import AppShell from "@/app/components/layout/AppLayout";
@@ -22,6 +20,7 @@ import { getTeamDisplayName } from "@/lib/teamDisplay";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { InlineSpinner } from "@/app/components/ui/loading-spinner";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
+import { PlatformGrid } from "@/app/components/upload/PlatformGrid";
 import { cn } from "@/lib/utils";
 
 // Text-post platforms — these are the only platforms that accept a
@@ -306,7 +305,8 @@ function MakePostTextContent() {
             {/* Desktop platform selector lives in hero so left column stays
                 focused on writing. Mobile/tablet gets it inside the form. */}
             <div className="hidden lg:block">
-              <PlatformPills
+              <PlatformGrid
+                items={[...TEXT_PLATFORMS]}
                 selected={selectedPlatforms}
                 onToggle={togglePlatform}
                 isLocked={isLocked}
@@ -323,7 +323,8 @@ function MakePostTextContent() {
             <div className={cn("space-y-4 sm:space-y-5 min-w-0", locked && "opacity-60 pointer-events-none select-none")}>
               {/* Mobile/tablet platform selector */}
               <div className="lg:hidden rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-soft">
-                <PlatformPills
+                <PlatformGrid
+                  items={[...TEXT_PLATFORMS]}
                   selected={selectedPlatforms}
                   onToggle={togglePlatform}
                   isLocked={isLocked}
@@ -447,77 +448,6 @@ function MakePostTextContent() {
 // ──────────────────────────────────────────────────────────────────────────
 // Local components
 // ──────────────────────────────────────────────────────────────────────────
-
-function PlatformPills({
-  selected, onToggle, isLocked, teamName,
-}: {
-  selected: string[];
-  onToggle: (id: string) => void;
-  isLocked: (key: string) => boolean;
-  teamName: string | null;
-}) {
-  return (
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-foreground">Platforms</span>
-        <span className="text-[0.65rem] text-muted-foreground/50 font-medium tabular-nums">
-          {selected.length} of {TEXT_PLATFORMS.length} selected
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {TEXT_PLATFORMS.map(({ id, label, key, limit }) => {
-          const active = selected.includes(id);
-          const lockedHere = isLocked(key);
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onToggle(id)}
-              disabled={lockedHere}
-              title={lockedHere ? `Not enabled for ${teamName || "this workspace"}.` : undefined}
-              className={cn(
-                "relative flex items-center gap-2 px-3.5 py-2.5 rounded-xl border transition-all duration-200 text-left select-none group",
-                lockedHere
-                  ? "bg-muted/40 border-dashed border-border/60 text-muted-foreground/60 cursor-not-allowed opacity-70"
-                  : active
-                    ? "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/15"
-                    : "bg-background border-border/50 hover:border-primary/30 hover:bg-muted/30",
-              )}
-            >
-              <span className={cn(
-                "w-4 h-4 rounded-md flex items-center justify-center shrink-0 border",
-                lockedHere
-                  ? "bg-muted border-border/60"
-                  : active
-                    ? "bg-white/20 border-white/30"
-                    : "bg-muted/40 border-border/60 group-hover:border-primary/40",
-              )}>
-                {lockedHere
-                  ? <Lock className="h-2.5 w-2.5 text-muted-foreground" strokeWidth={2.5} />
-                  : active && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
-              </span>
-              <div className="min-w-0">
-                <span className={cn(
-                  "font-semibold text-xs leading-tight block",
-                  lockedHere ? "text-muted-foreground/70" : active ? "text-white" : "text-foreground"
-                )}>
-                  {label}
-                </span>
-                <span className={cn(
-                  "text-[0.6rem] leading-snug block tabular-nums",
-                  lockedHere ? "text-muted-foreground/50 italic"
-                  : active ? "text-white/60" : "text-muted-foreground/50"
-                )}>
-                  {lockedHere ? "Not enabled" : `${limit.toLocaleString()} char limit`}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function PreviewCard({ platform, content }: { platform: string; content: string }) {
   const formatted = formatContent(content);
