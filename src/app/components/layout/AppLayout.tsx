@@ -64,6 +64,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { teams, personalTeam, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
   const { user } = useUser();
   const showWorkspaceSwitcher = (teams?.length ?? 0) > 0;
+  // Preview/detail pages have their own header with back button + actions —
+  // the mobile workspace switcher just adds noise above an already-busy
+  // toolbar. Hide it on those routes (still shown in sidebar on desktop).
+  const isPreviewRoute =
+    path.startsWith("/videos/") ||
+    path.startsWith("/posts/text/") ||
+    path.startsWith("/posts/image/") ||
+    path.startsWith("/posts/reel/") ||
+    /^\/posts\/[^/]+$/.test(path);
   const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
   const notifications = useNotifications();
 
@@ -420,8 +429,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <div className="w-9" />
             </div>
 
-            {/* Mobile workspace switcher */}
-            {showWorkspaceSwitcher && (
+            {/* Mobile workspace switcher — hidden on preview/detail routes
+                where the page's own header is already dense. */}
+            {showWorkspaceSwitcher && !isPreviewRoute && (
               <div className="mt-3">
                 <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Workspace
