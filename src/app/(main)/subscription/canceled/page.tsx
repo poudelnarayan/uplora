@@ -37,8 +37,8 @@ export default function SubscriptionCanceledPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <XCircle className="h-7 w-7 sm:h-10 sm:w-10 text-gray-500" />
+            <div className="w-14 h-14 sm:w-20 sm:h-20 bg-muted/60 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <XCircle className="h-7 w-7 sm:h-10 sm:w-10 text-muted-foreground" />
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Payment Canceled</h1>
             <p className="text-sm sm:text-lg md:text-xl text-muted-foreground px-4">

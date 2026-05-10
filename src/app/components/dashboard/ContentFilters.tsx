@@ -82,10 +82,10 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
       {/* Header with counts */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-foreground">
             All Content
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {filteredCount} of {totalCount} items
             {hasActiveFilters && (
               <span className="ml-2 text-blue-600">
@@ -109,7 +109,7 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
 
       {/* Content Type Filters */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Content Type</h3>
+        <h3 className="text-sm font-medium text-foreground/80 mb-3">Content Type</h3>
         <div className="flex flex-wrap gap-2">
           {contentTypes.map(({ type, label, icon: Icon, color }) => (
             <Button
@@ -120,7 +120,7 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
               className={`gap-2 ${
                 selectedTypes.includes(type) 
                   ? color 
-                  : 'hover:bg-gray-50'
+                  : 'hover:bg-muted/40'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -134,7 +134,7 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Status Filter */}
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Status</h3>
+          <h3 className="text-sm font-medium text-foreground/80 mb-3">Status</h3>
           <div className="flex flex-wrap gap-2">
             {statusOptions.map(({ status, label, icon: Icon }) => (
               <Button
@@ -153,11 +153,11 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
 
         {/* Sort Options */}
         <div className="sm:w-48">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Sort By</h3>
+          <h3 className="text-sm font-medium text-foreground/80 mb-3">Sort By</h3>
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {sortOptions.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -171,7 +171,7 @@ export const ContentFilters: React.FC<ContentFiltersProps> = ({
       {/* Active Filters Summary */}
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
-          <span className="text-sm text-gray-600">Active filters:</span>
+          <span className="text-sm text-muted-foreground">Active filters:</span>
           {selectedTypes.length < 4 && (
             <Badge variant="secondary" className="gap-1">
               Types: {selectedTypes.join(', ')}

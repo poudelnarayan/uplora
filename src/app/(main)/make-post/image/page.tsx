@@ -178,7 +178,7 @@ function MakePostImageContent() {
   };
 
   const formatContentWithColors = (text: string) => {
-    if (!text) return <span className="text-gray-400">Write a caption for your image...</span>;
+    if (!text) return <span className="text-muted-foreground">Write a caption for your image...</span>;
     
     return text.split(/(\s+)/).map((word, index) => {
       if (word.startsWith('#')) {
@@ -247,9 +247,9 @@ function MakePostImageContent() {
 
   return (
 <AppShell>
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-muted/30">
       {/* Header — fixed only on desktop */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -269,7 +269,7 @@ function MakePostImageContent() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="font-semibold text-sm sm:text-base truncate">Image Post</h1>
-                  <p className="text-[11px] sm:text-sm text-gray-500 hidden sm:block">Visual content</p>
+                  <p className="text-[11px] sm:text-sm text-muted-foreground hidden sm:block">Visual content</p>
                 </div>
               </div>
             </div>
@@ -408,7 +408,7 @@ function MakePostImageContent() {
                       className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
                         selectedPlatforms.includes(platform.id)
                           ? "bg-slate-800 border-slate-800 text-white"
-                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                          : "bg-white border-border text-gray-600 hover:border-input"
                       }`}
                     >
                       {platform.name}
@@ -429,16 +429,16 @@ function MakePostImageContent() {
                     className={`border-2 border-dashed rounded-lg h-48 flex flex-col items-center justify-center transition-all ${
                       dragActive 
                         ? "border-purple-400 bg-purple-50" 
-                        : "border-gray-300 hover:border-purple-400"
+                        : "border-input hover:border-purple-400"
                     }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
                     onDrop={handleDrop}
                   >
-                    <Upload className="h-8 w-8 text-gray-400 mb-4" />
+                    <Upload className="h-8 w-8 text-muted-foreground mb-4" />
                     <p className="text-sm font-medium mb-2">Drop image here or click to upload</p>
-                    <p className="text-xs text-gray-500 mb-4">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-xs text-muted-foreground mb-4">PNG, JPG, GIF up to 10MB</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -521,7 +521,7 @@ function MakePostImageContent() {
                         <TabsContent key={platform} value={platform} className="mt-0">
                           <div className="flex justify-center">
                             {platform === "Instagram" && (
-                              <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg">
+                              <div className="w-full max-w-sm bg-white border border-border rounded-lg overflow-hidden shadow-lg">
                                 {/* Header */}
                                 <div className="flex items-center justify-between p-3">
                                   <div className="flex items-center gap-3">
@@ -531,7 +531,7 @@ function MakePostImageContent() {
                                     </Avatar>
                                     <div>
                                       <p className="font-semibold text-sm">your_brand</p>
-                                      <p className="text-xs text-gray-500">2 minutes ago</p>
+                                      <p className="text-xs text-muted-foreground">2 minutes ago</p>
                                     </div>
                                   </div>
                                   <MoreHorizontal className="h-5 w-5 text-gray-600" />
@@ -548,7 +548,7 @@ function MakePostImageContent() {
                                   </div>
                                 ) : (
                                   <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                    <div className="text-gray-400 text-center">
+                                    <div className="text-muted-foreground text-center">
                                       <ImageIcon className="h-12 w-12 mx-auto mb-2" />
                                       <p className="text-sm">Your image here</p>
                                     </div>
@@ -580,7 +580,7 @@ function MakePostImageContent() {
                                     
                                     {/* Show more link for long content */}
                                     {content && content.length > 125 && (
-                                      <button className="text-gray-500 text-sm">more</button>
+                                      <button className="text-muted-foreground text-sm">more</button>
                                     )}
                                   </div>
                                 </div>
@@ -588,7 +588,7 @@ function MakePostImageContent() {
                             )}
 
                             {platform === "Facebook" && (
-                              <div className="w-full max-w-lg bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg">
+                              <div className="w-full max-w-lg bg-white border border-border rounded-lg overflow-hidden shadow-lg">
                               {/* Header */}
                               <div className="flex items-center justify-between p-3">
                                 <div className="flex items-center gap-3">
@@ -598,7 +598,7 @@ function MakePostImageContent() {
                                   </Avatar>
                                   <div>
                                     <p className="font-semibold text-sm">your_brand</p>
-                                    <p className="text-xs text-gray-500">2 minutes ago</p>
+                                    <p className="text-xs text-muted-foreground">2 minutes ago</p>
                                   </div>
                                 </div>
                                 <MoreHorizontal className="h-5 w-5 text-gray-600" />
@@ -621,7 +621,7 @@ function MakePostImageContent() {
                                         )}
                                       </div>
                                     ) : (
-                                      <span className="text-gray-400 italic">Write a caption for your image...</span>
+                                      <span className="text-muted-foreground italic">Write a caption for your image...</span>
                                     )}
                                   </div>
                                 </div>
@@ -637,7 +637,7 @@ function MakePostImageContent() {
                                   </div>
                                 ) : (
                                   <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                                    <div className="text-gray-400 text-center">
+                                    <div className="text-muted-foreground text-center">
                                       <ImageIcon className="h-12 w-12 mx-auto mb-2" />
                                       <p className="text-sm">Your image here</p>
                                     </div>
@@ -647,15 +647,15 @@ function MakePostImageContent() {
                                 {/* Actions */}
                                 <div className="border-t border-gray-100 p-3">
                                   <div className="flex justify-around text-gray-600 text-sm">
-                                    <button className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 rounded">
+                                    <button className="flex items-center gap-2 hover:bg-muted/40 px-3 py-2 rounded">
                                       <Heart className="h-4 w-4" />
                                       Like
                                     </button>
-                                    <button className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 rounded">
+                                    <button className="flex items-center gap-2 hover:bg-muted/40 px-3 py-2 rounded">
                                       <MessageCircle className="h-4 w-4" />
                                       Comment
                                     </button>
-                                    <button className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 rounded">
+                                    <button className="flex items-center gap-2 hover:bg-muted/40 px-3 py-2 rounded">
                                       <Share className="h-4 w-4" />
                                       Share
                                     </button>
@@ -665,7 +665,7 @@ function MakePostImageContent() {
                             )}
 
                             {platform === "X (Twitter)" && (
-                              <div className="w-full max-w-lg bg-white border border-gray-200 rounded-xl p-4 shadow-lg">
+                              <div className="w-full max-w-lg bg-white border border-border rounded-xl p-4 shadow-lg">
                                 <div className="flex gap-3">
                                   <Avatar className="h-10 w-10 flex-shrink-0">
                                     <AvatarImage src="/api/placeholder/40/40" />
@@ -674,8 +674,8 @@ function MakePostImageContent() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-2">
                                       <span className="font-bold text-sm">Your Brand</span>
-                                      <span className="text-gray-500 text-sm">@yourbrand</span>
-                                      <span className="text-gray-500 text-sm">· 2m</span>
+                                      <span className="text-muted-foreground text-sm">@yourbrand</span>
+                                      <span className="text-muted-foreground text-sm">· 2m</span>
                                     </div>
                                     
                                     <div className="text-sm mb-3 break-words whitespace-pre-wrap leading-relaxed">
@@ -691,7 +691,7 @@ function MakePostImageContent() {
                                           )}
                                         </div>
                                       ) : (
-                                        <span className="text-gray-400 italic">What's happening?</span>
+                                        <span className="text-muted-foreground italic">What's happening?</span>
                                       )}
                                     </div>
 
@@ -705,7 +705,7 @@ function MakePostImageContent() {
                                       </div>
                                     )}
 
-                                    <div className="flex justify-between max-w-md text-gray-500">
+                                    <div className="flex justify-between max-w-md text-muted-foreground">
                                       <div className="flex items-center gap-2 cursor-pointer hover:text-gray-700">
                                         <MessageCircle className="h-4 w-4" />
                                         <span className="text-xs">24</span>
@@ -728,7 +728,7 @@ function MakePostImageContent() {
                             )}
 
                             {platform === "LinkedIn" && (
-                              <div className="w-full max-w-lg bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg">
+                              <div className="w-full max-w-lg bg-white border border-border rounded-lg overflow-hidden shadow-lg">
                                 <div className="p-4">
                                   <div className="flex items-center gap-3 mb-3">
                                     <Avatar className="h-12 w-12 flex-shrink-0">
@@ -737,8 +737,8 @@ function MakePostImageContent() {
                                     </Avatar>
                                     <div className="min-w-0">
                                       <p className="font-semibold text-sm">Your Brand</p>
-                                      <p className="text-xs text-gray-500">CEO at Company • 1st</p>
-                                      <p className="text-xs text-gray-500">2m • 🌐</p>
+                                      <p className="text-xs text-muted-foreground">CEO at Company • 1st</p>
+                                      <p className="text-xs text-muted-foreground">2m • 🌐</p>
                                     </div>
                                   </div>
                                   
@@ -757,7 +757,7 @@ function MakePostImageContent() {
                                         )}
                                       </div>
                                     ) : (
-                                      <span className="text-gray-400 italic">Share your professional insights...</span>
+                                      <span className="text-muted-foreground italic">Share your professional insights...</span>
                                     )}
                                   </div>
                                 </div>
@@ -774,15 +774,15 @@ function MakePostImageContent() {
 
                                 <div className="border-t border-gray-100 p-3">
                                   <div className="flex justify-around text-gray-600 text-sm">
-                                    <button className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 rounded">
+                                    <button className="flex items-center gap-2 hover:bg-muted/40 px-3 py-2 rounded">
                                       <Heart className="h-4 w-4" />
                                       Like
                                     </button>
-                                    <button className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 rounded">
+                                    <button className="flex items-center gap-2 hover:bg-muted/40 px-3 py-2 rounded">
                                       <MessageCircle className="h-4 w-4" />
                                       Comment
                                     </button>
-                                    <button className="flex items-center gap-2 hover:bg-gray-50 px-3 py-2 rounded">
+                                    <button className="flex items-center gap-2 hover:bg-muted/40 px-3 py-2 rounded">
                                       <Share className="h-4 w-4" />
                                       Share
                                     </button>
@@ -796,8 +796,8 @@ function MakePostImageContent() {
                     </Tabs>
                   ) : (
                     <div className="text-center py-12">
-                      <Eye className="h-12 w-12 mx-auto mb-4 opacity-50 text-gray-400" />
-                      <p className="text-sm text-gray-500">Select platforms to see preview</p>
+                      <Eye className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Select platforms to see preview</p>
                     </div>
                   )}
                 </CardContent>

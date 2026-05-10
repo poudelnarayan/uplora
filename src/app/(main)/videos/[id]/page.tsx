@@ -1859,7 +1859,7 @@ export default function VideoPreviewPage() {
                           type="checkbox" 
                           checked={madeForKids} 
                           onChange={(e) => setMadeForKids(e.target.checked)}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                          className="w-4 h-4 text-blue-600 bg-muted/60 border-input rounded focus:ring-blue-500 focus:ring-2"
                         /> 
                         <span className="flex items-center gap-2">
                           <span className="text-lg">🧸</span>

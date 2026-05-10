@@ -360,25 +360,28 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <SubscriptionBadge />
           </div>
 
-          {/* Profile click goes to Settings page (Billing + Settings + Sign out). */}
+          {/* Profile + theme toggle */}
           <div className="px-3 pb-3">
-            <Link
-              href="/settings"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-            >
-              <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
-                {user?.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <UserIcon className="h-4 w-4" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate">{user?.fullName || user?.primaryEmailAddress?.emailAddress || "Account"}</div>
-                <div className="text-[11px] text-sidebar-foreground/60 truncate">Billing • Settings • Sign out</div>
-              </div>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/settings"
+                className="flex-1 min-w-0 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+              >
+                <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden shrink-0">
+                  {user?.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-4 w-4" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate">{user?.fullName || user?.primaryEmailAddress?.emailAddress || "Account"}</div>
+                  <div className="text-[11px] text-sidebar-foreground/60 truncate">Billing • Settings • Sign out</div>
+                </div>
+              </Link>
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Footer */}
@@ -417,8 +420,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 <Image src="/text-logo.png" alt="Uplora" width={160} height={40} className="h-10 w-auto" />
               </div>
 
-              {/* spacer to balance center logo */}
-              <div className="w-9" />
+              {/* Theme toggle (replaces the previous spacer) */}
+              <ThemeToggle />
             </div>
 
             {/* Mobile workspace switcher */}

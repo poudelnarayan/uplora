@@ -164,7 +164,7 @@ const ContentCard: React.FC<{
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 border-0 bg-white">
         <CardContent className="p-0">
           {/* Thumbnail/Preview */}
-          <div className="relative aspect-video bg-gray-100 overflow-hidden">
+          <div className="relative aspect-video bg-muted/60 overflow-hidden">
             {item.thumbnail ? (
               <Image
                 src={item.thumbnail}
@@ -220,7 +220,7 @@ const ContentCard: React.FC<{
           {/* Content Info */}
           <div className="p-4">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 break-words">
+              <h3 className="font-semibold text-sm line-clamp-2 text-foreground break-words">
                 {item.title}
               </h3>
               <DropdownMenu>
@@ -256,7 +256,7 @@ const ContentCard: React.FC<{
 
             {/* Content Preview */}
             {item.content && (
-              <p className="text-xs text-gray-600 line-clamp-2 mb-3 break-words">
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-3 break-words">
                 {item.content}
               </p>
             )}
@@ -278,7 +278,7 @@ const ContentCard: React.FC<{
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 {item.uploader && (
                   <>
@@ -336,11 +336,11 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   if (content.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 rounded-full bg-muted/60 flex items-center justify-center mx-auto mb-4">
           <FileText className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No content yet</h3>
-        <p className="text-gray-600 mb-6">Create your first post, video, or reel to get started.</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No content yet</h3>
+        <p className="text-muted-foreground mb-6">Create your first post, video, or reel to get started.</p>
         <div className="flex gap-3 justify-center">
           <Button onClick={() => window.location.href = '/make-post/text'}>
             <FileText className="w-4 h-4 mr-2" />

@@ -155,9 +155,9 @@ function MakePostTextContent() {
 
   return (
 <AppShell>
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-muted/30">
       {/* Header — fixed only on desktop */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
         <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -177,7 +177,7 @@ function MakePostTextContent() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="font-semibold text-sm sm:text-base truncate">Text Post</h1>
-                  <p className="text-[11px] sm:text-sm text-gray-500 hidden sm:block">Create text content</p>
+                  <p className="text-[11px] sm:text-sm text-muted-foreground hidden sm:block">Create text content</p>
                 </div>
               </div>
             </div>
@@ -306,7 +306,7 @@ function MakePostTextContent() {
                       className={`px-3 py-2 rounded-md border text-sm font-medium transition-all ${
                         selectedPlatforms.includes(platform.id)
                           ? "bg-slate-800 border-slate-800 text-white"
-                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                          : "bg-white border-border text-gray-600 hover:border-input"
                       }`}
                     >
                       {platform.name}
@@ -368,7 +368,7 @@ function MakePostTextContent() {
                                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400"></div>
                                   <div>
                                     <p className="font-medium text-sm">your_brand</p>
-                                    <p className="text-xs text-gray-500">2 minutes ago</p>
+                                    <p className="text-xs text-muted-foreground">2 minutes ago</p>
                                   </div>
                                 </div>
                                 
@@ -388,8 +388,8 @@ function MakePostTextContent() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-2">
                                       <span className="font-medium text-sm">Your Brand</span>
-                                      <span className="text-gray-500 text-sm">@yourbrand</span>
-                                      <span className="text-gray-500 text-sm">· 2m</span>
+                                      <span className="text-muted-foreground text-sm">@yourbrand</span>
+                                      <span className="text-muted-foreground text-sm">· 2m</span>
                                     </div>
                                     
                                     <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -407,7 +407,7 @@ function MakePostTextContent() {
                                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700"></div>
                                   <div>
                                     <p className="font-medium text-sm">Your Brand</p>
-                                    <p className="text-xs text-gray-500">CEO at Company • 2m</p>
+                                    <p className="text-xs text-muted-foreground">CEO at Company • 2m</p>
                                   </div>
                                 </div>
                                 
@@ -427,7 +427,7 @@ function MakePostTextContent() {
                                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600"></div>
                                   <div>
                                     <p className="font-medium text-sm">Your Brand</p>
-                                    <p className="text-xs text-gray-500">2 minutes ago</p>
+                                    <p className="text-xs text-muted-foreground">2 minutes ago</p>
                                   </div>
                                 </div>
                                 
@@ -446,7 +446,7 @@ function MakePostTextContent() {
                   ) : (
                     <div className="text-center py-12">
                       <Eye className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm text-gray-500">Select platforms to see preview</p>
+                      <p className="text-sm text-muted-foreground">Select platforms to see preview</p>
                     </div>
                   )}
                 </CardContent>

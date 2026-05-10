@@ -705,7 +705,7 @@ const MakePostVideosInner = () => {
 
   const formatContentWithColors = (text: string) => {
     if (!text)
-      return <span className="text-gray-400">Your video description...</span>;
+      return <span className="text-muted-foreground">Your video description...</span>;
 
     return text.split(/(\s+)/).map((word, index) => {
       if (word.startsWith("#")) {
@@ -764,7 +764,7 @@ const MakePostVideosInner = () => {
     <AppShell>
       <div className="min-h-screen bg-background">
         {/* Header — fixed only on desktop; on mobile the AppShell top bar is already sticky */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
+        <div className="bg-card/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -790,7 +790,7 @@ const MakePostVideosInner = () => {
                   </div>
                   <div className="min-w-0">
                     <h1 className="font-semibold text-sm sm:text-base truncate">YouTube Video</h1>
-                    <p className="text-[11px] sm:text-sm text-gray-500 hidden sm:block">Long-form content</p>
+                    <p className="text-[11px] sm:text-sm text-muted-foreground hidden sm:block">Long-form content</p>
                   </div>
                 </div>
               </div>
@@ -905,18 +905,18 @@ const MakePostVideosInner = () => {
                       className={`border-2 border-dashed rounded-lg h-48 flex flex-col items-center justify-center transition-all ${
                         dragActive
                           ? "border-red-400 bg-red-50"
-                          : "border-gray-300 hover:border-red-400"
+                          : "border-input hover:border-red-400"
                       }`}
                       onDragEnter={handleDrag}
                       onDragLeave={handleDrag}
                       onDragOver={handleDrag}
                       onDrop={handleDrop}
                     >
-                      <Upload className="h-8 w-8 text-gray-400 mb-4" />
+                      <Upload className="h-8 w-8 text-muted-foreground mb-4" />
                       <p className="text-sm font-medium mb-2">
                         Drop video here or click to upload
                       </p>
-                      <p className="text-xs text-gray-500 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         MP4, MOV, AVI
                       </p>
                       <input
@@ -1077,9 +1077,9 @@ const MakePostVideosInner = () => {
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Enter video title"
                       maxLength={100}
-                      className="border-gray-200 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                      className="border-border focus:border-red-500 focus:ring-1 focus:ring-red-500"
                     />
-                    <p className="text-xs text-gray-500 text-right">
+                    <p className="text-xs text-muted-foreground text-right">
                       {title.length}/100
                     </p>
                   </div>
@@ -1102,7 +1102,7 @@ const MakePostVideosInner = () => {
                     <div className="space-y-2">
                       <Label className="text-sm">Category</Label>
                       <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger className="border-gray-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                        <SelectTrigger className="border-border focus:border-red-500 focus:ring-1 focus:ring-red-500">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1118,7 +1118,7 @@ const MakePostVideosInner = () => {
                     <div className="space-y-2">
                       <Label className="text-sm">Privacy</Label>
                       <Select value={privacy} onValueChange={setPrivacy}>
-                        <SelectTrigger className="border-gray-200 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                        <SelectTrigger className="border-border focus:border-red-500 focus:ring-1 focus:ring-red-500">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1138,7 +1138,7 @@ const MakePostVideosInner = () => {
                   <div className="space-y-2">
                     <Label className="text-sm">Tags</Label>
                     <div className="space-y-2">
-                      <div className="min-h-[40px] p-2 border border-gray-200 rounded-md focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500">
+                      <div className="min-h-[40px] p-2 border border-border rounded-md focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500">
                         <div className="flex flex-wrap gap-1 mb-2">
                           {tags.map((tag, index) => (
                             <span
@@ -1169,7 +1169,7 @@ const MakePostVideosInner = () => {
                           className="border-0 px-2 py-1 h-8 focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {tags.length}/15 tags • Press Enter or comma to add tags
                       </p>
                     </div>
@@ -1184,12 +1184,12 @@ const MakePostVideosInner = () => {
                 </CardHeader>
                 <CardContent>
                   {!selectedThumbnail ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-red-400 transition-all">
-                      <ImageIcon className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+                    <div className="border-2 border-dashed border-input rounded-lg p-6 text-center hover:border-red-400 transition-all">
+                      <ImageIcon className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm font-medium mb-2">
                         Upload Custom Thumbnail
                       </p>
-                      <p className="text-xs text-gray-500 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         1280x720 recommended
                       </p>
                       <input
@@ -1297,7 +1297,7 @@ const MakePostVideosInner = () => {
                               </span>
                             ))}
                             {tags.length > 3 && (
-                              <span className="inline-block px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded-md">
+                              <span className="inline-block px-2 py-1 bg-gray-700 text-muted-foreground text-xs rounded-md">
                                 +{tags.length - 3} more
                               </span>
                             )}
@@ -1319,7 +1319,7 @@ const MakePostVideosInner = () => {
                             <p className="text-sm font-medium text-white">
                               {channelTitle || "Your Channel"}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                               {formatSubscriberCount(subscriberCount)
                                 ? `${formatSubscriberCount(subscriberCount)} subscribers`
                                 : "—"}
@@ -1333,7 +1333,7 @@ const MakePostVideosInner = () => {
                           </Button>
                         </div>
 
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           No views • Just uploaded
                         </div>
 
@@ -1353,7 +1353,7 @@ const MakePostVideosInner = () => {
                                   (p) => p.value === privacy,
                                 )?.icon;
                                 return PrivacyIcon ? (
-                                  <PrivacyIcon className="h-3 w-3 text-gray-400" />
+                                  <PrivacyIcon className="h-3 w-3 text-muted-foreground" />
                                 ) : null;
                               })()}
                               <Badge

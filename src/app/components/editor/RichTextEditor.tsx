@@ -140,7 +140,7 @@ const RichTextEditor = ({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Professional Toolbar */}
-      <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div className="flex items-center justify-between p-3 bg-white border border-border rounded-lg shadow-sm">
         <div className="flex items-center gap-1">
           {/* Text Formatting */}
           <div className="flex items-center gap-1">
@@ -148,7 +148,7 @@ const RichTextEditor = ({
               variant="ghost" 
               size="sm" 
               onClick={() => formatText("bold")}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-muted/60"
               title="Bold (Ctrl+B)"
             >
               <Bold className="h-4 w-4" />
@@ -157,7 +157,7 @@ const RichTextEditor = ({
               variant="ghost" 
               size="sm" 
               onClick={() => formatText("italic")}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-muted/60"
               title="Italic (Ctrl+I)"
             >
               <Italic className="h-4 w-4" />
@@ -172,7 +172,7 @@ const RichTextEditor = ({
               variant="ghost" 
               size="sm" 
               onClick={() => formatText("h1")}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-muted/60"
               title="Heading 1"
             >
               <Heading1 className="h-4 w-4" />
@@ -181,7 +181,7 @@ const RichTextEditor = ({
               variant="ghost" 
               size="sm" 
               onClick={() => formatText("h2")}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-muted/60"
               title="Heading 2"
             >
               <Heading2 className="h-4 w-4" />
@@ -249,7 +249,7 @@ const RichTextEditor = ({
 
       {/* Textarea Editor */}
       <div className={`relative border-2 rounded-lg transition-all duration-200 ${
-        isFocused ? 'border-blue-500 shadow-lg shadow-blue-500/10' : 'border-gray-200'
+        isFocused ? 'border-blue-500 shadow-lg shadow-blue-500/10' : 'border-border'
       }`}>
         <Textarea
           ref={textareaRef}
@@ -282,7 +282,7 @@ const RichTextEditor = ({
                     ? "bg-red-100 text-red-800 border-red-300" 
                     : isNearLimit 
                     ? "bg-amber-100 text-amber-800 border-amber-300"
-                    : "bg-gray-100 text-gray-700 border-gray-300"
+                    : "bg-muted/60 text-foreground/80 border-input"
                 }`}
               >
                 <span className="font-medium">{platform.name === "X (Twitter)" ? "X" : platform.name}</span>
