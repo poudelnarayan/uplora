@@ -14,7 +14,7 @@ import {
   Upload,
   Users,
   Settings,
-  ChevronDown,
+  ChevronsUpDown,
   Menu,
   X,
   MessageCircle,
@@ -23,10 +23,21 @@ import {
   Clock,
   Calendar,
   CheckCircle,
+  Check,
   FileText,
   ShieldCheck,
+  LogOut,
   User as UserIcon,
 } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
 import { useTeam } from "@/context/TeamContext";
 import NotificationCenter from "@/app/components/ui/NotificationCenter/NotificationCenter";
 import FeedbackStudio from "@/app/components/ui/FeedbackStudio/FeedbackStudio";
@@ -39,9 +50,8 @@ import { usePathname as usePathnameForFeedback } from "next/navigation";
 import { useModalManager } from "@/app/components/ui/Modal";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
-import { Button } from "@/app/components/ui/button";
 import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
+import { cn } from "@/lib/utils";
 
 const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
@@ -63,16 +73,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathForFeedback = usePathnameForFeedback();
   const { teams, personalTeam, selectedTeam, selectedTeamId, setSelectedTeamId } = useTeam();
   const { user } = useUser();
+  const { signOut } = useClerk();
   const showWorkspaceSwitcher = (teams?.length ?? 0) > 0;
-  // Preview/detail pages have their own header with back button + actions —
-  // the mobile workspace switcher just adds noise above an already-busy
-  // toolbar. Hide it on those routes (still shown in sidebar on desktop).
-  const isPreviewRoute =
-    path.startsWith("/videos/") ||
-    path.startsWith("/posts/text/") ||
-    path.startsWith("/posts/image/") ||
-    path.startsWith("/posts/reel/") ||
-    /^\/posts\/[^/]+$/.test(path);
   const { isTrialActive, isTrialExpired, trialDaysRemaining } = useSubscription();
   const notifications = useNotifications();
 
@@ -83,13 +85,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [showIdeaLab, setShowIdeaLab] = useState(false);
   const { openModal } = useModalManager();
 
-  const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
   const [switchingWorkspace, setSwitchingWorkspace] = useState(false);
   const [switchTargetId, setSwitchTargetId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!showWorkspaceSwitcher && workspaceDialogOpen) setWorkspaceDialogOpen(false);
-  }, [showWorkspaceSwitcher, workspaceDialogOpen]);
 
   const workspaces = useMemo(() => {
     const list: Array<{ id: string; name: string }> = [];
@@ -105,13 +102,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, [switchTargetId, selectedTeamId, workspaces]);
 
   const startWorkspaceSwitch = (nextId: string) => {
-    if (!nextId || nextId === selectedTeamId) {
-      setWorkspaceDialogOpen(false);
-      return;
-    }
+    if (!nextId || nextId === selectedTeamId) return;
     setSwitchTargetId(nextId);
     setSwitchingWorkspace(true);
-    setWorkspaceDialogOpen(false);
     // Intentional delay for premium UX + prevents accidental rapid switching
     window.setTimeout(() => {
       setSelectedTeamId(nextId);
@@ -269,6 +262,92 @@ export default function AppShell({ children }: { children: ReactNode }) {
     });
   };
 
+  // Combined account + workspace switcher. Trigger is the avatar/name row;
+  // the dropdown lists workspaces (with active checkmark) plus settings/sign-out.
+  // One-tap switching, no Dialog needed.
+  const accountSwitcher = (variant: "sidebar" | "drawer") => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-left",
+            "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+          )}
+        >
+          <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden shrink-0">
+            {user?.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <UserIcon className="h-4 w-4" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm">
+              {user?.fullName || user?.primaryEmailAddress?.emailAddress || "Account"}
+            </div>
+            <div className="text-[11px] text-sidebar-foreground/60 truncate">
+              {selectedTeam?.name || "Personal Workspace"}
+            </div>
+          </div>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        side={variant === "sidebar" ? "top" : "top"}
+        sideOffset={8}
+        className="w-[--radix-dropdown-menu-trigger-width] min-w-[240px] max-w-[320px]"
+      >
+        {workspaces.length > 0 && (
+          <>
+            <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Workspaces
+            </DropdownMenuLabel>
+            {workspaces.map((w) => {
+              const active = selectedTeamId === w.id;
+              return (
+                <DropdownMenuItem
+                  key={w.id}
+                  className="gap-2 cursor-pointer"
+                  onSelect={() => {
+                    if (variant === "drawer") setMobileNavOpen(false);
+                    if (!active) startWorkspaceSwitch(w.id);
+                  }}
+                >
+                  <span className="flex-1 truncate">{w.name}</span>
+                  {active && <Check className="h-4 w-4 text-primary shrink-0" />}
+                </DropdownMenuItem>
+              );
+            })}
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuItem asChild>
+          <Link
+            href="/settings"
+            onClick={() => variant === "drawer" && setMobileNavOpen(false)}
+            className="gap-2 cursor-pointer"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+          onSelect={() => {
+            if (variant === "drawer") setMobileNavOpen(false);
+            signOut();
+          }}
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -279,26 +358,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <Image src="/text-logo.png" alt="Uplora" width={240} height={60} className="h-16 w-auto" />
           </div>
         </div>
-
-        {/* Workspace switcher (only if user has/joined at least one team workspace) */}
-        {showWorkspaceSwitcher && (
-          <div className="px-3 py-4 border-b border-sidebar-border bg-sidebar">
-            <div className="text-[11px] font-semibold text-sidebar-foreground/60 uppercase tracking-wider px-1 mb-2">
-              Workspace
-            </div>
-            <Button
-              variant="outline"
-              // Prevent outline variant hover text (accent-foreground) from turning black.
-              className="w-full justify-between bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground focus-visible:text-sidebar-foreground active:text-sidebar-foreground data-[state=open]:text-sidebar-foreground"
-              onClick={() => setWorkspaceDialogOpen(true)}
-            >
-              <span className="truncate">
-                {selectedTeam?.name?.includes("Personal Workspace") ? "Personal Workspace" : selectedTeam?.name || "Select workspace"}
-              </span>
-              <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
-            </Button>
-          </div>
-        )}
 
         <nav className="flex-1 space-y-1 px-3 py-3 bg-sidebar">
           {/* Main Navigation */}
@@ -368,26 +427,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <SubscriptionBadge />
           </div>
 
-          {/* Profile click goes to Settings page (Billing + Settings + Sign out). */}
-          <div className="px-3 pb-3">
-            <Link
-              href="/settings"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-            >
-              <div className="h-9 w-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
-                {user?.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <UserIcon className="h-4 w-4" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate">{user?.fullName || user?.primaryEmailAddress?.emailAddress || "Account"}</div>
-                <div className="text-[11px] text-sidebar-foreground/60 truncate">Billing • Settings • Sign out</div>
-              </div>
-            </Link>
-          </div>
+          {/* Combined account + workspace switcher (replaces the old workspace
+              card at the top + profile link at the bottom). One row, one tap. */}
+          <div className="px-3 pb-3">{accountSwitcher("sidebar")}</div>
 
           {/* Footer */}
           <div className="border-t border-sidebar-border px-4 py-3 bg-sidebar">
@@ -429,48 +471,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <div className="w-9" />
             </div>
 
-            {/* Mobile workspace switcher — hidden on preview/detail routes
-                where the page's own header is already dense. */}
-            {showWorkspaceSwitcher && !isPreviewRoute && (
-              <div className="mt-3">
-                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                  Workspace
-                </div>
-                <Button variant="outline" className="w-full justify-between" onClick={() => setWorkspaceDialogOpen(true)}>
-                  <span className="truncate">{selectedTeam?.name || "Select workspace"}</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
-                </Button>
-              </div>
-            )}
+            {/* Workspace switching has moved into the mobile drawer
+                (alongside account/settings/sign-out) — keeps the top bar
+                clean for content. */}
           </div>
         </div>
 
-        {/* Workspace selection dialog */}
-        {showWorkspaceSwitcher && (
-          <Dialog open={workspaceDialogOpen} onOpenChange={setWorkspaceDialogOpen}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Switch workspace</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-2">
-                {workspaces.map((w) => (
-                  <button
-                    key={w.id}
-                    className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
-                      selectedTeamId === w.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"
-                    }`}
-                    onClick={() => startWorkspaceSwitch(w.id)}
-                  >
-                    <div className="font-medium text-foreground truncate">{w.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {selectedTeamId === w.id ? "Current workspace" : "Tap to switch"}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
 
         {/* Switching overlay */}
         <AnimatePresence>
@@ -615,6 +621,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   <span className="truncate">Feedback</span>
                 </button>
               </nav>
+              {/* Mobile account + workspace switcher (above the legal links) */}
+              <div className="border-t border-sidebar-border px-3 py-3 bg-sidebar">
+                {accountSwitcher("drawer")}
+              </div>
               {/* Mobile Footer Links */}
               <div className="border-t border-sidebar-border px-4 py-4 bg-sidebar">
                 <div className="text-[11px] text-sidebar-foreground/60 space-y-2">
