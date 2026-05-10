@@ -50,7 +50,7 @@ export default function PostDetailsPage() {
 
   return (
     <AppShell>
-      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+      <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
         <div className="flex justify-center items-center py-24">
           <LoadingSpinner size="lg" />
         </div>

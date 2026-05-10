@@ -24,7 +24,7 @@ export default function MakePostPage() {
     <>
       <NextSeoNoSSR title="Create Content" noindex nofollow />
       <AppShell>
-        <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+        <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
           <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

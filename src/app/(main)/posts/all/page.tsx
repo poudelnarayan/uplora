@@ -297,14 +297,14 @@ function AllPostsInner() {
 
   return (
     <AppShell>
-      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+      <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
         <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="min-h-full"
         >
           {/* Header */}
-          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:sticky lg:top-0 lg:z-10">
             <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
               <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground truncate">All Posts</h1>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">

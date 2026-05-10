@@ -65,8 +65,8 @@ export default function TextPostDetailsPage() {
 
   return (
     <AppShell>
-      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
-        <div className="px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+      <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
+        <div className="px-6 py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:sticky lg:top-0 lg:z-10">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2">

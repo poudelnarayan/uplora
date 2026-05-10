@@ -1306,7 +1306,7 @@ export default function VideoPreviewPage() {
 
   return (
     <AppShell>
-      <div className="fixed inset-0 lg:left-64 bg-background overflow-auto">
+      <div className="relative lg:fixed lg:inset-0 lg:left-64 bg-background lg:overflow-auto">
       <NextSeoNoSSR
         title={pageTitle}
         description={pageDescription}
