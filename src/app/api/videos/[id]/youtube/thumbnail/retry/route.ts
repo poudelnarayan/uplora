@@ -8,6 +8,7 @@ import { uploadYouTubeThumbnail } from "@/server/services/youtubeUploadService";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
 import { getVideoById, syncUser, getTeamAndRole, updateVideoMetadata } from "@/lib/video-utils";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -39,6 +40,19 @@ export async function POST(
     }
 
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const platformDecision = await checkTeamCanPublish(video.teamId, "youtube");
+    if (!platformDecision.allowed) {
+      return NextResponse.json(
+        {
+          error: platformDecision.reason,
+          code: platformDecision.code,
+          teamName: platformDecision.teamName,
+          enabledPlatforms: platformDecision.enabledPlatforms,
+        },
+        { status: 403 }
+      );
+    }
 
     const youtubeVideoId = video.metadata?.youtube_video_id;
     if (!youtubeVideoId) return NextResponse.json({ error: "Video must be uploaded to YouTube first" }, { status: 400 });

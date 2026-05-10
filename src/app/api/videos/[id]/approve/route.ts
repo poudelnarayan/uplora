@@ -12,6 +12,7 @@ import type { Readable } from "stream";
 import { uploadYouTubeVideo, validateAndNormalizeMetadata, uploadYouTubeThumbnail } from "@/server/services/youtubeUploadService";
 import { VideoStatus } from "@/types/videoStatus";
 import { getVideoById, syncUser, getTeamAndRole, updateVideoStatus, updateVideoMetadata } from "@/lib/video-utils";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -60,6 +61,20 @@ export async function POST(
       }
     } else {
       if (video.userId !== me.id) return NextResponse.json({ error: "Not allowed to publish this video" }, { status: 403 });
+    }
+
+    // Per-team platform allowlist guard (personal teams pass through).
+    const platformDecision = await checkTeamCanPublish(video.teamId, "youtube");
+    if (!platformDecision.allowed) {
+      return NextResponse.json(
+        {
+          error: platformDecision.reason,
+          code: platformDecision.code,
+          teamName: platformDecision.teamName,
+          enabledPlatforms: platformDecision.enabledPlatforms,
+        },
+        { status: 403 }
+      );
     }
 
     const rawPayload = await req.json().catch(() => ({}));

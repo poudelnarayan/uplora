@@ -92,7 +92,10 @@ export const TeamDetailsDialog = ({
   const [updatingPlatform, setUpdatingPlatform] = useState<string | null>(null);
 
   const canManageTeam = Boolean(team?.isOwner) || team?.role === "OWNER";
-  const canConnectPlatforms = team?.role === "ADMIN" || team?.role === "OWNER" || Boolean(team?.isOwner); // Only admins and owners can connect platforms
+  // Only the team OWNER can grant/revoke platform access. The PATCH /api/teams/[teamId]
+  // route enforces the same rule on the server; UI must not promise ADMINs an action
+  // the server will reject.
+  const canConnectPlatforms = team?.role === "OWNER" || Boolean(team?.isOwner);
 
   useEffect(() => {
     if (!isOpen) return;

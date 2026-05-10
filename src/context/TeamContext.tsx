@@ -16,6 +16,8 @@ type TeamBasic = {
   members_data?: Array<{ id: string; name: string; email: string; role: string; avatar: string }>;
   memberCount?: number;
   isPersonal?: boolean;
+  // Per-team platform allowlist (owner-managed). Empty = no team publishing.
+  enabledPlatforms?: string[];
 };
 
 type TeamContextType = {

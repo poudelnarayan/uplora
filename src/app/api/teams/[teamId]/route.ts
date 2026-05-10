@@ -20,10 +20,18 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const name = typeof body.name === "string" ? body.name.trim() : undefined;
     const description = typeof body.description === "string" ? body.description.trim() : undefined;
+    const enabledPlatforms = Array.isArray(body.enabledPlatforms) ? body.enabledPlatforms : undefined;
 
-    if (!name && description === undefined) {
+    if (!name && description === undefined && enabledPlatforms === undefined) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
+
+    const VALID_PLATFORMS = new Set([
+      'youtube','instagram','facebook','twitter','linkedin','pinterest','threads','tiktok','telegram',
+    ]);
+    const cleanPlatforms = enabledPlatforms !== undefined
+      ? Array.from(new Set(enabledPlatforms.filter((p: any) => typeof p === 'string' && VALID_PLATFORMS.has(p))))
+      : undefined;
 
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
@@ -52,18 +60,23 @@ export async function PATCH(
     const updateData: any = { updated_at: new Date().toISOString() };
     if (name) updateData.name = name;
     if (description !== undefined) updateData.description = description;
+    if (cleanPlatforms !== undefined) updateData.enabled_platforms = cleanPlatforms;
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('teams')
       .update(updateData)
       .eq('id', team.id)
-      .select('id, name, description, updated_at')
+      .select('id, name, description, enabled_platforms, updated_at')
       .single();
 
     if (updateError) {
       return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
     }
-    return NextResponse.json({ ...updated, updatedAt: updated.updated_at });
+    return NextResponse.json({
+      ...updated,
+      enabledPlatforms: Array.isArray((updated as any).enabled_platforms) ? (updated as any).enabled_platforms : [],
+      updatedAt: updated.updated_at,
+    });
   } catch (e) {
     return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
   }

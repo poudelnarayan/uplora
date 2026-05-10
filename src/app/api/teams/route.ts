@@ -48,10 +48,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, enabledPlatforms } = body as {
+      name?: string;
+      description?: string;
+      enabledPlatforms?: string[];
+    };
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(createErrorResponse(ErrorCodes.VALIDATION_ERROR, "Team name is required"), { status: 400 });
     }
+
+    const VALID_PLATFORMS = new Set([
+      'youtube','instagram','facebook','twitter','linkedin','pinterest','threads','tiktok','telegram',
+    ]);
+    const cleanPlatforms = Array.isArray(enabledPlatforms)
+      ? Array.from(new Set(enabledPlatforms.filter((p) => typeof p === 'string' && VALID_PLATFORMS.has(p))))
+      : [];
 
     const { data: existingTeam, error: checkError } = await supabaseAdmin
       .from('teams')
@@ -81,6 +92,7 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || "",
         owner_id: user.id,
         is_personal: false,
+        enabled_platforms: cleanPlatforms,
         created_at: now,
         updated_at: now
       })
@@ -119,7 +131,8 @@ export async function POST(request: NextRequest) {
         createdAt: team.created_at,
         isPersonal: false,
         isOwner: true,
-        role: 'OWNER'
+        role: 'OWNER',
+        enabledPlatforms: Array.isArray((team as any).enabled_platforms) ? (team as any).enabled_platforms : cleanPlatforms,
       }
     }));
   } catch (error) {
@@ -276,6 +289,7 @@ export async function GET(request: NextRequest) {
           activeMembership?.role || (team as any).team_members?.[0]?.role || 'MEMBER',
         members_data,
         memberCount: members_data.length,
+        enabledPlatforms: Array.isArray((team as any).enabled_platforms) ? (team as any).enabled_platforms : [],
       };
     });
 

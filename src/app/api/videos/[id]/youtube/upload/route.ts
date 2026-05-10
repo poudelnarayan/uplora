@@ -9,6 +9,7 @@ import { broadcast } from "@/lib/realtime";
 import type { Readable } from "stream";
 import { uploadYouTubeVideo, validateAndNormalizeMetadata, uploadYouTubeThumbnail } from "@/server/services/youtubeUploadService";
 import { getVideoById, syncUser, getTeamAndRole, updateVideoMetadata } from "@/lib/video-utils";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
@@ -43,6 +44,20 @@ export async function POST(
     }
 
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    // Per-team platform allowlist guard. Personal teams pass through.
+    const platformDecision = await checkTeamCanPublish(video.teamId, "youtube");
+    if (!platformDecision.allowed) {
+      return NextResponse.json(
+        {
+          error: platformDecision.reason,
+          code: platformDecision.code,
+          teamName: platformDecision.teamName,
+          enabledPlatforms: platformDecision.enabledPlatforms,
+        },
+        { status: 403 }
+      );
+    }
 
     if (video.teamId) {
       const isOwnerOrAdmin = callerRole === "OWNER" || callerRole === "ADMIN";

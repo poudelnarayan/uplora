@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { decryptString } from "@/lib/tokenCrypto";
 import { revokeXToken } from "@/lib/twitter";
 import { getUserSocialConnections, updateUserSocialConnections } from "@/server/services/socialConnections";
+import { cascadeRemovePlatformFromTeams } from "@/server/services/teamPlatformGuard";
 
 /**
  * POST /api/twitter/disconnect
@@ -33,6 +34,12 @@ export async function POST(_request: NextRequest) {
     }
 
     await updateUserSocialConnections(userId, current => ({ ...current, twitter: null }));
+    try {
+      const removed = await cascadeRemovePlatformFromTeams(userId, "twitter");
+      if (removed > 0) console.log(`[twitter/disconnect] revoked from ${removed} team(s)`);
+    } catch (e) {
+      console.error("[twitter/disconnect] cascade failed (non-fatal):", e);
+    }
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("X disconnect error:", e);

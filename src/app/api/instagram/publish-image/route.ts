@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { publishInstagramImagePost } from "@/lib/instagram";
 import { getUserSocialConnections } from "@/server/services/socialConnections";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 /**
  * Publish an Instagram image post using stored Instagram credentials.
@@ -20,9 +21,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const imageUrl = typeof body?.imageUrl === "string" ? body.imageUrl : null;
     const caption = typeof body?.caption === "string" ? body.caption : undefined;
+    const teamId = typeof body?.teamId === "string" ? body.teamId : null;
 
     if (!imageUrl) {
       return NextResponse.json({ error: "Missing imageUrl" }, { status: 400 });
+    }
+
+    // Per-team platform allowlist guard. Only kicks in when teamId is supplied
+    // (team-aware publish flows must pass it; ad-hoc personal calls don't).
+    if (teamId) {
+      const decision = await checkTeamCanPublish(teamId, "instagram");
+      if (!decision.allowed) {
+        return NextResponse.json(
+          { error: decision.reason, code: decision.code, teamName: decision.teamName, enabledPlatforms: decision.enabledPlatforms },
+          { status: 403 }
+        );
+      }
     }
 
     // Load stored Instagram credentials

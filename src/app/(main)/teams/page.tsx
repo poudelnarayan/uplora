@@ -81,7 +81,9 @@ const Teams = () => {
     backendId: t.id,
     name: t.name,
     description: t.description || '',
-    platforms: (t as any).platforms || [],
+    // Map API's enabledPlatforms (canonical) → UI's platforms field. Keep
+    // legacy `platforms` fallback for transitional safety.
+    platforms: (t as any).enabledPlatforms || (t as any).platforms || [],
     members_data: ((t as any).members_data || []).map((m: any, idx: number) => ({
       id: String(m?.id || ''),
       name: m?.name || '',
@@ -125,7 +127,11 @@ const Teams = () => {
       const res = await fetch('/api/teams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: teamData.name, description: teamData.description, platforms: teamData.platforms })
+        body: JSON.stringify({
+          name: teamData.name,
+          description: teamData.description,
+          enabledPlatforms: teamData.platforms,
+        }),
       });
       const js = await res.json();
       if (!res.ok) throw new Error(js?.error || 'Failed to create team');
@@ -219,7 +225,8 @@ const Teams = () => {
           body: JSON.stringify({
             name: updates.name,
             description: updates.description,
-            platforms: updates.platforms,
+            // The Team UI model uses `platforms`; the API canonicalised to `enabledPlatforms`.
+            enabledPlatforms: updates.platforms,
           }),
         });
         const js = await res.json().catch(() => ({}));

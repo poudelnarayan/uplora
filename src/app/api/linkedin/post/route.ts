@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getUserSocialConnections } from "@/server/services/socialConnections";
 import { postLinkedInUgcText } from "@/lib/linkedin";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 /**
  * POST /api/linkedin/post
@@ -20,7 +21,18 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const text = typeof body?.text === "string" ? body.text.trim() : "";
+    const teamId = typeof body?.teamId === "string" ? body.teamId : null;
     if (!text) return NextResponse.json({ error: "Missing text" }, { status: 400 });
+
+    if (teamId) {
+      const decision = await checkTeamCanPublish(teamId, "linkedin");
+      if (!decision.allowed) {
+        return NextResponse.json(
+          { error: decision.reason, code: decision.code, teamName: decision.teamName, enabledPlatforms: decision.enabledPlatforms },
+          { status: 403 }
+        );
+      }
+    }
 
     const social = await getUserSocialConnections(userId);
     const li = social.linkedin;

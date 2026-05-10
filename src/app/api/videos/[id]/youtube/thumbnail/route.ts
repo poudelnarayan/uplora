@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { uploadYouTubeThumbnail, validateThumbnail, type ThumbnailUploadResult } from "@/server/services/youtubeUploadService";
 import { getVideoById, syncUser, getTeamAndRole, updateVideoMetadata } from "@/lib/video-utils";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
@@ -53,6 +54,19 @@ export async function POST(
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     if (video.teamId && callerRole !== "OWNER" && callerRole !== "ADMIN") {
       return NextResponse.json({ error: "Only owner/admin can update team thumbnails." }, { status: 403 });
+    }
+
+    const platformDecision = await checkTeamCanPublish(video.teamId, "youtube");
+    if (!platformDecision.allowed) {
+      return NextResponse.json(
+        {
+          error: platformDecision.reason,
+          code: platformDecision.code,
+          teamName: platformDecision.teamName,
+          enabledPlatforms: platformDecision.enabledPlatforms,
+        },
+        { status: 403 }
+      );
     }
 
     const youtubeVideoId = video.metadata?.youtube_video_id;

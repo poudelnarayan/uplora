@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getUserSocialConnections } from "@/server/services/socialConnections";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 /**
  * Step 7: Post to Instagram (2 calls, always)
@@ -21,9 +22,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({} as any));
     const imageUrl = typeof body?.imageUrl === "string" ? body.imageUrl.trim() : "";
     const caption = typeof body?.caption === "string" ? body.caption : "Hello Instagram";
+    const teamId = typeof body?.teamId === "string" ? body.teamId : null;
 
     if (!imageUrl) {
       return NextResponse.json({ error: "imageUrl is required" }, { status: 400 });
+    }
+
+    if (teamId) {
+      // FB→IG publish requires both Facebook and Instagram on the team allowlist
+      // since the route depends on a Facebook page token to publish to IG.
+      const fbDecision = await checkTeamCanPublish(teamId, "facebook");
+      if (!fbDecision.allowed) {
+        return NextResponse.json(
+          { error: fbDecision.reason, code: fbDecision.code, teamName: fbDecision.teamName, enabledPlatforms: fbDecision.enabledPlatforms },
+          { status: 403 }
+        );
+      }
+      const igDecision = await checkTeamCanPublish(teamId, "instagram");
+      if (!igDecision.allowed) {
+        return NextResponse.json(
+          { error: igDecision.reason, code: igDecision.code, teamName: igDecision.teamName, enabledPlatforms: igDecision.enabledPlatforms },
+          { status: 403 }
+        );
+      }
     }
 
     const social = await getUserSocialConnections(userId);

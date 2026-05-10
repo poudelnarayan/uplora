@@ -16,6 +16,7 @@ import { ThumbnailShimmer } from "@/app/components/ui/Shimmer";
 import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
+import { useTeamPlatforms } from "@/hooks/use-team-platforms";
 export const dynamic = "force-dynamic";
 
 interface Video {
@@ -55,6 +56,10 @@ export default function VideoPreviewPage() {
   const notifications = useNotifications();
   const { teams } = useTeam();
   const [video, setVideo] = useState<Video | null>(null);
+  // Resolve the team owning THIS video (not the active workspace) so the lock state
+  // matches what the server will actually accept on publish.
+  const { canYouTube, isPersonal: isPersonalTeam } = useTeamPlatforms(video?.teamId ?? null);
+  const youTubeAllowed = isPersonalTeam || canYouTube;
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"OWNER" | "ADMIN" | "MANAGER" | "EDITOR" | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -2048,24 +2053,45 @@ export default function VideoPreviewPage() {
                   {/* Owner/Admin: always show publish. Editor/Manager: only show when status is APPROVAL_APPROVED */}
                   {((role === "OWNER" || role === "ADMIN") || 
                     ((role === "EDITOR" || role === "MANAGER") && video.status === VideoStatus.APPROVAL_APPROVED)) && (
-                    <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
-                        disabled={submitting}
-                        onClick={approveOrPublish}
-                      >
-                        <Youtube className="h-5 w-5" />
-                        {submitting ? 'Working…' : 'Publish to YouTube'}
-                      </button>
-                      <button
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
-                        disabled={submitting}
-                        onClick={() => setShowScheduleModal(true)}
-                      >
-                        <Clock className="h-5 w-5" />
-                        Schedule
-                      </button>
-                    </div>
+                    youTubeAllowed ? (
+                      <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                          disabled={submitting}
+                          onClick={approveOrPublish}
+                        >
+                          <Youtube className="h-5 w-5" />
+                          {submitting ? 'Working…' : 'Publish to YouTube'}
+                        </button>
+                        <button
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+                          disabled={submitting}
+                          onClick={() => setShowScheduleModal(true)}
+                        >
+                          <Clock className="h-5 w-5" />
+                          Schedule
+                        </button>
+                      </div>
+                    ) : (
+                      // Locked state: team owner hasn't enabled YouTube for this team.
+                      // Render an explicit explanation rather than a disabled button so the
+                      // editor (or owner browsing a not-yet-enabled team) knows what to do.
+                      <div className="sm:col-span-2 lg:col-span-4 rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
+                        <div className="mt-0.5 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <Youtube className="h-4 w-4 text-amber-700" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-amber-900">
+                            YouTube isn't enabled for this team
+                          </div>
+                          <p className="text-xs text-amber-800 mt-1">
+                            {role === "OWNER"
+                              ? "Open Team settings → Platform Access and grant YouTube to enable publishing."
+                              : "Ask the team owner to enable YouTube under Team settings → Platform Access."}
+                          </p>
+                        </div>
+                      </div>
+                    )
                   )}
                 </div>
 

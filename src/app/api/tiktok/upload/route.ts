@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getUserSocialConnections, updateUserSocialConnections } from "@/server/services/socialConnections";
 import { refreshTikTokAccessToken, uploadTikTokVideo } from "@/lib/tiktok";
+import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
 /**
  * POST /api/tiktok/upload
@@ -22,8 +23,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const filePath = typeof body?.filePath === "string" ? body.filePath : null;
     const caption = typeof body?.caption === "string" ? body.caption : "";
+    const teamId = typeof body?.teamId === "string" ? body.teamId : null;
 
     if (!filePath) return NextResponse.json({ error: "Missing filePath" }, { status: 400 });
+
+    if (teamId) {
+      const decision = await checkTeamCanPublish(teamId, "tiktok");
+      if (!decision.allowed) {
+        return NextResponse.json(
+          { error: decision.reason, code: decision.code, teamName: decision.teamName, enabledPlatforms: decision.enabledPlatforms },
+          { status: 403 }
+        );
+      }
+    }
 
     const clientKey = process.env.TIKTOK_CLIENT_KEY;
     const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
