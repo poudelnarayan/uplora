@@ -763,36 +763,34 @@ const MakePostVideosInner = () => {
   return (
     <AppShell>
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-44 z-40 lg:left-64">
-          <div className="max-w-5xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+        {/* Header — fixed only on desktop; on mobile the AppShell top bar is already sticky */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
+          <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={async () => {
                     if (hasUnsavedChanges && videoId) {
-                      // Try to save before leaving
                       await autoSaveMetadata(false);
-                      // Small delay to ensure save completes
                       await new Promise((resolve) => setTimeout(resolve, 500));
                     }
                     router.push("/make-post");
                   }}
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 px-2 sm:px-3 shrink-0"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  <span className="hidden sm:inline">Back</span>
                 </Button>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
                     <Youtube className="h-4 w-4 text-red-600" />
                   </div>
-                  <div>
-                    <h1 className="font-semibold">YouTube Video</h1>
-                    <p className="text-sm text-gray-500">Long-form content</p>
+                  <div className="min-w-0">
+                    <h1 className="font-semibold text-sm sm:text-base truncate">YouTube Video</h1>
+                    <p className="text-[11px] sm:text-sm text-gray-500 hidden sm:block">Long-form content</p>
                   </div>
                 </div>
               </div>
@@ -864,14 +862,14 @@ const MakePostVideosInner = () => {
         {activeUpload &&
           (activeUpload.status === "uploading" ||
             activeUpload.status === "queued") && (
-            <div className="max-w-5xl mx-auto px-6 pt-4">
+            <div className="max-w-5xl mx-auto px-3 sm:px-6 pt-3 sm:pt-4 lg:pt-24">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-3">
-                <Upload className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-pulse" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                <Upload className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-pulse shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">
                     Upload in progress ({activeUpload.progress}%)
                   </p>
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <p className="text-[11px] sm:text-xs text-blue-700 dark:text-blue-300">
                     You can navigate anywhere—your upload will continue in the
                     background. Metadata is auto-saved.
                   </p>
@@ -880,8 +878,8 @@ const MakePostVideosInner = () => {
             </div>
           )}
 
-        <div className="max-w-5xl mx-auto px-6 py-8 pt-24">
-          <div className="grid lg:grid-cols-3 gap-8">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8 lg:pt-24">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Video Upload */}
@@ -1255,8 +1253,8 @@ const MakePostVideosInner = () => {
               </Card>
             </div>
 
-            {/* YouTube Preview */}
-            <div className="lg:col-span-1">
+            {/* YouTube Preview — hidden on mobile (preview phone is bigger than the device), visible on lg+ */}
+            <div className="hidden lg:block lg:col-span-1">
               <Card className="shadow-sm sticky top-24 w-full max-w-none">
                 <CardContent className="p-0">
                   {/* iPhone 14 Pro Max Preview */}

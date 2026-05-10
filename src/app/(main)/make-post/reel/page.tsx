@@ -221,11 +221,11 @@ function MakePostReelsContent() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             TOP NAVIGATION BAR — back button, breadcrumbs, workspace, actions
            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <header className="sticky top-0 z-20 border-b border-border/50 backdrop-blur-xl bg-card/80">
-          <div className="px-4 sm:px-6 lg:px-8 xl:px-10">
+        <header className="lg:sticky lg:top-0 lg:z-20 border-b border-border/50 backdrop-blur-xl bg-card/80">
+          <div className="px-3 sm:px-6 lg:px-8 xl:px-10">
 
             {/* Row 1: Back + Breadcrumbs + Workspace + Actions */}
-            <div className="flex items-center justify-between h-16 gap-4">
+            <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
 
               {/* Left: Back + Breadcrumbs */}
               <div className="flex items-center gap-3 min-w-0">
@@ -338,7 +338,7 @@ function MakePostReelsContent() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             HERO SECTION — Title + Specs + Platform selector (horizontal pills)
            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="px-4 sm:px-6 lg:px-8 xl:px-10 pt-6 pb-2">
+        <div className="px-3 sm:px-6 lg:px-8 xl:px-10 pt-4 sm:pt-6 pb-2">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             {/* Left: Title + Spec chips */}
             <div className="space-y-2">
@@ -379,14 +379,14 @@ function MakePostReelsContent() {
             Left: Upload + Post Details
             Right: Phone Preview (sticky)
            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <section className="flex-1 px-4 sm:px-6 lg:px-8 xl:px-10 pt-4 pb-32 sm:pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] gap-6 lg:gap-8 items-start">
+        <section className="flex-1 px-3 sm:px-6 lg:px-8 xl:px-10 pt-3 sm:pt-4 pb-32 sm:pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] gap-4 sm:gap-6 lg:gap-8 items-start">
 
             {/* ── Left column: Upload + Details ── */}
-            <div className={`space-y-5 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
+            <div className={`space-y-4 sm:space-y-5 min-w-0 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
 
               {/* Upload area card */}
-              <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-soft">
+              <div className="rounded-2xl border border-border/50 bg-card p-4 sm:p-5 shadow-soft">
                 <ReelUploadArea
                   dragActive={dragActive}
                   selectedVideo={selectedVideo}

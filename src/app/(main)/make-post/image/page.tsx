@@ -248,33 +248,33 @@ function MakePostImageContent() {
   return (
 <AppShell>
     <div className="min-h-screen bg-gray-50/50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 fixed top-0 left-0 right-44 z-40 lg:left-64">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+      {/* Header — fixed only on desktop */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-border/20 lg:fixed lg:top-0 lg:left-64 lg:right-44 lg:z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => router.push("/make-post")}
-                className="gap-2"
+                className="gap-1 sm:gap-2 px-2 sm:px-3 shrink-0"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                <span className="hidden sm:inline">Back</span>
               </Button>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
                   <ImageIcon className="h-4 w-4 text-purple-600" />
                 </div>
-                <div>
-                  <h1 className="font-semibold">Image Post</h1>
-                  <p className="text-sm text-gray-500">Visual content</p>
+                <div className="min-w-0">
+                  <h1 className="font-semibold text-sm sm:text-base truncate">Image Post</h1>
+                  <p className="text-[11px] sm:text-sm text-gray-500 hidden sm:block">Visual content</p>
                 </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Button 
                 size="sm" 
                 className="gap-2"
@@ -382,15 +382,15 @@ function MakePostImageContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 pt-24">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 lg:pt-24">
         {editId && postStatus === "PENDING" && (
-          <div className="mb-4 rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+          <div className="mb-4 rounded-lg border border-border bg-muted/30 p-3 text-xs sm:text-sm text-muted-foreground">
             {role === "EDITOR"
-              ? "This post is awaiting approval. Editing is locked until it’s approved or sent back."
+              ? "This post is awaiting approval. Editing is locked until it's approved or sent back."
               : "This post is awaiting approval. You can approve & publish from the top bar."}
           </div>
         )}
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className={`lg:col-span-3 space-y-6 ${locked ? "opacity-60 pointer-events-none select-none" : ""}`}>
             
@@ -496,8 +496,8 @@ function MakePostImageContent() {
 
           </div>
 
-          {/* Preview Sidebar */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Preview Sidebar — hidden on mobile (375-512px previews don't fit on phones) */}
+          <div className="hidden lg:block lg:col-span-2 space-y-6">
             <div className="sticky top-24">
               <Card className="shadow-sm">
                 <CardHeader className="pb-4">
