@@ -447,8 +447,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-64 ml-0">
+      {/* Main Content. min-w-0 + overflow-x-hidden are critical: without
+          them, any child wider than the viewport (e.g. an unwrapped button
+          row) widens the body and triggers mobile auto-zoom-out. */}
+      <main className="flex-1 lg:ml-64 ml-0 min-w-0 overflow-x-hidden">
         {/* Mobile Top Bar - Only for mobile */}
         <div className="lg:hidden sticky top-0 z-30 bg-card backdrop-blur-sm border-b border-border">
           <div className="px-4 py-3">

@@ -52,15 +52,15 @@ export function StatTile({ label, value, hint, Icon, onClick, active, tone }: Pr
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate">
+          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
             {label}
           </p>
           <div className="flex items-baseline gap-2">
-            <p className="text-lg sm:text-2xl font-bold text-foreground leading-tight tabular-nums">
+            <p className="text-xl sm:text-2xl font-bold text-foreground leading-tight tabular-nums">
               {value}
             </p>
             {hint && (
-              <span className="text-[10px] sm:text-xs text-muted-foreground/80 truncate hidden sm:inline">
+              <span className="text-xs text-muted-foreground/80 truncate hidden sm:inline">
                 {hint}
               </span>
             )}

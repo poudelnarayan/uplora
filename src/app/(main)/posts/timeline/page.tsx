@@ -240,25 +240,40 @@ const Timeline = () => {
           animate={{ opacity: 1, y: 0 }}
           className="min-h-full"
         >
-          {/* Header */}
-          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:sticky lg:top-0 lg:z-10">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Timeline</h1>
-                <span className="text-xs sm:text-sm text-muted-foreground truncate">
+          {/* Header — mobile-first: title row then a separate controls row.
+              On desktop the two rows collapse into one. */}
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:sticky lg:top-0 lg:z-10 space-y-3 sm:space-y-0">
+            {/* Title + date label */}
+            <div className="sm:flex sm:items-center sm:justify-between sm:gap-3">
+              <div className="flex items-baseline gap-2 sm:gap-3 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground shrink-0">Timeline</h1>
+                <span className="text-sm text-muted-foreground truncate">
                   {viewMode === 'month'
                     ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`
-                    : `${calendarDays[0]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${calendarDays[6]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${currentDate.getFullYear()}`
+                    : `${calendarDays[0]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${calendarDays[6]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                   }
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Desktop-only New Post button (mobile gets its own slot below) */}
+              <Link href="/make-post" className="hidden sm:inline-flex">
+                <Button size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  New Post
+                </Button>
+              </Link>
+            </div>
+
+            {/* Controls row */}
+            <div className="flex items-center gap-2 sm:mt-3">
+              {/* Prev/Next */}
+              <div className="flex items-center gap-1 shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => viewMode === 'month' ? navigateMonth('prev') : navigateWeek('prev')}
                   className="h-9 w-9 p-0"
+                  aria-label="Previous"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -267,50 +282,50 @@ const Timeline = () => {
                   size="sm"
                   onClick={() => viewMode === 'month' ? navigateMonth('next') : navigateWeek('next')}
                   className="h-9 w-9 p-0"
+                  aria-label="Next"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-                <div className="flex border border-border rounded-lg overflow-hidden ml-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewMode('week')}
-                    className={`px-3 py-1.5 text-sm rounded-none border-r ${
-                      viewMode === 'week'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    Week
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewMode('month')}
-                    className={`px-3 py-1.5 text-sm rounded-none ${
-                      viewMode === 'month'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    Month
-                  </Button>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={goToToday}
-                  className="ml-2"
-                >
-                  Today
-                </Button>
-                <Link href="/make-post">
-                  <Button size="sm" className="ml-2 gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Post
-                  </Button>
-                </Link>
               </div>
+
+              {/* Week/Month segmented — flex so it shrinks gracefully */}
+              <div className="flex border border-border rounded-lg overflow-hidden shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('week')}
+                  className={`px-3 h-9 text-sm rounded-none border-r ${
+                    viewMode === 'week'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary'
+                      : 'hover:bg-muted'
+                  }`}
+                >
+                  Week
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('month')}
+                  className={`px-3 h-9 text-sm rounded-none ${
+                    viewMode === 'month'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary'
+                      : 'hover:bg-muted'
+                  }`}
+                >
+                  Month
+                </Button>
+              </div>
+
+              <Button size="sm" variant="outline" onClick={goToToday} className="h-9 shrink-0">
+                Today
+              </Button>
+
+              {/* Mobile: New Post pushed to the right and icon-only to save width */}
+              <Link href="/make-post" className="sm:hidden ml-auto">
+                <Button size="sm" className="h-9 w-9 p-0" aria-label="New post">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -333,21 +348,21 @@ const Timeline = () => {
                       const isTodayDay = isToday(date);
                       return (
                         <div key={index} className={`px-3 py-3 ${isTodayDay ? 'bg-primary/5' : ''}`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-baseline gap-2">
-                              <span className={`text-sm font-bold ${isTodayDay ? 'text-primary' : 'text-foreground'}`}>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span className={`text-base font-bold ${isTodayDay ? 'text-primary' : 'text-foreground'}`}>
                                 {date.toLocaleDateString('en-US', { weekday: 'short' })}
                               </span>
-                              <span className={`text-xs ${isTodayDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                              <span className={`text-sm ${isTodayDay ? 'text-primary' : 'text-muted-foreground'}`}>
                                 {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                               </span>
                               {isTodayDay && (
-                                <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground">
+                                <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground shrink-0">
                                   Today
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-xs text-muted-foreground shrink-0">
                               {dayPosts.length === 0 ? 'No posts' : `${dayPosts.length} post${dayPosts.length > 1 ? 's' : ''}`}
                             </span>
                           </div>
@@ -356,15 +371,15 @@ const Timeline = () => {
                               {dayPosts.map((post) => (
                                 <div
                                   key={post.id}
-                                  className={`px-3 py-2 rounded-lg border text-xs flex items-center gap-2 ${getStatusColor(post.status)} border-border/50`}
+                                  className={`px-3 py-2 rounded-lg border text-sm flex items-center gap-2 ${getStatusColor(post.status)} border-border/50`}
                                 >
-                                  <span className="shrink-0 [&_svg]:w-3 [&_svg]:h-3">{getTypeIcon(post.type)}</span>
+                                  <span className="shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5">{getTypeIcon(post.type)}</span>
                                   <span className="flex-1 min-w-0 truncate font-semibold text-foreground">
                                     {post.title || 'Untitled'}
                                   </span>
                                   {post.scheduledFor && (
-                                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                                      <Clock className="h-2.5 w-2.5" />
+                                    <span className="shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                      <Clock className="h-3 w-3" />
                                       {new Date(post.scheduledFor).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   )}

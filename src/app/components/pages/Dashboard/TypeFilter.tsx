@@ -70,9 +70,9 @@ export function TypeFilter({ selected, onChange }: Props) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/40 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 h-9 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
         >
-          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+          <Filter className="h-4 w-4 text-muted-foreground" />
           Type: <span className="text-foreground">{summary}</span>
         </button>
         {open && (

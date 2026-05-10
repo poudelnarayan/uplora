@@ -328,8 +328,8 @@ export default function Dashboard() {
           className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4"
         >
           <div className="min-w-0">
-            <p className="text-xs sm:text-sm text-muted-foreground">{greeting}</p>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">{greeting}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate flex items-center gap-2">
               <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
               <span className="truncate">{teamName}</span>
             </h1>
@@ -398,9 +398,9 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 min-w-0">
             <TypeFilter selected={selectedTypes} onChange={setSelectedTypes} />
           </div>
-          <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+          <div className="text-sm text-muted-foreground tabular-nums whitespace-nowrap">
             {loading ? (
-              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3.5 w-32" />
             ) : (
               <>
                 {content.length}{" "}
@@ -531,17 +531,17 @@ function ContentCard({
           <div className="p-3 sm:p-4">
             <div className="flex items-center justify-between gap-2 mb-2">
               <TypeIndicator type={item.type} />
-              <Badge variant={statusVariant} className="text-[10px] sm:text-xs font-semibold">
+              <Badge variant={statusVariant} className="text-xs font-semibold">
                 {status || "—"}
               </Badge>
             </div>
 
-            <h3 className="font-semibold text-sm sm:text-base text-foreground line-clamp-2 mb-1">
+            <h3 className="font-semibold text-base text-foreground line-clamp-2 mb-1">
               {item.title || item.filename || "Untitled"}
             </h3>
             {item.content && (
               <p
-                className="text-xs text-muted-foreground line-clamp-2 mb-3 [&_strong]:text-foreground [&_em]:text-foreground"
+                className="text-sm text-muted-foreground line-clamp-2 mb-3 [&_strong]:text-foreground [&_em]:text-foreground"
                 // Render the same inline formatting (bold, italic, hashtags,
                 // links, timestamps) that the live preview on /videos/[id]
                 // shows so the dashboard isn't a downgraded-looking duplicate.
@@ -550,9 +550,9 @@ function ContentCard({
             )}
 
             {/* Meta row */}
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-3 pt-2 border-t border-border/60">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 pt-2 border-t border-border/60">
               <span className="inline-flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3.5 h-3.5" />
                 {new Date(item.createdAt).toLocaleDateString()}
               </span>
               {item.platforms?.length > 0 && (
@@ -565,18 +565,18 @@ function ContentCard({
               <div className="flex gap-1.5">
                 <Button
                   size="sm" variant="outline"
-                  className="h-8 px-2.5 text-xs gap-1"
+                  className="h-9 px-3 text-sm gap-1.5"
                   onClick={(e) => { e.stopPropagation(); onEdit(item); }}
                 >
-                  <Edit className="w-3 h-3" /> Edit
+                  <Edit className="w-3.5 h-3.5" /> Edit
                 </Button>
                 {isDraft && (
                   <Button
                     size="sm"
-                    className="h-8 px-2.5 text-xs gap-1"
+                    className="h-9 px-3 text-sm gap-1.5"
                     onClick={(e) => { e.stopPropagation(); onPublish(item); }}
                   >
-                    <Send className="w-3 h-3" /> Publish
+                    <Send className="w-3.5 h-3.5" /> Publish
                   </Button>
                 )}
               </div>
