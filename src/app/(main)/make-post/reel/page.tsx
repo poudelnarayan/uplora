@@ -40,8 +40,9 @@ function MakePostReelsContent() {
   const locked = !!editId && postStatus === "PENDING" && role === "EDITOR";
   const busy = isPublishing || isDrafting || isUploading;
 
-  const showRequestApproval = !!editId && role === "EDITOR" && postStatus !== "PENDING";
-  const showApprove = !!editId && postStatus === "PENDING" && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role);
+  const showRequestApproval = !!editId && role === "EDITOR";
+  const isPendingApproval = postStatus === "PENDING";
+  const showApprove = !!editId && isPendingApproval && !!role && ["OWNER", "ADMIN", "MANAGER"].includes(role);
 
   useEffect(() => {
     if (!editId) return;
@@ -283,14 +284,22 @@ function MakePostReelsContent() {
                     </button>
                   )}
                   {showRequestApproval && (
-                    <button
-                      onClick={requestApproval}
-                      disabled={!!isRequestingApproval || busy}
-                      className="flex items-center gap-2 bg-warning hover:bg-warning/90 text-warning-foreground font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all disabled:opacity-50 active:scale-95"
-                    >
-                      {isRequestingApproval && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Request Approval
-                    </button>
+                    <>
+                      {isPendingApproval && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-warning-muted text-warning-foreground text-xs font-bold">
+                          <Clock className="h-3.5 w-3.5 text-warning" />
+                          Waiting for approval
+                        </span>
+                      )}
+                      <button
+                        onClick={requestApproval}
+                        disabled={!!isRequestingApproval || busy}
+                        className="flex items-center gap-2 bg-warning hover:bg-warning/90 text-warning-foreground font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all disabled:opacity-50 active:scale-95"
+                      >
+                        {isRequestingApproval && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        {isPendingApproval ? "Resend Approval" : "Request Approval"}
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={() => save(true)}
@@ -442,14 +451,22 @@ function MakePostReelsContent() {
               </button>
             )}
             {showRequestApproval && (
-              <button
-                onClick={requestApproval}
-                disabled={!!isRequestingApproval || busy}
-                className="w-full flex items-center justify-center gap-2 bg-warning text-warning-foreground font-bold py-3 rounded-xl transition-all disabled:opacity-50 active:scale-[0.98]"
-              >
-                {isRequestingApproval && <Loader2 className="h-4 w-4 animate-spin" />}
-                Request Approval
-              </button>
+              <>
+                {isPendingApproval && (
+                  <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-warning-muted text-warning-foreground text-xs font-bold">
+                    <Clock className="h-3.5 w-3.5 text-warning" />
+                    Waiting for approval
+                  </div>
+                )}
+                <button
+                  onClick={requestApproval}
+                  disabled={!!isRequestingApproval || busy}
+                  className="w-full flex items-center justify-center gap-2 bg-warning text-warning-foreground font-bold py-3 rounded-xl transition-all disabled:opacity-50 active:scale-[0.98]"
+                >
+                  {isRequestingApproval && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isPendingApproval ? "Resend Approval" : "Request Approval"}
+                </button>
+              </>
             )}
             {/* Primary actions row */}
             <div className="flex gap-2">
