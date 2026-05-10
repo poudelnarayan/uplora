@@ -27,6 +27,8 @@ import {
   FileText,
   ShieldCheck,
   LogOut,
+  Home,
+  Link2,
   User as UserIcon,
 } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
@@ -453,22 +455,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main Content. min-w-0 + overflow-x-hidden are critical: without
           them, any child wider than the viewport (e.g. an unwrapped button
-          row) widens the body and triggers mobile auto-zoom-out. */}
-      <main className="flex-1 lg:ml-64 ml-0 min-w-0 overflow-x-hidden">
-        {/* Mobile Top Bar — slim, just the menu trigger. The Uplora logo
-            lives inside the drawer header (and the desktop sidebar), so
-            we don't repeat it here. Keeps content space maximized. */}
-        <div className="lg:hidden sticky top-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border">
-          <div className="px-2 py-2 flex items-center">
-            <button
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+          row) widens the body and triggers mobile auto-zoom-out. The
+          pb on mobile leaves clearance for the bottom tab bar (skipped
+          on make-post, which renders its own bottom action bar). */}
+      <main
+        className={cn(
+          "flex-1 lg:ml-64 ml-0 min-w-0 overflow-x-hidden lg:pb-0",
+          path.startsWith("/make-post") ? "pb-0" : "pb-20",
+        )}
+      >
 
 
         {/* Switching overlay */}
@@ -635,6 +630,83 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Mobile bottom tab bar — primary navigation on small screens.
+          Hidden on desktop (sidebar handles nav there) and during the
+          make-post flow (those pages have their own bottom action bars
+          and don't want a competing nav surface). The middle slot
+          (Create) gets a tinted background to mark it as the primary
+          CTA, mirroring post-bridge / Buffer / Hootsuite. */}
+      {!path.startsWith("/make-post") && (
+      <nav
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        aria-label="Primary"
+      >
+        <div className="grid grid-cols-5 h-16">
+          {[
+            { href: "/dashboard", label: "Home", Icon: Home },
+            { href: "/posts/all", label: "Posts", Icon: FileText },
+            { href: "/make-post", label: "Create", Icon: Plus, primary: true },
+            { href: "/social", label: "Connect", Icon: Link2 },
+            { href: "__menu__", label: "Menu", Icon: Menu },
+          ].map(({ href, label, Icon, primary }) => {
+            const isMenuTrigger = href === "__menu__";
+            const active = !isMenuTrigger && (path === href || path.startsWith(href + "/"));
+
+            const inner = (
+              <>
+                <span
+                  className={cn(
+                    "flex items-center justify-center rounded-xl transition-colors",
+                    primary
+                      ? "h-9 w-12 bg-primary/15 text-primary"
+                      : active
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  <Icon className={cn("h-5 w-5", primary && "h-5 w-5")} strokeWidth={primary ? 2.4 : 2} />
+                </span>
+                <span
+                  className={cn(
+                    "text-[11px] mt-0.5 leading-none",
+                    primary
+                      ? "text-primary font-medium"
+                      : active
+                        ? "text-primary font-medium"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                </span>
+              </>
+            );
+
+            const baseClass = "flex flex-col items-center justify-center gap-0.5 select-none active:opacity-70 transition-opacity";
+
+            if (isMenuTrigger) {
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setMobileNavOpen(true)}
+                  className={baseClass}
+                  aria-label="Open menu"
+                >
+                  {inner}
+                </button>
+              );
+            }
+            return (
+              <Link key={href} href={href} className={baseClass}>
+                {inner}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+      )}
 
       {/* Modals */}
       <NotificationCenter
