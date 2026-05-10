@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, Clock } from "lucide-react";
+import { CheckCircle, Link2, Plus, Instagram, Youtube, Twitter, Facebook, Linkedin, Clock, MoreHorizontal, RefreshCw, Unplug, ShieldAlert } from "lucide-react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
@@ -11,7 +11,14 @@ import { Input } from "@/app/components/ui/input";
 import { Textarea } from "@/app/components/ui/textarea";
 import { Label } from "@/app/components/ui/label";
 import AppShell from "@/app/components/layout/AppLayout";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
 import { useTeam } from "@/context/TeamContext";
+import { cn } from "@/lib/utils";
 
 const MotionDiv = motion.div as any;
 
@@ -400,8 +407,121 @@ const SocialConnections = () => {
     }
   ];
 
-  const connectedPlatforms = platforms.filter((p) => p.connected);
-  const availablePlatforms = platforms.filter((p) => !p.connected);
+  // Data-driven platform config — single source of truth for each
+  // platform's connect URL, disconnect URL, brand color, and how to
+  // reset its local state on disconnect. Lets the UI loop instead of
+  // repeating an if/else chain per platform.
+  type PlatformDef = {
+    id: string;
+    connectHref: string;
+    disconnectHref: string;
+    /** brand-tinted icon background — light tint over the card surface */
+    iconBg: string;
+    /** brand-tinted icon color */
+    iconFg: string;
+    loading: boolean;
+    onDisconnected: () => void;
+  };
+
+  const PLATFORM_DEFS: Record<string, PlatformDef> = {
+    instagram: {
+      id: "instagram",
+      connectHref: "/api/instagram/start",
+      // Instagram is wired to the same auth as Facebook server-side
+      disconnectHref: "/api/facebook/disconnect",
+      iconBg: "bg-pink-500/10",
+      iconFg: "text-pink-600 dark:text-pink-400",
+      loading: fb.loading,
+      onDisconnected: () => setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] }),
+    },
+    youtube: {
+      id: "youtube",
+      connectHref: "/api/youtube/start",
+      disconnectHref: "/api/youtube/disconnect",
+      iconBg: "bg-red-500/10",
+      iconFg: "text-red-600 dark:text-red-400",
+      loading: yt.loading,
+      onDisconnected: () => setYt({ loading: false, isConnected: false }),
+    },
+    twitter: {
+      id: "twitter",
+      connectHref: "/api/twitter/connect",
+      disconnectHref: "/api/twitter/disconnect",
+      iconBg: "bg-foreground/5 dark:bg-foreground/10",
+      iconFg: "text-foreground",
+      loading: x.loading,
+      onDisconnected: () => setX({ loading: false, isConnected: false, username: null }),
+    },
+    facebook: {
+      id: "facebook",
+      connectHref: "/api/facebook/start?intent=facebook",
+      disconnectHref: "/api/facebook/disconnect",
+      iconBg: "bg-blue-500/10",
+      iconFg: "text-blue-600 dark:text-blue-400",
+      loading: fb.loading,
+      onDisconnected: () => setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] }),
+    },
+    linkedin: {
+      id: "linkedin",
+      connectHref: "/api/linkedin/connect",
+      disconnectHref: "/api/linkedin/disconnect",
+      iconBg: "bg-sky-500/10",
+      iconFg: "text-sky-700 dark:text-sky-400",
+      loading: li.loading,
+      onDisconnected: () => setLi({ loading: false, isConnected: false, name: null }),
+    },
+    pinterest: {
+      id: "pinterest",
+      connectHref: "/api/pinterest/auth/connect",
+      disconnectHref: "/api/pinterest/disconnect",
+      iconBg: "bg-rose-500/10",
+      iconFg: "text-rose-600 dark:text-rose-400",
+      loading: pin.loading,
+      onDisconnected: () => setPin({ loading: false, isConnected: false, username: null }),
+    },
+    threads: {
+      id: "threads",
+      connectHref: "/api/threads/auth/connect",
+      disconnectHref: "/api/threads/disconnect",
+      iconBg: "bg-foreground/5 dark:bg-foreground/10",
+      iconFg: "text-foreground",
+      loading: th.loading,
+      onDisconnected: () => setTh({ loading: false, isConnected: false, userId: null }),
+    },
+    tiktok: {
+      id: "tiktok",
+      connectHref: "/api/tiktok/auth/connect",
+      disconnectHref: "/api/tiktok/disconnect",
+      iconBg: "bg-foreground/5 dark:bg-foreground/10",
+      iconFg: "text-foreground",
+      loading: tt.loading,
+      onDisconnected: () => setTt({ loading: false, isConnected: false, username: null }),
+    },
+  };
+
+  const handleDisconnect = async (platform: { id: string; name: string }) => {
+    const def = PLATFORM_DEFS[platform.id];
+    if (!def) return;
+    try {
+      const resp = await fetch(def.disconnectHref, { method: "POST" });
+      if (!resp.ok) throw new Error("Failed");
+      def.onDisconnected();
+      invalidateKey(SOCIAL_CACHE_USER_KEY);
+      notifications.addNotification({ type: "success", title: "Disconnected", message: `${platform.name} disconnected` });
+    } catch {
+      notifications.addNotification({ type: "error", title: "Disconnect failed", message: "Try again." });
+    }
+  };
+
+  // Sort: connected first, then unconnected. This keeps the user's wins
+  // up top without needing two separate sections.
+  const sortedPlatforms = useMemo(
+    () => [...platforms].sort((a, b) => Number(b.connected) - Number(a.connected)),
+    [platforms],
+  );
+  const connectedCount = platforms.filter((p) => p.connected).length;
+  const totalCount = platforms.length;
+  const progressPct = Math.round((connectedCount / totalCount) * 100);
 
   return (
     <AppShell>
@@ -415,288 +535,202 @@ const SocialConnections = () => {
           <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground truncate">Social Media Connections</h1>
-                <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1">
-                  Connect accounts to publish content.
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground truncate">Social connections</h1>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  Link the accounts you want to publish to.
                 </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" className="gap-2 text-xs sm:text-sm" onClick={() => setRequestOpen(true)}>
-                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Request a platform</span>
-                  <span className="sm:hidden">Request</span>
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => setRequestOpen(true)}>
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Request a platform</span>
+                <span className="sm:hidden">Request</span>
+              </Button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-4 sm:p-6 space-y-6 sm:space-y-10">
+          <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+            {/* Summary strip — at-a-glance "where am I" without scrolling */}
+            <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="text-sm text-muted-foreground">Connected accounts</div>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums">
+                      {connectedCount}
+                    </span>
+                    <span className="text-sm text-muted-foreground">of {totalCount} platforms</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                    {connectedCount > 0 ? "Active" : "None yet"}
+                  </Badge>
+                </div>
+              </div>
+              <div className="mt-3 h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
+
             {/* Workspace-aware hint (team workspaces publish using owner connections) */}
             {isTeamWorkspace && !isTeamOwner && (
-              <Card className="border border-border/60">
+              <Card className="border border-amber-500/30 bg-amber-500/5">
                 <CardContent className="p-4">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Badge variant="outline" className="text-xs shrink-0">Team workspace</Badge>
-                      <div className="text-sm font-medium text-foreground truncate">
-                        {selectedTeam?.name || "Team"}
+                  <div className="flex items-start gap-3">
+                    <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="text-sm">
+                        <span className="font-semibold text-foreground">Team workspace.</span>{" "}
+                        <span className="text-muted-foreground">
+                          Posts publish using the team owner&apos;s accounts. The connections below are your personal ones.
+                        </span>
                       </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Publishing for this workspace uses the <span className="font-medium text-foreground">team owner&apos;s</span> connected accounts.
-                      The connections shown below are <span className="font-medium text-foreground">your personal</span> connections.
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="text-xs text-muted-foreground">
-                        {teamOwnerPlatforms.loading ? "Checking team connections…" : "Team owner connected:"}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">
+                          {teamOwnerPlatforms.loading ? "Checking team connections…" : "Owner connected:"}
+                        </span>
+                        {!teamOwnerPlatforms.loading && (
+                          teamOwnerPlatforms.connectedPlatforms.length > 0 ? (
+                            teamOwnerPlatforms.connectedPlatforms.map((p) => (
+                              <Badge key={p} variant="secondary" className="text-xs">
+                                {p}
+                              </Badge>
+                            ))
+                          ) : (
+                            <Badge variant="outline" className="text-xs">None</Badge>
+                          )
+                        )}
+                        {teamOwnerPlatforms.ownerName && !teamOwnerPlatforms.loading && (
+                          <span className="text-xs text-muted-foreground">· {teamOwnerPlatforms.ownerName}</span>
+                        )}
                       </div>
-                      {teamOwnerPlatforms.loading ? null : (
-                        teamOwnerPlatforms.connectedPlatforms.length > 0 ? (
-                          teamOwnerPlatforms.connectedPlatforms.map((p) => (
-                            <Badge key={p} className="bg-primary/10 text-foreground border border-border/60">
-                              {p}
-                            </Badge>
-                          ))
-                        ) : (
-                          <Badge variant="outline">None</Badge>
-                        )
-                      )}
-                      {teamOwnerPlatforms.ownerName && !teamOwnerPlatforms.loading && (
-                        <span className="text-xs text-muted-foreground">({teamOwnerPlatforms.ownerName})</span>
-                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Connected */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Connected</h2>
-                  <p className="text-sm text-muted-foreground">These accounts can publish once you take action.</p>
-                </div>
-                <Badge className="bg-success/10 text-success border border-success/20">
-                  {connectedPlatforms.length} connected
-                </Badge>
-              </div>
-
-              {connectedPlatforms.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-6 text-sm text-muted-foreground">
-                    No platforms connected yet. Connect one below to start publishing.
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                  {connectedPlatforms.map((platform) => (
-                    <Card key={platform.id} className="hover:shadow-lg transition-all duration-200">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                              {getPlatformIcon(platform.id)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-foreground">{platform.name}</h3>
-                                <Badge className="bg-success/10 text-success border border-success/20">Connected</Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{platform.username || "Connected"}</p>
-                            </div>
-                          </div>
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        </div>
-
-                        <div className="mt-6">
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={async () => {
-                              try {
-                                let didChange = false;
-                                let resp;
-                                if (platform.id === "youtube") {
-                                  resp = await fetch("/api/youtube/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "YouTube account disconnected" });
-                                  setYt({ loading: false, isConnected: false });
-                                  didChange = true;
-                                } else if (platform.id === "facebook" || platform.id === "instagram") {
-                                  resp = await fetch("/api/facebook/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "Facebook/Instagram disconnected" });
-                                  setFb({ loading: false, isConnected: false, instagramConnected: false, pages: [], instagramAccounts: [] });
-                                  didChange = true;
-                                } else if (platform.id === "tiktok") {
-                                  resp = await fetch("/api/tiktok/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "TikTok disconnected" });
-                                  setTt({ loading: false, isConnected: false, username: null });
-                                  didChange = true;
-                                } else if (platform.id === "threads") {
-                                  resp = await fetch("/api/threads/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "Threads disconnected" });
-                                  setTh({ loading: false, isConnected: false, userId: null });
-                                  didChange = true;
-                                } else if (platform.id === "pinterest") {
-                                  resp = await fetch("/api/pinterest/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "Pinterest disconnected" });
-                                  setPin({ loading: false, isConnected: false, username: null });
-                                  didChange = true;
-                                } else if (platform.id === "linkedin") {
-                                  resp = await fetch("/api/linkedin/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "LinkedIn disconnected" });
-                                  setLi({ loading: false, isConnected: false, name: null });
-                                  didChange = true;
-                                } else if (platform.id === "twitter") {
-                                  resp = await fetch("/api/twitter/disconnect", { method: "POST" });
-                                  if (!resp.ok) throw new Error("Failed");
-                                  notifications.addNotification({ type: "success", title: "Disconnected", message: "X disconnected" });
-                                  setX({ loading: false, isConnected: false, username: null });
-                                  didChange = true;
-                                }
-
-                                // Connection state changed => invalidate cached statuses so next visit revalidates.
-                                if (didChange) invalidateKey(SOCIAL_CACHE_USER_KEY);
-                              } catch {
-                                notifications.addNotification({ type: "error", title: "Disconnect failed", message: "Try again." });
-                              }
-                            }}
+            {/* Unified platforms grid — connected first, then unconnected.
+                Each card is compact (~140px) so 6+ fit on one screen. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {sortedPlatforms.map((platform) => {
+                const def = PLATFORM_DEFS[platform.id];
+                const isLoading = def?.loading ?? false;
+                return (
+                  <Card
+                    key={platform.id}
+                    className={cn(
+                      "transition-all duration-200 hover:shadow-md",
+                      platform.connected
+                        ? "border-emerald-500/30 bg-card"
+                        : "border-border/60 bg-card",
+                    )}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={cn(
+                              "h-11 w-11 rounded-xl flex items-center justify-center shrink-0",
+                              def?.iconBg || "bg-muted",
+                              def?.iconFg || "text-foreground",
+                            )}
                           >
-                            Disconnect
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Available */}
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Available platforms</h2>
-                <p className="text-sm text-muted-foreground">Connect more accounts to publish everywhere.</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                {availablePlatforms.map((platform) => (
-                  <Card key={platform.id} className="hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
                             {getPlatformIcon(platform.id)}
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-foreground">{platform.name}</h3>
-                              <Badge variant="outline" className="text-muted-foreground">Not connected</Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">Connect to start publishing</p>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-foreground text-sm truncate">{platform.name}</h3>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {platform.connected
+                                ? (platform.username || "Connected")
+                                : "Not connected"}
+                            </p>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="mt-6">
-                        {platform.id === "youtube" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={yt.loading}>
-                            <a href="/api/youtube/start" className={yt.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {yt.loading ? "Checking…" : "Connect YouTube"}
-                            </a>
-                          </Button>
-                        ) : platform.id === "tiktok" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={tt.loading}>
-                            <a href="/api/tiktok/auth/connect" className={tt.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {tt.loading ? "Checking…" : "Connect TikTok"}
-                            </a>
-                          </Button>
-                        ) : platform.id === "threads" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={th.loading}>
-                            <a href="/api/threads/auth/connect" className={th.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {th.loading ? "Checking…" : "Connect Threads"}
-                            </a>
-                          </Button>
-                        ) : platform.id === "pinterest" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={pin.loading}>
-                            <a href="/api/pinterest/auth/connect" className={pin.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {pin.loading ? "Checking…" : "Connect Pinterest"}
-                            </a>
-                          </Button>
-                        ) : platform.id === "linkedin" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={li.loading}>
-                            <a href="/api/linkedin/connect" className={li.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {li.loading ? "Checking…" : "Connect LinkedIn"}
-                            </a>
-                          </Button>
-                        ) : platform.id === "twitter" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={x.loading}>
-                            <a href="/api/twitter/connect" className={x.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {x.loading ? "Checking…" : "Connect X"}
-                            </a>
-                          </Button>
-                        ) : platform.id === "instagram" ? (
-                          <Button asChild className="w-full gap-2">
-                            <a href="/api/instagram/start">
-                              <Link2 className="h-4 w-4" />
-                              Connect Instagram
-                            </a>
-                          </Button>
-                        ) : platform.id === "facebook" ? (
-                          <Button asChild className="w-full gap-2" aria-disabled={fb.loading}>
-                            <a href="/api/facebook/start?intent=facebook" className={fb.loading ? "pointer-events-none opacity-50" : ""}>
-                              <Link2 className="h-4 w-4" />
-                              {fb.loading ? "Checking…" : "Connect Facebook"}
-                            </a>
-                          </Button>
+                        {platform.connected ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-[180px]">
+                              {def && (
+                                <DropdownMenuItem asChild>
+                                  <a href={def.connectHref} className="cursor-pointer gap-2">
+                                    <RefreshCw className="h-4 w-4" />
+                                    Reconnect
+                                  </a>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                onSelect={() => handleDisconnect(platform)}
+                              >
+                                <Unplug className="h-4 w-4" />
+                                Disconnect
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         ) : (
-                          <Button type="button" className="w-full gap-2" disabled>
-                            <Clock className="h-4 w-4" />
-                            Coming soon
-                          </Button>
+                          <Badge variant="outline" className="text-[10px] shrink-0 px-1.5 py-0">
+                            New
+                          </Badge>
                         )}
                       </div>
+
+                      {/* Primary action */}
+                      {platform.connected ? (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Ready to publish
+                        </div>
+                      ) : def ? (
+                        <Button asChild size="sm" className="w-full gap-1.5 h-9" aria-disabled={isLoading}>
+                          <a
+                            href={def.connectHref}
+                            className={isLoading ? "pointer-events-none opacity-50" : ""}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                            {isLoading ? "Checking…" : `Connect ${platform.name}`}
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button type="button" size="sm" className="w-full gap-1.5 h-9" disabled>
+                          <Clock className="h-3.5 w-3.5" />
+                          Coming soon
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
-                ))}
+                );
+              })}
 
-                {/* Request Platform Card */}
-                <Card className="hover:shadow-lg transition-all duration-200 border-dashed border-2">
-                  <CardContent className="p-6">
-                    <div className="h-full flex flex-col justify-between gap-6">
-                      <div className="space-y-2">
-                        <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
-                          <Plus className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">Request a platform</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Don’t see your platform? Tell us what you need and we’ll prioritize it.
-                          </p>
-                        </div>
-                      </div>
-
-                      <Button variant="outline" className="w-full gap-2" onClick={() => setRequestOpen(true)}>
-                        <Plus className="h-4 w-4" />
-                        Request platform
-                      </Button>
+              {/* Request platform card — sits in the same grid, dashed border
+                  signals it's a different kind of action. */}
+              <Card className="border-dashed border-2 border-border/80 hover:border-primary/40 transition-colors">
+                <CardContent className="p-4 h-full flex flex-col justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                      <Plus className="h-5 w-5 text-muted-foreground" />
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-foreground text-sm">Request a platform</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Don&apos;t see yours? Let us know.</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full h-9 gap-1.5" onClick={() => setRequestOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" />
+                    Submit request
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
 

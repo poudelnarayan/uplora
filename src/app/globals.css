@@ -140,15 +140,18 @@
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --transition-luxury: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    /* Sidebar - Sage theme */
-    --sidebar-background: 82 24% 25%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 82 24% 57%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 82 24% 35%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 82 20% 40%;
-    --sidebar-ring: 82 24% 57%;
+    /* Sidebar — warm cream surface with sage-green accents.
+       The Uplora wordmark uses cool tones, so a warm cream backdrop
+       reads better than a saturated green panel. Active nav items still
+       pop with sage so the brand identity survives. */
+    --sidebar-background: 40 35% 96%;
+    --sidebar-foreground: 82 18% 22%;
+    --sidebar-primary: 82 24% 42%;
+    --sidebar-primary-foreground: 40 35% 97%;
+    --sidebar-accent: 82 28% 90%;
+    --sidebar-accent-foreground: 82 24% 22%;
+    --sidebar-border: 40 22% 85%;
+    --sidebar-ring: 82 24% 50%;
   }
 
   .dark {
@@ -238,14 +241,16 @@
     --shadow-sage: 0 8px 32px -8px rgba(151, 168, 122, 0.4);
     --shadow-orange: 0 8px 32px -8px rgba(255, 162, 57, 0.4);
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 82 24% 57%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 82 20% 18%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 82 20% 22%;
-    --sidebar-ring: 82 24% 57%;
+    /* Dark mode keeps the warm-cream concept but inverted: a deep warm
+       charcoal panel with cream text and sage accents. */
+    --sidebar-background: 40 8% 11%;
+    --sidebar-foreground: 40 25% 92%;
+    --sidebar-primary: 82 28% 60%;
+    --sidebar-primary-foreground: 40 8% 8%;
+    --sidebar-accent: 40 8% 18%;
+    --sidebar-accent-foreground: 40 25% 95%;
+    --sidebar-border: 40 8% 22%;
+    --sidebar-ring: 82 28% 60%;
   }
 
   /**
