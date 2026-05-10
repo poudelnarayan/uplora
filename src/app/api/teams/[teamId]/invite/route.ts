@@ -93,18 +93,23 @@ export async function POST(
           }
 
           let emailSent = true;
+          let emailError: string | null = null;
           let inviteUrl: string | null = null;
           try {
             await sendInvitationEmail(existingInvite.token, email, teamId, role);
             inviteUrl = buildInviteUrl(existingInvite.token);
-          } catch {
+          } catch (err) {
+            const e = err as { message?: string };
+            console.error("Resend email failed:", err);
             emailSent = false;
+            emailError = e?.message || String(err);
             inviteUrl = buildInviteUrl(existingInvite.token);
           }
 
           return createSuccessResponse({
-            message: emailSent ? "Invitation resent successfully" : "Resend failed - email delivery error",
+            message: emailSent ? "Invitation resent successfully" : `Resend failed: ${emailError}`,
             emailSent,
+            emailError,
             inviteUrl,
             invitation: existingInvite
           });
@@ -140,21 +145,25 @@ export async function POST(
       }
 
       let emailSent = true;
+      let emailError: string | null = null;
       let inviteUrl: string | null = null;
       try {
         await sendInvitationEmail(token, email, teamId, role);
         inviteUrl = buildInviteUrl(token);
-      } catch (emailError) {
-        console.error("Invitation email failed:", emailError);
+      } catch (err) {
+        const e = err as { message?: string; code?: string; response?: string };
+        console.error("Invitation email failed:", err);
         emailSent = false;
+        emailError = e?.message || String(err);
         inviteUrl = buildInviteUrl(token);
       }
 
       broadcast({ type: "team.invitation.sent", payload: { teamId, email, role } });
 
       return createSuccessResponse({
-        message: emailSent ? "Invitation sent successfully" : "Invitation created but email delivery failed",
+        message: emailSent ? "Invitation sent successfully" : `Invitation created but email delivery failed: ${emailError}`,
         emailSent,
+        emailError,
         inviteUrl,
         invitation: newInvite
       });
