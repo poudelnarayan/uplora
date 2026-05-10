@@ -87,12 +87,12 @@ export default function IdeaLabContent({
           required
         />
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-3 border-t border-border">
+        {/* Footer — split: cancel ghost / submit primary (matches Feedback) */}
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-all text-foreground"
+            className="px-3 py-1.5 rounded-md text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
             disabled={isLoading}
           >
             Cancel
@@ -100,16 +100,16 @@ export default function IdeaLabContent({
           <button
             type="submit"
             disabled={isLoading || !formData.title.trim() || !formData.description.trim()}
-            className="flex-1 px-4 py-2 rounded-lg text-primary-foreground transition-colors flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs sm:text-sm font-medium hover:bg-primary-hover disabled:opacity-60 transition-colors"
           >
             {isLoading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 Submitting…
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-3.5 h-3.5" />
                 Submit
               </>
             )}

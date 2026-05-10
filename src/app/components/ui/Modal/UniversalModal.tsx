@@ -29,7 +29,7 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     icon: <Users className="w-6 h-6 text-white" />,
     iconColor: "bg-primary",
     maxWidth: "max-w-md",
-    headerGradient: "bg-accent/20"
+    headerGradient: ""
   },
   "create-team": {
     title: "Create New Team",
@@ -37,7 +37,7 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     icon: <Plus className="w-6 h-6 text-white" />,
     iconColor: "bg-primary",
     maxWidth: "max-w-lg",
-    headerGradient: "bg-accent/20"
+    headerGradient: ""
   },
   "feedback-hub": {
     title: "Feedback",
@@ -45,7 +45,7 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     icon: <MessageCircle className="w-6 h-6 text-white" />,
     iconColor: "bg-primary",
     maxWidth: "max-w-lg",
-    headerGradient: "bg-accent/20"
+    headerGradient: ""
   },
   "feedback-studio": {
     title: "Feedback Studio",
@@ -53,7 +53,7 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     icon: <MessageCircle className="w-6 h-6 text-white" />,
     iconColor: "bg-primary",
     maxWidth: "max-w-lg",
-    headerGradient: "bg-accent/20"
+    headerGradient: ""
   },
   "idea-lab": {
     title: "Idea Lab",
@@ -61,7 +61,7 @@ const modalConfigs: Record<ModalType, ModalConfig> = {
     icon: <Lightbulb className="w-6 h-6 text-white" />,
     iconColor: "bg-primary",
     maxWidth: "max-w-xl",
-    headerGradient: "bg-accent/20"
+    headerGradient: ""
   }
 };
 
@@ -184,35 +184,32 @@ export default function UniversalModal({
               aria-labelledby="modal-title"
               aria-describedby="modal-description"
             >
-              {/* Header Section */}
+              {/* Header Section — slimmer, no big icon block; cleaner on mobile */}
               {showHeader && (
-                <div className={`
-                  ${config.headerGradient}
-                  border-b border-border p-6
-                `}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {/* Icon with gradient background */}
+                <div className="border-b border-border px-4 sm:px-5 py-3 sm:py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className={`
-                        w-12 h-12 rounded-xl 
-                        ${config.iconColor} shadow-lg
-                        flex items-center justify-center
+                        w-8 h-8 sm:w-9 sm:h-9 rounded-lg
+                        ${config.iconColor}
+                        flex items-center justify-center shrink-0
                       `}>
-                        {config.icon}
+                        {/* Scale down the icon inside (it's defined as w-6) */}
+                        <span className="[&_svg]:w-4 [&_svg]:h-4 sm:[&_svg]:w-5 sm:[&_svg]:h-5">
+                          {config.icon}
+                        </span>
                       </div>
-                      
-                      {/* Title and subtitle */}
-                      <div>
-                        <h2 
+                      <div className="min-w-0">
+                        <h2
                           id="modal-title"
-                          className="text-xl font-bold text-foreground"
+                          className="text-base sm:text-lg font-semibold text-foreground truncate"
                         >
                           {customTitle || config.title}
                         </h2>
                         {(customSubtitle || config.subtitle) && (
-                          <p 
+                          <p
                             id="modal-description"
-                            className="text-sm mt-1 text-muted-foreground"
+                            className="text-[11px] sm:text-xs text-muted-foreground truncate"
                           >
                             {customSubtitle || config.subtitle}
                           </p>
@@ -220,19 +217,18 @@ export default function UniversalModal({
                       </div>
                     </div>
 
-                    {/* Close button */}
                     <MotionButton
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
                       className="
-                        p-2 rounded-lg hover:bg-muted 
+                        p-1.5 sm:p-2 rounded-lg hover:bg-muted shrink-0
                         transition-colors duration-200
                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30
                       "
                       aria-label="Close modal"
                     >
-                      <X className="w-5 h-5 text-foreground" />
+                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                     </MotionButton>
                   </div>
                 </div>
@@ -240,7 +236,7 @@ export default function UniversalModal({
 
               {/* Content Section - Scrollable */}
               <div className="flex-1 overflow-y-auto">
-                <div className="p-6">
+                <div className="p-4 sm:p-5">
                   {children}
                 </div>
               </div>

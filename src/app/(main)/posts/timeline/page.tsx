@@ -311,13 +311,68 @@ const Timeline = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {loading ? (
               <div className="flex justify-center items-center py-24">
                 <LoadingSpinner size="lg" />
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+              <>
+                {/* MOBILE — stacked list of days. The 7-col grid is unusable below lg. */}
+                <div className="lg:hidden bg-card border border-border rounded-xl divide-y divide-border overflow-hidden">
+                  {calendarDays
+                    .filter((date) => viewMode === 'week' || isCurrentMonth(date))
+                    .map((date, index) => {
+                      const dayPosts = getPostsForDate(date);
+                      const isTodayDay = isToday(date);
+                      return (
+                        <div key={index} className={`px-3 py-3 ${isTodayDay ? 'bg-primary/5' : ''}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-baseline gap-2">
+                              <span className={`text-sm font-bold ${isTodayDay ? 'text-primary' : 'text-foreground'}`}>
+                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                              </span>
+                              <span className={`text-xs ${isTodayDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                                {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                              {isTodayDay && (
+                                <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground">
+                                  Today
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">
+                              {dayPosts.length === 0 ? 'No posts' : `${dayPosts.length} post${dayPosts.length > 1 ? 's' : ''}`}
+                            </span>
+                          </div>
+                          {dayPosts.length > 0 && (
+                            <div className="space-y-1.5">
+                              {dayPosts.map((post) => (
+                                <div
+                                  key={post.id}
+                                  className={`px-3 py-2 rounded-lg border text-xs flex items-center gap-2 ${getStatusColor(post.status)} border-border/50`}
+                                >
+                                  <span className="shrink-0 [&_svg]:w-3 [&_svg]:h-3">{getTypeIcon(post.type)}</span>
+                                  <span className="flex-1 min-w-0 truncate font-semibold text-foreground">
+                                    {post.title || 'Untitled'}
+                                  </span>
+                                  {post.scheduledFor && (
+                                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                                      <Clock className="h-2.5 w-2.5" />
+                                      {new Date(post.scheduledFor).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* DESKTOP — original grid layout */}
+                <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                 {viewMode === 'week' ? (
                   <>
                     {/* Week View */}
@@ -483,7 +538,8 @@ const Timeline = () => {
                     </div>
                   </>
                 )}
-              </div>
+                </div>
+              </>
             )}
           </div>
         </MotionDiv>
