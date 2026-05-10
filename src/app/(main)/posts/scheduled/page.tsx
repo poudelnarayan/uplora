@@ -10,7 +10,7 @@ import { Badge } from "@/app/components/ui/badge";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { PageLoader, CardSkeleton, Skeleton } from "@/app/components/ui/loading-spinner";
+import { CardSkeleton, Skeleton, PostsGridSkeleton, AppShellSkeleton } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
 const MotionDiv = motion.div as any;
 
@@ -169,12 +169,16 @@ const Scheduled = () => {
     console.log('Post now:', postId);
   };
 
-  if (!isLoaded) return <PageLoader />;
+  if (!isLoaded) return <AppShellSkeleton />;
   if (!user) return <RedirectToSignIn redirectUrl="/posts/scheduled" />;
-  
+
   // Show loading while team context is initializing
   if (!selectedTeamId || !selectedTeam) {
-    return <PageLoader />;
+    return (
+      <AppShell>
+        <PostsGridSkeleton />
+      </AppShell>
+    );
   }
 
   return (

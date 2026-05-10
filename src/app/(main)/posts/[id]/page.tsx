@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/app/components/layout/AppLayout";
-import { PageLoader } from "@/app/components/ui/loading-spinner";
+import { DetailSkeleton, AppShellSkeleton } from "@/app/components/ui/loading-spinner";
 import { useNotifications } from "@/app/components/ui/Notification";
 
 export default function PostDetailsPage() {
@@ -46,11 +46,11 @@ export default function PostDetailsPage() {
     };
   }, [id, notifications, router]);
 
-  if (!id) return <PageLoader />;
+  if (!id) return <AppShellSkeleton />;
 
   return (
     <AppShell>
-      <PageLoader />
+      <DetailSkeleton />
     </AppShell>
   );
 }

@@ -59,7 +59,7 @@ import { Separator } from "@/app/components/ui/separator";
 import RichTextEditor from "@/app/components/editor/RichTextEditor";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { InlineSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { InlineSpinner, MakePostSkeleton } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useUploads } from "@/context/UploadContext";
 import { useTeam } from "@/context/TeamContext";
@@ -1384,7 +1384,7 @@ const MakePostVideosInner = () => {
 
 export default function MakePostVideosPage() {
   return (
-    <Suspense fallback={<PageLoader text="Loading editor..." />}>
+    <Suspense fallback={<AppShell><MakePostSkeleton /></AppShell>}>
       <MakePostVideosInner />
     </Suspense>
   );

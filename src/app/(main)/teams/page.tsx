@@ -15,7 +15,7 @@ import { EditTeamDialog } from "@/app/components/teams/EditTeamDialog";
 import { EmptyState } from "@/app/components/teams/EmptyState";
 import { TeamDetailsDialog } from "@/app/components/teams/TeamDetailsDialog";
 import { platformIcons } from "@/app/components/teams/PlatformIcon";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
 import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
 

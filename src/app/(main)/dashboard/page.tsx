@@ -10,7 +10,7 @@ import { formatPostContent } from "@/lib/formatPostContent";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
 import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
-import { PageLoader, CardSkeleton, Skeleton } from "@/app/components/ui/loading-spinner";
+import { CardSkeleton, Skeleton, DashboardSkeleton } from "@/app/components/ui/loading-spinner";
 import { Button } from "@/app/components/ui/button";
 import {
   BarChart3,
@@ -296,7 +296,11 @@ export default function Dashboard() {
 
   // ---------- Render ----------
   if (!selectedTeamId && selectedTeam === null) {
-    return <PageLoader />;
+    return (
+      <AppShell>
+        <DashboardSkeleton />
+      </AppShell>
+    );
   }
 
   const teamName = selectedTeam?.name || "Personal Workspace";

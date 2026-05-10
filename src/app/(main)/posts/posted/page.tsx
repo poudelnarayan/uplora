@@ -10,7 +10,7 @@ import { Badge } from "@/app/components/ui/badge";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { PageLoader, CardSkeleton, Skeleton } from "@/app/components/ui/loading-spinner";
+import { CardSkeleton, Skeleton, PostsGridSkeleton, AppShellSkeleton } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
 const MotionDiv = motion.div as any;
 
@@ -192,12 +192,16 @@ const Posted = () => {
     };
   }, { views: 0, likes: 0, shares: 0, comments: 0 });
 
-  if (!isLoaded) return <PageLoader />;
+  if (!isLoaded) return <AppShellSkeleton />;
   if (!user) return <RedirectToSignIn redirectUrl="/posts/posted" />;
-  
+
   // Show loading while team context is initializing
   if (!selectedTeamId || !selectedTeam) {
-    return <PageLoader />;
+    return (
+      <AppShell>
+        <PostsGridSkeleton />
+      </AppShell>
+    );
   }
 
   return (

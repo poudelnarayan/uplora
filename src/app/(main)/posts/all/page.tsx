@@ -10,7 +10,7 @@ import { Input } from "@/app/components/ui/input";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { useNotifications } from "@/app/components/ui/Notification";
-import { PageLoader, CardSkeleton } from "@/app/components/ui/loading-spinner";
+import { CardSkeleton, PostsGridSkeleton } from "@/app/components/ui/loading-spinner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
 import { Label } from "@/app/components/ui/label";
@@ -311,7 +311,11 @@ function AllPostsInner() {
   };
 
   if (!selectedTeamId || !selectedTeam) {
-    return <PageLoader />;
+    return (
+      <AppShell>
+        <PostsGridSkeleton />
+      </AppShell>
+    );
   }
 
   return (

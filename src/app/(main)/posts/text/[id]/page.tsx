@@ -6,7 +6,7 @@ import AppShell from "@/app/components/layout/AppLayout";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { PageLoader, Skeleton } from "@/app/components/ui/loading-spinner";
+import { Skeleton, DetailSkeleton, AppShellSkeleton } from "@/app/components/ui/loading-spinner";
 import { ArrowLeft, Edit, FileText } from "lucide-react";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CopyField, formatDate, getStatusColor, MetadataTable } from "@/app/(main)/posts/_components/detail-utils";
@@ -61,7 +61,7 @@ export default function TextPostDetailsPage() {
     };
   }, [id, notifications]);
 
-  if (!id) return <PageLoader />;
+  if (!id) return <AppShellSkeleton />;
 
   return (
     <AppShell>

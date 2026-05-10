@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { InlineSpinner, PageLoader } from '@/app/components/ui/loading-spinner';
+import { InlineSpinner, AppShellSkeleton } from '@/app/components/ui/loading-spinner';
 
 interface OnboardingGuardProps {
   children: React.ReactNode;
@@ -62,23 +62,14 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     router.push('/onboarding');
   }, [isLoaded, user, shouldSkipOnboarding, isLoading, shouldShowOnboarding, pathname, router]);
 
-  // Show loading skeleton while checking (only for authenticated users on
-  // protected pages). Uses the shared PageLoader so this matches every other
-  // initial-load surface in the app — skeleton grid instead of a lonely
-  // centered spinner.
+  // Pre-shell loader: AppShellSkeleton fakes a sidebar + content area so the
+  // page doesn't jump when the real shell mounts.
   if (isChecking || (isLoaded && user && !shouldSkipOnboarding && isLoading)) {
-    return <PageLoader />;
+    return <AppShellSkeleton />;
   }
 
-  // Only redirect to onboarding if:
-  // 1. User is authenticated
-  // 2. Not on an excluded page
-  // 3. Onboarding is not completed
-  // 4. Not already on onboarding page
   if (isLoaded && user && !shouldSkipOnboarding && !isLoading && shouldShowOnboarding && !pathname.startsWith('/onboarding')) {
-    return (
-      <PageLoader text="Redirecting to onboarding…" />
-    );
+    return <AppShellSkeleton text="Redirecting to onboarding…" />;
   }
 
   return <>{children}</>;
