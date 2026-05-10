@@ -71,6 +71,35 @@ export default function ApprovalsPage() {
     load();
   }, [load]);
 
+  // Realtime: refresh when an editor/manager requests approval, or when status changes,
+  // so the owner sees new pending items without clicking Refresh.
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/events?teamId=${encodeURIComponent(selectedTeamId)}`);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || "{}");
+          if (!evt?.type) return;
+          if (evt.type !== "post.status" && evt.type !== "video.status") return;
+          load();
+        } catch {
+          // ignore parse errors
+        }
+      };
+      es.onerror = () => {
+        try { es?.close(); } catch {}
+        es = null;
+      };
+    } catch {
+      // ignore SSE setup errors
+    }
+    return () => {
+      try { es?.close(); } catch {}
+    };
+  }, [selectedTeamId, load]);
+
   const title = useMemo(
     () => (selectedTeam?.name ? `${selectedTeam.name} • Approvals` : "Approvals"),
     [selectedTeam?.name]

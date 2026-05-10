@@ -77,6 +77,8 @@ export interface VideoRow {
   description: string | null;
   visibility: string | null;
   madeForKids: boolean;
+  tags: string[];
+  categoryId: string | null;
   updatedAt: string;
   createdAt: string;
   requestedByUserId: string | null;
@@ -145,6 +147,8 @@ export function postToVideoRow(post: any): VideoRow {
     description: post.content ?? null,
     visibility: meta.visibility ?? null,
     madeForKids: meta.made_for_kids ?? false,
+    tags: Array.isArray(meta.tags) ? meta.tags : [],
+    categoryId: meta.category_id ?? null,
     updatedAt: post.updated_at,
     createdAt: post.created_at,
     requestedByUserId: meta.requested_by_user_id ?? null,

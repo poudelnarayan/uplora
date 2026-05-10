@@ -33,6 +33,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNotifications } from '@/app/components/ui/Notification';
 import { ConfirmModal } from '@/app/components/ui/Modal';
+import { useTeam } from '@/context/TeamContext';
 
 interface NavItem {
   id: string;
@@ -109,10 +110,12 @@ export default function Sidebar() {
   const { user } = useUser();
   const pathname = usePathname();
   const notifications = useNotifications();
+  const { selectedTeamId } = useTeam();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
 
   // Check if user is admin (only once)
   useEffect(() => {
@@ -132,6 +135,48 @@ export default function Sidebar() {
     checkAdminStatus();
     return () => { cancelled = true; };
   }, [!!user?.emailAddresses?.[0]?.emailAddress]);
+
+  // Pending-approvals count for the active team. Refreshes via SSE so the badge
+  // updates the moment an editor requests approval.
+  useEffect(() => {
+    if (!selectedTeamId) { setPendingApprovalsCount(0); return; }
+
+    let cancelled = false;
+    const fetchCount = async () => {
+      try {
+        const res = await fetch(
+          `/api/content?teamId=${encodeURIComponent(selectedTeamId)}&types=video,image,text,reel&status=APPROVAL_REQUESTED&limit=100`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setPendingApprovalsCount(Array.isArray(data?.content) ? data.content.length : 0);
+      } catch {
+        // ignore
+      }
+    };
+    fetchCount();
+
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/events?teamId=${encodeURIComponent(selectedTeamId)}`);
+      es.onmessage = (ev) => {
+        try {
+          const evt = JSON.parse(ev.data || "{}");
+          if (evt?.type === "post.status" || evt?.type === "video.status") {
+            fetchCount();
+          }
+        } catch {
+          // ignore parse errors
+        }
+      };
+      es.onerror = () => { try { es?.close(); } catch {} es = null; };
+    } catch {
+      // ignore SSE setup errors
+    }
+    return () => { cancelled = true; try { es?.close(); } catch {} };
+  }, [selectedTeamId]);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -173,6 +218,14 @@ export default function Sidebar() {
               {item.icon}
             </div>
             <span className="font-medium">{item.label}</span>
+            {(item.id === 'posts-approvals' || (item.id === 'posts' && !isExpanded)) && pendingApprovalsCount > 0 && (
+              <span
+                title={`${pendingApprovalsCount} pending approval${pendingApprovalsCount === 1 ? '' : 's'}`}
+                className={`${hasChildren ? 'mr-2' : 'ml-auto'} inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold bg-rose-500 text-white`}
+              >
+                {pendingApprovalsCount > 99 ? '99+' : pendingApprovalsCount}
+              </span>
+            )}
             {hasChildren && (
               <ChevronDown 
                 className={`w-4 h-4 ml-auto transition-transform duration-200 ${

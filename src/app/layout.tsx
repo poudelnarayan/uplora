@@ -3,6 +3,7 @@ import Providers from "./providers";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "@/app/components/ui/toaster";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,6 +44,7 @@ export default function RootLayout({
             {children}
           </Providers>
         )}
+        <Toaster />
         <SpeedInsights />
       </body>
     </html>

@@ -600,6 +600,8 @@ const MakePostVideosInner = () => {
             description,
             visibility: privacy,
             madeForKids: false,
+            tags,
+            categoryId: category || undefined,
             thumbnailKey:
               thumbnailKey !== undefined
                 ? thumbnailKey

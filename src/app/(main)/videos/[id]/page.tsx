@@ -31,6 +31,8 @@ interface Video {
   visibility?: "private" | "unlisted" | "public";
   madeForKids?: boolean;
   thumbnailKey?: string | null;
+  tags?: string[];
+  categoryId?: string | null;
   requestedByUserId?: string | null;
   approvedByUserId?: string | null;
   youtubeVideoId?: string | null;
@@ -927,12 +929,14 @@ export default function VideoPreviewPage() {
     }
 
     // Create upload promise
-    const uploadResponse = fetch(`/api/videos/${video.id}/approve`, { 
+    const uploadResponse = fetch(`/api/videos/${video.id}/approve`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
         description,
+        tags: video.tags,
+        categoryId: video.categoryId || undefined,
         privacyStatus: visibility,
         madeForKids,
       })
@@ -998,6 +1002,8 @@ export default function VideoPreviewPage() {
         body: JSON.stringify({
           title,
           description,
+          tags: video.tags,
+          categoryId: video.categoryId || undefined,
           privacyStatus: visibility,
           madeForKids,
           publishAt: scheduledDateTime.toISOString(),
@@ -1660,15 +1666,45 @@ export default function VideoPreviewPage() {
                         <Type className="w-3 h-3" />
                         Live Preview
                       </div>
-                      <div 
+                      <div
                         className="text-sm leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: descriptionPreview }}
                       />
                     </div>
                   )}
-                  
+
 
                 </div>
+
+                {/* Tags Section (read-only on preview; edit in make-post) */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium">Tags</label>
+                    {video?.tags && video.tags.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {video.tags.length}/15 • Sent to YouTube on publish
+                      </span>
+                    )}
+                  </div>
+                  {video?.tags && video.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 p-3 bg-muted/20 border border-border/60 rounded">
+                      {video.tags.map((tag, i) => (
+                        <span
+                          key={`${tag}-${i}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-foreground text-xs border border-primary/20"
+                        >
+                          <Hash className="w-3 h-3 opacity-70" />
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-muted/20 border border-dashed border-border/60 rounded text-xs text-muted-foreground">
+                      No tags yet. Add them in the make-post page so YouTube can index your video.
+                    </div>
+                  )}
+                </div>
+
                 {/* Thumbnail Section */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Thumbnail</label>

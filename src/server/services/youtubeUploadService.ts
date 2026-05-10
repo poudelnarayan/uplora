@@ -478,29 +478,22 @@ export async function uploadYouTubeThumbnail(
         status: "SUCCESS",
       };
     } catch (uploadErr: any) {
-      // Handle specific YouTube API errors
-      const errorMessage = uploadErr?.message || "Unknown error";
-      const errorCode = uploadErr?.code || uploadErr?.response?.status || "UPLOAD_ERROR";
+      // YouTube API errors are nested. The actual reason lives in
+      // err.errors[0].reason (or err.response.data.error.errors[0].reason),
+      // not in err.message. The previous heuristic conflated all 403s with
+      // "quota exceeded" — but for thumbnails.set, 403 almost always means
+      // the channel isn't verified for custom thumbnails.
+      const httpStatus =
+        uploadErr?.code ?? uploadErr?.response?.status ?? null;
+      const apiErrors: Array<{ reason?: string; message?: string }> =
+        uploadErr?.errors ??
+        uploadErr?.response?.data?.error?.errors ??
+        [];
+      const reason = (apiErrors[0]?.reason || "").toLowerCase();
+      const apiMessage = apiErrors[0]?.message || uploadErr?.message || "";
 
-      // Check for common error scenarios
-      if (errorMessage.includes("unverified") || errorMessage.includes("verification")) {
-        return {
-          status: "FAILED",
-          error: "YouTube channel is not verified. Custom thumbnails require channel verification.",
-          errorCode: "UNVERIFIED_CHANNEL",
-        };
-      }
-
-      if (errorMessage.includes("quota") || errorCode === 403) {
-        return {
-          status: "FAILED",
-          error: "YouTube API quota exceeded or access denied",
-          errorCode: "QUOTA_EXCEEDED",
-        };
-      }
-
-      if (errorCode === 401) {
-        // Token expired, try refreshing once
+      // 401 → refresh once and retry
+      if (httpStatus === 401) {
         try {
           const tokens = await getYouTubeAccess(publisherUserId);
           oauth2Client.setCredentials({
@@ -508,7 +501,6 @@ export async function uploadYouTubeThumbnail(
             refresh_token: tokens.refreshToken,
           });
 
-          // Retry upload with fresh token
           await youtube.thumbnails.set({
             videoId: youtubeVideoId,
             media: {
@@ -517,9 +509,7 @@ export async function uploadYouTubeThumbnail(
             },
           });
 
-          return {
-            status: "SUCCESS",
-          };
+          return { status: "SUCCESS" };
         } catch (retryErr: any) {
           return {
             status: "FAILED",
@@ -529,10 +519,44 @@ export async function uploadYouTubeThumbnail(
         }
       }
 
+      // Genuine quota: only when YouTube actually says so
+      if (reason === "quotaexceeded" || reason === "ratelimitexceeded") {
+        return {
+          status: "FAILED",
+          error: "YouTube API quota exceeded. Try again tomorrow.",
+          errorCode: "QUOTA_EXCEEDED",
+        };
+      }
+
+      // Channel not verified for custom thumbnails — by far the most common 403
+      if (
+        reason === "youtubesignuprequired" ||
+        reason === "customthumbnailsnotallowed" ||
+        reason === "forbidden" ||
+        /unverified|verification|verify/i.test(apiMessage)
+      ) {
+        return {
+          status: "FAILED",
+          error:
+            "YouTube channel is not verified for custom thumbnails. " +
+            "Verify your channel at https://www.youtube.com/verify, then retry.",
+          errorCode: "UNVERIFIED_CHANNEL",
+        };
+      }
+
+      // Generic 403 with no recognizable reason
+      if (httpStatus === 403) {
+        return {
+          status: "FAILED",
+          error: apiMessage || "YouTube refused the thumbnail upload (403).",
+          errorCode: reason ? `FORBIDDEN_${reason.toUpperCase()}` : "FORBIDDEN",
+        };
+      }
+
       return {
         status: "FAILED",
-        error: errorMessage,
-        errorCode: String(errorCode),
+        error: apiMessage || uploadErr?.message || "Unknown thumbnail upload error",
+        errorCode: String(httpStatus || reason || "UPLOAD_ERROR"),
       };
     }
   } catch (err: any) {

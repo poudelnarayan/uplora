@@ -47,6 +47,8 @@ export async function GET(
       visibility: video.visibility || "public",
       madeForKids: video.madeForKids,
       thumbnailKey: video.thumbnailKey,
+      tags: video.tags || [],
+      categoryId: video.categoryId || null,
       youtubeVideoId: video.youtubeVideoId,
       youtubeThumbnailUploadStatus: video.youtubeThumbnailUploadStatus,
       youtubeThumbnailUploadError: video.youtubeThumbnailUploadError,
@@ -100,9 +102,10 @@ export async function PATCH(
       }
     }
 
-    const { title, description, visibility, madeForKids, thumbnailKey, status } = body as {
+    const { title, description, visibility, madeForKids, thumbnailKey, status, tags, categoryId } = body as {
       title?: string; description?: string; visibility?: string;
       madeForKids?: boolean; thumbnailKey?: string | null; status?: string;
+      tags?: string[] | null; categoryId?: string | null;
     };
 
     const now = new Date().toISOString();
@@ -116,6 +119,25 @@ export async function PATCH(
     }
     if (typeof visibility === 'string') metaUpdate.visibility = visibility;
     if (typeof madeForKids === 'boolean') metaUpdate.made_for_kids = madeForKids;
+
+    // Tags: cap to YouTube's 500 limit, filter empties + length, dedupe
+    if (Array.isArray(tags) || tags === null) {
+      if (tags === null) {
+        metaUpdate.tags = [];
+      } else {
+        const cleaned = Array.from(
+          new Set(
+            tags
+              .map((t) => (typeof t === 'string' ? t.trim() : ''))
+              .filter((t) => t.length > 0 && t.length <= 30)
+          )
+        ).slice(0, 500);
+        metaUpdate.tags = cleaned;
+      }
+    }
+    if (typeof categoryId === 'string' || categoryId === null) {
+      metaUpdate.category_id = categoryId || null;
+    }
 
     // Update thumbnail in post_media
     if (typeof thumbnailKey === 'string' || thumbnailKey === null) {
