@@ -68,6 +68,11 @@ export async function GET(req: NextRequest) {
     const key = url.searchParams.get("key");
     const expiresIn = url.searchParams.get("expiresIn");
     const contentType = url.searchParams.get("contentType");
+    // `redirect=1` returns a 302 to the signed URL so the route can be used
+    // directly as an <img src> / <video src>. Without it (the historical
+    // behavior) we return JSON, which the existing fetch()-based callers
+    // depend on.
+    const redirect = url.searchParams.get("redirect") === "1";
 
     if (!key) return NextResponse.json({ error: "Missing key" }, { status: 400 });
 
@@ -89,6 +94,16 @@ export async function GET(req: NextRequest) {
     const signedUrl = await getSignedUrl(s3, command, {
       expiresIn: Math.min(Number(expiresIn || 300), maxExpiry),
     });
+
+    if (redirect) {
+      // 302 so the browser fetches the signed URL directly. Cache header lets
+      // the browser reuse the redirect without re-hitting our route during
+      // grids of many thumbnails.
+      return NextResponse.redirect(signedUrl, {
+        status: 302,
+        headers: { "Cache-Control": isThumb ? "private, max-age=300" : "private, max-age=60" },
+      });
+    }
     return NextResponse.json({ url: signedUrl });
   } catch (e: any) {
     const msg = e?.message || "Unauthorized";

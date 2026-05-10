@@ -626,18 +626,22 @@ function ContentPreview({ item }: { item: any }) {
   const isReel = item.type === "reel";
   const isImage = item.type === "image";
 
-  // The /api/content `thumbnail` field already prefers thumbnailKey when present
-  // and falls back to mediaKey. For images that's fine, but for videos the
-  // fallback would be the video file URL — which can't render in <img>.
-  // Resolve explicitly here so we never render a broken image.
+  // /api/s3/get-url returns JSON by default (the existing behavior used by
+  // fetch-based callers). Pass `redirect=1` so the route 302s to the actual
+  // signed S3 URL, making it usable as <img src> / <video src> directly.
+  const signedSrc = (key: string) =>
+    `/api/s3/get-url?redirect=1&key=${encodeURIComponent(key)}`;
+
   const thumbUrl =
     item.thumbnailKey
-      ? `/api/s3/get-url?key=${encodeURIComponent(item.thumbnailKey)}`
-      : (isImage ? (item.imageUrl || item.thumbnail) : null);
+      ? signedSrc(item.thumbnailKey)
+      : isImage && (item.imageKey || item.key)
+        ? signedSrc(item.imageKey || item.key)
+        : null;
 
-  const videoUrl =
+  const videoSrc =
     (isVideo || isReel) && (item.videoKey || item.key)
-      ? `/api/s3/get-url?key=${encodeURIComponent(item.videoKey || item.key)}`
+      ? signedSrc(item.videoKey || item.key)
       : null;
 
   // Image post: just show the image
@@ -665,13 +669,13 @@ function ContentPreview({ item }: { item: any }) {
         </div>
       );
     }
-    if (videoUrl) {
+    if (videoSrc) {
       // Use the actual media file as a poster source — preload="metadata"
       // grabs only the first frame, no full download.
       return (
         <div className="aspect-video bg-muted relative overflow-hidden">
           <video
-            src={videoUrl}
+            src={videoSrc}
             preload="metadata"
             muted
             playsInline

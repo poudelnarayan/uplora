@@ -186,12 +186,17 @@ export async function GET(req: NextRequest) {
         contentType: primaryMedia?.content_type || post.metadata?.content_type || null,
         sizeBytes: primaryMedia?.size_bytes || post.metadata?.size_bytes || null,
         imageKey: post.post_type === 'image' ? mediaKey : null,
-        videoKey: post.post_type === 'reel' ? mediaKey : null,
+        videoKey: (post.post_type === 'video' || post.post_type === 'reel') ? mediaKey : null,
         thumbnailKey,
+        // `thumbnail` is meant to be used as <img src>. We append `redirect=1`
+        // so the route 302s to the actual signed S3 URL instead of returning
+        // JSON. Falling back to `mediaKey` for non-image posts would be
+        // pointing at a video file (which <img> can't render), so we restrict
+        // the fallback to image posts only.
         thumbnail: thumbnailKey
-          ? `/api/s3/get-url?key=${encodeURIComponent(thumbnailKey)}`
-          : mediaKey
-            ? `/api/s3/get-url?key=${encodeURIComponent(mediaKey)}`
+          ? `/api/s3/get-url?redirect=1&key=${encodeURIComponent(thumbnailKey)}`
+          : (post.post_type === 'image' && mediaKey)
+            ? `/api/s3/get-url?redirect=1&key=${encodeURIComponent(mediaKey)}`
             : null,
         // video-specific fields
         description: post.content,
