@@ -592,7 +592,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   );
                 })}
 
-                {/* Mobile: Feedback / Feature Requests */}
+                {/* Mobile: Feedback (modal contains both Feedback + Feature request tabs) */}
                 <div className="my-4 border-t border-sidebar-border pt-3" />
                 <button
                   onClick={() => {
@@ -603,16 +603,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 >
                   <MessageCircle className="h-5 w-5 shrink-0" />
                   <span className="truncate">Feedback</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setMobileNavOpen(false);
-                    openModal("feedback-hub", { onSubmitFeedback: submitFeedback, onSubmitIdea: submitIdea, defaultTab: "idea" });
-                  }}
-                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                >
-                  <Lightbulb className="h-5 w-5 shrink-0" />
-                  <span className="truncate">Feature request</span>
                 </button>
               </nav>
               {/* Mobile Footer Links */}

@@ -17,6 +17,7 @@ import { useTeam } from "@/context/TeamContext";
 import AppShell from "@/app/components/layout/AppLayout";
 import { YouTubeUploadModal } from "@/app/components/ui/YouTubeUploadModal";
 import { useTeamPlatforms } from "@/hooks/use-team-platforms";
+import { formatPostContent } from "@/lib/formatPostContent";
 import { DisabledPlatformButton } from "@/app/components/teams/DisabledPlatformButton";
 export const dynamic = "force-dynamic";
 
@@ -1264,40 +1265,9 @@ export default function VideoPreviewPage() {
     return Array.from(new Set(matches.map(t => t.replace('#', ''))));
   }, [description]);
 
-  // YouTube formatting and link highlighting
-  const descriptionPreview = useMemo(() => {
-    let formatted = description;
-    
-    // 1. YouTube-style formatting (do this first to avoid conflicts)
-    // Bold: **text** (prioritize double asterisk)
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
-    // Bold: *text* (single asterisk, avoid already processed content)
-    formatted = formatted.replace(/\*([^\*\n]+?)\*/g, (match, content) => {
-      // Don't replace if it's inside HTML tags
-      return `<strong class="font-bold">${content}</strong>`;
-    });
-    
-    // Italic: _text_
-    formatted = formatted.replace(/_([^_\n]+?)_/g, '<em class="italic">$1</em>');
-    
-    // 2. Convert URLs to clickable links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    formatted = formatted.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300">$1</a>');
-    
-    // 3. Highlight hashtags (improved regex to handle consecutive hashtags)
-    formatted = formatted.replace(/#([a-zA-Z0-9_\u00a1-\uffff]+)(?![a-zA-Z0-9_\u00a1-\uffff])/g, (match, content) => {
-      return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-300 text-sm font-medium">#${content}</span>`;
-    });
-    
-    // 4. Timestamps: 1:23 or 12:34:56
-    const timestampRegex = /\b(\d{1,2}:\d{2}(?::\d{2})?)\b/g;
-    formatted = formatted.replace(timestampRegex, '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 dark:text-green-300 text-sm font-medium cursor-pointer hover:bg-green-500/20"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>$1</span>');
-    
-    // 5. Convert line breaks to <br>
-    formatted = formatted.replace(/\n/g, '<br>');
-    
-    return formatted;
-  }, [description]);
+  // Use the shared formatter so what we render here is identical to what
+  // the dashboard / post listings render \u2014 single source of truth.
+  const descriptionPreview = useMemo(() => formatPostContent(description), [description]);
 
   // Formatting helpers
   const insertFormatting = (before: string, after: string = before) => {
@@ -1714,11 +1684,11 @@ export default function VideoPreviewPage() {
                     </span>
                   </div>
 
-                  <textarea 
+                  <textarea
                     name="description"
-                    className="textarea h-56 font-mono text-sm bg-muted/20 border border-border/60 w-full" 
-                    value={description} 
-                    onChange={(e) => setDescription(e.target.value)} 
+                    className="textarea h-28 sm:h-36 font-mono text-sm bg-muted/20 border border-border/60 w-full resize-y"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="📝 Add your video description here..."
                   />
                   

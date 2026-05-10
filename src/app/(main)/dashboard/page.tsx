@@ -6,11 +6,11 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
+import { formatPostContent } from "@/lib/formatPostContent";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
-import EmailVerificationBanner from "@/app/components/pages/Dashboard/EmailVerificationBanner";
 import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
-import { LoadingSpinner, PageLoader } from "@/app/components/ui/loading-spinner";
+import { PageLoader, CardSkeleton } from "@/app/components/ui/loading-spinner";
 import { Button } from "@/app/components/ui/button";
 import {
   BarChart3,
@@ -72,30 +72,6 @@ export default function Dashboard() {
   // sending the full list). UI shows pill chips that toggle.
   const [selectedTypes, setSelectedTypes] = useState<string[]>(ALL_TYPES);
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
-
-  // ---------- Email verification ----------
-  const [showEmailBanner, setShowEmailBanner] = useState(true);
-  const [resendingEmail, setResendingEmail] = useState(false);
-
-  const handleResendVerification = async () => {
-    if (!user?.emailAddresses?.[0]) return;
-    setResendingEmail(true);
-    try {
-      notifications.addNotification({
-        type: "success",
-        title: "Verification email sent",
-        message: "Please check your inbox and spam folder",
-      });
-    } catch {
-      notifications.addNotification({
-        type: "error",
-        title: "Failed to send email",
-        message: "Please try again later",
-      });
-    } finally {
-      setResendingEmail(false);
-    }
-  };
 
   // ---------- Fetch ----------
   const fetchContent = useCallback(async () => {
@@ -340,15 +316,6 @@ export default function Dashboard() {
       <NextSeoNoSSR title="Dashboard" noindex nofollow />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6">
-        {showEmailBanner && user && !user.emailAddresses?.[0]?.verification?.status && (
-          <EmailVerificationBanner
-            show={showEmailBanner}
-            onResend={handleResendVerification}
-            onDismiss={() => setShowEmailBanner(false)}
-            isResending={resendingEmail}
-          />
-        )}
-
         {/* HERO — greeting + primary CTA */}
         <MotionDiv
           initial={{ opacity: 0, y: -8 }}
@@ -438,8 +405,13 @@ export default function Dashboard() {
 
         {/* CONTENT */}
         {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <LoadingSpinner size="lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton className="hidden sm:block" />
+            <CardSkeleton className="hidden lg:block" />
+            <CardSkeleton className="hidden lg:block" />
           </div>
         ) : content.length === 0 ? (
           <EmptyState selectedStatus={selectedStatus} />
@@ -549,7 +521,13 @@ function ContentCard({
               {item.title || item.filename || "Untitled"}
             </h3>
             {item.content && (
-              <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{item.content}</p>
+              <p
+                className="text-xs text-muted-foreground line-clamp-2 mb-3 [&_strong]:text-foreground [&_em]:text-foreground"
+                // Render the same inline formatting (bold, italic, hashtags,
+                // links, timestamps) that the live preview on /videos/[id]
+                // shows so the dashboard isn't a downgraded-looking duplicate.
+                dangerouslySetInnerHTML={{ __html: formatPostContent(item.content) }}
+              />
             )}
 
             {/* Meta row */}

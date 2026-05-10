@@ -96,6 +96,11 @@ export default {
 				display: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif']
 			},
 			keyframes: {
+				shimmer: {
+					'100%': {
+						transform: 'translateX(100%)'
+					}
+				},
 				'accordion-down': {
 					from: {
 						height: '0'
