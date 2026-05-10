@@ -1,4 +1,5 @@
 import "./globals.css";
+import type { Viewport } from "next";
 import Providers from "./providers";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter, Playfair_Display } from 'next/font/google';
@@ -23,6 +24,15 @@ export const metadata = {
   title: 'Uplora - Team YouTube Workflow',
   description: 'Editors upload, owners approve, videos go straight to YouTube',
 }
+
+// Without an explicit viewport, mobile browsers default to ~980px width and
+// scale the page to fit — which makes every page render "zoomed in" until the
+// user pinches out. Setting width=device-width + initial-scale=1 fixes this.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5, // allow user pinch-zoom up to 5x for accessibility
+};
 
 export default function RootLayout({
   children,
