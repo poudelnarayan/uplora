@@ -7,7 +7,8 @@ import { useUser } from "@clerk/nextjs";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { useTeam } from "@/context/TeamContext";
 import { getTeamDisplayName } from "@/lib/teamDisplay";
-import { stripPostMarkup } from "@/lib/formatPostContent";
+import { formatPostContent } from "@/lib/formatPostContent";
+import { usePreferences } from "@/context/PreferencesContext";
 import { useContentCache } from "@/context/ContentCacheContext";
 import { motion } from "framer-motion";
 import { NextSeoNoSSR } from "@/app/components/seo/NoSSRSeo";
@@ -59,6 +60,7 @@ function greetingFor(name?: string | null) {
 export default function Dashboard() {
   const { user } = useUser();
   const { selectedTeamId, selectedTeam, personalTeam } = useTeam();
+  const { compact } = usePreferences();
   const { getCachedContent, setCachedContent, isStale, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   const router = useRouter();
@@ -418,12 +420,13 @@ export default function Dashboard() {
         ) : content.length === 0 ? (
           <EmptyState selectedStatus={selectedStatus} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className={`grid grid-cols-1 ${compact ? "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3" : "sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"}`}>
             {content.map((item: any, index: number) => (
               <ContentCard
                 key={item.id}
                 item={item}
                 index={index}
+                compact={compact}
                 onOpen={openPostDetails}
                 onEdit={handleEditContent}
                 onPublish={handlePublishContent}
@@ -491,9 +494,9 @@ function EmptyState({ selectedStatus }: { selectedStatus: string }) {
 // ContentCard — slimmer, mobile-first card
 // ============================================================================
 function ContentCard({
-  item, index, onOpen, onEdit, onPublish, onSchedule, onDuplicate, onDelete,
+  item, index, compact = false, onOpen, onEdit, onPublish, onSchedule, onDuplicate, onDelete,
 }: {
-  item: any; index: number;
+  item: any; index: number; compact?: boolean;
   onOpen: (i: any) => void;
   onEdit: (i: any) => void;
   onPublish: (i: any) => void;
@@ -529,29 +532,29 @@ function ContentCard({
           <ContentPreview item={item} />
 
           {/* Body */}
-          <div className="p-3 sm:p-4">
-            <div className="flex items-center justify-between gap-2 mb-2">
+          <div className={compact ? "p-2.5" : "p-3 sm:p-4"}>
+            <div className={`flex items-center justify-between gap-2 ${compact ? "mb-1.5" : "mb-2"}`}>
               <TypeIndicator type={item.type} />
               <Badge variant={statusVariant} className="text-xs font-semibold">
                 {status || "—"}
               </Badge>
             </div>
 
-            <h3 className="font-semibold text-base text-foreground line-clamp-2 mb-1">
+            <h3 className={`font-semibold text-foreground line-clamp-2 mb-1 ${compact ? "text-sm" : "text-base"}`}>
               {item.title || item.filename || "Untitled"}
             </h3>
             {item.content && (
-              // Card previews show plain text only — markdown markers
-              // (`_italic_`, `**bold**`) and hashtag chips read as noise at
-              // thumbnail size. Full formatting still appears on the post
-              // detail page where there's space for it.
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3 whitespace-pre-line">
-                {stripPostMarkup(item.content)}
-              </p>
+              // Render the same inline formatting (bold, italic, hashtags,
+              // links, timestamps) that the live preview shows so the
+              // dashboard isn't a downgraded-looking duplicate.
+              <p
+                className={`text-muted-foreground line-clamp-2 mb-3 [&_strong]:text-foreground [&_em]:text-foreground [&_a]:break-all ${compact ? "text-xs" : "text-sm"}`}
+                dangerouslySetInnerHTML={{ __html: formatPostContent(item.content) }}
+              />
             )}
 
             {/* Meta row */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 pt-2 border-t border-border/60">
+            <div className={`flex items-center justify-between text-xs text-muted-foreground mb-3 pt-2 border-t border-border/60 ${compact && "mb-2"}`}>
               <span className="inline-flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
                 {new Date(item.createdAt).toLocaleDateString()}
@@ -566,18 +569,18 @@ function ContentCard({
               <div className="flex gap-1.5">
                 <Button
                   size="sm" variant="outline"
-                  className="h-9 px-3 text-sm gap-1.5"
+                  className={compact ? "h-7 px-2 text-xs gap-1" : "h-9 px-3 text-sm gap-1.5"}
                   onClick={(e) => { e.stopPropagation(); onEdit(item); }}
                 >
-                  <Edit className="w-3.5 h-3.5" /> Edit
+                  <Edit className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} /> Edit
                 </Button>
                 {isDraft && (
                   <Button
                     size="sm"
-                    className="h-9 px-3 text-sm gap-1.5"
+                    className={compact ? "h-7 px-2 text-xs gap-1" : "h-9 px-3 text-sm gap-1.5"}
                     onClick={(e) => { e.stopPropagation(); onPublish(item); }}
                   >
-                    <Send className="w-3.5 h-3.5" /> Publish
+                    <Send className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} /> Publish
                   </Button>
                 )}
               </div>

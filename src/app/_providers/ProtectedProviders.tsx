@@ -7,6 +7,7 @@ import { UploadProvider } from "@/context/UploadContext";
 import { ContentCacheProvider } from "@/context/ContentCacheContext";
 import UploadTray from "@/app/components/layout/UploadTray";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { PreferencesProvider } from "@/context/PreferencesContext";
 import { ModalProvider } from "@/app/components/ui/Modal";
 import { SeoProviders } from "./SeoProviders";
 
@@ -18,10 +19,12 @@ export function ProtectedProviders({ children, siteUrl }: { children: React.Reac
           <UploadProvider>
             <ModalProvider>
               <ThemeProvider>
-                <SeoProviders siteUrl={siteUrl}>
-                  {children}
-                  <UploadTray />
-                </SeoProviders>
+                <PreferencesProvider>
+                  <SeoProviders siteUrl={siteUrl}>
+                    {children}
+                    <UploadTray />
+                  </SeoProviders>
+                </PreferencesProvider>
               </ThemeProvider>
             </ModalProvider>
           </UploadProvider>

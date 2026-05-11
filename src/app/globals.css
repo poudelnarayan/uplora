@@ -263,7 +263,19 @@
    * - Minimal grey usage (only for borders/secondary text)
    * - Red accent for primary CTAs / emphasis (not everywhere)
    */
-  .theme-landing {
+  /* The selectors below force `.theme-landing` to win even when a dark
+     class is sitting higher in the tree (`<html class="dark">`). Without
+     the explicit `.dark .theme-landing` selector, the variables defined
+     here would still apply via cascade, but the body element underneath
+     keeps its dark `--background`, so when the page is shorter than the
+     viewport or has transparent sections, the dark body bg shows
+     through. We fix that below by also painting `.theme-landing` itself
+     with its own background color. */
+  .theme-landing,
+  .dark .theme-landing {
+    color-scheme: light;
+    min-height: 100vh;
+    background-color: hsl(0 0% 99%);
     /* Base surfaces */
     --background: 0 0% 99%;
     --foreground: 222 47% 11%;

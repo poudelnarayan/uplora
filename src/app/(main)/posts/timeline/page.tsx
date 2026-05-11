@@ -9,6 +9,9 @@ import { Card, CardContent } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
+import { usePreferences } from "@/context/PreferencesContext";
+import { stripPostMarkup, formatPostContent } from "@/lib/formatPostContent";
+import { useRouter } from "next/navigation";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { Skeleton, TimelineSkeleton, AppShellSkeleton } from "@/app/components/ui/loading-spinner";
 import AppShell from "@/app/components/layout/AppLayout";
@@ -21,6 +24,50 @@ const Timeline = () => {
   const { selectedTeamId, selectedTeam } = useTeam();
   const { getCachedContent, setCachedContent, isStale, invalidateCache } = useContentCache();
   const notifications = useNotifications();
+  const router = useRouter();
+  const { compact } = usePreferences();
+
+  // Timeline rows route through /posts/[id] which redirects to the
+  // right detail page based on type (video → /videos/[id], etc.).
+  const openPost = (post: any) => router.push(`/posts/${encodeURIComponent(String(post.id))}`);
+
+  // Build the row's display: title if present, then text-post snippet,
+  // then image caption — or the image itself if there's no caption.
+  const renderRowContent = (post: any) => {
+    const title = String(post.title || "").trim();
+    const content = String(post.content || "").trim();
+    const type = String(post.type || "").toLowerCase();
+
+    // Image post with no caption → show thumbnail-sized image
+    if (type === "image" && !content && (post.imageUrl || post.imageKey)) {
+      return (
+        <span className="flex-1 min-w-0 flex items-center gap-2 text-foreground/80 text-xs">
+          {post.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.imageUrl}
+              alt=""
+              loading="lazy"
+              className="h-7 w-7 rounded object-cover shrink-0"
+            />
+          ) : (
+            <span className="h-7 w-7 rounded bg-muted flex items-center justify-center shrink-0">
+              <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+            </span>
+          )}
+          <span className="italic text-muted-foreground truncate">Image · no caption</span>
+        </span>
+      );
+    }
+
+    // Otherwise: title preferred, then stripped content snippet
+    const display = title || stripPostMarkup(content) || "Untitled";
+    return (
+      <span className="flex-1 min-w-0 truncate font-semibold text-foreground">
+        {display}
+      </span>
+    );
+  };
 
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -367,23 +414,23 @@ const Timeline = () => {
                             </span>
                           </div>
                           {dayPosts.length > 0 && (
-                            <div className="space-y-1.5">
+                            <div className={compact ? "space-y-1" : "space-y-1.5"}>
                               {dayPosts.map((post) => (
-                                <div
+                                <button
+                                  type="button"
                                   key={post.id}
-                                  className={`px-3 py-2 rounded-lg border text-sm flex items-center gap-2 ${getStatusColor(post.status)} border-border/50`}
+                                  onClick={() => openPost(post)}
+                                  className={`w-full text-left ${compact ? "px-2.5 py-1.5" : "px-3 py-2"} rounded-lg border text-sm flex items-center gap-2 ${getStatusColor(post.status)} border-border/50 hover:border-primary/40 active:scale-[0.99] transition-all`}
                                 >
                                   <span className="shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5">{getTypeIcon(post.type)}</span>
-                                  <span className="flex-1 min-w-0 truncate font-semibold text-foreground">
-                                    {post.title || 'Untitled'}
-                                  </span>
+                                  {renderRowContent(post)}
                                   {post.scheduledFor && (
                                     <span className="shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground">
                                       <Clock className="h-3 w-3" />
                                       {new Date(post.scheduledFor).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   )}
-                                </div>
+                                </button>
                               ))}
                             </div>
                           )}
@@ -432,10 +479,24 @@ const Timeline = () => {
                                   <p className="text-sm text-muted-foreground/60">No posts</p>
                                 </div>
                               ) : (
-                                dayPosts.map((post) => (
-                                  <Card key={post.id} className="hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/40">
-                                    <CardContent className="p-4">
-                                      <div className="flex items-start gap-3 mb-3">
+                                dayPosts.map((post) => {
+                                  const title = String(post.title || "").trim();
+                                  const content = String(post.content || post.description || "").trim();
+                                  const type = String(post.type || "").toLowerCase();
+                                  const displayTitle = title || stripPostMarkup(content) || "Untitled";
+                                  const showImageOnly = type === "image" && !title && !content;
+
+                                  return (
+                                  <Card
+                                    key={post.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => openPost(post)}
+                                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPost(post); } }}
+                                    className={`hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary/40 ${compact ? "" : ""}`}
+                                  >
+                                    <CardContent className={compact ? "p-2.5" : "p-4"}>
+                                      <div className={`flex items-start gap-3 ${compact ? "mb-1.5" : "mb-3"}`}>
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
                                           <div className="p-1.5 rounded-lg bg-primary/10 text-primary flex-shrink-0">
                                             {getTypeIcon(post.type)}
@@ -454,12 +515,26 @@ const Timeline = () => {
                                           {post.status === 'PUBLISHED' ? 'Posted' : post.status === 'SCHEDULED' ? 'Scheduled' : 'Draft'}
                                         </Badge>
                                       </div>
-                                      <h4 className="text-sm font-semibold text-foreground mb-2 line-clamp-2">
-                                        {post.title || 'Untitled Post'}
-                                      </h4>
-                                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                                        {post.content || post.description || 'No description'}
-                                      </p>
+
+                                      {showImageOnly && post.imageUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                          src={post.imageUrl}
+                                          alt=""
+                                          loading="lazy"
+                                          className="w-full aspect-video object-cover rounded-md mb-2 border border-border/40"
+                                        />
+                                      ) : (
+                                        <h4 className={`font-semibold text-foreground line-clamp-2 ${compact ? "text-xs mb-1" : "text-sm mb-2"}`}>
+                                          {displayTitle}
+                                        </h4>
+                                      )}
+                                      {!compact && !showImageOnly && content && (
+                                        <p
+                                          className="text-xs text-muted-foreground mb-3 line-clamp-2 [&_strong]:text-foreground [&_em]:text-foreground"
+                                          dangerouslySetInnerHTML={{ __html: formatPostContent(content) }}
+                                        />
+                                      )}
                                       {post.platforms && post.platforms.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5">
                                           {post.platforms.slice(0, 2).map((platform: string) => (
@@ -476,7 +551,8 @@ const Timeline = () => {
                                       )}
                                     </CardContent>
                                   </Card>
-                                ))
+                                  );
+                                })
                               )}
                             </div>
                           </div>

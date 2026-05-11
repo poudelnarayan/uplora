@@ -16,6 +16,7 @@ import { Badge } from "@/app/components/ui/badge";
 import { Separator } from "@/app/components/ui/separator";
 import AppShell from "@/app/components/layout/AppLayout";
 import { useTheme } from "@/context/ThemeContext";
+import { usePreferences } from "@/context/PreferencesContext";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -23,6 +24,7 @@ const Settings = () => {
   const { signOut } = useClerk();
   const router = useRouter();
   const { theme, toggleTheme, mounted: themeMounted } = useTheme();
+  const { compact, toggleCompact, mounted: prefsMounted } = usePreferences();
 
   const primaryEmail = useMemo(() => user?.primaryEmailAddress?.emailAddress || "", [user]);
   const initials = useMemo(() => {
@@ -466,7 +468,23 @@ const Settings = () => {
                       className="data-[state=checked]:bg-primary shrink-0 mt-0.5"
                     />
                   </div>
-                  <ToggleRow label="Compact view" description="Show more content in less space" />
+                  {/* Compact view — controlled by PreferencesContext.
+                      Persists to localStorage and toggles `data-compact`
+                      on <html> so any page can respond to it. */}
+                  <div className="flex items-start justify-between gap-3 p-4 border rounded-lg bg-card">
+                    <div className="min-w-0 flex-1">
+                      <Label className="text-sm">Compact view</Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Tighter spacing and denser grids across dashboard, posts, and timeline.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={prefsMounted ? compact : false}
+                      onCheckedChange={() => prefsMounted && toggleCompact()}
+                      disabled={!prefsMounted}
+                      className="data-[state=checked]:bg-primary shrink-0 mt-0.5"
+                    />
+                  </div>
                 </div>
               </div>
 

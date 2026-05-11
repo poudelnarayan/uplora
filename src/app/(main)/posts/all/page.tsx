@@ -9,6 +9,8 @@ import { Badge } from "@/app/components/ui/badge";
 import { Input } from "@/app/components/ui/input";
 import { useTeam } from "@/context/TeamContext";
 import { useContentCache } from "@/context/ContentCacheContext";
+import { usePreferences } from "@/context/PreferencesContext";
+import { formatPostContent } from "@/lib/formatPostContent";
 import { useNotifications } from "@/app/components/ui/Notification";
 import { CardSkeleton, PostsGridSkeleton } from "@/app/components/ui/loading-spinner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/app/components/ui/dropdown-menu";
@@ -23,6 +25,7 @@ const MotionDiv = motion.div as any;
 function AllPostsInner() {
   const router = useRouter();
   const { selectedTeamId, selectedTeam } = useTeam();
+  const { compact } = usePreferences();
   const { getCachedContent, setCachedContent, isStale, removeContentItem, invalidateCache } = useContentCache();
   const notifications = useNotifications();
   const searchParams = useSearchParams();
@@ -440,7 +443,12 @@ function AllPostsInner() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6' : 'space-y-3 sm:space-y-4'}>
+                  <div className={viewMode === 'grid'
+                    ? (compact
+                        ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3'
+                        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6')
+                    : (compact ? 'space-y-2' : 'space-y-3 sm:space-y-4')
+                  }>
                     <AnimatePresence initial={false}>
                       {filteredPosts.map((post) => (
                         <motion.div
@@ -536,10 +544,15 @@ function AllPostsInner() {
                                 </div>
                               </div>
                             </CardHeader>
-                            <CardContent className="pt-0 space-y-4">
-                              <p className="text-muted-foreground text-sm line-clamp-3">
-                                {post.content || post.description || 'No description provided'}
-                              </p>
+                            <CardContent className={compact ? "pt-0 space-y-2" : "pt-0 space-y-4"}>
+                              {(post.content || post.description) ? (
+                                <p
+                                  className={`text-muted-foreground line-clamp-3 [&_strong]:text-foreground [&_em]:text-foreground [&_a]:break-all ${compact ? "text-xs" : "text-sm"}`}
+                                  dangerouslySetInnerHTML={{ __html: formatPostContent(post.content || post.description || "") }}
+                                />
+                              ) : (
+                                <p className={`text-muted-foreground/70 italic ${compact ? "text-xs" : "text-sm"}`}>No description provided</p>
+                              )}
 
                               {post.platforms && post.platforms.length > 0 && (
                                 <div className="flex flex-wrap gap-2">

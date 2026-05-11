@@ -73,7 +73,7 @@ const ProblemSolutionSection = () => {
           {problems.map((problem, index) => (
             <Card key={index} className={`${problem.bgColor} ${problem.borderColor} border-2 shadow-soft`}>
               <CardContent className="p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-soft mb-6 ${problem.color}`}>
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-card shadow-soft mb-6 ${problem.color}`}>
                   <problem.icon className="h-8 w-8" />
                 </div>
                 
@@ -106,7 +106,7 @@ const ProblemSolutionSection = () => {
           {solutions.map((solution, index) => (
             <Card key={index} className={`${solution.bgColor} ${solution.borderColor} border-2 shadow-medium hover-lift`}>
               <CardContent className="p-8 text-center">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-soft mb-6 ${solution.color}`}>
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-card shadow-soft mb-6 ${solution.color}`}>
                   <solution.icon className="h-8 w-8" />
                 </div>
                 
