@@ -1,113 +1,87 @@
 "use client";
 
-import { Card, CardContent } from "@/app/components/ui/card";
-import { Globe, Users, Upload, Sparkles, ArrowRight } from "lucide-react";
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { useState } from "react";
+import {
+  Globe,
+  ShieldCheck,
+  Calendar,
+  Users,
+  Eye,
+  Sparkles,
+} from "lucide-react";
 
-const features = [
+const FEATURES = [
   {
-    icon: Globe,
-    title: "Multi-Platform Publishing",
-    description: "Post once, publish everywhere. Reach your audience across YouTube, TikTok, Instagram, LinkedIn, X, and Facebook simultaneously.",
-    color: "text-primary",
-    glow: "bg-primary/10",
+    Icon: Globe,
+    title: "Cross-post in one shot",
+    body: "Pick the platforms once and we'll format the same content for YouTube, Instagram, TikTok, X, LinkedIn, Facebook, Threads, and Pinterest.",
+    tint: "bg-primary/10 text-primary",
   },
   {
-    icon: Users,
-    title: "Team Workspace",
-    description: "Seamless collaboration where editors draft content and admins review and approve before publishing. Perfect role-based workflow.",
-    color: "text-accent",
-    glow: "bg-accent/10",
+    Icon: ShieldCheck,
+    title: "Approvals built in",
+    body: "Editors request, owners review, posts ship. No more screenshots in DMs or last-minute fire drills.",
+    tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   },
   {
-    icon: Upload,
-    title: "YouTube Long Video Support",
-    description: "Upload and schedule large video files with ease. Built specifically to handle YouTube's long-form content requirements.",
-    color: "text-destructive",
-    glow: "bg-destructive/10",
+    Icon: Calendar,
+    title: "Schedule that respects you",
+    body: "Set a publish time per platform, see the full week on the calendar, and reschedule with a drag — never a re-upload.",
+    tint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   },
   {
-    icon: Sparkles,
-    title: "AI Assistance",
-    description: "Future-ready automation for titles, thumbnails, and tags. Let AI optimize your content for maximum engagement.",
-    color: "text-success",
-    glow: "bg-success/10",
-  }
+    Icon: Users,
+    title: "Workspaces and roles",
+    body: "Separate personal work from team workspaces. Owner, admin, manager, editor — each role only sees what it needs.",
+    tint: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+  },
+  {
+    Icon: Eye,
+    title: "True live preview",
+    body: "What you see is exactly what each platform will render — bold, italics, hashtag chips, link previews, timestamps.",
+    tint: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  },
+  {
+    Icon: Sparkles,
+    title: "AI assist (soon)",
+    body: "Generate titles, rewrite captions for each platform's voice, and auto-pick the best thumbnail — without leaving the editor.",
+    tint: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+  },
 ];
 
 const FeatureCards = () => {
-  const { isVisible, elementRef } = useScrollAnimation();
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-
   return (
-    <section id="features" className="py-20 bg-gradient-to-b from-background to-secondary/20 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 opacity-30">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-primary/20 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${3 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      <div ref={elementRef} className="container mx-auto px-4 lg:px-8 relative z-10">
-        <div className={`text-center mb-16 transition-all duration-1000 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-            Everything you need to
-            <span className="gradient-text"> scale your content</span>
+    <section className="relative py-20 sm:py-28 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section header */}
+        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+            Features
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+            Everything a content team needs.
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Streamline your social media workflow with powerful features designed for teams and creators
+          <p className="mt-4 text-base sm:text-lg text-muted-foreground">
+            Built around how creator teams actually work, not how scheduling tools assume you do.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <Card 
-              key={index} 
-              className={`group hover-lift shadow-soft border-0 bg-card/50 backdrop-blur-sm cursor-pointer relative overflow-hidden transition-all duration-500 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
-              style={{ transitionDelay: `${index * 150}ms` }}
-              onMouseEnter={() => setHoveredCard(index)}
-              onMouseLeave={() => setHoveredCard(null)}
+        {/* Feature grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {FEATURES.map(({ Icon, title, body, tint }) => (
+            <div
+              key={title}
+              className="group relative rounded-2xl border border-border bg-card p-5 sm:p-6 hover:border-primary/30 hover:shadow-md transition-all"
             >
-              {/* Interactive background glow */}
-              <div 
-                className={`absolute inset-0 transition-opacity duration-300 ${feature.glow} ${
-                  hoveredCard === index ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-
-              <CardContent className="p-8 text-center relative z-10">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary/50 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ${feature.color} relative overflow-hidden`}>
-                  <feature.icon className="h-8 w-8 relative z-10" />
-                  
-                  {/* Icon background pulse */}
-                  {hoveredCard === index && (
-                    <div className="absolute inset-0 bg-current opacity-10 animate-ping" />
-                  )}
-                </div>
-                
-                <h3 className="text-xl font-semibold mb-4 group-hover:text-primary transition-colors duration-300">
-                  {feature.title}
-                </h3>
-                
-                <p className="text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+              <div className={`h-11 w-11 rounded-xl ${tint} flex items-center justify-center mb-4 transition-transform group-hover:scale-110`}>
+                <Icon className="h-5 w-5" strokeWidth={1.8} />
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1.5">
+                {title}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {body}
+              </p>
+            </div>
           ))}
         </div>
       </div>
