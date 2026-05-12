@@ -52,7 +52,6 @@ const FeatureCards = () => {
   return (
     <section className="relative py-20 sm:py-28 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
             Features
@@ -65,7 +64,6 @@ const FeatureCards = () => {
           </p>
         </div>
 
-        {/* Feature grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {FEATURES.map(({ Icon, title, body, tint }) => (
             <div

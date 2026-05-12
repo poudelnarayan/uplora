@@ -8,25 +8,17 @@ import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 /**
  * Landing hero — modern SaaS pattern: short value proposition headline,
  * one supporting line, two CTAs, and a product mock to anchor the visual.
- *
- * The earlier hero had too many competing elements (badge, 3-line headline,
- * info card, paragraph, platform color logos, side widget). This rewrite
- * follows the Linear / Vercel / Notion convention — let the headline carry
- * the weight and put one polished asset to the right of it.
  */
 const HeroSection = () => {
   return (
     <section className="relative overflow-hidden">
-      {/* Subtle background — radial spotlight + grid pattern. Painted with
-          inline styles so it survives the .theme-landing variable system. */}
+      {/* Subtle background — radial spotlight + grid pattern. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage: [
-            // Soft sage-green radial top-center
             "radial-gradient(ellipse 80% 50% at 50% -10%, hsl(82 30% 60% / 0.18), transparent 70%)",
-            // Dot grid
             "radial-gradient(hsl(82 24% 40% / 0.08) 1px, transparent 1px)",
           ].join(","),
           backgroundSize: "auto, 24px 24px",
@@ -34,7 +26,7 @@ const HeroSection = () => {
       />
 
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24">
-        {/* ── Top: tiny badge ── */}
+        {/* Top: tiny badge */}
         <div className="flex justify-center mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 backdrop-blur px-3 py-1 text-xs">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -44,7 +36,7 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* ── Headline ── */}
+        {/* Headline */}
         <h1 className="text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.05] max-w-4xl mx-auto">
           Publish to every platform,{" "}
           <span className="relative inline-block">
@@ -55,13 +47,13 @@ const HeroSection = () => {
           </span>
         </h1>
 
-        {/* ── Sub ── */}
+        {/* Sub */}
         <p className="mt-5 sm:mt-6 text-center text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           One workspace for editors to draft, owners to approve, and posts to ship
           automatically — across YouTube, Instagram, TikTok, X, LinkedIn, and more.
         </p>
 
-        {/* ── CTAs ── */}
+        {/* CTAs */}
         <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <SignedOut>
             <SignUpButton mode="redirect" forceRedirectUrl="/subscription">
@@ -96,7 +88,7 @@ const HeroSection = () => {
           </Link>
         </div>
 
-        {/* ── Trust strip ── */}
+        {/* Trust strip */}
         <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs sm:text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
@@ -114,7 +106,7 @@ const HeroSection = () => {
           </span>
         </div>
 
-        {/* ── Product mock (visual anchor) ── */}
+        {/* Product mock (visual anchor) */}
         <div className="mt-14 sm:mt-20 relative max-w-5xl mx-auto">
           {/* Glow under the mock */}
           <div
@@ -150,12 +142,7 @@ const HeroSection = () => {
                   <div className="h-9 w-28 rounded-md bg-primary/80" />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    "bg-primary/10",
-                    "bg-emerald-500/10",
-                    "bg-amber-500/10",
-                    "bg-sky-500/10",
-                  ].map((tone, i) => (
+                  {["bg-primary/10","bg-emerald-500/10","bg-amber-500/10","bg-sky-500/10"].map((tone, i) => (
                     <div key={i} className={`rounded-xl border border-border p-3 ${tone}`}>
                       <div className="h-3 w-12 rounded-sm bg-foreground/20 mb-2" />
                       <div className="h-5 w-8 rounded-sm bg-foreground/40" />
@@ -178,7 +165,7 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* ── Platform marquee — subtle, signals breadth ── */}
+        {/* Platform marquee */}
         <div className="mt-12 sm:mt-16 text-center">
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
             One workspace · every major platform

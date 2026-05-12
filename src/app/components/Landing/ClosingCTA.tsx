@@ -14,7 +14,6 @@ const ClosingCTA = () => {
     <section className="relative py-20 sm:py-28">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative max-w-4xl mx-auto overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 py-16 sm:px-12 sm:py-20 text-center">
-          {/* Decorative glow */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
