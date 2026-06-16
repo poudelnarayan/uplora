@@ -14,14 +14,10 @@ const nextConfig = {
     ];
   },
   eslint: {
-    // Allow production builds to successfully complete even if
-    // there are ESLint errors. We still surface them in dev.
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    // Allow production builds to complete even with type errors.
-    // This unblocks deploys while we iterate on typing.
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     // If you move thumbnails to a stable CDN hostname, list it here for full Next image optimization

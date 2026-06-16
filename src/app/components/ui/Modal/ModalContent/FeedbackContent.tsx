@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Send, Bug, Sparkles, Heart } from "lucide-react";
 
 interface FeedbackContentProps {
-  onSubmit: (type: string, message: string) => Promise<void>;
+  onSubmit: (type: string, message: string) => Promise<unknown>;
   onCancel: () => void;
   isLoading?: boolean;
 }

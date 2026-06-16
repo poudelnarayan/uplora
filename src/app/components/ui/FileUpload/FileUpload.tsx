@@ -18,7 +18,7 @@ import {
 
 const MotionDiv = motion.div as any;
 
-interface FileUploadProps {
+export interface FileUploadProps {
   onFileSelect: (files: File[]) => void;
   acceptedTypes?: string[];
   maxFileSize?: number; // in bytes

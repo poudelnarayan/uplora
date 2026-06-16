@@ -66,7 +66,8 @@ export async function POST(req: NextRequest) {
       params: { uploadType: 'resumable' }
     } as any);
 
-    const videoId = insertRes.data.id;
+    const insertData = insertRes.data as { id?: string | null; snippet?: { title?: string | null } };
+    const videoId = insertData.id;
 
     // Optional: set thumbnail if provided
     if (videoId && thumbnailKey) {
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       videoId: videoId,
-      title: insertRes.data.snippet?.title,
+      title: insertData.snippet?.title,
     });
   } catch (error) {
     console.error("YouTube upload error:", error);

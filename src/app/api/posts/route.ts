@@ -5,7 +5,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createErrorResponse, createSuccessResponse, ErrorCodes } from "@/lib/api-utils";
 import { broadcast } from "@/lib/realtime";
-import { mapToDbStatus } from "@/app/api/content/route";
+import { mapToDbStatus } from "@/lib/postStatus";
 
 export async function POST(request: NextRequest) {
   try {

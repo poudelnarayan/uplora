@@ -192,8 +192,7 @@ export async function POST(
       );
     }
 
-    // Send invitation email (import from parent invite route)
-    const { sendInvitationEmail } = await import("../route");
+    const { sendInvitationEmail } = await import("@/lib/invitationEmail");
     let emailSent = true;
     try {
       await sendInvitationEmail(invitation.token, invitation.email, teamId, invitation.role);

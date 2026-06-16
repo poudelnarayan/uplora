@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     // If connected, verify the token is still valid and get fresh data
     try {
       // Backward compatibility: older code stored `accessToken`. New flow stores `userAccessToken`.
-      const userAccessToken = facebookConnection!.userAccessToken || facebookConnection!.accessToken;
+      const userAccessToken = facebookConnection!.userAccessToken || facebookConnection!.accessToken || "";
       const apiVersion = process.env.META_API_VERSION || "v19.0";
 
       const userInfoResponse = await fetch(`https://graph.facebook.com/${apiVersion}/me?fields=id,name&access_token=${encodeURIComponent(userAccessToken)}`);

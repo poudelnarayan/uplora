@@ -3,16 +3,16 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { S3Client, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectCommand, ListObjectsV2Command, DeleteObjectsCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase";
-import { mapToDbStatus, mapFromDbStatus } from "@/app/api/content/route";
+import { mapToDbStatus, mapFromDbStatus } from "@/lib/postStatus";
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 async function deleteS3Prefix(prefix: string) {
   let continuationToken: string | undefined = undefined;
   do {
-    const listed = await s3.send(
+    const listed: ListObjectsV2CommandOutput = await s3.send(
       new ListObjectsV2Command({
         Bucket: process.env.S3_BUCKET!,
         Prefix: prefix,

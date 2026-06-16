@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import { TextField } from "@/app/components/ui/TextField";
 
 interface IdeaLabContentProps {
-  onSubmit: (title: string, description: string, priority: string) => Promise<void>;
+  onSubmit: (title: string, description: string, priority: string) => Promise<unknown>;
   onCancel: () => void;
   isLoading?: boolean;
 }

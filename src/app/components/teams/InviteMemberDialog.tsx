@@ -25,7 +25,7 @@ interface InviteMemberDialogProps {
     email: string;
     teamId: number;
     role: string;
-  }) => Promise<void> | void;
+  }) => Promise<{ emailSent?: boolean } | void> | { emailSent?: boolean } | void;
 }
 
 export const InviteMemberDialog = ({ 

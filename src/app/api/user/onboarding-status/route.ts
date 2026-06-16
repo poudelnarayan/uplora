@@ -90,12 +90,14 @@ export async function POST(req: NextRequest) {
     if (body.goal)     prefUpdate.onboarding_goal      = String(body.goal);
     if (body.teamSize) prefUpdate.onboarding_team_size = String(body.teamSize);
 
-    await supabaseAdmin
-      .from("users")
-      .update(prefUpdate)
-      .eq("clerk_id", clerkUserId)
-      .then(() => {})
-      .catch(() => {}); // ignore — columns may not exist yet
+    try {
+      await supabaseAdmin
+        .from("users")
+        .update(prefUpdate)
+        .eq("clerk_id", clerkUserId);
+    } catch {
+      // ignore — columns may not exist yet
+    }
   }
 
   const onboardingCompleted = Boolean(updatedUser?.onboarding_completed);

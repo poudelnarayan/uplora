@@ -10,7 +10,7 @@ import { broadcast } from "@/lib/realtime";
 import { S3Client, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
 import { uploadYouTubeVideo, validateAndNormalizeMetadata, uploadYouTubeThumbnail } from "@/server/services/youtubeUploadService";
-import { VideoStatus } from "@/types/videoStatus";
+import { VideoStatus, type VideoStatusType } from "@/types/videoStatus";
 import { getVideoById, syncUser, getTeamAndRole, updateVideoStatus, updateVideoMetadata } from "@/lib/video-utils";
 import { checkTeamCanPublish } from "@/server/services/teamPlatformGuard";
 
@@ -55,7 +55,7 @@ export async function POST(
         return NextResponse.json({ error: "Not allowed to publish this team video" }, { status: 403 });
       }
 
-      const readyStatuses = [VideoStatus.READY_TO_PUBLISH, VideoStatus.APPROVAL_REQUESTED, VideoStatus.APPROVAL_APPROVED];
+      const readyStatuses: VideoStatusType[] = [VideoStatus.READY_TO_PUBLISH, VideoStatus.APPROVAL_REQUESTED, VideoStatus.APPROVAL_APPROVED];
       if (!readyStatuses.includes(upperStatus)) {
         return NextResponse.json({ error: "This video is not ready to publish yet." }, { status: 400 });
       }

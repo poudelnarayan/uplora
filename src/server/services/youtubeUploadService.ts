@@ -250,7 +250,7 @@ async function uploadChunk(
       "Content-Length": String(chunk.length),
       "Content-Range": `bytes ${start}-${end}/${totalBytes}`,
     },
-    body: chunk,
+    body: chunk as unknown as BodyInit,
   });
 
   return resp;

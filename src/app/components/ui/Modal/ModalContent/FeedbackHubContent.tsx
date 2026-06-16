@@ -15,8 +15,8 @@ export default function FeedbackHubContent({
   isLoading = false,
   defaultTab = "feedback",
 }: {
-  onSubmitFeedback: (type: string, message: string) => Promise<void>;
-  onSubmitIdea: (title: string, description: string, priority: string) => Promise<void>;
+  onSubmitFeedback: (type: string, message: string) => Promise<unknown>;
+  onSubmitIdea: (title: string, description: string, priority: string) => Promise<unknown>;
   onCancel: () => void;
   isLoading?: boolean;
   defaultTab?: Tab;
