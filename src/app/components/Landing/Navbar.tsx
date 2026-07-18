@@ -1,6 +1,5 @@
 "use client";
 
-import { Star } from "lucide-react";
 import { ClerkLoaded, ClerkLoading, SignedOut, SignedIn } from "@clerk/nextjs";
 import AuthButtons from "./AuthButtons";
 import Image from "next/image";
@@ -8,12 +7,6 @@ import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
 
 const Navbar = () => {
-  const scrollToReviews = () => {
-    document.getElementById("reviews")?.scrollIntoView({
-      behavior: "smooth",
-    });
-  };
-
   const scrollToFeatures = () => {
     document.getElementById("features")?.scrollIntoView({
       behavior: "smooth",
@@ -49,14 +42,6 @@ const Navbar = () => {
               />
             </Link>
 
-            <button
-              onClick={scrollToReviews}
-              className="hidden lg:inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-              <span className="font-medium">4.9</span>
-              <span>· 50+ teams</span>
-            </button>
           </div>
 
           {/* Desktop Navigation */}

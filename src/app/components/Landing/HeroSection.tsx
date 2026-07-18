@@ -107,65 +107,6 @@ const HeroSection = () => {
           </span>
         </div>
 
-        {/* Product mock (visual anchor) */}
-        <div className="mt-14 sm:mt-20 relative max-w-5xl mx-auto">
-          {/* Glow under the mock */}
-          <div
-            aria-hidden
-            className="absolute -inset-x-20 -bottom-10 h-40 rounded-full blur-3xl opacity-50"
-            style={{ background: "radial-gradient(ellipse at center, hsl(152 45% 40% / 0.28), transparent 70%)" }}
-          />
-          <div className="relative rounded-2xl border border-border bg-card shadow-2xl shadow-primary/10 overflow-hidden">
-            {/* Browser chrome */}
-            <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border bg-muted/40">
-              <div className="flex gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-                <div className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-              </div>
-              <div className="mx-auto h-6 w-48 rounded-md bg-background border border-border flex items-center px-2 text-[10px] text-muted-foreground">
-                uplora.app/dashboard
-              </div>
-            </div>
-            {/* Fake dashboard skeleton */}
-            <div className="grid grid-cols-12 gap-3 p-4 sm:p-6 bg-gradient-to-br from-background to-muted/30">
-              {/* Sidebar */}
-              <div className="hidden md:flex md:col-span-3 flex-col gap-2">
-                <div className="h-7 w-24 rounded-md bg-muted" />
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className={`h-8 rounded-md ${i === 0 ? "bg-primary/15" : "bg-muted/60"}`} />
-                ))}
-              </div>
-              {/* Main */}
-              <div className="col-span-12 md:col-span-9 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-7 w-40 rounded-md bg-muted" />
-                  <div className="h-9 w-28 rounded-md bg-primary/80" />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {["bg-primary/10","bg-emerald-500/10","bg-amber-500/10","bg-sky-500/10"].map((tone, i) => (
-                    <div key={i} className={`rounded-xl border border-border p-3 ${tone}`}>
-                      <div className="h-3 w-12 rounded-sm bg-foreground/20 mb-2" />
-                      <div className="h-5 w-8 rounded-sm bg-foreground/40" />
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="rounded-xl border border-border bg-card overflow-hidden">
-                      <div className="aspect-video bg-gradient-to-br from-muted to-muted/60" />
-                      <div className="p-2.5 space-y-1.5">
-                        <div className="h-3 w-3/4 rounded-sm bg-foreground/30" />
-                        <div className="h-2.5 w-1/2 rounded-sm bg-foreground/15" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
   );

@@ -10,13 +10,18 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
+// v2 key: the v1 default was dark, so v1 values mostly reflect the old
+// default rather than a real user choice. Bumping the key restarts
+// everyone on light; the toggle still persists their next choice.
+const THEME_STORAGE_KEY = "uplora-theme-v2";
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("uplora-theme") as "dark" | "light" | null;
-    const initialTheme = savedTheme || "dark";
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as "dark" | "light" | null;
+    const initialTheme = savedTheme || "light";
     
     // Apply theme immediately to prevent flash
     const root = document.documentElement;
@@ -30,7 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     
     setTheme(initialTheme);
     if (!savedTheme) {
-      localStorage.setItem("uplora-theme", initialTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, initialTheme);
     }
     setMounted(true);
   }, []);
@@ -49,7 +54,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.setAttribute("data-theme", "light");
     }
     
-    localStorage.setItem("uplora-theme", theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {
