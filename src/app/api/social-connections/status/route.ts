@@ -4,9 +4,21 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getUserSocialConnections } from "@/server/services/socialConnections";
 import { supabaseAdmin } from "@/lib/supabase";
+import { ENABLED_PLATFORM_IDS } from "@/config/platforms";
 
-// Returns which platforms are currently connected for the signed-in user.
-// Used by Team "Add more platforms" UI so it only offers platforms that can actually publish.
+// Returns which platforms are currently connected for the signed-in user
+// (or the owner of ?teamId=). Connection checks are driven by the platform
+// registry — today that means YouTube only.
+function connectedFrom(sc: Awaited<ReturnType<typeof getUserSocialConnections>>): string[] {
+  const connected = new Set<string>();
+  for (const id of ENABLED_PLATFORM_IDS) {
+    if (id === "youtube" && (sc.youtube?.accessToken || sc.youtube?.refreshToken)) {
+      connected.add("youtube");
+    }
+  }
+  return Array.from(connected);
+}
+
 export async function GET(req: Request) {
   try {
     const { userId } = await auth();
@@ -15,8 +27,8 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const teamId = url.searchParams.get("teamId");
 
-    // If teamId is provided, return the *team owner's* connected platforms (members can view).
-    // This lets the UI indicate whether the current workspace can publish.
+    // If teamId is provided, return the *team owner's* connected platforms
+    // (members can view) so the UI can indicate whether this workspace can publish.
     if (teamId) {
       const { data: team } = await supabaseAdmin
         .from("teams")
@@ -26,7 +38,6 @@ export async function GET(req: Request) {
 
       if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
-      // Resolve the current user's internal UUID to compare with team.owner_id (UUID)
       const { data: currentUser } = await supabaseAdmin
         .from("users")
         .select("id")
@@ -48,18 +59,7 @@ export async function GET(req: Request) {
         }
       }
 
-      // Pass team.id directly to bypass owner resolution — team is already known
       const sc = await getUserSocialConnections(userId, team.id);
-
-      const connected = new Set<string>();
-      if (sc.facebook?.userAccessToken || sc.facebook?.accessToken) connected.add("facebook");
-      if (sc.instagram?.accessToken || sc.instagram?.businessAccountId) connected.add("instagram");
-      if (sc.youtube?.accessToken || sc.youtube?.refreshToken) connected.add("youtube");
-      if (sc.twitter?.encryptedAccessToken) connected.add("twitter");
-      if (sc.linkedin?.accessToken) connected.add("linkedin");
-      if (sc.pinterest?.accessToken) connected.add("pinterest");
-      if (sc.threads?.accessToken) connected.add("threads");
-      if (sc.tiktok?.accessToken) connected.add("tiktok");
 
       const { data: owner } = await supabaseAdmin
         .from("users")
@@ -68,7 +68,7 @@ export async function GET(req: Request) {
         .maybeSingle();
 
       return NextResponse.json({
-        connectedPlatforms: Array.from(connected),
+        connectedPlatforms: connectedFrom(sc),
         scope: "team-owner",
         teamId: team.id,
         teamName: team.name || null,
@@ -77,24 +77,10 @@ export async function GET(req: Request) {
       });
     }
 
-    // Default: current user's connected platforms
     const sc = await getUserSocialConnections(userId);
-
-    const connected = new Set<string>();
-    if (sc.facebook?.userAccessToken || sc.facebook?.accessToken) connected.add("facebook");
-    if (sc.instagram?.accessToken || sc.instagram?.businessAccountId) connected.add("instagram");
-    if (sc.youtube?.accessToken || sc.youtube?.refreshToken) connected.add("youtube");
-    if (sc.twitter?.encryptedAccessToken) connected.add("twitter");
-    if (sc.linkedin?.accessToken) connected.add("linkedin");
-    if (sc.pinterest?.accessToken) connected.add("pinterest");
-    if (sc.threads?.accessToken) connected.add("threads");
-    if (sc.tiktok?.accessToken) connected.add("tiktok");
-
-    return NextResponse.json({ connectedPlatforms: Array.from(connected), scope: "user" });
+    return NextResponse.json({ connectedPlatforms: connectedFrom(sc), scope: "user" });
   } catch (e) {
     console.error("GET /api/social-connections/status error", e);
     return NextResponse.json({ connectedPlatforms: [] }, { status: 200 });
   }
 }
-
-

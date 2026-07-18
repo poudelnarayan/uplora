@@ -29,50 +29,17 @@ export const CreateTeamDialog = ({ onCreateTeam, isOpen: externalIsOpen, onOpenC
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
   const [loadingPlatforms, setLoadingPlatforms] = useState(true);
 
-  // Fetch connected platforms
+  // Fetch connected platforms — one registry-driven endpoint instead of
+  // per-platform status calls.
   useEffect(() => {
     const fetchConnectedPlatforms = async () => {
       setLoadingPlatforms(true);
       try {
-        const connected: string[] = [];
-
-        // Check YouTube
-        const ytRes = await fetch('/api/youtube/status', { cache: 'no-store' });
-        const ytData = await ytRes.json();
-        if (ytData?.isConnected) connected.push('youtube');
-
-        // Check Facebook/Instagram
-        const fbRes = await fetch('/api/facebook/status', { cache: 'no-store' });
-        const fbData = await fbRes.json();
-        if (fbData?.connected) connected.push('facebook');
-        if (fbData?.instagramConnected) connected.push('instagram');
-
-        // Check TikTok
-        const ttRes = await fetch('/api/tiktok/status', { cache: 'no-store' });
-        const ttData = await ttRes.json();
-        if (ttData?.isConnected) connected.push('tiktok');
-
-        // Check Threads
-        const thRes = await fetch('/api/threads/status', { cache: 'no-store' });
-        const thData = await thRes.json();
-        if (thData?.isConnected) connected.push('threads');
-
-        // Check Pinterest
-        const pinRes = await fetch('/api/pinterest/status', { cache: 'no-store' });
-        const pinData = await pinRes.json();
-        if (pinData?.isConnected) connected.push('pinterest');
-
-        // Check LinkedIn
-        const liRes = await fetch('/api/linkedin/status', { cache: 'no-store' });
-        const liData = await liRes.json();
-        if (liData?.isConnected) connected.push('linkedin');
-
-        // Check X/Twitter
-        const xRes = await fetch('/api/twitter/status', { cache: 'no-store' });
-        const xData = await xRes.json();
-        if (xData?.isConnected) connected.push('twitter');
-
-        setConnectedPlatforms(connected);
+        const res = await fetch('/api/social-connections/status', { cache: 'no-store' });
+        const data = await res.json();
+        setConnectedPlatforms(
+          Array.isArray(data?.connectedPlatforms) ? data.connectedPlatforms : []
+        );
       } catch (error) {
         console.error('Failed to fetch connected platforms:', error);
       } finally {

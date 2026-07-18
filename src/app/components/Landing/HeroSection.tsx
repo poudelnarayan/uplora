@@ -18,8 +18,8 @@ const HeroSection = () => {
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage: [
-            "radial-gradient(ellipse 80% 50% at 50% -10%, hsl(82 30% 60% / 0.18), transparent 70%)",
-            "radial-gradient(hsl(82 24% 40% / 0.08) 1px, transparent 1px)",
+            "radial-gradient(ellipse 80% 50% at 50% -10%, hsl(152 45% 42% / 0.14), transparent 70%)",
+            "radial-gradient(hsl(152 40% 35% / 0.07) 1px, transparent 1px)",
           ].join(","),
           backgroundSize: "auto, 24px 24px",
         }}
@@ -38,7 +38,7 @@ const HeroSection = () => {
 
         {/* Headline */}
         <h1 className="text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.05] max-w-4xl mx-auto">
-          Publish to every platform,{" "}
+          Ship YouTube videos,{" "}
           <span className="relative inline-block">
             <span className="relative z-10 bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
               with your team.
@@ -49,8 +49,9 @@ const HeroSection = () => {
 
         {/* Sub */}
         <p className="mt-5 sm:mt-6 text-center text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          One workspace for editors to draft, owners to approve, and posts to ship
-          automatically — across YouTube, Instagram, TikTok, X, LinkedIn, and more.
+          One workspace for editors to upload, owners to approve, and videos
+          to publish to YouTube — without sharing channel passwords or
+          juggling Google Drive links.
         </p>
 
         {/* CTAs */}
@@ -112,7 +113,7 @@ const HeroSection = () => {
           <div
             aria-hidden
             className="absolute -inset-x-20 -bottom-10 h-40 rounded-full blur-3xl opacity-50"
-            style={{ background: "radial-gradient(ellipse at center, hsl(82 30% 55% / 0.35), transparent 70%)" }}
+            style={{ background: "radial-gradient(ellipse at center, hsl(152 45% 40% / 0.28), transparent 70%)" }}
           />
           <div className="relative rounded-2xl border border-border bg-card shadow-2xl shadow-primary/10 overflow-hidden">
             {/* Browser chrome */}
@@ -165,29 +166,6 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Platform marquee */}
-        <div className="mt-12 sm:mt-16 text-center">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
-            One workspace · every major platform
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-muted-foreground/80">
-            <span>YouTube</span>
-            <span className="text-border">·</span>
-            <span>Instagram</span>
-            <span className="text-border">·</span>
-            <span>TikTok</span>
-            <span className="text-border">·</span>
-            <span>X</span>
-            <span className="text-border">·</span>
-            <span>LinkedIn</span>
-            <span className="text-border">·</span>
-            <span>Facebook</span>
-            <span className="text-border">·</span>
-            <span>Threads</span>
-            <span className="text-border">·</span>
-            <span>Pinterest</span>
-          </div>
-        </div>
       </div>
     </section>
   );

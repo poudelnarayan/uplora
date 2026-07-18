@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Globe,
+  Youtube,
   ShieldCheck,
   Calendar,
   Users,
@@ -11,10 +11,10 @@ import {
 
 const FEATURES = [
   {
-    Icon: Globe,
-    title: "Cross-post in one shot",
-    body: "Pick the platforms once and we'll format the same content for YouTube, Instagram, TikTok, X, LinkedIn, Facebook, Threads, and Pinterest.",
-    tint: "bg-primary/10 text-primary",
+    Icon: Youtube,
+    title: "Publish straight to YouTube",
+    body: "Editors upload the video, owners approve it, and Uplora pushes it to your channel — title, description, tags, thumbnail, and scheduling all in one flow.",
+    tint: "bg-red-500/10 text-red-600 dark:text-red-400",
   },
   {
     Icon: ShieldCheck,
@@ -25,7 +25,7 @@ const FEATURES = [
   {
     Icon: Calendar,
     title: "Schedule that respects you",
-    body: "Set a publish time per platform, see the full week on the calendar, and reschedule with a drag — never a re-upload.",
+    body: "Set a publish time, see the full week on the calendar, and reschedule with a drag — never a re-upload.",
     tint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   },
   {
@@ -37,13 +37,13 @@ const FEATURES = [
   {
     Icon: Eye,
     title: "True live preview",
-    body: "What you see is exactly what each platform will render — bold, italics, hashtag chips, link previews, timestamps.",
+    body: "Exactly what YouTube will render — title, description, thumbnail, tags, chapters, end screens — before anyone clicks publish.",
     tint: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
   },
   {
     Icon: Sparkles,
     title: "AI assist (soon)",
-    body: "Generate titles, rewrite captions for each platform's voice, and auto-pick the best thumbnail — without leaving the editor.",
+    body: "Generate titles, rewrite descriptions, suggest tags, and auto-pick the best thumbnail — without leaving the editor.",
     tint: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
   },
 ];

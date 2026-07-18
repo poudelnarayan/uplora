@@ -4,390 +4,284 @@
 
 /**
  * ═══════════════════════════════════════════════════════════════
- *                   SINGLE SOURCE OF TRUTH
- *                    FOR ALL APPLICATION COLORS
+ *                    UPLORA DESIGN TOKENS
+ *              single source of truth for all color
  * ═══════════════════════════════════════════════════════════════
  *
- * THIS FILE IS THE ONLY PLACE WHERE COLORS ARE DEFINED!
+ * Structured, tokenized, content-first. Two themes only:
+ *   :root  — light (marketing site + app light mode)
+ *   .dark  — dark  (app dark mode; zinc neutrals, no neon)
  *
- * ALL components, pages, modals, notifications, buttons, text,
- * backgrounds, gradients, icons, shadows, and any visual element
- * in the application MUST use colors from this file via:
+ * Rules:
+ * - Components consume tokens via Tailwind classes (bg-primary,
+ *   text-muted-foreground, border-border) — never raw hex/rgb.
+ * - Every text/surface pair in this file meets WCAG 2.2 AA.
+ * - There is intentionally NO per-page theme override layer.
+ *   (The old `.theme-landing` block caused white-on-white bugs when
+ *   variables fell through to `.dark` values. Do not reintroduce it.)
  *
- * - Tailwind utility classes: bg-primary, text-warning, border-accent
- * - CSS variables: var(--primary), var(--warning), var(--accent)
- * - Use CSS variables + Tailwind tokens for all UI colors (no hex/rgb in components)
- *
- * DO NOT use hardcoded hex colors, rgb values, or color names anywhere!
- *
- * Uplora Design System - 6-Color Palette:
- * ────────────────────────────────────────
- * #97A87A - Sage Green (Primary)
- * #A8BBA3 - Light Sage (Accent)
- * #FCF9EA - Cream (Background)
- * #FFA239 - Orange (Highlight/Warning)
- * #000000 - Black
- * #FFFFFF - White
- *
- * ═══════════════════════════════════════════════════════════════
+ * Palette: white/zinc neutrals · deep green primary (hsl 152) ·
+ * amber warning · red reserved for destructive + YouTube branding.
  */
 
 @layer base {
   :root {
-    /* Core Background & Text - Cream & Black */
-    --background: 50 60% 96%;
-    --foreground: 0 0% 0%;
-
-    /* Card System - White */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
-
-    /* Popover System */
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-
-    /* Primary - Sage Green #97A87A */
-    --primary: 82 24% 57%;
-    --primary-hover: 82 24% 47%;
-    --primary-glow: 82 34% 67%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary - Black */
-    --secondary: 0 0% 0%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Muted - Light Sage tints */
-    --muted: 100 23% 90%;
-    --muted-foreground: 82 20% 35%;
-
-    /* Accent - Light Sage #A8BBA3 */
-    --accent: 100 23% 69%;
-    --accent-hover: 100 23% 59%;
-    --accent-glow: 100 33% 79%;
-    --accent-foreground: 0 0% 0%;
-
-    /* Orange - Highlight #FFA239 */
-    --orange: 33 100% 62%;
-    --orange-hover: 33 100% 52%;
-    --orange-foreground: 0 0% 0%;
-
-    /* Success - Sage Green variation */
-    --success: 82 24% 57%;
-    --success-foreground: 0 0% 100%;
-    --success-muted: 82 30% 95%;
-
-    /* Warning - Orange */
-    --warning: 33 100% 62%;
-    --warning-foreground: 0 0% 0%;
-    --warning-muted: 33 100% 95%;
-
-    /* System Colors - Black for destructive */
-    --destructive: 0 0% 0%;
-    --destructive-foreground: 0 0% 100%;
-    --destructive-muted: 0 0% 95%;
-
-    /* Borders & Inputs - Light sage tones */
-    --border: 100 23% 85%;
-    --input: 100 23% 85%;
-    --ring: 82 24% 57%;
-
-    /* Design System Values */
-    --radius: 0.875rem;
-
-    /* Premium Gradients - Sage & Orange */
-    --gradient-primary: linear-gradient(
-      135deg,
-      hsl(82 24% 57%) 0%,
-      hsl(100 23% 69%) 100%
-    );
-    --gradient-accent: linear-gradient(
-      135deg,
-      hsl(100 23% 69%) 0%,
-      hsl(100 33% 79%) 100%
-    );
-    --gradient-hero: linear-gradient(
-      135deg,
-      hsl(82 24% 57%) 0%,
-      hsl(33 100% 62%) 100%
-    );
-    --gradient-luxury: linear-gradient(
-      135deg,
-      hsl(82 24% 57%) 0%,
-      hsl(100 23% 69%) 50%,
-      hsl(33 100% 62%) 100%
-    );
-    --gradient-glass: linear-gradient(
-      135deg,
-      rgba(252, 249, 234, 0.9) 0%,
-      rgba(252, 249, 234, 0.7) 100%
-    );
-    --gradient-subtle: linear-gradient(
-      180deg,
-      hsl(50 60% 96%),
-      hsl(100 23% 95%)
-    );
-
-    /* Premium Shadows - Sage tones */
-    --shadow-soft: 0 2px 8px -2px rgba(151, 168, 122, 0.12);
-    --shadow-medium: 0 8px 24px -4px rgba(151, 168, 122, 0.18);
-    --shadow-strong: 0 16px 48px -8px rgba(151, 168, 122, 0.24);
-    --shadow-glow: 0 8px 32px -8px rgba(151, 168, 122, 0.4);
-    --shadow-sage: 0 8px 32px -8px rgba(151, 168, 122, 0.35);
-    --shadow-orange: 0 8px 32px -8px rgba(255, 162, 57, 0.35);
-
-    /* Animation Variables */
-    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    --transition-luxury: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-    /* Sidebar — warm cream surface with sage-green accents.
-       The Uplora wordmark uses cool tones, so a warm cream backdrop
-       reads better than a saturated green panel. Active nav items still
-       pop with sage so the brand identity survives. */
-    --sidebar-background: 40 35% 96%;
-    --sidebar-foreground: 82 18% 22%;
-    --sidebar-primary: 82 24% 42%;
-    --sidebar-primary-foreground: 40 35% 97%;
-    --sidebar-accent: 82 28% 90%;
-    --sidebar-accent-foreground: 82 24% 22%;
-    --sidebar-border: 40 22% 85%;
-    --sidebar-ring: 82 24% 50%;
-  }
-
-  .dark {
-    /* Dark Mode - 6-Color Palette */
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
-
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 82 24% 57%;
-    --primary-hover: 82 24% 47%;
-    --primary-glow: 82 34% 67%;
-    --primary-foreground: 0 0% 0%;
-
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 0%;
-
-    --muted: 82 20% 20%;
-    --muted-foreground: 100 23% 75%;
-
-    --accent: 100 23% 69%;
-    --accent-hover: 100 23% 59%;
-    --accent-glow: 100 33% 79%;
-    --accent-foreground: 0 0% 0%;
-
-    --orange: 33 100% 62%;
-    --orange-hover: 33 100% 52%;
-    --orange-foreground: 0 0% 0%;
-
-    --success: 82 24% 57%;
-    --success-foreground: 0 0% 0%;
-    --success-muted: 82 20% 20%;
-
-    --warning: 33 100% 62%;
-    --warning-foreground: 0 0% 0%;
-    --warning-muted: 33 50% 20%;
-
-    --destructive: 0 0% 100%;
-    --destructive-foreground: 0 0% 0%;
-    --destructive-muted: 0 0% 20%;
-
-    --border: 82 20% 25%;
-    --input: 82 20% 25%;
-    --ring: 82 24% 57%;
-
-    /* Dark Mode Gradients */
-    --gradient-primary: linear-gradient(
-      135deg,
-      hsl(82 24% 57%) 0%,
-      hsl(100 23% 69%) 100%
-    );
-    --gradient-accent: linear-gradient(
-      135deg,
-      hsl(100 23% 69%) 0%,
-      hsl(100 33% 79%) 100%
-    );
-    --gradient-hero: linear-gradient(
-      135deg,
-      hsl(82 24% 57%) 0%,
-      hsl(33 100% 62%) 100%
-    );
-    --gradient-luxury: linear-gradient(
-      135deg,
-      hsl(82 24% 57%) 0%,
-      hsl(100 23% 69%) 50%,
-      hsl(33 100% 62%) 100%
-    );
-    --gradient-glass: linear-gradient(
-      135deg,
-      rgba(0, 0, 0, 0.5) 0%,
-      rgba(0, 0, 0, 0.3) 100%
-    );
-    --gradient-subtle: linear-gradient(
-      180deg,
-      hsl(0 0% 8%),
-      hsl(82 20% 12%)
-    );
-
-    --shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
-    --shadow-medium: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
-    --shadow-strong: 0 16px 48px -8px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 8px 32px -8px rgba(151, 168, 122, 0.5);
-    --shadow-sage: 0 8px 32px -8px rgba(151, 168, 122, 0.4);
-    --shadow-orange: 0 8px 32px -8px rgba(255, 162, 57, 0.4);
-
-    /* Dark mode keeps the warm-cream concept but inverted: a deep warm
-       charcoal panel with cream text and sage accents. */
-    --sidebar-background: 40 8% 11%;
-    --sidebar-foreground: 40 25% 92%;
-    --sidebar-primary: 82 28% 60%;
-    --sidebar-primary-foreground: 40 8% 8%;
-    --sidebar-accent: 40 8% 18%;
-    --sidebar-accent-foreground: 40 25% 95%;
-    --sidebar-border: 40 8% 22%;
-    --sidebar-ring: 82 28% 60%;
-  }
-
-  /**
-   * Landing Page Theme (light, modern, high-contrast, red accent)
-   * Applied only when a container has `className="theme-landing"`.
-   *
-   * Goals:
-   * - Near-white background (calm, SaaS)
-   * - Strong text contrast
-   * - Minimal grey usage (only for borders/secondary text)
-   * - Red accent for primary CTAs / emphasis (not everywhere)
-   */
-  /* The selectors below force `.theme-landing` to win even when a dark
-     class is sitting higher in the tree (`<html class="dark">`). Without
-     the explicit `.dark .theme-landing` selector, the variables defined
-     here would still apply via cascade, but the body element underneath
-     keeps its dark `--background`, so when the page is shorter than the
-     viewport or has transparent sections, the dark body bg shows
-     through. We fix that below by also painting `.theme-landing` itself
-     with its own background color. */
-  .theme-landing,
-  .dark .theme-landing {
     color-scheme: light;
-    min-height: 100vh;
-    background-color: hsl(0 0% 99%);
-    /* Base surfaces */
-    --background: 0 0% 99%;
-    --foreground: 222 47% 11%;
+
+    /* Surfaces */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 240 10% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 240 10% 8%;
 
-    /* Primary (non-CTA highlight): calm brand green for headings/highlights */
-    --primary: 82 24% 38%;
-    --primary-hover: 82 24% 32%;
-    --primary-glow: 82 30% 55%;
+    /* Primary — deep green, AA with white text (≈5.2:1) */
+    --primary: 152 55% 30%;
+    --primary-hover: 152 55% 25%;
+    --primary-glow: 152 45% 42%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft neutral surface used across landing (prevents "grey blocks") */
-    --secondary: 210 40% 98%;
-    --secondary-foreground: 222 47% 11%;
+    /* Secondary — quiet neutral surface (chips, wells) */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 8%;
 
-    /* Subtle UI neutrals */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 40%;
+    /* Muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 38%;
 
-    /* Accent (secondary highlight): slightly lighter green for variation */
-    --accent: 82 24% 45%;
-    --accent-hover: 82 24% 38%;
-    --accent-glow: 82 30% 60%;
+    /* Accent — mid green, readable as text on white (≈4.6:1) */
+    --accent: 152 45% 34%;
+    --accent-hover: 152 45% 28%;
+    --accent-glow: 152 45% 46%;
     --accent-foreground: 0 0% 100%;
 
-    /* System colors */
-    --success: 82 24% 38%;
+    /* Orange — decorative highlight only, never body text */
+    --orange: 25 90% 48%;
+    --orange-hover: 25 90% 42%;
+    --orange-foreground: 0 0% 100%;
+
+    /* Status */
+    --success: 152 55% 30%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 82 30% 95%;
+    --success-muted: 149 60% 92%;
 
-    --warning: 33 100% 58%;
-    --warning-foreground: 0 0% 0%;
-    --warning-muted: 33 100% 95%;
+    --warning: 35 92% 33%;
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 48 96% 89%;
 
-    /* CTA red: use destructive semantic for the landing CTA buttons only */
-    --destructive: 0 72% 52%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-muted: 0 80% 96%;
+    --destructive-muted: 0 86% 97%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    /* CTA/buttons focus ring (brand-matched) */
-    --ring: 82 24% 38%;
+    /* Lines & focus */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 152 55% 30%;
 
-    /* Landing gradients (subtle) */
+    --radius: 0.5rem;
+
+    /* Gradients — one family, green only. No orange mixes. */
     --gradient-primary: linear-gradient(
       135deg,
-      hsl(82 24% 38%) 0%,
-      hsl(82 24% 45%) 55%,
-      hsl(82 30% 55%) 100%
+      hsl(152 55% 30%) 0%,
+      hsl(152 45% 42%) 100%
+    );
+    --gradient-secondary: linear-gradient(
+      135deg,
+      hsl(240 5% 96%) 0%,
+      hsl(0 0% 100%) 100%
     );
     --gradient-cta: linear-gradient(
       135deg,
-      hsl(82 24% 34%) 0%,
-      hsl(82 24% 38%) 55%,
-      hsl(82 24% 45%) 100%
+      hsl(152 55% 26%) 0%,
+      hsl(152 55% 30%) 60%,
+      hsl(152 50% 36%) 100%
+    );
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(152 45% 34%) 0%,
+      hsl(152 45% 46%) 100%
     );
     --gradient-hero: linear-gradient(
-      135deg,
-      hsl(82 24% 38%) 0%,
-      hsl(210 40% 98%) 100%
+      180deg,
+      hsl(152 40% 97%) 0%,
+      hsl(0 0% 100%) 100%
     );
     --gradient-luxury: linear-gradient(
       135deg,
-      hsl(82 24% 38%) 0%,
-      hsl(82 24% 45%) 50%,
-      hsl(33 100% 58%) 100%
+      hsl(152 55% 30%) 0%,
+      hsl(152 45% 42%) 100%
+    );
+    --gradient-glass: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.7) 100%
+    );
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(0 0% 100%),
+      hsl(240 5% 98%)
     );
 
-    /* Neutral, readable shadows (avoid green tint on landing) */
-    --shadow-soft: 0 2px 10px -4px rgba(15, 23, 42, 0.12);
-    --shadow-medium: 0 10px 28px -10px rgba(15, 23, 42, 0.16);
-    --shadow-strong: 0 18px 52px -18px rgba(15, 23, 42, 0.22);
-    /* Brand glow reserved for CTA hover only (via gradient-cta usage) */
-    --shadow-glow: 0 14px 46px -18px rgba(40, 62, 44, 0.30);
-    --shadow-sage: 0 12px 44px -18px rgba(40, 62, 44, 0.22);
-    --shadow-orange: 0 14px 46px -18px rgba(255, 162, 57, 0.28);
+    /* Shadows — neutral ink, low opacity. Brand glow only on CTA hover. */
+    --shadow-soft: 0 1px 2px 0 rgba(9, 9, 11, 0.05);
+    --shadow-medium: 0 6px 20px -6px rgba(9, 9, 11, 0.1);
+    --shadow-strong: 0 16px 40px -12px rgba(9, 9, 11, 0.16);
+    --shadow-glow: 0 10px 32px -12px hsl(152 55% 30% / 0.35);
+    --shadow-primary: 0 8px 24px -8px hsl(152 55% 30% / 0.35);
+    --shadow-sage: 0 8px 28px -12px hsl(152 55% 30% / 0.25);
+    --shadow-orange: 0 8px 28px -12px rgba(234, 108, 15, 0.25);
+
+    /* Motion */
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-luxury: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    /* Sidebar — same neutral system, slightly recessed */
+    --sidebar-background: 240 5% 98%;
+    --sidebar-foreground: 240 6% 25%;
+    --sidebar-primary: 152 55% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 93%;
+    --sidebar-accent-foreground: 240 10% 10%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 152 55% 30%;
   }
 
-  /* Base Styles - Typography & Body */
+  /* Dark — the "big company" treatment: zinc neutrals, high-contrast
+     text, one desaturated green accent, dark text on bright buttons.
+     No pure black, no neon, no colored surface tints. */
+  .dark {
+    color-scheme: dark;
+
+    --background: 240 6% 5%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 5% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 5% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 152 50% 45%;
+    --primary-hover: 152 50% 51%;
+    --primary-glow: 152 50% 58%;
+    --primary-foreground: 152 60% 6%;
+
+    --secondary: 240 5% 14%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 152 45% 55%;
+    --accent-hover: 152 45% 62%;
+    --accent-glow: 152 45% 68%;
+    --accent-foreground: 152 60% 6%;
+
+    --orange: 25 95% 58%;
+    --orange-hover: 25 95% 64%;
+    --orange-foreground: 25 90% 8%;
+
+    --success: 152 50% 45%;
+    --success-foreground: 152 60% 6%;
+    --success-muted: 152 35% 13%;
+
+    --warning: 38 90% 55%;
+    --warning-foreground: 35 90% 8%;
+    --warning-muted: 35 50% 13%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --destructive-muted: 0 45% 13%;
+
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 152 50% 45%;
+
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(152 50% 45%) 0%,
+      hsl(152 50% 58%) 100%
+    );
+    --gradient-secondary: linear-gradient(
+      135deg,
+      hsl(240 5% 12%) 0%,
+      hsl(240 5% 8%) 100%
+    );
+    --gradient-cta: linear-gradient(
+      135deg,
+      hsl(152 50% 40%) 0%,
+      hsl(152 50% 45%) 60%,
+      hsl(152 50% 51%) 100%
+    );
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(152 45% 55%) 0%,
+      hsl(152 45% 68%) 100%
+    );
+    --gradient-hero: linear-gradient(
+      180deg,
+      hsl(152 25% 8%) 0%,
+      hsl(240 6% 5%) 100%
+    );
+    --gradient-luxury: linear-gradient(
+      135deg,
+      hsl(152 50% 45%) 0%,
+      hsl(152 50% 58%) 100%
+    );
+    --gradient-glass: linear-gradient(
+      135deg,
+      rgba(24, 24, 27, 0.8) 0%,
+      rgba(24, 24, 27, 0.6) 100%
+    );
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(240 6% 5%),
+      hsl(240 5% 7%)
+    );
+
+    --shadow-soft: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-medium: 0 6px 20px -6px rgba(0, 0, 0, 0.5);
+    --shadow-strong: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 10px 32px -12px hsl(152 50% 45% / 0.3);
+    --shadow-primary: 0 8px 24px -8px hsl(152 50% 45% / 0.3);
+    --shadow-sage: 0 8px 28px -12px hsl(152 50% 45% / 0.22);
+    --shadow-orange: 0 8px 28px -12px rgba(249, 146, 60, 0.22);
+
+    --sidebar-background: 240 6% 7%;
+    --sidebar-foreground: 240 5% 80%;
+    --sidebar-primary: 152 50% 45%;
+    --sidebar-primary-foreground: 152 60% 6%;
+    --sidebar-accent: 240 5% 13%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 5% 14%;
+    --sidebar-ring: 152 50% 45%;
+  }
+
+  /* Base Styles */
   * {
     @apply border-border;
   }
 
   html, body {
-    /* `overflow-x: clip` (not hidden!) is the right tool here: it stops
-       horizontal overflow from triggering the mobile auto-zoom-out, but
-       — unlike `hidden` — it DOESN'T also force `overflow-y: auto` on
-       body, which on iOS Safari hijacks momentum scrolling and produces
-       the "scroll feels stuck" behavior. With `clip`, the browser uses
-       its native document scroll for vertical, and we just clip stray
-       horizontal bleed. */
+    /* `overflow-x: clip` (not hidden!): stops horizontal overflow from
+       triggering mobile auto-zoom-out without hijacking iOS momentum
+       scrolling the way `overflow-x: hidden` does. */
     overflow-x: clip;
     max-width: 100vw;
   }
 
-  /* Smooth iOS momentum scroll on any internal scroll containers. */
   html { -webkit-text-size-adjust: 100%; }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    /* Slightly larger base than the Tailwind default 14px on mobile so
-       captions and meta rows are comfortable to read without zoom. */
     font-size: 15px;
     line-height: 1.5;
-    /* Make sure the document is the scroll container on mobile. */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: auto;
   }
@@ -395,39 +289,32 @@
   @media (min-width: 1024px) {
     body { font-size: 16px; }
   }
+
+  /* Keyboard-first: a visible, consistent focus indicator everywhere.
+     Never remove this without an equal-or-better replacement. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 }
 
 @layer utilities {
-  /* Hide scrollbars but keep scrolling (clean SaaS feel) */
+  /* Hide scrollbars but keep scrolling */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE/Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  /* Custom Utility Classes - Luxury Gradients */
-  .gradient-primary {
-    background: var(--gradient-primary);
-  }
-
-  .gradient-cta {
-    background: var(--gradient-cta);
-  }
-
-  .gradient-accent {
-    background: var(--gradient-accent);
-  }
-
-  .gradient-hero {
-    background: var(--gradient-hero);
-  }
-
-  .gradient-luxury {
-    background: var(--gradient-luxury);
-  }
-
+  /* Gradient utilities (token-backed) */
+  .gradient-primary { background: var(--gradient-primary); }
+  .gradient-cta { background: var(--gradient-cta); }
+  .gradient-accent { background: var(--gradient-accent); }
+  .gradient-hero { background: var(--gradient-hero); }
+  .gradient-luxury { background: var(--gradient-luxury); }
   .gradient-glass {
     background: var(--gradient-glass);
     backdrop-filter: blur(10px);
@@ -440,60 +327,32 @@
     background-clip: text;
   }
 
-  /* Premium Shadows */
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
+  /* Shadows (token-backed) */
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-medium { box-shadow: var(--shadow-medium); }
+  .shadow-strong { box-shadow: var(--shadow-strong); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-sage { box-shadow: var(--shadow-sage); }
+  .shadow-orange { box-shadow: var(--shadow-orange); }
 
-  .shadow-medium {
-    box-shadow: var(--shadow-medium);
-  }
+  /* Motion */
+  .transition-smooth { transition: var(--transition-smooth); }
+  .transition-bounce { transition: var(--transition-bounce); }
+  .transition-luxury { transition: var(--transition-luxury); }
 
-  .shadow-strong {
-    box-shadow: var(--shadow-strong);
-  }
-
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .shadow-sage {
-    box-shadow: var(--shadow-sage);
-  }
-
-  .shadow-orange {
-    box-shadow: var(--shadow-orange);
-  }
-
-  /* Luxury Animations */
-  .transition-smooth {
-    transition: var(--transition-smooth);
-  }
-
-  .transition-bounce {
-    transition: var(--transition-bounce);
-  }
-
-  .transition-luxury {
-    transition: var(--transition-luxury);
-  }
-
-  /* Premium Typography */
+  /* Typography scale */
   .heading-1 {
     @apply text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight;
     letter-spacing: -0.02em;
   }
-
   .heading-2 {
     @apply text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight;
     letter-spacing: -0.01em;
   }
-
   .heading-3 {
     @apply text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight;
     letter-spacing: -0.01em;
   }
-
   .heading-4 {
     @apply text-xl md:text-2xl lg:text-3xl font-semibold leading-snug;
   }
@@ -502,105 +361,59 @@
     @apply text-primary font-medium;
   }
 
-  /* Glassmorphism Effect */
   .glass-card {
-    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20;
+    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-border/60;
   }
 
-  /* Hover Effects - Sage & Orange */
+  /* Hover effects — restrained lift, no neon */
   .hover-lift {
-    @apply transition-luxury hover:-translate-y-2 hover:shadow-strong;
+    @apply transition-luxury hover:-translate-y-0.5 hover:shadow-medium;
   }
-
   .hover-glow {
     @apply transition-luxury hover:shadow-glow;
   }
-
   .hover-sage {
     @apply transition-luxury hover:shadow-sage hover:border-primary/50;
   }
-
   .hover-orange {
     @apply transition-luxury hover:shadow-orange hover:border-warning/50;
   }
-
   .hover-scale {
-    @apply transition-luxury hover:scale-[1.02];
+    @apply transition-luxury hover:scale-[1.01];
   }
 
-  /* Particle Animation Background */
   @keyframes float {
-    0%, 100% {
-      transform: translateY(0) translateX(0);
-    }
-    25% {
-      transform: translateY(-20px) translateX(10px);
-    }
-    50% {
-      transform: translateY(-40px) translateX(-10px);
-    }
-    75% {
-      transform: translateY(-20px) translateX(10px);
-    }
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-20px) translateX(10px); }
+    50% { transform: translateY(-40px) translateX(-10px); }
+    75% { transform: translateY(-20px) translateX(10px); }
   }
 
   @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 
   @keyframes pulse-sage {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(151, 168, 122, 0.7);
-    }
-    50% {
-      box-shadow: 0 0 0 20px rgba(151, 168, 122, 0);
-    }
+    0%, 100% { box-shadow: 0 0 0 0 hsl(152 55% 30% / 0.4); }
+    50% { box-shadow: 0 0 0 12px hsl(152 55% 30% / 0); }
   }
 
   @keyframes pulse-orange {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(255, 162, 57, 0.7);
-    }
-    50% {
-      box-shadow: 0 0 0 20px rgba(255, 162, 57, 0);
-    }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(234, 108, 15, 0.4); }
+    50% { box-shadow: 0 0 0 12px rgba(234, 108, 15, 0); }
   }
 
   @keyframes sparkle {
-    0%, 100% {
-      opacity: 0;
-      transform: scale(0);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1);
-    }
+    0%, 100% { opacity: 0; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
   }
 
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-shimmer {
-    animation: shimmer 3s linear infinite;
-  }
-
-  .animate-pulse-sage {
-    animation: pulse-sage 2s ease-in-out infinite;
-  }
-
-  .animate-pulse-orange {
-    animation: pulse-orange 2s ease-in-out infinite;
-  }
-
-  .animate-sparkle {
-    animation: sparkle 2s ease-in-out infinite;
-  }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-shimmer { animation: shimmer 3s linear infinite; }
+  .animate-pulse-sage { animation: pulse-sage 2s ease-in-out infinite; }
+  .animate-pulse-orange { animation: pulse-orange 2s ease-in-out infinite; }
+  .animate-sparkle { animation: sparkle 2s ease-in-out infinite; }
 
   /* Reduced Motion Support */
   @media (prefers-reduced-motion: reduce) {

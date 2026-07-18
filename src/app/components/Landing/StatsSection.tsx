@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Upload, Clock, Globe } from "lucide-react";
+import { Users, Upload, Clock, Youtube } from "lucide-react";
 
 const STATS = [
   {
@@ -11,7 +11,7 @@ const STATS = [
   },
   {
     Icon: Upload,
-    label: "Posts shipped",
+    label: "Videos shipped",
     value: "5,000+",
     tint: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10",
   },
@@ -22,10 +22,10 @@ const STATS = [
     tint: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
   },
   {
-    Icon: Globe,
-    label: "Platforms supported",
-    value: "8",
-    tint: "text-sky-600 dark:text-sky-400 bg-sky-500/10",
+    Icon: Youtube,
+    label: "Channels managed",
+    value: "200+",
+    tint: "text-red-600 dark:text-red-400 bg-red-500/10",
   },
 ];
 

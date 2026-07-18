@@ -7,12 +7,12 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 const faqs = [
   {
     question: "How does Uplora's team collaboration work?",
-    answer: "Uplora streamlines team collaboration with a 4-step workflow: Editors create and upload content with captions and scheduling details, content enters a review queue, admins approve and confirm publish times, then content automatically publishes across selected platforms. This ensures quality control while maintaining team efficiency.",
+    answer: "Uplora streamlines team collaboration with a 4-step workflow: Editors upload videos with titles, descriptions, and thumbnails; the video enters a review queue; owners approve and confirm publish times; then Uplora publishes the video to YouTube. This ensures quality control without anyone sharing channel credentials.",
     icon: Users
   },
   {
-    question: "Which social media platforms are supported?",
-    answer: "Uplora supports all major platforms including YouTube, TikTok, Instagram, LinkedIn, X (Twitter), and Facebook. You can publish to multiple platforms simultaneously from a single upload, ensuring consistent content distribution across your entire social media presence.",
+    question: "Why YouTube only?",
+    answer: "Uplora is built specifically for YouTube teams — the platform where production cost is highest and the stakes around 'who can hit publish' are biggest. We'd rather make the YouTube workflow excellent than spread thin across every social network. More platforms may come later, but the focus is depth first.",
     icon: Globe
   },
   {
@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     question: "Do you offer a free trial?",
-    answer: "Yes! We offer a comprehensive free trial so you can experience our collaborative workflow firsthand. Test our 4-step process, try multi-platform publishing, and see how our approval system works for your team before committing to a paid plan.",
+    answer: "Yes — a comprehensive free trial so you can experience our collaborative workflow firsthand. Test the 4-step process, try publishing to YouTube, and see how our approval system works for your team before committing to a paid plan.",
     icon: Star
   },
   {

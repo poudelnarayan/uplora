@@ -91,9 +91,9 @@ export default {
 				'primary': 'var(--shadow-primary)'
 			},
 			fontFamily: {
-				sans: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
-				serif: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif'],
-				display: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif']
+				sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+				serif: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+				display: ['var(--font-sans)', 'system-ui', 'sans-serif']
 			},
 			keyframes: {
 				'accordion-down': {

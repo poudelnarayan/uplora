@@ -10,17 +10,15 @@ import ClosingCTA from "@/app/components/Landing/ClosingCTA";
 
 export default function Home() {
   return (
-    <div className="theme-landing">
-      <DashboardLayout>
-        <HeroSection />
-        <StatsSection />
-        <FeatureCards />
-        <WorkflowSection />
-        <ReviewsSection />
-        <PricingSection />
-        <FAQSection />
-        <ClosingCTA />
-      </DashboardLayout>
-    </div>
+    <DashboardLayout>
+      <HeroSection />
+      <StatsSection />
+      <FeatureCards />
+      <WorkflowSection />
+      <ReviewsSection />
+      <PricingSection />
+      <FAQSection />
+      <ClosingCTA />
+    </DashboardLayout>
   );
 }

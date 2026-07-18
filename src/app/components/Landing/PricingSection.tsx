@@ -6,64 +6,27 @@ import { Badge } from "@/app/components/ui/badge";
 import { Switch } from "@/app/components/ui/switch";
 import { Check, X, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { PLANS } from "@/stripe-config";
 
-const basicFeatures = [
-  "Multi-platform publishing",
-  "Basic team collaboration",
-  "Up to 50 posts per month",
-  "Standard video support",
-  "Basic analytics",
-  "Email support"
-];
-
-const basicLimitations = [
-  "YouTube long video support",
-  "Advanced approval workflow",
-  "Unlimited posts",
-  "Priority support",
-  "AI-powered optimization"
-];
-
-const proFeatures = [
-  "Multi-platform publishing",
-  "Advanced team collaboration",
-  "Unlimited posts & videos",
-  "YouTube long video support",
-  "Advanced approval workflow",
-  "Shared content calendar",
-  "Real-time notifications",
-  "Advanced analytics & reporting",
-  "Priority customer support",
-  "AI-powered optimization (coming soon)"
-];
+// Single source of truth: src/stripe-config.ts. The landing page renders
+// exactly what checkout charges — never hardcode plan data here.
+const plans = PLANS.map((p) => ({
+  name: p.name,
+  description: p.description,
+  monthlyPrice: p.monthlyPrice,
+  yearlyPrice: p.yearlyPriceMonthly,
+  features: p.features.filter((f) => f.included).map((f) => f.label),
+  limitations: p.features.filter((f) => !f.included).map((f) => f.label),
+  popular: !!p.popular,
+  buttonText: p.cta,
+}));
 
 const PricingSection = () => {
   const [isYearly, setIsYearly] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(1); // Default to Pro (index 1)
+  const [selectedPlan, setSelectedPlan] = useState(
+    Math.max(plans.findIndex((p) => p.popular), 0)
+  );
   const [freeTrialEnabled, setFreeTrialEnabled] = useState(true);
-
-  const plans = [
-    {
-      name: "Basic",
-      description: "Perfect for individuals and small teams",
-      monthlyPrice: 9.99,
-      yearlyPrice: 6.99,
-      features: basicFeatures,
-      limitations: basicLimitations,
-      popular: false,
-      buttonText: "Start 7 days free trial"
-    },
-    {
-      name: "Pro",
-      description: "Advanced features for growing teams",
-      monthlyPrice: 14.99,
-      yearlyPrice: 11.99,
-      features: proFeatures,
-      limitations: [],
-      popular: true,
-      buttonText: "Start 7 days free trial"
-    }
-  ];
 
   return (
     <section id="pricing" className="py-20">
@@ -100,7 +63,7 @@ const PricingSection = () => {
             >
               Yearly
               <Badge className="absolute -top-3 -right-4 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 whitespace-nowrap">
-                Save 30%
+                Save 20%
               </Badge>
             </button>
           </div>
@@ -116,7 +79,7 @@ const PricingSection = () => {
         </div>
 
         {/* Plans */}
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-8 max-w-5xl mx-auto relative px-4 md:px-8 lg:px-0">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-6 max-w-6xl mx-auto relative px-4 md:px-8 lg:px-0">
           {plans.map((plan, index) => (
             <div key={index} className="relative">
               {/* Popular Badge - Outside the card to avoid clipping */}

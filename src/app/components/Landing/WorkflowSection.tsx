@@ -8,7 +8,7 @@ const STEPS = [
     Icon: Pencil,
     title: "Editor drafts",
     body:
-      "Your team uploads videos, writes captions, picks platforms — all inside Uplora. No file passing, no version chaos.",
+      "Your team uploads videos, writes titles and descriptions, and picks the thumbnail — all inside Uplora. No file passing, no version chaos.",
     tint: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
   },
   {
@@ -16,7 +16,7 @@ const STEPS = [
     Icon: ShieldCheck,
     title: "Owner approves",
     body:
-      "A side-by-side preview shows exactly what will publish where. One tap to approve, send back, or edit.",
+      "A side-by-side preview shows exactly what YouTube will render. One tap to approve, send back, or edit.",
     tint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   },
   {
@@ -24,7 +24,7 @@ const STEPS = [
     Icon: Send,
     title: "Uplora publishes",
     body:
-      "We post to every selected platform on the schedule you set — and confirm in your dashboard the moment they go live.",
+      "We push approved videos straight to your YouTube channel on the schedule you set — and confirm in your dashboard the moment they go live.",
     tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   },
 ];

@@ -1,27 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { ENABLED_PLATFORM_IDS, type PlatformId } from "@/config/platforms";
 
-export type Platform =
-  | "youtube"
-  | "instagram"
-  | "facebook"
-  | "twitter"
-  | "linkedin"
-  | "pinterest"
-  | "threads"
-  | "tiktok"
-  | "telegram";
+// Platform union + active list both come from the registry — flip a flag in
+// src/config/platforms.ts to change what the product supports.
+export type Platform = PlatformId;
 
-export const ALL_PLATFORMS: Platform[] = [
-  "youtube",
-  "instagram",
-  "facebook",
-  "twitter",
-  "linkedin",
-  "pinterest",
-  "threads",
-  "tiktok",
-  "telegram",
-];
+export const ALL_PLATFORMS: Platform[] = ENABLED_PLATFORM_IDS;
 
 export type TeamPlatformDecision =
   | { allowed: true; reason?: undefined }

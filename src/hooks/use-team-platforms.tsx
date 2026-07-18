@@ -2,25 +2,21 @@
 
 import { useMemo } from "react";
 import { useTeam } from "@/context/TeamContext";
+import {
+  ENABLED_PLATFORM_IDS,
+  type PlatformId,
+} from "@/config/platforms";
 
-export type Platform =
-  | "youtube"
-  | "instagram"
-  | "facebook"
-  | "twitter"
-  | "linkedin"
-  | "pinterest"
-  | "threads"
-  | "tiktok"
-  | "telegram";
+export type Platform = PlatformId;
 
 /**
- * Returns the publishing capabilities of a given team (defaults to the currently
- * selected team) for use in editor-side UIs.
+ * Returns the publishing capabilities of a given team (defaults to the
+ * currently selected team) for use in editor-side UIs.
  *
- * - Personal workspaces: every platform allowed (we never lock the owner out of
- *   their own account).
- * - Team workspaces: respects `team.enabledPlatforms` (owner-managed allowlist).
+ * Platform availability = product-level registry (`src/config/platforms.ts`)
+ * intersected with the team's owner-managed allowlist:
+ * - Personal workspaces: every ENABLED platform allowed.
+ * - Team workspaces: enabled ∩ `team.enabledPlatforms`.
  *
  * NOTE: this is a UX helper. The authoritative check lives server-side in
  * `assertTeamCanPublish` — never trust this alone for security decisions.
@@ -33,9 +29,13 @@ export function useTeamPlatforms(teamId?: string | null) {
     const all = personalTeam ? [personalTeam, ...teams] : teams;
     const team = all.find((t) => t.id === targetId) || null;
     const isPersonal = !!team?.isPersonal;
-    const enabled = isPersonal
-      ? ALL_PLATFORMS
+    const allowlist = isPersonal
+      ? ENABLED_PLATFORM_IDS
       : ((team as any)?.enabledPlatforms as string[] | undefined) || [];
+
+    const enabled = ENABLED_PLATFORM_IDS.filter(
+      (p) => isPersonal || allowlist.includes(p),
+    );
 
     const has = (p: Platform) => enabled.includes(p);
 
@@ -45,28 +45,17 @@ export function useTeamPlatforms(teamId?: string | null) {
       isPersonal,
       enabledPlatforms: enabled,
       has,
-      // Convenience flags for the most common gates in the UI
       canYouTube: has("youtube"),
-      canInstagram: has("instagram"),
-      canFacebook: has("facebook"),
-      canTwitter: has("twitter"),
-      canLinkedIn: has("linkedin"),
-      canPinterest: has("pinterest"),
-      canThreads: has("threads"),
-      canTikTok: has("tiktok"),
-      canTelegram: has("telegram"),
+      // Disabled platforms — kept so existing call sites compile and gate
+      // correctly. Re-enable via src/config/platforms.ts, not here.
+      canInstagram: false,
+      canFacebook: false,
+      canTwitter: false,
+      canLinkedIn: false,
+      canPinterest: false,
+      canThreads: false,
+      canTikTok: false,
+      canTelegram: false,
     };
   }, [teams, personalTeam, targetId]);
 }
-
-const ALL_PLATFORMS: Platform[] = [
-  "youtube",
-  "instagram",
-  "facebook",
-  "twitter",
-  "linkedin",
-  "pinterest",
-  "threads",
-  "tiktok",
-  "telegram",
-];

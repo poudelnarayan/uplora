@@ -37,41 +37,26 @@ const Navbar = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center">
-              <Image 
-                src="/text-logo.png" 
-                alt="Uplora" 
-                width={280} 
-                height={60} 
-                className="h-24 w-auto hover:opacity-80 transition-opacity" 
+              <Image
+                src="/text-logo.png"
+                alt="Uplora"
+                width={280}
+                height={60}
+                className="h-8 w-auto hover:opacity-80 transition-opacity"
                 priority
               />
             </Link>
 
-            {/* Enhanced Review Indicator */}
-            <div
+            <button
               onClick={scrollToReviews}
-              className="hidden lg:flex items-center space-x-3 px-4 py-2 rounded-full bg-gradient-to-r from-secondary/30 to-accent/20 border border-primary/20 cursor-pointer hover:from-secondary/50 hover:to-accent/30 hover:border-primary/30 transition-all duration-300 hover:scale-105"
+              className="hidden lg:inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <div className="flex items-center space-x-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"
-                  />
-                ))}
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-semibold text-foreground">
-                  4.9
-                </span>
-                <div className="h-4 w-px bg-border/50" />
-                <span className="text-xs font-medium text-muted-foreground">
-                  50+ teams
-                </span>
-              </div>
-            </div>
+              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+              <span className="font-medium">4.9</span>
+              <span>· 50+ teams</span>
+            </button>
           </div>
 
           {/* Desktop Navigation */}

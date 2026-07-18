@@ -19,7 +19,7 @@ const ClosingCTA = () => {
             className="pointer-events-none absolute inset-0"
             style={{
               backgroundImage:
-                "radial-gradient(ellipse 60% 70% at 50% 0%, hsl(82 30% 60% / 0.18), transparent 70%)",
+                "radial-gradient(ellipse 60% 70% at 50% 0%, hsl(152 45% 42% / 0.14), transparent 70%)",
             }}
           />
 

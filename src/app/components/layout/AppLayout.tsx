@@ -58,7 +58,7 @@ const routes = [
   { href: "/dashboard", label: "Dashboard", icon: Video },
   { href: "/make-post", label: "Make Post", icon: Upload },
   { href: "/teams", label: "Teams", icon: Users },
-  { href: "/social", label: "Social", icon: Plus },
+  { href: "/social", label: "YouTube", icon: Plus },
 ];
 
 const postRoutes = [

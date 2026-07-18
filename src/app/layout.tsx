@@ -2,21 +2,14 @@ import "./globals.css";
 import type { Viewport } from "next";
 import Providers from "./providers";
 import { ClerkProvider } from '@clerk/nextjs';
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "@/app/components/ui/toaster";
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-playfair',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-sans',
   display: 'swap',
 });
 
@@ -42,7 +35,7 @@ export default function RootLayout({
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${jakarta.variable} font-sans antialiased`}>
         {publishableKey ? (
           <ClerkProvider publishableKey={publishableKey}>
             <Providers>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Youtube, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Youtube, Twitter } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -29,23 +29,16 @@ const Footer = () => {
                 className="h-16 w-auto hover:opacity-80 transition-opacity" 
               />
             </Link>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              <span className="text-base font-inter">
-                Helping creators and teams streamline their content workflow from draft to publish.
-              </span>
+            <p className="text-muted-foreground mb-6 max-w-md text-base">
+              The approval workflow for YouTube teams — editors upload, owners
+              approve, videos publish safely.
             </p>
             <div className="flex items-center space-x-4">
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth" aria-label="YouTube">
+              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-600/10 transition-smooth" aria-label="YouTube">
                 <Youtube className="h-5 w-5" />
               </a>
               <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth" aria-label="X (Twitter)">
                 <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-accent/10 transition-smooth" aria-label="Instagram">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-smooth" aria-label="LinkedIn">
-                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
